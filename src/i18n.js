@@ -167,7 +167,7 @@ const ENGLISH_TO_SPANISH = {
   "You're home, little one. We're together again.": "Estás en casa, pequeña. Volvemos a estar juntos.",
   "This is not the end of the wild. But this time, we brought our family back.": "Este no es el final de lo salvaje. Pero esta vez recuperamos a nuestra familia.",
   "CELL BLOCK C": "BLOQUE DE CELDAS C",
-  "MINIBOSS // INDORAPTOR": "MINIJEFЕ // INDORAPTOR",
+  "MINIBOSS // INDORAPTOR": "MINIJЕFE // INDORAPTOR",
   "MINIBOSS // INDOMINUS REX": "MINIJЕFE // INDOMINUS REX",
   "APEX THREAT DETECTED": "AMENAZA ALFA DETECTADA",
   "POUNCE INCOMING": "EMBESTIDA INMINENTE",
@@ -211,11 +211,14 @@ export function t(key, locale = "es") {
   return UI[locale]?.[key] ?? UI.es[key] ?? key;
 }
 
+const SPANISH_TO_ENGLISH = Object.fromEntries(
+  Object.entries(ENGLISH_TO_SPANISH).map(([english, spanish]) => [spanish, english])
+);
+
 export function translateText(value, locale = "es") {
-  if (locale === "en" || typeof value !== "string") return value;
-  if (ENGLISH_TO_SPANISH[value]) return ENGLISH_TO_SPANISH[value];
-  if (value.startsWith("FASE ")) return value;
-  return value;
+  if (typeof value !== "string") return value;
+  if (locale === "en") return SPANISH_TO_ENGLISH[value] ?? value;
+  return ENGLISH_TO_SPANISH[value] ?? value;
 }
 
 export function supportedLocales() {
