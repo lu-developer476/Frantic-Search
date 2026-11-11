@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#101a1b" />
+    <meta name="description" content="AVOID — una aventura de supervivencia prehistórica. Rescatá a Beta junto a Blue y Vasti." />
+    <title>AVOID — Operation: Lost Hatchling</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="AVOID inicio"><span class="brand-mark">A</span><span>AVOID<span class="brand-dot">.</span></span></a>
+        <div class="top-meta"><span class="status-dot"></span><span>FIELD OPERATION / 01</span></div>
+        <button class="sound-toggle" id="sound-toggle" type="button" aria-label="Activar o desactivar sonido">♫ <span>SONIDO</span></button>
+      </header>
+      <main class="layout">
+        <section class="intro">
+          <p class="eyebrow">JURASSIC WORLD // SURVIVAL PROTOCOL</p>
+          <h1>OPERATION:<br><em>LOST HATCHLING</em></h1>
+          <p class="lede">Una operación de rescate. Dos depredadores. Una cría en peligro.</p>
+          <div class="character-picker" aria-label="Elegir personaje">
+            <button class="character-card active" data-character="blue" type="button">
+              <span class="character-number">01 / RAPTOR</span><span class="character-art blue-art">B</span>
+              <strong>BLUE</strong><small>VELOCIDAD · AGILIDAD</small>
+            </button>
+            <button class="character-card" data-character="vasti" type="button">
+              <span class="character-number">02 / TITAN</span><span class="character-art vasti-art">V</span>
+              <strong>VASTI</strong><small>FUERZA · RESISTENCIA</small>
+            </button>
+          </div>
+          <div class="mission-brief">
+            <div class="brief-icon">⌖</div><div><span class="eyebrow">MISIÓN PRINCIPAL</span><p>Encontrar y rescatar a <b>BETA</b>. Los cazadores furtivos la trasladan hacia un punto de extracción clandestino.</p></div>
+          </div>
+          <button id="start-button" class="start-button" type="button"><span>INICIAR OPERACIÓN</span><b>→</b></button>
+          <p class="controls-note">ESPACIO / ↑ SALTAR <span>·</span> ↓ AGACHARSE <span>·</span> P PAUSAR</p>
+        </section>
+        <section class="game-panel">
+          <div class="panel-head"><span><i></i> LIVE FEED // SECTOR 01</span><span id="game-state">STANDBY</span></div>
+          <div class="canvas-wrap">
+            <canvas id="game" width="960" height="540" aria-label="Juego de plataformas AVOID"></canvas>
+            <div id="overlay" class="game-overlay">
+              <div class="overlay-content"><span class="overlay-kicker">OPERATION AVOID</span><h2>THE WILD<br><em>IS WATCHING.</em></h2><p>Prepará el equipo. Beta necesita que lleguemos.</p><button id="overlay-start" type="button">COMENZAR <span>↗</span></button></div>
+            </div>
+          </div>
+          <div class="hud-strip"><div><small>DISTANCIA</small><b id="distance">0000 m</b></div><div><small>RESCATOS</small><b id="rescues">00</b></div><div><small>RÉCORD</small><b id="best">0000 m</b></div><div class="objective"><small>OBJETIVO</small><b>RESCATAR A BETA</b></div></div>
+          <div class="panel-foot"><span>SIMULACIÓN DE CAMPO // BUILD 0.1.0</span><span>CANVAS 2D <i>●</i> VITE</span></div>
+        </section>
+      </main>
+      <footer><span>AVOID — A FAN-MADE SURVIVAL ADVENTURE</span><span>NOT AFFILIATED WITH UNIVERSAL / AMBLIN</span></footer>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
