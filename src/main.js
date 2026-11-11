@@ -6,6 +6,8 @@ import { InputManager } from "./core/InputManager.js";
 import { Player } from "./entities/Player.js";
 import { HunterEnemy } from "./entities/HunterEnemy.js";
 import { FerrucutusAlly } from "./entities/FerrucutusAlly.js";
+import { IndoraptorBoss } from "./entities/IndoraptorBoss.js";
+import { IndominusRexBoss } from "./entities/IndominusRexBoss.js";
 import { PhysicsSystem } from "./systems/PhysicsSystem.js";
 import { CollisionSystem } from "./systems/CollisionSystem.js";
 import { PlatformWorld } from "./world/PlatformWorld.js";
@@ -40,6 +42,11 @@ let hunters = [];
 let allies = [];
 let seenHunterSpawns = new Set();
 let seenAllySpawns = new Set();
+let seenBossSpawns = new Set();
+let bosses = [];
+let activeBoss = null;
+let bossCueTimer = 0;
+let bossCueTitle = "";
 let dashHitIds = new Set();
 let particles = [];
 
@@ -420,6 +427,294 @@ function damagePlayer() {
   audio.hit();
   burst(player.x + player.w / 2, player.y + player.h / 2, "#ed8e55", 15);
   if (player.health <= 0) endGame();
+}
+
+
+function drawIndoraptor(boss) {
+  const x = boss.x;
+  const y = boss.y;
+  const phase = elapsed * 10;
+  const stride = Math.sin(phase) * 5;
+  ctx.save();
+  ctx.globalAlpha = boss.defeated ? 0.4 : 1;
+  ctx.translate(x, y);
+  ctx.fillStyle = "#27222f";
+  ctx.beginPath();
+  ctx.moveTo(26, 53);
+  ctx.lineTo(-32, 28);
+  ctx.lineTo(12, 67);
+  ctx.fill();
+  roundedRect(ctx, 25, 35, 75, 39, 17);
+  ctx.fillStyle = "#332b3d";
+  ctx.beginPath();
+  ctx.moveTo(73, 48);
+  ctx.lineTo(91, 13);
+  ctx.lineTo(116, 19);
+  ctx.lineTo(126, 35);
+  ctx.lineTo(110, 53);
+  ctx.lineTo(84, 64);
+  ctx.fill();
+  ctx.fillStyle = "#6a4b68";
+  for (let i = 0; i < 5; i += 1) {
+    const sx = 35 + i * 12;
+    ctx.beginPath();
+    ctx.moveTo(sx, 37);
+    ctx.lineTo(sx + 5, 18 - (i % 2) * 5);
+    ctx.lineTo(sx + 12, 40);
+    ctx.fill();
+  }
+  ctx.strokeStyle = "#51445b";
+  ctx.lineWidth = 9;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(43, 68);
+  ctx.lineTo(38 + stride, 89);
+  ctx.moveTo(83, 68);
+  ctx.lineTo(86 - stride, 89);
+  ctx.stroke();
+  ctx.strokeStyle = "#8a8290";
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(82, 58);
+  ctx.lineTo(96, 76);
+  ctx.lineTo(108, 70);
+  ctx.stroke();
+  ctx.fillStyle = "#ff6759";
+  ctx.beginPath();
+  ctx.arc(111, 29, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  if (boss.state === "telegraph") {
+    ctx.strokeStyle = "#ff806c";
+    ctx.lineWidth = 3;
+    ctx.setLineDash([7, 6]);
+    ctx.strokeRect(
+      boss.direction > 0 ? boss.x + boss.w - 10 : boss.x - 150,
+      boss.groundY - 68,
+      150,
+      54
+    );
+    ctx.setLineDash([]);
+    ctx.fillStyle = "#ff9b7e";
+    ctx.font = "11px monospace";
+    ctx.fillText(boss.attackName === "pounce" ? "POUNCE INCOMING" : "CLAW STRIKE", boss.x - 5, boss.y - 18);
+  }
+}
+
+function drawIndominus(boss) {
+  const x = boss.x;
+  const y = boss.y;
+  const phase = elapsed * 5;
+  const stride = Math.sin(phase) * 4;
+  ctx.save();
+  ctx.globalAlpha = boss.defeated ? 0.4 : 1;
+  ctx.translate(x, y);
+  ctx.fillStyle = "#b9b5a8";
+  ctx.beginPath();
+  ctx.moveTo(58, 91);
+  ctx.lineTo(-52, 67);
+  ctx.lineTo(22, 112);
+  ctx.fill();
+  roundedRect(ctx, 34, 55, 126, 74, 30);
+  ctx.fillStyle = "#d1ccbc";
+  ctx.beginPath();
+  ctx.moveTo(126, 69);
+  ctx.lineTo(155, 23);
+  ctx.lineTo(197, 20);
+  ctx.lineTo(222, 42);
+  ctx.lineTo(208, 69);
+  ctx.lineTo(172, 84);
+  ctx.lineTo(140, 91);
+  ctx.fill();
+  ctx.fillStyle = "#8b8a7a";
+  for (let i = 0; i < 8; i += 1) {
+    const sx = 54 + i * 15;
+    ctx.beginPath();
+    ctx.moveTo(sx, 58);
+    ctx.lineTo(sx + 7, 35 - (i % 2) * 8);
+    ctx.lineTo(sx + 14, 64);
+    ctx.fill();
+  }
+  ctx.strokeStyle = "#a19e90";
+  ctx.lineWidth = 17;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(79, 112);
+  ctx.lineTo(75 + stride, 147);
+  ctx.moveTo(143, 112);
+  ctx.lineTo(148 - stride, 147);
+  ctx.stroke();
+  ctx.strokeStyle = "#8d897b";
+  ctx.lineWidth = 11;
+  ctx.beginPath();
+  ctx.moveTo(133, 84);
+  ctx.lineTo(111, 110);
+  ctx.lineTo(124, 117);
+  ctx.stroke();
+  ctx.fillStyle = "#24221f";
+  ctx.beginPath();
+  ctx.arc(194, 38, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#f2eee2";
+  ctx.fillRect(202, 60, 18, 4);
+  ctx.restore();
+
+  if (boss.state === "telegraph") {
+    ctx.strokeStyle = "#ffb26b";
+    ctx.lineWidth = 3;
+    if (boss.attackName === "roar") {
+      ctx.beginPath();
+      ctx.ellipse(
+        boss.x + boss.w / 2,
+        boss.groundY - 4,
+        boss.roarRadius * 0.55,
+        18,
+        0,
+        0,
+        Math.PI * 2
+      );
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.ellipse(
+        boss.x + boss.w / 2,
+        boss.groundY - 4,
+        boss.roarRadius,
+        28,
+        0,
+        0,
+        Math.PI * 2
+      );
+      ctx.stroke();
+      ctx.fillStyle = "#ffc078";
+      ctx.font = "11px monospace";
+      ctx.fillText("SONIC ROAR // JUMP", boss.x + 25, boss.y - 18);
+    } else {
+      ctx.setLineDash([9, 6]);
+      ctx.strokeRect(
+        boss.direction > 0 ? boss.x + boss.w - 10 : boss.x - 190,
+        boss.groundY - 106,
+        190,
+        84
+      );
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#ffc078";
+      ctx.font = "11px monospace";
+      ctx.fillText(
+        boss.attackName === "charge" ? "CHARGE INCOMING" : "TAIL SWEEP",
+        boss.x + 20,
+        boss.y - 18
+      );
+    }
+  }
+}
+
+function drawBoss(boss) {
+  if (boss.kind === "indoraptor") drawIndoraptor(boss);
+  else drawIndominus(boss);
+
+  if (boss.state === "attacking" && boss.attackBox) {
+    const box = boss.attackBox;
+    ctx.fillStyle = "#ff75522b";
+    ctx.fillRect(box.x, box.y, box.w, box.h);
+  }
+}
+
+function drawBossHud() {
+  if (activeBoss && !activeBoss.defeated) {
+    const barX = 250;
+    const barY = 71;
+    const barWidth = 460;
+    ctx.fillStyle = "#101716dd";
+    ctx.fillRect(barX - 14, barY - 28, barWidth + 28, 50);
+    ctx.fillStyle = "#e8eee0";
+    ctx.font = "12px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText(
+      activeBoss.kind === "indoraptor" ? "MINIBOSS // INDORAPTOR" : "MINIBOSS // INDOMINUS REX",
+      GAME.width / 2,
+      barY - 11
+    );
+    ctx.fillStyle = "#35403a";
+    ctx.fillRect(barX, barY, barWidth, 9);
+    ctx.fillStyle = activeBoss.phase === 2 ? "#ff805f" : "#d8f36a";
+    ctx.fillRect(barX, barY, barWidth * (activeBoss.health / activeBoss.maxHealth), 9);
+    ctx.fillStyle = "#b9c4b8";
+    ctx.font = "9px monospace";
+    ctx.fillText("FASE " + activeBoss.phase, GAME.width / 2, barY + 25);
+    ctx.textAlign = "start";
+  }
+
+  if (bossCueTimer > 0) {
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, bossCueTimer * 1.5);
+    ctx.fillStyle = "#0d1514dd";
+    ctx.fillRect(215, 185, 530, 90);
+    ctx.strokeStyle = "#d8f36a";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(215, 185, 530, 90);
+    ctx.fillStyle = "#d8f36a";
+    ctx.font = "11px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("APEX THREAT DETECTED", GAME.width / 2, 211);
+    ctx.fillStyle = "#f0f2e9";
+    ctx.font = "bold 29px sans-serif";
+    ctx.fillText(bossCueTitle, GAME.width / 2, 249);
+    ctx.textAlign = "start";
+    ctx.restore();
+  }
+}
+
+function syncBossEncounter() {
+  if (activeBoss) return;
+
+  for (const spawn of world.bossSpawns) {
+    if (seenBossSpawns.has(spawn.id) || player.x < spawn.x - 620) continue;
+
+    seenBossSpawns.add(spawn.id);
+    const BossType = spawn.kind === "indoraptor" ? IndoraptorBoss : IndominusRexBoss;
+    const boss = new BossType({
+      ...spawn,
+      x: spawn.x + (spawn.kind === "indominus" ? 90 : 45),
+      groundY: GAME.groundY,
+      arenaMinX: spawn.x - 570,
+      arenaMaxX: spawn.x + 560
+    });
+    boss.activate();
+    bosses.push(boss);
+    activeBoss = boss;
+    bossCueTitle = spawn.kind === "indoraptor" ? "INDORAPTOR" : "INDOMINUS REX";
+    bossCueTimer = 2.8;
+    audio.bossWarning();
+    break;
+  }
+}
+
+function damageBoss(boss, amount, source) {
+  if (!boss || boss.defeated) return;
+  const result = boss.takeDamage(amount);
+  if (!result.hit) return;
+
+  audio.bossHit();
+  burst(
+    boss.x + boss.w / 2,
+    boss.y + boss.h * 0.52,
+    result.defeated ? "#d8f36a" : "#ff9877",
+    result.defeated ? 34 : 15
+  );
+
+  if (result.phaseChanged) {
+    bossCueTitle = "PHASE " + boss.phase;
+    bossCueTimer = 1.8;
+    audio.bossWarning();
+  }
+
+  if (result.defeated) {
+    bossCueTitle = boss.kind === "indoraptor" ? "INDORAPTOR DEFEATED" : "INDOMINUS DEFEATED";
+    bossCueTimer = 2.4;
+    audio.bossDefeat();
+    activeBoss = null;
+  }
 }
 
 function handleAbilityImpact() {
