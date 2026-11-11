@@ -17,7 +17,7 @@ export class FerrucutusAlly {
     this.strikes = 0;
   }
 
-  update(delta, player, world, hunters) {
+  update(delta, player, world, hunters, apexBoss = null) {
     if (this.departed) return null;
     if (!this.bridge && player.x > this.startX + 1320 && this.state !== "charge") {
       this.departed = true;
@@ -40,6 +40,27 @@ export class FerrucutusAlly {
         this.x += (this.bridge.start - 58 - this.x) * Math.min(1, delta * 5);
         return { type: "holding-bridge" };
       }
+    }
+
+    if (
+      apexBoss &&
+      apexBoss.isVulnerable &&
+      !apexBoss.defeated &&
+      this.attackCooldown <= 0 &&
+      Math.abs(apexBoss.x + apexBoss.w / 2 - (this.x + this.w / 2)) < 270
+    ) {
+      const targetX = apexBoss.x - this.w - 12;
+      this.direction = apexBoss.x >= this.x ? 1 : -1;
+      this.x += Math.sign(targetX - this.x) * Math.min(300 * delta, Math.abs(targetX - this.x));
+      this.state = "charge";
+      if (Math.abs(targetX - this.x) < 32) {
+        this.attackCooldown = 5.4;
+        this.state = "recover";
+        this.stateTimer = 0.7;
+        this.strikes += 1;
+        return { type: "ally-boss-strike", boss: apexBoss };
+      }
+      return { type: "ally-boss-charge", boss: apexBoss };
     }
 
     const nearbyHunter = hunters
