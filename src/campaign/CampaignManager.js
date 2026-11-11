@@ -109,6 +109,7 @@ export class CampaignManager {
   }
 
   activateConsole(kind) {
+    if (kind === "security" && !this.flags.powerRestored) return false;
     if (kind === "power") {
       this.flags.powerRestored = true;
       this.objective = "RELEASE THE SECURITY LOCK";
