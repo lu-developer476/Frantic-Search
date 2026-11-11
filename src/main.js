@@ -159,6 +159,26 @@ function drawBackground() {
     ctx.fill();
     ctx.fillRect(x + 24, y + 55, 8, 75);
   }
+  if (currentLevel.environment === "industrial" || currentLevel.environment === "facility") {
+    ctx.fillStyle = "#111b20";
+    ctx.fillRect(0, 300, GAME.width, 240);
+    for (let i = 0; i < 5; i += 1) {
+      const x = ((i * 240 - cameraX * 0.28) % 1300 + 1300) % 1300 - 120;
+      const height = 115 + (i % 3) * 28;
+      ctx.fillStyle = i % 2 ? "#354247" : "#2b373c";
+      ctx.fillRect(x, 270 - height, 178, height);
+      ctx.fillStyle = "#7c8c85";
+      for (let j = 0; j < 4; j += 1) {
+        ctx.fillRect(x + 18 + j * 38, 285 - height + 26, 19, 5);
+        ctx.fillRect(x + 18 + j * 38, 285 - height + 64, 19, 5);
+      }
+      ctx.fillStyle = "#d8f36a";
+      ctx.fillRect(x + 12, 278 - height, 46, 3);
+    }
+    ctx.fillStyle = "#ed8e5530";
+    ctx.fillRect(0, 356, GAME.width, 3);
+  }
+
   ctx.fillStyle = "#d4dfb022";
   for (let i = 0; i < 18; i += 1) {
     const x = (i * 71 + elapsed * 12) % GAME.width;
@@ -538,6 +558,109 @@ function syncEncounters() {
   }
 }
 
+function syncFacility() {
+  if (!world.facilitySpawns || facilityConsoles.length > 0) return;
+  facilityConsoles = world.facilitySpawns.consoles.map((spawn) =>
+    new FacilityConsole({ ...spawn, groundY: GAME.groundY })
+  );
+  beta = new Beta({ x: world.facilitySpawns.beta, groundY: GAME.groundY });
+  extractionX = world.facilitySpawns.extraction;
+}
+
+function updateCampaignHud() {
+  if (campaignObjectiveLabel) campaignObjectiveLabel.textContent = campaign.objective;
+  if (campaignChapterLabel) campaignChapterLabel.textContent = campaign.chapter;
+  if (rescuesLabel) rescuesLabel.textContent = String(rescues).padStart(2, "0");
+}
+
+function renderStoryPanel() {
+  if (!campaign.sceneOpen) {
+    storyPanel?.classList.add("hidden");
+    return;
+  }
+  const scene = campaign.activeScene;
+  const line = campaign.currentLine;
+  if (!scene || !line || !storyPanel) return;
+  storyTitle.textContent = scene.title;
+  storySpeaker.textContent = line.speaker;
+  storyText.textContent = line.text;
+  storyProgress.textContent = (scene.index + 1) + " / " + scene.lines.length;
+  storyNextButton.textContent = scene.index + 1 >= scene.lines.length ? "CONTINUAR ↗" : "SIGUIENTE →";
+  storyPanel.classList.remove("hidden");
+}
+
+function showCampaignEnding() {
+  if (!campaign.flags.completed) return;
+  storyPanel?.classList.add("hidden");
+  overlay.querySelector(".overlay-kicker").textContent = "OPERATION COMPLETE";
+  overlay.querySelector("h2").innerHTML = "WE BROUGHT<br><em>HER HOME.</em>";
+  overlay.querySelector("p").textContent = "Beta fue rescatada. La instalación clandestina quedó expuesta. Campaña completada.";
+  overlay.querySelector("button").textContent = "JUGAR DE NUEVO ↗";
+  overlay.classList.remove("hidden");
+  stateLabel.textContent = "MISSION COMPLETE";
+}
+
+function advanceStory() {
+  campaign.advanceScene();
+  renderStoryPanel();
+  if (!campaign.sceneOpen && campaign.flags.completed) showCampaignEnding();
+}
+
+function interactWithFacility() {
+  for (const terminal of facilityConsoles) {
+    if (!terminal.canInteract(player)) continue;
+    if (terminal.kind === "security" && !campaign.flags.powerRestored) {
+      campaign.queueScene("security-terminal-locked", "SECURITY TERMINAL LOCKED", [
+        { speaker: "MISSION CONTROL", text: "The security terminal has no auxiliary power. Activate the power relay first." }
+      ]);
+      renderStoryPanel();
+      return true;
+    }
+    if (campaign.activateConsole(terminal.kind)) {
+      terminal.activate();
+      audio.rescue();
+      renderStoryPanel();
+      updateCampaignHud();
+      return true;
+    }
+  }
+
+  if (beta && beta.state === "confined" &&
+      Math.abs((player.x + player.w / 2) - (beta.x + beta.w / 2)) < 112) {
+    if (!campaign.canFreeBeta()) {
+      campaign.queueScene("beta-cell-locked-hint", "CELL BLOCK C", [
+        { speaker: "MISSION CONTROL", text: "Beta's cell is still sealed. Restore auxiliary power and disengage the security lock before attempting extraction." }
+      ]);
+      renderStoryPanel();
+      return true;
+    }
+    if (beta.rescue() && campaign.freeBeta()) {
+      rescues += 1;
+      audio.rescue();
+      burst(beta.x + beta.w / 2, beta.y + beta.h / 2, "#d8f36a", 28);
+      renderStoryPanel();
+      updateCampaignHud();
+      return true;
+    }
+  }
+  return false;
+}
+
+function finishCampaign() {
+  if (campaignSaved || !campaign.complete()) return;
+  campaignSaved = true;
+  running = false;
+  save.update({
+    campaignCompleted: true,
+    completedCampaigns: save.get("completedCampaigns") + 1,
+    rescues: save.get("rescues") + rescues,
+    bestDistance: Math.max(save.get("bestDistance"), Math.floor(distance))
+  });
+  audio.rescue();
+  beta?.extract();
+  renderStoryPanel();
+}
+
 function pruneEncounterBookkeeping() {
   const activeHunterIds = new Set([
     ...world.hunterSpawns.map((spawn) => spawn.id),
@@ -912,6 +1035,9 @@ function damageBoss(boss, amount, source) {
     bossCueTitle = boss.kind === "indoraptor" ? "INDORAPTOR DEFEATED" : "INDOMINUS DEFEATED";
     bossCueTimer = 2.4;
     audio.bossDefeat();
+    campaign.onBossDefeated(boss.kind);
+    updateCampaignHud();
+    renderStoryPanel();
     activeBoss = null;
   }
 }
