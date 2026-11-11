@@ -11,37 +11,53 @@
     <div id="app">
       <header class="topbar">
         <a class="brand" href="#" aria-label="Frantic Search inicio"><span>FRANTIC <span class="brand-dot">SEARCH</span></span></a>
-        <button class="sound-toggle" id="sound-toggle" type="button" aria-label="Activar o desactivar sonido">♫ <span>SONIDO</span></button>
-      </header>
+        <div class="nav-actions">
+          <button class="sound-toggle" id="sound-toggle" type="button" aria-label="Activar o desactivar sonido"><span id="sound-icon">♫</span> <span id="sound-label" data-i18n="sound">SONIDO</span></button>
+          <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav-menu" data-i18n-aria="openMenu">
+            <span></span><span></span><span></span>
+          </button>
+          <nav id="nav-menu" class="nav-menu hidden" aria-label="Menú principal">
+            <div class="menu-section">
+              <p data-i18n="language">IDIOMA</p>
+              <div class="menu-options" role="group" aria-label="Idioma">
+                <button type="button" data-language="es" class="menu-option active" aria-pressed="true">ESPAÑOL</button>
+                <button type="button" data-language="en" class="menu-option" aria-pressed="false">ENGLISH</button>
+              </div>
+            </div>
+            <div class="menu-section">
+              <p data-i18n="environmentMode">MODO AMBIENTAL</p>
+              <div class="menu-options mode-options" role="group" aria-label="Modo ambiental">
+                <button type="button" data-mode="normal" class="menu-option active" aria-pressed="true" data-i18n="normal">NORMAL</button>
+                <button type="button" data-mode="mud" class="menu-option" aria-pressed="false" data-i18n="mud">FANGO</button>
+                <button type="button" data-mode="fog" class="menu-option" aria-pressed="false" data-i18n="fog">NEBLINA</button>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </header>eader>
       <section class="page-title"><h1><span>OPERATION:</span> <em>LOST HATCHLING</em></h1></section>
       <main class="layout">
         <section class="desktop-only-notice" aria-labelledby="desktop-only-title">
-          <span class="notice-kicker">FRANTIC SEARCH // DESKTOP ONLY</span>
-          <h2 id="desktop-only-title">LA OPERACIÓN<br><em>REQUIERE DESKTOP.</em></h2>
-          <p>Este juego está diseñado para jugarse en una computadora con teclado y mouse.</p>
+          <span class="notice-kicker">FRANTIC SEARCH // <span data-i18n="desktopOnly">SOLO DESKTOP</span></span>
+          <h2 id="desktop-only-title"><span data-i18n="desktopOnly">SOLO DESKTOP</span></h2>
+          <p data-i18n="desktopMessage">Este videojuego está diseñado para jugarse en una computadora con teclado y mouse.</p>
         </section>
         <section class="game-panel">
-          <div class="panel-head"><span><i></i> LIVE FEED // SECTOR 01</span><span id="game-state">STANDBY</span></div>
+          <div class="panel-head"><span><i></i> <span data-i18n="liveFeed">TRANSMISIÓN EN VIVO // SECTOR 01</span></span><span id="game-state" data-i18n="standby">EN ESPERA</span></div>
           
           <div class="canvas-wrap">
 <div class="game-setup">
-            <div class="character-picker" aria-label="Elegir personaje">
-            <button class="character-card active" data-character="blue" type="button">
-              <span class="character-number">01 / RAPTOR</span><span class="character-art blue-art"><img src="%BASE_URL%assets/sprites/blue-idle.svg" alt="" /></span>
-              <strong>BLUE</strong><small>VELOCIDAD · DOBLE SALTO · DASH</small>
-            </button>
-            <button class="character-card" data-character="vasti" type="button">
-              <span class="character-number">02 / TITAN</span><span class="character-art vasti-art"><img src="%BASE_URL%assets/sprites/vasti-idle.svg" alt="" /></span>
-              <strong>VASTI</strong><small>FUERZA · PISOTÓN DE IMPACTO</small>
-            </button>
-          </div>
             <div class="mission-details">
               <div class="mission-brief">
-            <div class="brief-icon">⌖</div><div><span class="eyebrow">MISIÓN PRINCIPAL</span><p>Encontrar y rescatar a <b>BETA</b>. Los cazadores furtivos la trasladan hacia un punto de extracción clandestino.</p></div>
-          </div>
+                <div class="brief-icon">⌖</div>
+                <div>
+                  <span class="eyebrow" data-i18n="mainMission">MISIÓN PRINCIPAL</span>
+                  <p><span data-i18n="missionStart">Encontrar y rescatar a</span> <b>BETA</b><span data-i18n="missionEnd">. Los cazadores furtivos la trasladan hacia un punto de extracción clandestino.</span></p>
+                </div>
+              </div>
               <div class="mission-actions">
-                <button id="start-button" class="start-button" type="button"><span>INICIAR OPERACIÓN</span><b>→</b></button>
-                <p class="controls-note">A / D MOVER <span>·</span> ESPACIO / ↑ SALTAR <span>·</span> ↓ AGACHARSE <span>·</span> X HABILIDAD <span>·</span> E INTERACTUAR <span>·</span> P PAUSAR</p>
+                <button id="start-button" class="start-button" type="button"><span data-i18n="play">JUGAR</span><b>→</b></button>
+                <p class="controls-note" data-i18n="controls">A / D MOVER · ESPACIO / ↑ SALTAR · ↓ AGACHARSE · X HABILIDAD · E INTERACTUAR · P PAUSAR</p>
               </div>
             </div>
           </div>
@@ -50,21 +66,44 @@
             <div id="overlay" class="game-overlay">
               <div class="overlay-content"><span class="overlay-kicker">FRANTIC SEARCH</span><h2>THE WILD<br><em>IS WATCHING.</em></h2><p>Prepará el equipo. Beta necesita que lleguemos.</p><button id="overlay-start" type="button" hidden>CONTINUAR <span>↗</span></button></div>
             </div>
+            <section id="dino-modal" class="dino-modal hidden" role="dialog" aria-modal="true" aria-labelledby="dino-modal-title">
+              <div class="dino-dialog">
+                <span class="dialog-kicker" data-i18n="selectDinosaur">ELEGÍ TU DINOSAURIO</span>
+                <h2 id="dino-modal-title" data-i18n="selectDinosaur">ELEGÍ TU DINOSAURIO</h2>
+                <p class="dialog-description" data-i18n="selectDinosaurHelp">Seleccioná el dinosaurio con el que querés comenzar la operación.</p>
+                <div class="character-picker" aria-label="Elegir personaje">
+                  <button class="character-card active" data-character="blue" type="button" aria-pressed="true">
+                    <span class="character-number">01 / RAPTOR</span>
+                    <span class="character-art blue-art"><img src="%BASE_URL%assets/sprites/blue-idle.svg" alt="" /></span>
+                    <strong>BLUE</strong><small data-i18n="blueAbility">VELOCIDAD · DOBLE SALTO · EMBESTIDA</small>
+                  </button>
+                  <button class="character-card" data-character="vasti" type="button" aria-pressed="false">
+                    <span class="character-number">02 / TITAN</span>
+                    <span class="character-art vasti-art"><img src="%BASE_URL%assets/sprites/vasti-idle.svg" alt="" /></span>
+                    <strong>VASTI</strong><small data-i18n="vastiAbility">FUERZA · PISOTÓN DE IMPACTO</small>
+                  </button>
+                </div>
+                <div class="dialog-actions">
+                  <button id="cancel-character" class="dialog-back" type="button" data-i18n="back">VOLVER</button>
+                  <button id="confirm-character" class="dialog-confirm" type="button"><span data-i18n="confirmPlay">CONFIRMAR Y JUGAR</span><b>→</b></button>
+                </div>
+              </div>
+            </section>
             <section id="story-panel" class="story-panel hidden" role="dialog" aria-modal="true" aria-labelledby="story-title">
               <div class="story-card">
-                <p class="story-kicker">MISSION LOG</p>
+                <p class="story-kicker" data-i18n="missionLog">REGISTRO DE MISIÓN</p>
                 <h2 id="story-title">OPERATION: LOST HATCHLING</h2>
                 <p id="story-speaker" class="story-speaker">MISSION CONTROL</p>
                 <p id="story-text" class="story-text"></p>
-                <div class="story-actions"><span id="story-progress">1 / 1</span><button id="story-next" type="button">CONTINUAR ↗</button></div>
+                <div class="story-actions"><span id="story-progress">1 / 1</span><button id="story-next" type="button" data-i18n="continue">CONTINUAR ↗</button></div>
               </div>
             </section>
           
 <div class="hud-strip">
-            <div><small>DISTANCIA</small><b id="distance">0000 m</b></div>
-            <div><small>RESCATOS</small><b id="rescues">00</b></div>
-            <div><small>RÉCORD</small><b id="best">0000 m</b></div>
-            <div class="objective"><small id="campaign-chapter">COASTAL HIGHWAY</small><b id="campaign-objective">FOLLOW THE CONVOY</b><small id="ability-status" class="ability-readout">HABILIDAD LISTA</small><small id="health-status" class="health-readout">INTEGRIDAD 03/03</small><small id="interaction-hint" class="interaction-readout"></small></div>
+            <div><small data-i18n="distance">DISTANCIA</small><b id="distance">0000 m</b></div>
+            <div><small data-i18n="rescues">RESCATOS</small><b id="rescues">00</b></div>
+            <div><small data-i18n="record">RÉCORD</small><b id="best">0000 m</b></div>
+            <div class="objective"><small id="campaign-chapter">COASTAL HIGHWAY</small><b id="campaign-objective">FOLLOW THE CONVOY</b><small id="ability-status" class="ability-readout" data-i18n="abilityReady">HABILIDAD LISTA</small><small id="health-status" class="health-readout">INTEGRIDAD 03/03</small><small id="interaction-hint" class="interaction-readout"></small></div>
           </div>
 </div>
 
