@@ -4,7 +4,10 @@ export class PlatformWorld {
     this.sectionLength = 1500;
     this.platforms = [];
     this.obstacles = [];
+    this.hunterSpawns = [];
+    this.allySpawns = [];
     this.generatedSections = 0;
+    this.bridgeSequence = 0;
     this.extendTo(2800);
   }
 
@@ -19,7 +22,6 @@ export class PlatformWorld {
     const start = index * this.sectionLength;
     const floorHeight = 110;
 
-    // Each section has a deliberate gap; elevated ledges provide alternate routes.
     this.platforms.push(
       { x: start, y: this.groundY, w: 730, h: floorHeight, kind: "ground" },
       { x: start + 900, y: this.groundY, w: 620, h: floorHeight, kind: "ground" },
@@ -31,9 +33,9 @@ export class PlatformWorld {
 
     const obstacleSet = [
       { offset: 445, type: index % 3 === 0 ? "crate" : "rock", w: 52, h: 52 },
-      { offset: 1050, type: "hunter", w: 43, h: 72 },
       { offset: 1320, type: index % 2 === 0 ? "crate" : "rock", w: 55, h: 58 }
     ];
+
     for (const item of obstacleSet) {
       this.obstacles.push({
         ...item,
@@ -42,12 +44,84 @@ export class PlatformWorld {
         passed: false
       });
     }
+
+    this.hunterSpawns.push({
+      id: "hunter-" + index,
+      x: start + 1045,
+      patrolStart: start + 955,
+      patrolEnd: start + 1270,
+      carriesCaptive: true
+    });
+
+    if (index % 3 === 0) {
+      this.allySpawns.push({
+        id: "ferrucutus-" + index,
+        x: start + 500
+      });
+    }
+  }
+
+  update(delta) {
+    for (const platform of this.platforms) {
+      if (platform.kind === "ally-bridge") platform.remaining -= delta;
+    }
+    this.platforms = this.platforms.filter((platform) =>
+      platform.kind !== "ally-bridge" || platform.remaining > 0
+    );
+  }
+
+  gapAhead(worldX, maxDistance = 390) {
+    const grounds = this.platforms
+      .filter((platform) => platform.kind === "ground")
+      .sort((a, b) => a.x - b.x);
+    const current = grounds.find((platform) =>
+      platform.x <= worldX && platform.x + platform.w >= worldX
+    );
+    if (!current) return null;
+
+    const next = grounds.find((platform) => platform.x >= current.x + current.w);
+    if (!next) return null;
+
+    const start = current.x + current.w;
+    const end = next.x;
+    const width = end - start;
+    if (start < worldX || start - worldX > maxDistance || width <= 12 || width > 340) return null;
+
+    return { start, end, width };
+  }
+
+  createSupportBridge(start, end, duration = 6.5) {
+    const width = end - start;
+    if (width <= 12 || width > 340) return null;
+
+    const id = "ally-bridge-" + (++this.bridgeSequence);
+    const bridge = {
+      id,
+      x: start,
+      y: this.groundY,
+      w: width,
+      h: 18,
+      kind: "ally-bridge",
+      remaining: duration
+    };
+    this.platforms.push(bridge);
+    return { id, start, end, duration };
+  }
+
+  removeSupportBridge(id) {
+    this.platforms = this.platforms.filter((platform) => platform.id !== id);
   }
 
   pruneBehind(worldX, retain = 1400) {
     const cutoff = worldX - retain;
-    this.platforms = this.platforms.filter((platform) => platform.x + platform.w >= cutoff);
-    this.obstacles = this.obstacles.filter((obstacle) => obstacle.x + obstacle.w >= cutoff);
+    this.platforms = this.platforms.filter((platform) =>
+      platform.x + platform.w >= cutoff
+    );
+    this.obstacles = this.obstacles.filter((obstacle) =>
+      obstacle.x + obstacle.w >= cutoff
+    );
+    this.hunterSpawns = this.hunterSpawns.filter((spawn) => spawn.x >= cutoff);
+    this.allySpawns = this.allySpawns.filter((spawn) => spawn.x >= cutoff);
   }
 
   platformsNear(worldX, range = 1200) {
