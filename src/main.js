@@ -371,6 +371,24 @@ function syncEncounters() {
   }
 }
 
+function pruneEncounterBookkeeping() {
+  const activeHunterIds = new Set([
+    ...world.hunterSpawns.map((spawn) => spawn.id),
+    ...hunters.map((hunter) => hunter.id)
+  ]);
+  const activeAllyIds = new Set([
+    ...world.allySpawns.map((spawn) => spawn.id),
+    ...allies.map((ally) => ally.id)
+  ]);
+
+  for (const id of seenHunterSpawns) {
+    if (!activeHunterIds.has(id)) seenHunterSpawns.delete(id);
+  }
+  for (const id of seenAllySpawns) {
+    if (!activeAllyIds.has(id)) seenAllySpawns.delete(id);
+  }
+}
+
 function registerHunterResult(hunter, result) {
   if (!result || !result.hit) return;
   if (result.defeated) {
@@ -487,6 +505,7 @@ function update(delta) {
 
   allies = allies.filter((ally) => !ally.departed);
   hunters = hunters.filter((hunter) => hunter.x + hunter.w >= cameraX - 1100);
+  pruneEncounterBookkeeping();
   if (player.dashTimer <= 0) dashHitIds.clear();
   handleAbilityImpact();
 
