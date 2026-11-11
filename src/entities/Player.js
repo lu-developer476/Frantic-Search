@@ -19,6 +19,8 @@ export class Player {
     this.abilityCooldown = 0;
     this.isSlamming = false;
     this.shockwavePending = false;
+    this.jumpEvent = false;
+    this.abilityEvent = null;
     this.setCharacter(character);
     this.y = groundY - this.h;
   }
@@ -39,6 +41,8 @@ export class Player {
   }
 
   update(delta, input) {
+    this.jumpEvent = false;
+    this.abilityEvent = null;
     this.invulnerable = Math.max(0, this.invulnerable - delta);
     this.dashTimer = Math.max(0, this.dashTimer - delta);
     this.abilityCooldown = Math.max(0, this.abilityCooldown - delta);
@@ -61,8 +65,11 @@ export class Player {
     }
     this.duck = wantsDuck;
 
-    if (input.consume("jump")) this.jump();
-    if (input.consume("ability")) this.useAbility();
+    if (input.consume("jump") && this.jump()) this.jumpEvent = true;
+    if (input.consume("ability")) {
+      const groundedBeforeAbility = this.onGround;
+      if (this.useAbility()) this.abilityEvent = this.character === "blue" ? "dash" : groundedBeforeAbility ? "stomp" : "slam";
+    }
   }
 
   jump() {
@@ -102,6 +109,18 @@ export class Player {
     this.jumpCount = 0;
     if (this.isSlamming) this.shockwavePending = true;
     this.isSlamming = false;
+  }
+
+  consumeJumpEvent() {
+    const triggered = this.jumpEvent;
+    this.jumpEvent = false;
+    return triggered;
+  }
+
+  consumeAbilityEvent() {
+    const event = this.abilityEvent;
+    this.abilityEvent = null;
+    return event;
   }
 
   consumeShockwave() {
