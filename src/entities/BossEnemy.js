@@ -45,6 +45,11 @@ export class BossEnemy {
     return this.health <= Math.ceil(this.maxHealth * 0.5) ? 2 : 1;
   }
 
+  get isVulnerable() {
+    return this.active && !this.defeated &&
+      (this.state === "recovering" || this.state === "stunned");
+  }
+
   activate() {
     if (this.defeated) return false;
     this.active = true;
@@ -118,8 +123,8 @@ export class BossEnemy {
     return null;
   }
 
-  beginAttack(distance) {
-    this.attackName = this.chooseAttack(distance);
+  beginAttack(distance, target) {
+    this.attackName = this.chooseAttack(distance, target);
     this.state = "telegraph";
     this.stateTimer = this.telegraphDuration();
     this.warning = true;
@@ -146,10 +151,17 @@ export class BossEnemy {
   onAttack() {}
 
   takeDamage(amount = 1) {
-    if (this.defeated || !this.active || amount <= 0 || this.damageCooldown > 0) {
-      return { hit: false, defeated: this.defeated };
+    if (
+      this.defeated ||
+      !this.active ||
+      amount <= 0 ||
+      this.damageCooldown > 0 ||
+      !this.isVulnerable
+    ) {
+      return { hit: false, defeated: this.defeated, blocked: !this.isVulnerable };
     }
 
+    const previousPhase = this.phase;
     this.health = Math.max(0, this.health - amount);
     this.damageCooldown = 0.22;
 
@@ -169,7 +181,7 @@ export class BossEnemy {
     return {
       hit: true,
       defeated: false,
-      phaseChanged: this.health === Math.ceil(this.maxHealth * 0.5)
+      phaseChanged: this.phase !== previousPhase
     };
   }
 
