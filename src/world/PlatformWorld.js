@@ -44,6 +44,12 @@ export class PlatformWorld {
     }
   }
 
+  pruneBehind(worldX, retain = 1400) {
+    const cutoff = worldX - retain;
+    this.platforms = this.platforms.filter((platform) => platform.x + platform.w >= cutoff);
+    this.obstacles = this.obstacles.filter((obstacle) => obstacle.x + obstacle.w >= cutoff);
+  }
+
   platformsNear(worldX, range = 1200) {
     return this.platforms.filter((platform) =>
       platform.x + platform.w >= worldX - 120 &&
