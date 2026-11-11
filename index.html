@@ -12,21 +12,21 @@
       <header class="topbar">
         <a class="brand" href="#" aria-label="Frantic Search inicio"><span>FRANTIC <span class="brand-dot">SEARCH</span></span></a>
         <div class="nav-actions">
-          <button class="sound-toggle" id="sound-toggle" type="button" aria-label="Activar o desactivar sonido"><span id="sound-icon">♫</span> <span id="sound-label" data-i18n="sound">SONIDO</span></button>
+          <button class="sound-toggle" id="sound-toggle" type="button" aria-label="Activar o desactivar sonido" data-i18n-aria="sound"><span id="sound-icon">♫</span> <span id="sound-label" data-i18n="sound">SONIDO</span></button>
           <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav-menu" data-i18n-aria="openMenu">
             <span></span><span></span><span></span>
           </button>
-          <nav id="nav-menu" class="nav-menu hidden" aria-label="Menú principal">
+          <nav id="nav-menu" class="nav-menu hidden" aria-label="Menú principal" data-i18n-aria="menu">
             <div class="menu-section">
               <p data-i18n="language">IDIOMA</p>
-              <div class="menu-options" role="group" aria-label="Idioma">
+              <div class="menu-options" role="group" aria-label="Idioma" data-i18n-aria="language">
                 <button type="button" data-language="es" class="menu-option active" aria-pressed="true">ESPAÑOL</button>
                 <button type="button" data-language="en" class="menu-option" aria-pressed="false">ENGLISH</button>
               </div>
             </div>
             <div class="menu-section">
               <p data-i18n="environmentMode">MODO AMBIENTAL</p>
-              <div class="menu-options mode-options" role="group" aria-label="Modo ambiental">
+              <div class="menu-options mode-options" role="group" aria-label="Modo ambiental" data-i18n-aria="environmentMode">
                 <button type="button" data-mode="normal" class="menu-option active" aria-pressed="true" data-i18n="normal">NORMAL</button>
                 <button type="button" data-mode="mud" class="menu-option" aria-pressed="false" data-i18n="mud">FANGO</button>
                 <button type="button" data-mode="fog" class="menu-option" aria-pressed="false" data-i18n="fog">NEBLINA</button>
@@ -71,7 +71,7 @@
                 <span class="dialog-kicker" data-i18n="selectDinosaur">ELEGÍ TU DINOSAURIO</span>
                 <h2 id="dino-modal-title" data-i18n="selectDinosaur">ELEGÍ TU DINOSAURIO</h2>
                 <p class="dialog-description" data-i18n="selectDinosaurHelp">Seleccioná el dinosaurio con el que querés comenzar la operación.</p>
-                <div class="character-picker" aria-label="Elegir personaje">
+                <div class="character-picker" aria-label="Elegir personaje" data-i18n-aria="selectDinosaur">
                   <button class="character-card active" data-character="blue" type="button" aria-pressed="true">
                     <span class="character-number">01 / RAPTOR</span>
                     <span class="character-art blue-art"><img src="%BASE_URL%assets/sprites/blue-idle.svg" alt="" /></span>
