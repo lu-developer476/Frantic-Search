@@ -1,10 +1,7 @@
 import { defineConfig } from "vite";
 
-const repositoryName = process.env.GITHUB_REPOSITORY?.split("/")[1] || "Avoid";
-const isGitHubPages = process.env.GITHUB_PAGES === "true";
-
 export default defineConfig({
-  base: isGitHubPages ? "/" + repositoryName + "/" : "/",
+  base: "/",
   build: {
     outDir: "dist",
     emptyOutDir: true,
