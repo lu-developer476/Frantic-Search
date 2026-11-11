@@ -17,4 +17,13 @@ export class CollisionSystem {
       player.y + player.h - 4 > obstacle.y + 5
     );
   }
+
+  static hunterAttackHit(player, hunter) {
+    const attack = hunter.attackBox;
+    return attack ? CollisionSystem.overlaps(player, attack, 7) : false;
+  }
+
+  static bodyHit(a, b) {
+    return CollisionSystem.overlaps(a, b, 8);
+  }
 }
