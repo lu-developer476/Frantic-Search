@@ -4,6 +4,8 @@ import { AudioManager } from "./audio/AudioManager.js";
 import { SaveManager } from "./storage/SaveManager.js";
 import { InputManager } from "./core/InputManager.js";
 import { Player } from "./entities/Player.js";
+import { HunterEnemy } from "./entities/HunterEnemy.js";
+import { FerrucutusAlly } from "./entities/FerrucutusAlly.js";
 import { PhysicsSystem } from "./systems/PhysicsSystem.js";
 import { CollisionSystem } from "./systems/CollisionSystem.js";
 import { PlatformWorld } from "./world/PlatformWorld.js";
@@ -16,6 +18,7 @@ const distanceLabel = document.querySelector("#distance");
 const rescuesLabel = document.querySelector("#rescues");
 const bestLabel = document.querySelector("#best");
 const abilityLabel = document.querySelector("#ability-status");
+const healthLabel = document.querySelector("#health-status");
 
 const save = new SaveManager();
 const audio = new AudioManager();
@@ -33,6 +36,11 @@ let rescues = 0;
 let cameraX = 0;
 let player = new Player(selected, GAME.playerX, GAME.groundY);
 let world = new PlatformWorld(GAME.groundY);
+let hunters = [];
+let allies = [];
+let seenHunterSpawns = new Set();
+let seenAllySpawns = new Set();
+let dashHitIds = new Set();
 let particles = [];
 
 const rand = (min, max) => min + Math.random() * (max - min);
@@ -147,6 +155,17 @@ function drawPlatform(platform) {
     }
     return;
   }
+  if (platform.kind === "ally-bridge") {
+    ctx.fillStyle = "#8b9b70";
+    roundedRect(ctx, platform.x, platform.y, platform.w, platform.h, 5);
+    ctx.fillStyle = "#d8f36a";
+    ctx.fillRect(platform.x + 3, platform.y + 2, platform.w - 6, 3);
+    ctx.fillStyle = "#47563b";
+    for (let x = platform.x + 12; x < platform.x + platform.w - 8; x += 28) {
+      ctx.fillRect(x, platform.y + 7, 12, 3);
+    }
+    return;
+  }
   ctx.fillStyle = "#435543";
   roundedRect(ctx, platform.x, platform.y, platform.w, platform.h, 5);
   ctx.fillStyle = "#9aa276";
@@ -206,10 +225,194 @@ function burst(x, y, color = "#d8f36a", count = 12) {
   }
 }
 
+
+function drawFerrucutus(ally) {
+  const x = ally.x;
+  const y = ally.y;
+  const phase = elapsed * 7;
+  const step = Math.sin(phase) * 6;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.fillStyle = "#a9a477";
+  ctx.beginPath();
+  ctx.moveTo(26, 43);
+  ctx.lineTo(-18, 29);
+  ctx.lineTo(4, 52);
+  ctx.fill();
+  roundedRect(ctx, 21, 29, 59, 31, 15);
+  ctx.fillStyle = "#b8b58a";
+  ctx.beginPath();
+  ctx.ellipse(77, 29, 26, 22, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#7e8761";
+  ctx.beginPath();
+  ctx.moveTo(61, 20);
+  ctx.lineTo(51, 1);
+  ctx.lineTo(72, 15);
+  ctx.lineTo(88, -4);
+  ctx.lineTo(89, 18);
+  ctx.lineTo(109, 16);
+  ctx.lineTo(96, 31);
+  ctx.lineTo(64, 39);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#e1d7ad";
+  ctx.lineWidth = 5;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(67, 17);
+  ctx.lineTo(53, 3);
+  ctx.moveTo(90, 16);
+  ctx.lineTo(103, 2);
+  ctx.stroke();
+  ctx.fillStyle = "#27352b";
+  ctx.beginPath();
+  ctx.arc(88, 24, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#858c62";
+  ctx.lineWidth = 9;
+  ctx.beginPath();
+  ctx.moveTo(38, 54);
+  ctx.lineTo(35 + step, 70);
+  ctx.moveTo(68, 54);
+  ctx.lineTo(70 - step, 70);
+  ctx.stroke();
+  ctx.restore();
+
+  if (ally.state === "brace" || ally.state === "bridge") {
+    ctx.fillStyle = "#d8f36a";
+    ctx.font = "10px monospace";
+    ctx.fillText("FERRUCUTUS // SUPPORT", x - 15, y - 14);
+  } else if (ally.state === "charge") {
+    ctx.fillStyle = "#e8c58a";
+    ctx.font = "10px monospace";
+    ctx.fillText("ALLY ATTACK", x + 8, y - 14);
+  }
+}
+
+function drawHunter(hunter) {
+  ctx.save();
+  const x = hunter.x;
+  const y = hunter.y;
+  const alert = hunter.state === "windup" || hunter.state === "attack";
+  const stunned = hunter.state === "stunned";
+  const defeated = hunter.defeated;
+
+  ctx.globalAlpha = defeated ? 0.48 : 1;
+  ctx.fillStyle = defeated ? "#4f5a50" : "#343c37";
+  roundedRect(ctx, x + 8, y + 18, 24, 39, 5);
+  ctx.fillStyle = "#b6a083";
+  ctx.beginPath();
+  ctx.arc(x + 20, y + 11, 11, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#202a28";
+  ctx.fillRect(x + 7, y + 4, 26, 7);
+  ctx.fillStyle = "#a3a58e";
+  ctx.fillRect(x + 8, y + 27, 7, 23);
+  ctx.fillRect(x + 25, y + 27, 7, 23);
+  ctx.strokeStyle = "#303a35";
+  ctx.lineWidth = 7;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x + 14, y + 53);
+  ctx.lineTo(x + 11, y + 64);
+  ctx.moveTo(x + 26, y + 53);
+  ctx.lineTo(x + 30, y + 64);
+  ctx.stroke();
+
+  if (alert && !defeated) {
+    ctx.fillStyle = "#ed8e55";
+    ctx.fillRect(x + 17, y - 10, 5, 13);
+    ctx.beginPath();
+    ctx.arc(x + 19.5, y + 7, 2, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (stunned) {
+    ctx.fillStyle = "#d8f36a";
+    ctx.font = "16px monospace";
+    ctx.fillText("✳", x + 12, y - 3);
+  } else if (defeated) {
+    ctx.fillStyle = "#d8f36a";
+    ctx.font = "9px monospace";
+    ctx.fillText("CAPTIVE FREE", x - 14, y - 8);
+  }
+
+  if (!defeated) {
+    ctx.fillStyle = "#17201a";
+    ctx.fillRect(x + 5, y - 18, 30, 4);
+    ctx.fillStyle = hunter.health > 1 ? "#d8f36a" : "#ed8e55";
+    ctx.fillRect(x + 5, y - 18, 30 * hunter.health / 2, 4);
+  }
+  ctx.restore();
+
+  const attack = hunter.attackBox;
+  if (attack) {
+    ctx.fillStyle = "#ed8e5528";
+    ctx.fillRect(attack.x, attack.y, attack.w, attack.h);
+  }
+}
+
+function syncEncounters() {
+  for (const spawn of world.hunterSpawns) {
+    if (seenHunterSpawns.has(spawn.id)) continue;
+    seenHunterSpawns.add(spawn.id);
+    hunters.push(new HunterEnemy({
+      ...spawn,
+      groundY: GAME.groundY
+    }));
+  }
+
+  for (const spawn of world.allySpawns) {
+    if (seenAllySpawns.has(spawn.id)) continue;
+    seenAllySpawns.add(spawn.id);
+    allies.push(new FerrucutusAlly({
+      ...spawn,
+      groundY: GAME.groundY
+    }));
+  }
+}
+
+function registerHunterResult(hunter, result) {
+  if (!result || !result.hit) return;
+  if (result.defeated) {
+    if (result.rescued) {
+      rescues += 1;
+      audio.rescue();
+      burst(hunter.x + hunter.w / 2, hunter.y + 12, "#d8f36a", 22);
+    } else {
+      audio.hit();
+      burst(hunter.x + hunter.w / 2, hunter.y + 12, "#e8a77d", 16);
+    }
+  } else {
+    audio.hit();
+    burst(hunter.x + hunter.w / 2, hunter.y + hunter.h / 2, "#e8a77d", 9);
+  }
+}
+
+function damageHunter(hunter, amount, source) {
+  if (hunter.defeated) return;
+  const result = hunter.takeDamage(amount);
+  registerHunterResult(hunter, result);
+  if (source === "blue-dash" && result.hit) {
+    dashHitIds.add(hunter.id);
+  }
+}
+
+function damagePlayer() {
+  if (!player.takeHit()) return;
+  audio.hit();
+  burst(player.x + player.w / 2, player.y + player.h / 2, "#ed8e55", 15);
+  if (player.health <= 0) endGame();
+}
+
 function handleAbilityImpact() {
   if (!player.consumeShockwave()) return;
   const radius = 190;
   let destroyed = 0;
+  for (const hunter of hunters) {
+    if (!hunter.defeated && Math.abs(hunter.x + hunter.w / 2 - (player.x + player.w / 2)) < radius) {
+      damageHunter(hunter, 2, "vasti-stomp");
+    }
+  }
   world.obstacles = world.obstacles.filter((obstacle) => {
     const close = Math.abs(obstacle.x + obstacle.w / 2 - (player.x + player.w / 2)) < radius;
     const sameLevel = Math.abs(obstacle.y - (player.y + player.h - obstacle.h)) < 105;
@@ -225,6 +428,96 @@ function handleAbilityImpact() {
 }
 
 function update(delta) {
+  if (!running || paused) return;
+  elapsed += delta;
+  world.update(delta);
+
+  player.update(delta, input);
+  if (player.consumeJumpEvent()) audio.jump();
+  const abilityEvent = player.consumeAbilityEvent();
+  if (abilityEvent === "dash" || abilityEvent === "stomp") audio.collect();
+  if (abilityEvent === "slam") audio.hit();
+
+  const physicsResult = physics.step(player, delta, world.platformsNear(player.x));
+  if (physicsResult.fell) {
+    endGame();
+    return;
+  }
+
+  world.extendTo(player.x + 2800);
+  world.pruneBehind(player.x);
+  syncEncounters();
+  distance = Math.max(0, player.x - GAME.playerX);
+  cameraX = Math.max(0, player.x - 330);
+
+  for (const hunter of hunters) {
+    const previousState = hunter.state;
+    hunter.update(delta, player);
+    if (previousState !== hunter.state && hunter.state === "windup") audio.collect();
+
+    if (
+      abilityEvent === "dash" &&
+      player.dashTimer > 0 &&
+      !hunter.defeated &&
+      !dashHitIds.has(hunter.id) &&
+      CollisionSystem.bodyHit(player, hunter)
+    ) {
+      damageHunter(hunter, 1, "blue-dash");
+    }
+
+    if (
+      !hunter.defeated &&
+      (CollisionSystem.hunterAttackHit(player, hunter) ||
+        ((hunter.state === "pursuit" || hunter.state === "attack") && CollisionSystem.bodyHit(player, hunter)))
+    ) {
+      damagePlayer();
+      if (player.health <= 0) return;
+    }
+  }
+
+  for (const ally of allies) {
+    const event = ally.update(delta, player, world, hunters);
+    if (event?.type === "ally-strike") {
+      registerHunterResult(event.enemy, event.result);
+      audio.collect();
+    } else if (event?.type === "bridge-created") {
+      audio.rescue();
+      burst(event.bridge.start + (event.bridge.end - event.bridge.start) / 2, GAME.groundY - 8, "#d8f36a", 16);
+    }
+  }
+
+  if (player.dashTimer <= 0) dashHitIds.clear();
+  handleAbilityImpact();
+
+  for (const obstacle of world.obstacles) {
+    if (CollisionSystem.obstacleHit(player, obstacle)) {
+      damagePlayer();
+      if (player.health <= 0) return;
+    }
+  }
+
+  for (const particle of particles) {
+    particle.x += particle.vx * delta;
+    particle.y += particle.vy * delta;
+    particle.vy += 600 * delta;
+    particle.life -= delta;
+  }
+  particles = particles.filter((particle) => particle.life > 0);
+
+  distanceLabel.textContent = Math.floor(distance).toString().padStart(4, "0") + " m";
+  rescuesLabel.textContent = String(rescues).padStart(2, "0");
+  bestLabel.textContent = Math.floor(best()).toString().padStart(4, "0") + " m";
+  if (abilityLabel) {
+    const ready = player.abilityCooldown <= 0;
+    abilityLabel.textContent = ready ? "HABILIDAD LISTA" : "RECARGA " + player.abilityCooldown.toFixed(1) + "s";
+    abilityLabel.classList.toggle("ready", ready);
+  }
+  if (healthLabel) {
+    healthLabel.textContent = "INTEGRIDAD " + String(player.health).padStart(2, "0") + "/03";
+  }
+}
+
+
   if (!running || paused) return;
   elapsed += delta;
   player.update(delta, input);
@@ -283,6 +576,12 @@ function render() {
   ctx.translate(-cameraX, 0);
   for (const platform of world.visiblePlatforms(cameraX, GAME.width)) drawPlatform(platform);
   for (const obstacle of world.visibleObstacles(cameraX, GAME.width)) drawObstacle(obstacle);
+  for (const hunter of hunters) {
+    if (hunter.x + hunter.w >= cameraX - 90 && hunter.x <= cameraX + GAME.width + 90) drawHunter(hunter);
+  }
+  for (const ally of allies) {
+    if (ally.x + ally.w >= cameraX - 100 && ally.x <= cameraX + GAME.width + 100) drawFerrucutus(ally);
+  }
   for (const particle of particles) {
     ctx.globalAlpha = Math.max(0, particle.life / particle.max);
     ctx.fillStyle = particle.color;
@@ -322,6 +621,8 @@ function render() {
   ctx.fillStyle = "#d2a27d";
   ctx.font = "10px monospace";
   ctx.fillText(selected === "blue" ? "BLUE // DOUBLE JUMP + DASH" : "VASTI // HEAVY STOMP", 24, GAME.height - 18);
+  ctx.fillStyle = "#d8f36a";
+  ctx.fillText("FERRUCUTUS SUPPORT // HUNTER AI ACTIVE", GAME.width - 292, GAME.height - 18);
 }
 
 function frame(now) {
@@ -342,6 +643,12 @@ function frame(now) {
 function resetPlayer() {
   player = new Player(selected, GAME.playerX, GAME.groundY);
   world = new PlatformWorld(GAME.groundY);
+  hunters = [];
+  allies = [];
+  seenHunterSpawns = new Set();
+  seenAllySpawns = new Set();
+  dashHitIds = new Set();
+  syncEncounters();
   cameraX = 0;
   particles = [];
 }
@@ -358,6 +665,7 @@ function start() {
   rescues = 0;
   stateLabel.textContent = "IN PROGRESS";
   rescuesLabel.textContent = "00";
+  if (healthLabel) healthLabel.textContent = "INTEGRIDAD 03/03";
   last = performance.now();
   render();
   requestAnimationFrame(frame);
