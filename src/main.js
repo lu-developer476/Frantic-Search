@@ -48,7 +48,9 @@ function roundedRect(context, x, y, width, height, radius) {
 function drawDino(x, y, width, height, color, kind, phase = 0, alpha = 1) {
   ctx.save();
   ctx.globalAlpha = alpha;
-  ctx.translate(x, y);
+  const facing = arguments.length > 8 ? arguments[8] : 1;
+  ctx.translate(facing < 0 ? x + width : x, y);
+  if (facing < 0) ctx.scale(-1, 1);
   const leg = Math.sin(phase * 13) * 7;
   ctx.fillStyle = color;
   ctx.beginPath();
@@ -136,7 +138,7 @@ function drawBackground() {
 
 function drawPlatform(platform) {
   if (platform.kind === "ground") {
-    ctx.fillStyle = "#293a31";
+    ctx.fillStyle = level().ground;
     ctx.fillRect(platform.x, platform.y, platform.w, platform.h);
     ctx.fillStyle = "#89936b";
     ctx.fillRect(platform.x, platform.y, platform.w, 5);
@@ -230,6 +232,7 @@ function update(delta) {
   if (player.consumeJumpEvent()) audio.jump();
   const abilityEvent = player.consumeAbilityEvent();
   if (abilityEvent === "dash" || abilityEvent === "stomp") audio.collect();
+  if (abilityEvent === "slam") audio.hit();
   const physicsResult = physics.step(player, delta, world.platformsNear(player.x));
   handleAbilityImpact();
   if (physicsResult.fell) {
@@ -296,7 +299,7 @@ function render() {
   drawDino(
     companionX, companionY, companionWidth, companionHeight,
     companionIsBlue ? "#75a99b" : "#d2a27d",
-    companionIsBlue ? "blue" : "vasti", elapsed - 0.12, 0.95
+    companionIsBlue ? "blue" : "vasti", elapsed - 0.12, 0.95, player.facing
   );
 
   const isBlue = selected === "blue";
@@ -304,7 +307,7 @@ function render() {
   drawDino(
     player.x, player.y, player.w, player.h,
     isBlue ? "#75a99b" : "#d2a27d",
-    isBlue ? "blue" : "vasti", elapsed, blink ? 0.35 : 1
+    isBlue ? "blue" : "vasti", elapsed, blink ? 0.35 : 1, player.facing
   );
   if (player.dashTimer > 0) {
     ctx.fillStyle = "#d8f36a66";
