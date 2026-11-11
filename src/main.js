@@ -627,13 +627,29 @@ function drawBoss(boss) {
   }
 }
 
+function drawBossArenaBoundary() {
+  if (!activeBoss || activeBoss.defeated) return;
+  for (const boundaryX of [activeBoss.arenaMinX, activeBoss.arenaMaxX]) {
+    ctx.save();
+    ctx.globalAlpha = 0.62 + Math.sin(elapsed * 7) * 0.12;
+    ctx.fillStyle = "#d8f36a";
+    ctx.fillRect(boundaryX - 3, GAME.groundY - 224, 6, 224);
+    ctx.fillStyle = "#f7f2df";
+    ctx.fillRect(boundaryX - 1, GAME.groundY - 224, 2, 224);
+    ctx.globalAlpha = 0.14;
+    ctx.fillStyle = "#d8f36a";
+    ctx.fillRect(boundaryX - 18, GAME.groundY - 224, 36, 224);
+    ctx.restore();
+  }
+}
+
 function drawBossHud() {
   if (activeBoss && !activeBoss.defeated) {
     const barX = 250;
     const barY = 71;
     const barWidth = 460;
     ctx.fillStyle = "#101716dd";
-    ctx.fillRect(barX - 14, barY - 28, barWidth + 28, 50);
+    ctx.fillRect(barX - 14, barY - 28, barWidth + 28, 62);
     ctx.fillStyle = "#e8eee0";
     ctx.font = "12px monospace";
     ctx.textAlign = "center";
@@ -648,7 +664,14 @@ function drawBossHud() {
     ctx.fillRect(barX, barY, barWidth * (activeBoss.health / activeBoss.maxHealth), 9);
     ctx.fillStyle = "#b9c4b8";
     ctx.font = "9px monospace";
-    ctx.fillText("FASE " + activeBoss.phase, GAME.width / 2, barY + 25);
+    ctx.fillText("FASE " + activeBoss.phase, GAME.width / 2, barY + 23);
+    ctx.fillStyle = activeBoss.isVulnerable ? "#d8f36a" : "#a5b0a5";
+    ctx.font = "8px monospace";
+    ctx.fillText(
+      activeBoss.isVulnerable ? "VENTANA DE ATAQUE // EXPUESTO" : "ESPERÁ SU RECUPERACIÓN",
+      GAME.width / 2,
+      barY + 35
+    );
     ctx.textAlign = "start";
   }
 
@@ -767,9 +790,16 @@ function update(delta) {
     endGame();
     return;
   }
-  if (activeBoss && !activeBoss.defeated && player.x > activeBoss.arenaMaxX) {
-    player.x = activeBoss.arenaMaxX;
-    player.vx = Math.min(0, player.vx);
+  if (activeBoss && !activeBoss.defeated) {
+    const arenaLeft = activeBoss.arenaMinX;
+    const arenaRight = activeBoss.arenaMaxX - player.w;
+    if (player.x < arenaLeft) {
+      player.x = arenaLeft;
+      player.vx = Math.max(0, player.vx);
+    } else if (player.x > arenaRight) {
+      player.x = arenaRight;
+      player.vx = Math.min(0, player.vx);
+    }
   }
 
   world.extendTo(player.x + 2800);
@@ -826,10 +856,13 @@ function update(delta) {
   }
 
   for (const ally of allies) {
-    const event = ally.update(delta, player, world, hunters);
+    const event = ally.update(delta, player, world, hunters, activeBoss);
     if (event?.type === "ally-strike") {
       registerHunterResult(event.enemy, event.result);
       audio.collect();
+    } else if (event?.type === "ally-boss-strike") {
+      damageBoss(event.boss, 1, "ferrucutus");
+      burst(event.boss.x + event.boss.w / 2, event.boss.y + event.boss.h * 0.7, "#d8f36a", 10);
     } else if (event?.type === "bridge-created") {
       audio.rescue();
       burst(event.bridge.start + (event.bridge.end - event.bridge.start) / 2, GAME.groundY - 8, "#d8f36a", 16);
@@ -876,6 +909,7 @@ function render() {
   ctx.save();
   ctx.translate(-cameraX, 0);
   for (const platform of world.visiblePlatforms(cameraX, GAME.width)) drawPlatform(platform);
+  drawBossArenaBoundary();
   for (const obstacle of world.visibleObstacles(cameraX, GAME.width)) drawObstacle(obstacle);
   for (const hunter of hunters) {
     if (hunter.x + hunter.w >= cameraX - 90 && hunter.x <= cameraX + GAME.width + 90) drawHunter(hunter);
