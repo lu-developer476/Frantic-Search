@@ -4,3 +4,5 @@
 .canvas-wrap canvas{touch-action:none}.hud-strip .objective .ability-readout{display:block;margin-top:6px;font-size:7px;letter-spacing:.08em;color:#93a198}.hud-strip .objective .ability-readout.ready{color:#d8f36a}
 
 .touch-controls{display:none;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:10px;border-top:1px solid var(--line);background:#111b1b}.touch-controls button{height:40px;border:1px solid #59675a;background:#202d29;color:#e8f0df;font-family:'DM Mono';font-size:16px;touch-action:none;user-select:none}.touch-controls button[data-action='jump'],.touch-controls button[data-action='ability']{border-color:#82914d;color:var(--acid)}.touch-controls button.pressed{background:var(--acid);color:#17201a}@media(max-width:980px){.touch-controls{display:grid}}@media(min-width:981px){.touch-controls{display:none}}
+
+.hud-strip .objective .health-readout{display:block;margin-top:4px;font-size:7px;letter-spacing:.08em;color:#e8a77d}.hud-strip .objective .health-readout:empty{display:none}
