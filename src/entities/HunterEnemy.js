@@ -36,19 +36,28 @@ export class HunterEnemy {
       return null;
     }
 
-    if (this.state === "patrol" || this.state === "investigate") {
+    if (this.state === "patrol") {
       if (this.alerted && absoluteDistance < 340 && sameRoute) {
         this.state = "investigate";
-        if (this.stateTimer <= 0) {
-          this.state = "pursuit";
-          this.stateTimer = 0.35;
-        }
-      } else {
-        this.x += this.direction * 52 * delta;
-        if (this.x <= this.patrolStart || this.x + this.w >= this.patrolEnd) {
-          this.direction *= -1;
-          this.x = Math.max(this.patrolStart, Math.min(this.patrolEnd - this.w, this.x));
-        }
+        this.stateTimer = 0.42;
+        this.direction = distance >= 0 ? 1 : -1;
+        return "alert";
+      }
+
+      this.x += this.direction * 52 * delta;
+      if (this.x <= this.patrolStart || this.x + this.w >= this.patrolEnd) {
+        this.direction *= -1;
+        this.x = Math.max(this.patrolStart, Math.min(this.patrolEnd - this.w, this.x));
+      }
+      return null;
+    }
+
+    if (this.state === "investigate") {
+      if (absoluteDistance > 440 || !sameRoute) {
+        this.state = "patrol";
+        this.alerted = false;
+      } else if (this.stateTimer <= 0) {
+        this.state = "pursuit";
       }
       return null;
     }
