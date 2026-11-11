@@ -45,10 +45,9 @@ function roundedRect(context, x, y, width, height, radius) {
   context.fill();
 }
 
-function drawDino(x, y, width, height, color, kind, phase = 0, alpha = 1) {
+function drawDino(x, y, width, height, color, kind, phase = 0, alpha = 1, facing = 1) {
   ctx.save();
   ctx.globalAlpha = alpha;
-  const facing = arguments.length > 8 ? arguments[8] : 1;
   ctx.translate(facing < 0 ? x + width : x, y);
   if (facing < 0) ctx.scale(-1, 1);
   const leg = Math.sin(phase * 13) * 7;
