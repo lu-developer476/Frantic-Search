@@ -38,7 +38,7 @@ function spawn(){const roll=Math.random();const type=roll<.48?"rock":roll<.78?"c
 function burst(x,y,color="#d8f36a",count=12){for(let i=0;i<count;i++)particles.push({x,y,vx:rand(-170,170),vy:rand(-240,40),life:rand(.3,.7),max:.7,color,size:rand(2,5)})}
 function rects(a,b){return a.x+12<b.x+b.w-7&&a.x+a.w-12>b.x+7&&a.y+8<b.y+b.h-5&&a.y+a.h-4>b.y+5}
 function update(dt){if(!running||paused)return;elapsed+=dt;distance+=speed*dt/10;speed=Math.min(GAME.maxSpeed,GAME.baseSpeed+distance*.12);player.invulnerable=Math.max(0,player.invulnerable-dt);
-  const duck=keys.ArrowDown||keys.KeyS;player.duck=duck&&player.onGround;player.h=player.duck?42:66;player.y=GAME.groundY-player.h;
+  const duck=keys.ArrowDown||keys.KeyS;player.duck=duck&&player.onGround;player.h=player.duck?42:66;if(player.onGround)player.y=GAME.groundY-player.h;
   if((keys.Space||keys.ArrowUp||keys.KeyW)&&player.onGround&&!player.duck){player.vy=-690;player.onGround=false;audio.jump();keys.Space=keys.ArrowUp=keys.KeyW=false}
   player.vy+=GAME.gravity*dt;player.y+=player.vy*dt;if(player.y+player.h>=GAME.groundY){player.y=GAME.groundY-player.h;player.vy=0;player.onGround=true}
   companion.x=player.x-83;companion.y=GAME.groundY-57+Math.sin(elapsed*8)*2;
