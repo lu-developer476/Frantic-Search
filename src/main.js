@@ -18,6 +18,7 @@ import { FacilityConsole } from "./entities/FacilityConsole.js";
 import { SpriteRenderer } from "./rendering/SpriteRenderer.js";
 
 const canvas = document.querySelector("#game");
+const desktopPlayback = window.matchMedia("(min-width: 1024px) and (hover: hover) and (pointer: fine)");
 const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
 ctx.imageSmoothingEnabled = true;
 const spriteRenderer = new SpriteRenderer();
@@ -1377,7 +1378,9 @@ function resetPlayer() {
 }
 
 function start() {
+  if (!desktopPlayback.matches) return;
   audio.unlock();
+  overlay.querySelector("button").hidden = true;
   resetPlayer();
   music.start(audio.context, currentMusicTheme());
   music.setPaused(false);
@@ -1416,13 +1419,14 @@ function endGame() {
   overlay.querySelector(".overlay-kicker").textContent = "MISSION INTERRUPTED";
   overlay.querySelector("h2").innerHTML = "THE WILD<br><em>STRIKES BACK.</em>";
   overlay.querySelector("p").textContent = "Distancia: " + Math.floor(distance) + " m · Rescates: " + rescues + ". Volvé a intentarlo.";
+  overlay.querySelector("button").hidden = false;
   overlay.querySelector("button").textContent = "REINTENTAR ↗";
   overlay.classList.remove("hidden");
   render();
 }
 
 function togglePause() {
-  if (!running) return;
+  if (!desktopPlayback.matches || !running) return;
   paused = !paused;
   music.setPaused(paused);
   stateLabel.textContent = paused ? "PAUSED" : "IN PROGRESS";
@@ -1430,9 +1434,11 @@ function togglePause() {
     overlay.querySelector(".overlay-kicker").textContent = "OPERATION PAUSED";
     overlay.querySelector("h2").innerHTML = "CATCH YOUR<br><em>BREATH.</em>";
     overlay.querySelector("p").textContent = "La operación está en pausa.";
+    overlay.querySelector("button").hidden = false;
     overlay.querySelector("button").textContent = "CONTINUAR ↗";
     overlay.classList.remove("hidden");
   } else {
+    overlay.querySelector("button").hidden = true;
     overlay.classList.add("hidden");
     accumulator = 0;
     last = performance.now();
@@ -1477,26 +1483,10 @@ document.querySelector("#sound-toggle").addEventListener("click", () => {
   save.update({ muted: !enabled });
 });
 window.addEventListener("keydown", (event) => {
+  if (!desktopPlayback.matches) return;
   if (event.code === "KeyP" && !event.repeat && !campaign.sceneOpen) togglePause();
   if (event.code === "Enter" && !event.repeat && campaign.sceneOpen) advanceStory();
   else if (event.code === "Enter" && !running && !paused) start();
-});
-
-document.querySelectorAll("[data-action]").forEach((button) => {
-  const action = button.dataset.action;
-  const release = () => {
-    input.setAction(action, false);
-    button.classList.remove("pressed");
-  };
-  button.addEventListener("pointerdown", (event) => {
-    event.preventDefault();
-    input.setAction(action, true);
-    button.classList.add("pressed");
-    button.setPointerCapture(event.pointerId);
-  });
-  button.addEventListener("pointerup", release);
-  button.addEventListener("pointercancel", release);
-  button.addEventListener("lostpointercapture", release);
 });
 
 bestLabel.textContent = String(save.get("bestDistance")).padStart(4, "0") + " m";
@@ -1509,5 +1499,41 @@ if (save.get("muted")) {
   document.querySelector("#sound-toggle").innerHTML = "♪ <span>SILENCIO</span>";
 }
 
+function syncDesktopAccess() {
+  const canPlay = desktopPlayback.matches;
+  const startButton = document.querySelector("#start-button");
+  const overlayStartButton = document.querySelector("#overlay-start");
+  startButton.disabled = !canPlay;
+  overlayStartButton.disabled = !canPlay;
+
+  if (!canPlay) {
+    if (running) {
+      running = false;
+      paused = false;
+      music.setPaused(true);
+      storyPanel.classList.add("hidden");
+    }
+    overlayStartButton.hidden = true;
+    stateLabel.textContent = "DESKTOP ONLY";
+    overlay.querySelector(".overlay-kicker").textContent = "DESKTOP REQUIRED";
+    overlay.querySelector("h2").innerHTML = "DESKTOP<br><em>ONLY.</em>";
+    overlay.querySelector("p").textContent = "Frantic Search se puede jugar únicamente en una computadora con teclado y mouse.";
+    overlay.classList.remove("hidden");
+    render();
+    return;
+  }
+
+  if (stateLabel.textContent === "DESKTOP ONLY") {
+    stateLabel.textContent = "STANDBY";
+    overlay.querySelector(".overlay-kicker").textContent = "FRANTIC SEARCH";
+    overlay.querySelector("h2").innerHTML = "THE WILD<br><em>IS WATCHING.</em>";
+    overlay.querySelector("p").textContent = "Prepará el equipo. Beta necesita que lleguemos.";
+    overlay.classList.remove("hidden");
+  }
+}
+
+desktopPlayback.addEventListener("change", syncDesktopAccess);
+
 selectCharacter(selected);
 render();
+syncDesktopAccess();
