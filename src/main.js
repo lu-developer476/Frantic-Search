@@ -1429,7 +1429,8 @@ document.querySelector("#sound-toggle").addEventListener("click", () => {
 });
 window.addEventListener("keydown", (event) => {
   if (event.code === "KeyP" && !event.repeat && !campaign.sceneOpen) togglePause();
-  if (event.code === "Enter" && !running && !paused) start();
+  if (event.code === "Enter" && !event.repeat && campaign.sceneOpen) advanceStory();
+  else if (event.code === "Enter" && !running && !paused) start();
 });
 
 document.querySelectorAll("[data-action]").forEach((button) => {
