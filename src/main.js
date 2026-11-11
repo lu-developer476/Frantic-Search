@@ -429,6 +429,23 @@ window.addEventListener("keydown", (event) => {
   if (event.code === "Enter" && !running && !paused) start();
 });
 
+document.querySelectorAll("[data-action]").forEach((button) => {
+  const action = button.dataset.action;
+  const release = () => {
+    input.setAction(action, false);
+    button.classList.remove("pressed");
+  };
+  button.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    input.setAction(action, true);
+    button.classList.add("pressed");
+    button.setPointerCapture(event.pointerId);
+  });
+  button.addEventListener("pointerup", release);
+  button.addEventListener("pointercancel", release);
+  button.addEventListener("lostpointercapture", release);
+});
+
 bestLabel.textContent = String(save.get("bestDistance")).padStart(4, "0") + " m";
 rescuesLabel.textContent = String(save.get("rescues")).padStart(2, "0");
 if (save.get("muted")) {
