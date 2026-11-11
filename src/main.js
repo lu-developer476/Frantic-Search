@@ -26,6 +26,7 @@ let selected = save.get("selectedCharacter");
 let running = false;
 let paused = false;
 let last = 0;
+let accumulator = 0;
 let elapsed = 0;
 let distance = 0;
 let rescues = 0;
@@ -234,6 +235,7 @@ function update(delta) {
   }
 
   world.extendTo(player.x + 2800);
+  world.pruneBehind(player.x);
   distance = Math.max(0, player.x - GAME.playerX);
   cameraX = Math.max(0, player.x - 330);
 
@@ -318,9 +320,16 @@ function render() {
 }
 
 function frame(now) {
-  const delta = Math.min((now - last) / 1000 || 0, 0.033);
+  const frameDelta = Math.min((now - last) / 1000 || 0, GAME.maxFrameDelta);
   last = now;
-  update(delta);
+  accumulator = Math.min(accumulator + frameDelta, GAME.fixedStep * 5);
+  let steps = 0;
+  while (accumulator >= GAME.fixedStep && steps < 5 && running && !paused) {
+    update(GAME.fixedStep);
+    accumulator -= GAME.fixedStep;
+    steps += 1;
+  }
+  if (steps === 5 && accumulator >= GAME.fixedStep) accumulator = 0;
   render();
   if (running && !paused) requestAnimationFrame(frame);
 }
@@ -339,6 +348,7 @@ function start() {
   running = true;
   paused = false;
   elapsed = 0;
+  accumulator = 0;
   distance = 0;
   rescues = 0;
   stateLabel.textContent = "IN PROGRESS";
@@ -379,6 +389,7 @@ function togglePause() {
     overlay.classList.remove("hidden");
   } else {
     overlay.classList.add("hidden");
+    accumulator = 0;
     last = performance.now();
     requestAnimationFrame(frame);
   }
