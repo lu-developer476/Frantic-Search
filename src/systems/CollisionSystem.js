@@ -23,6 +23,11 @@ export class CollisionSystem {
     return attack ? CollisionSystem.overlaps(player, attack, 7) : false;
   }
 
+  static bossAttackHit(player, boss) {
+    const attack = boss.attackBox;
+    return attack ? CollisionSystem.overlaps(player, attack, 6) : false;
+  }
+
   static bodyHit(a, b) {
     return CollisionSystem.overlaps(a, b, 8);
   }
