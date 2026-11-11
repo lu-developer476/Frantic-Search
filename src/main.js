@@ -1544,14 +1544,14 @@ function applyLanguage() {
     overlay.querySelector(".overlay-kicker").textContent = ui("desktopRequired");
     overlay.querySelector("h2").innerHTML = ui("desktopOverlayTitle");
     overlay.querySelector("p").textContent = ui("desktopMessage");
-  } else if (running) {
-    stateLabel.textContent = ui("inProgress");
   } else if (paused) {
     stateLabel.textContent = ui("paused");
     overlay.querySelector(".overlay-kicker").textContent = ui("operationPaused");
     overlay.querySelector("h2").innerHTML = ui("pauseTitle");
     overlay.querySelector("p").textContent = ui("pausedMessage");
     overlay.querySelector("button").textContent = ui("continue");
+  } else if (running) {
+    stateLabel.textContent = ui("inProgress");
   } else if (campaign.flags.completed) {
     showCampaignEnding();
   } else if (["SIGNAL LOST", "SEÑAL PERDIDA"].includes(stateLabel.textContent)) {
