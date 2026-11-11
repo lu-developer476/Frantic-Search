@@ -7,4 +7,8 @@ export class AudioManager {
   collect(){this.tone(660,.09,"sine",.04,240);setTimeout(()=>this.tone(880,.12,"sine",.03,180),65)}
   hit(){this.tone(150,.25,"sawtooth",.055,-90)}
   rescue(){this.tone(520,.12,"triangle",.04,250);setTimeout(()=>this.tone(780,.18,"triangle",.035,220),110)}
+  bossWarning(){this.tone(115,.42,"sawtooth",.065,-35);setTimeout(()=>this.tone(82,.5,"triangle",.05,-18),170)}
+  bossAttack(){this.tone(190,.12,"square",.045,150);setTimeout(()=>this.tone(95,.22,"sawtooth",.045,-45),75)}
+  bossHit(){this.tone(125,.16,"triangle",.06,-65);setTimeout(()=>this.tone(360,.07,"square",.025,90),45)}
+  bossDefeat(){this.tone(220,.25,"triangle",.05,160);setTimeout(()=>this.tone(440,.35,"sine",.045,250),180)}
 }
