@@ -1490,7 +1490,7 @@ function openDinoModal() {
   if (!desktopPlayback.matches || running) return;
   selectCharacter(selected);
   dinoModal.classList.remove("hidden");
-  document.querySelector("#confirm-character").focus();
+  document.querySelector(".character-card.active")?.focus();
 }
 
 function closeDinoModal() {
@@ -1618,13 +1618,10 @@ window.addEventListener("keydown", (event) => {
     else if (!navMenu.classList.contains("hidden")) setMenuOpen(false);
     return;
   }
-  if (event.code === "Enter" && !event.repeat && !dinoModal.classList.contains("hidden")) {
-    startFromDinoModal();
-    return;
-  }
+  if (event.code === "Enter" && event.target instanceof Element && event.target.closest("button, a, input, select, textarea, [role='button']")) return;
   if (event.code === "KeyP" && !event.repeat && !campaign.sceneOpen) togglePause();
   if (event.code === "Enter" && !event.repeat && campaign.sceneOpen) advanceStory();
-  else if (event.code === "Enter" && !running && !paused) openDinoModal();
+  else if (event.code === "Enter" && !running && !paused && dinoModal.classList.contains("hidden") && navMenu.classList.contains("hidden")) openDinoModal();
 });
 
 bestLabel.textContent = String(save.get("bestDistance")).padStart(4, "0") + " m";
