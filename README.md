@@ -4,7 +4,7 @@ A fan-made 2D survival-platformer prototype built with HTML5 Canvas 2D, vanilla 
 
 ## Premise
 
-Blue and Vasti are the two playable protagonists. Choose which dinosaur to control; the other remains alongside them. Their mission is to rescue Beta from poachers transporting her toward an illegal wildlife-trading operation. Ferrucutus Cerastes can assist with traversal and poacher encounters. Indoraptors and Indominus Rexes remain planned boss encounters.
+Blue and Vasti are the two playable protagonists. Choose which dinosaur to control; the other remains alongside them. Their mission is to rescue Beta from poachers transporting her toward an illegal wildlife-trading operation. Ferrucutus Cerastes can assist with traversal and combat. Indoraptors and Indominus Rexes now appear as staged miniboss encounters.
 
 ## Stack
 
@@ -20,17 +20,17 @@ Blue and Vasti are the two playable protagonists. Choose which dinosaur to contr
 
 Requires Node.js 20+.
 
-```bash
+\`\`\`bash
 npm install
 npm run dev
-```
+\`\`\`
 
 ## Production
 
-```bash
+\`\`\`bash
 npm run build
 npm run preview
-```
+\`\`\`
 
 Vercel configuration: Framework Preset **Vite**, Build Command **npm run build**, Output Directory **dist**.
 
@@ -66,24 +66,37 @@ Vercel configuration: Framework Preset **Vite**, Build Command **npm run build**
 - Hunters have health and can be defeated. Defeating a carrier releases a captive and increments the rescue counter.
 - The player has three integrity points and brief invulnerability after taking damage.
 - Expired support bridges, escort actors and distant hunter entities are cleaned up as the camera advances.
-- Procedural Canvas silhouettes and audio cues communicate ally support, alerts, attacks, damage and rescues.
+
+## Miniboss encounters — 0.4.0
+
+- Indoraptor encounter in the Redwood Frontier sector with an arena boundary and a continuous floor.
+- Indoraptor patterns: pounce and claw strike; phase two shortens telegraph and recovery windows and increases attack speed.
+- Indominus Rex encounter in the Black Site sector with a larger health pool and its own arena.
+- Indominus patterns: sonic roar, forward charge and tail sweep; phase two accelerates the attack cycle.
+- Bosses telegraph attacks with directional danger zones and attack labels before hitboxes become active.
+- Attack hitboxes are separate from boss body hitboxes; jumping and spacing provide ways to evade the patterns.
+- Boss health, phase and exposed recovery window are displayed in the HUD.
+- Bosses can only take damage during recovery or while stunned, creating deliberate counterattack windows.
+- Blue's dash deals one damage during a successful counter; Vasti's shockwave deals two.
+- Ferrucutus can join an exposed recovery window and deliver a support strike.
+- Boss entry triggers an audio/visual alert; phase transitions and defeats have dedicated cues.
+- The player is held inside each arena until the boss is defeated.
 
 ## Known limitations
 
-- The world is still an endless sequence of generated sections, not yet a finite campaign with checkpoints.
-- Ferrucutus and poachers use original geometric prototype art rather than final character models and animations.
-- Poacher AI is currently melee-only; ranged weapons, stealth and multi-wave encounter scripting are not implemented.
+- The world is still a sequence of generated sections, not yet a finite campaign with checkpoints or a story-completion state.
+- Ferrucutus, poachers and bosses use original geometric prototype art rather than final character models and animations.
+- Poacher AI is melee-only; ranged weapons, stealth and multi-wave encounter scripting are not implemented.
 - Rescued captives are represented by the rescue counter; Beta is not yet an interactable escort objective.
-- Ferrucutus currently provides temporary bridge support and melee assistance; additional ally behaviors remain planned.
-- Indoraptor and Indominus Rex boss logic is not implemented yet.
+- Boss wins are not yet persisted as campaign unlocks across runs.
 - A production build and browser playtest still need to be run in an environment with package registry access.
 
 ## Planned campaign milestones
 
 1. Platform movement, physics, character abilities and terrain — implemented in 0.2.0.
 2. Ferrucutus Cerastes support, hunter AI, combat feedback and captive release — implemented in 0.3.0.
-3. Distinct level objectives, checkpoints and encounter scripting.
-4. Indoraptor and Indominus Rex boss encounters.
+3. Indoraptor and Indominus Rex miniboss encounters — implemented in 0.4.0.
+4. Distinct level objectives, checkpoints and encounter scripting.
 5. Beta rescue finale, narrative sequences and campaign save data.
 6. Visual/audio polish, balancing and deployment.
 
