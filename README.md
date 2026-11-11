@@ -17,6 +17,12 @@ The finite campaign runs through six chapters:
 
 Dialogue scenes pause the simulation. The campaign only completes after Beta has been freed and reaches the extraction gate with the player.
 
+## Interface, languages and environment modes
+
+- The **Jugar / Play** action opens a dinosaur-selection dialog. The campaign starts only after the player confirms Blue or Vasti.
+- The navigation menu supports **Español** and **English**.
+- **Fango / Mud** adds an earthy, muddy atmosphere; **Neblina / Fog** adds a low-visibility mist effect. The selected language and environment mode are saved locally.
+
 ## Characters and encounters
 
 - **Blue:** fast movement, double jump and evasive dash.
