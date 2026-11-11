@@ -1,14 +1,19 @@
 {
   "name": "avoid-dino-run",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=20.19.0 || >=22.12.0"
+  },
   "scripts": {
     "dev": "vite",
+    "test": "node --test",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check": "npm test && npm run build"
   },
   "devDependencies": {
-    "vite": "^6.4.1"
+    "vite": "^8.3.7"
   }
 }
