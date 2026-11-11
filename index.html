@@ -42,20 +42,30 @@
             <div id="overlay" class="game-overlay">
               <div class="overlay-content"><span class="overlay-kicker">OPERATION AVOID</span><h2>THE WILD<br><em>IS WATCHING.</em></h2><p>Prepará el equipo. Beta necesita que lleguemos.</p><button id="overlay-start" type="button">COMENZAR <span>↗</span></button></div>
             </div>
+            <section id="story-panel" class="story-panel hidden" role="dialog" aria-modal="true" aria-labelledby="story-title">
+              <div class="story-card">
+                <p class="story-kicker">AVOID // CAMPAIGN LOG</p>
+                <h2 id="story-title">OPERATION: LOST HATCHLING</h2>
+                <p id="story-speaker" class="story-speaker">MISSION CONTROL</p>
+                <p id="story-text" class="story-text"></p>
+                <div class="story-actions"><span id="story-progress">1 / 1</span><button id="story-next" type="button">CONTINUAR ↗</button></div>
+              </div>
+            </section>
           </div>
           <div class="touch-controls" aria-label="Controles táctiles">
             <button type="button" data-action="left" aria-label="Mover a la izquierda">←</button>
             <button type="button" data-action="right" aria-label="Mover a la derecha">→</button>
             <button type="button" data-action="jump" aria-label="Saltar">↑</button>
             <button type="button" data-action="ability" aria-label="Usar habilidad">X</button>
+            <button type="button" data-action="interact" aria-label="Interactuar">E</button>
           </div>
           <div class="hud-strip">
             <div><small>DISTANCIA</small><b id="distance">0000 m</b></div>
             <div><small>RESCATOS</small><b id="rescues">00</b></div>
             <div><small>RÉCORD</small><b id="best">0000 m</b></div>
-            <div class="objective"><small>OBJETIVO</small><b>RESCATAR A BETA</b><small id="ability-status" class="ability-readout">HABILIDAD LISTA</small><small id="health-status" class="health-readout">INTEGRIDAD 03/03</small></div>
+            <div class="objective"><small id="campaign-chapter">COASTAL HIGHWAY</small><b id="campaign-objective">FOLLOW THE CONVOY</b><small id="ability-status" class="ability-readout">HABILIDAD LISTA</small><small id="health-status" class="health-readout">INTEGRIDAD 03/03</small><small id="interaction-hint" class="interaction-readout"></small></div>
           </div>
-          <div class="panel-foot"><span>MINIBOSS ENCOUNTERS // BUILD 0.4.0</span><span>CANVAS 2D <i>●</i> VITE</span></div>
+          <div class="panel-foot"><span>NARRATIVE CAMPAIGN // BUILD 0.5.0</span><span>CANVAS 2D <i>●</i> VITE</span></div>
         </section>
       </main>
       <footer><span>AVOID — A FAN-MADE SURVIVAL ADVENTURE</span><span>NOT AFFILIATED WITH UNIVERSAL / AMBLIN</span></footer>
