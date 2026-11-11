@@ -21,8 +21,10 @@ export class IndominusRexBoss extends BossEnemy {
   }
 
   chooseAttack(distance) {
-    if (distance > 300 && this.attackIndex % 3 !== 2) return "roar";
-    return this.attackIndex % 2 === 0 ? "charge" : "tail-sweep";
+    const pattern = this.attackIndex % 3;
+    if (pattern === 0 && (distance > 220 || this.phase === 2)) return "roar";
+    if (pattern === 1) return "charge";
+    return "tail-sweep";
   }
 
   telegraphDuration() {
