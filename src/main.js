@@ -1069,7 +1069,7 @@ function handleAbilityImpact() {
 }
 
 function update(delta) {
-  if (!running || paused) return;
+  if (!running || paused || campaign.sceneOpen) return;
   elapsed += delta;
   bossCueTimer = Math.max(0, bossCueTimer - delta);
   world.update(delta);
@@ -1101,6 +1101,14 @@ function update(delta) {
   world.pruneBehind(player.x);
   syncEncounters();
   syncBossEncounter();
+  syncFacility();
+  campaign.updateLocation(player.x);
+  updateCampaignHud();
+  if (campaign.sceneOpen) return;
+  if (input.consume("interact")) {
+    interactWithFacility();
+    if (campaign.sceneOpen) return;
+  }
   distance = Math.max(0, player.x - GAME.playerX);
   cameraX = Math.max(0, player.x - 330);
 
@@ -1166,6 +1174,7 @@ function update(delta) {
 
   allies = allies.filter((ally) => !ally.departed);
   hunters = hunters.filter((hunter) => hunter.x + hunter.w >= cameraX - 1100);
+  beta?.update(delta, player);
   bosses = bosses.filter((boss) => boss.x + boss.w >= cameraX - 850 || boss === activeBoss);
   pruneEncounterBookkeeping();
   if (player.dashTimer <= 0) dashHitIds.clear();
@@ -1197,6 +1206,16 @@ function update(delta) {
   if (healthLabel) {
     healthLabel.textContent = "INTEGRIDAD " + String(player.health).padStart(2, "0") + "/03";
   }
+  if (beta?.state === "following" && extractionX && player.x >= extractionX && beta.x >= extractionX - 220) {
+    finishCampaign();
+  }
+  if (interactionHintLabel) {
+    const nearbyConsole = facilityConsoles.find((terminal) => terminal.canInteract(player));
+    const nearBeta = beta && beta.state === "confined" && Math.abs(player.x - beta.x) < 112;
+    interactionHintLabel.textContent = nearbyConsole
+      ? "E // " + (nearbyConsole.kind === "power" ? "ACTIVAR ENERGÍA" : "ABRIR SEGURIDAD")
+      : nearBeta ? "E // BETA" : beta?.state === "following" ? "BETA // ESCORTANDO" : "";
+  }
 }
 
 function render() {
@@ -1204,7 +1223,12 @@ function render() {
   ctx.save();
   ctx.translate(-cameraX, 0);
   for (const platform of world.visiblePlatforms(cameraX, GAME.width)) drawPlatform(platform);
+  for (const prop of world.facilityProps) {
+    if (prop.x + prop.w >= cameraX - 50 && prop.x <= cameraX + GAME.width + 50) drawFacilityProp(prop);
+  }
   drawBossArenaBoundary();
+  for (const terminal of facilityConsoles) drawFacilityConsole(terminal);
+  drawExtractionMarker(extractionX);
   for (const obstacle of world.visibleObstacles(cameraX, GAME.width)) drawObstacle(obstacle);
   for (const hunter of hunters) {
     if (hunter.x + hunter.w >= cameraX - 90 && hunter.x <= cameraX + GAME.width + 90) drawHunter(hunter);
@@ -1215,6 +1239,7 @@ function render() {
   for (const boss of bosses) {
     if (boss.x + boss.w >= cameraX - 180 && boss.x <= cameraX + GAME.width + 180) drawBoss(boss);
   }
+  if (beta) drawBeta(beta);
   for (const particle of particles) {
     ctx.globalAlpha = Math.max(0, particle.life / particle.max);
     ctx.fillStyle = particle.color;
@@ -1243,6 +1268,18 @@ function render() {
   if (player.dashTimer > 0) {
     ctx.fillStyle = "#d8f36a66";
     ctx.fillRect(player.x - 20, player.y + player.h * 0.48, player.w + 8, 4);
+  }
+  for (const terminal of facilityConsoles) {
+    if (terminal.canInteract(player)) {
+      ctx.fillStyle = "#d8f36a";
+      ctx.font = "10px monospace";
+      ctx.fillText("E // INTERACT", terminal.x - 18, terminal.y - 24);
+    }
+  }
+  if (beta && beta.state === "confined" && Math.abs(player.x - beta.x) < 112) {
+    ctx.fillStyle = "#d8f36a";
+    ctx.font = "10px monospace";
+    ctx.fillText(campaign.canFreeBeta() ? "E // FREE BETA" : "CELL LOCKED", beta.x - 12, beta.y - 30);
   }
   ctx.restore();
 
@@ -1275,6 +1312,11 @@ function frame(now) {
 }
 
 function resetPlayer() {
+  campaign = new CampaignManager();
+  beta = null;
+  facilityConsoles = [];
+  extractionX = null;
+  campaignSaved = false;
   player = new Player(selected, GAME.playerX, GAME.groundY);
   world = new PlatformWorld(GAME.groundY);
   hunters = [];
@@ -1305,6 +1347,9 @@ function start() {
   stateLabel.textContent = "IN PROGRESS";
   rescuesLabel.textContent = "00";
   if (healthLabel) healthLabel.textContent = "INTEGRIDAD 03/03";
+  campaign.begin();
+  updateCampaignHud();
+  renderStoryPanel();
   last = performance.now();
   render();
   requestAnimationFrame(frame);
@@ -1363,6 +1408,7 @@ document.querySelectorAll(".character-card").forEach((card) => {
   card.addEventListener("click", () => selectCharacter(card.dataset.character));
 });
 document.querySelector("#start-button").addEventListener("click", start);
+storyNextButton?.addEventListener("click", advanceStory);
 document.querySelector("#overlay-start").addEventListener("click", () => {
   if (paused) {
     togglePause();
@@ -1377,7 +1423,7 @@ document.querySelector("#sound-toggle").addEventListener("click", () => {
   save.update({ muted: !enabled });
 });
 window.addEventListener("keydown", (event) => {
-  if (event.code === "KeyP" && !event.repeat) togglePause();
+  if (event.code === "KeyP" && !event.repeat && !campaign.sceneOpen) togglePause();
   if (event.code === "Enter" && !running && !paused) start();
 });
 
@@ -1400,6 +1446,8 @@ document.querySelectorAll("[data-action]").forEach((button) => {
 
 bestLabel.textContent = String(save.get("bestDistance")).padStart(4, "0") + " m";
 rescuesLabel.textContent = String(save.get("rescues")).padStart(2, "0");
+updateCampaignHud();
+renderStoryPanel();
 if (save.get("muted")) {
   audio.setEnabled(false);
   document.querySelector("#sound-toggle").innerHTML = "♪ <span>SILENCIO</span>";
