@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 170">
+<defs>
+ <linearGradient id="b" x1="0" y1="0" x2="0.8" y2="1"><stop stop-color="#a6c6b9"/><stop offset=".45" stop-color="#527f79"/><stop offset="1" stop-color="#203e43"/></linearGradient>
+ <linearGradient id="s" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#7bc2de"/><stop offset="1" stop-color="#28719d"/></linearGradient>
+ <linearGradient id="u" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#dce0c9"/><stop offset="1" stop-color="#9caa99"/></linearGradient>
+</defs>
+<g stroke="#172a2d" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+ <path d="M64 93 C39 95 14 80 7 66 C28 76 47 76 72 76 L91 88Z" fill="url(#b)"/>
+ <path d="M52 82 C62 57 89 45 119 48 C145 49 158 66 154 94 C149 113 120 123 87 117 C63 113 48 101 52 82Z" fill="url(#b)"/>
+ <path d="M73 98 C97 106 126 104 148 88 C144 111 122 121 92 117 C79 114 70 108 73 98Z" fill="url(#u)" stroke="none"/>
+ <path d="M131 76 C145 63 157 40 171 32 C184 25 194 34 190 47 C181 64 179 82 160 96 L142 97Z" fill="url(#b)"/>
+ <path d="M168 30 C183 13 207 13 226 25 L235 36 L221 48 L188 46 L174 51Z" fill="url(#b)"/>
+ <path d="M188 44 L230 42 L219 53 L191 55 L179 49Z" fill="#344e4d"/>
+ <path d="M65 69 C93 48 125 50 151 69 C133 66 117 69 101 78 C88 84 74 82 65 79Z" fill="url(#s)" stroke="none"/>
+ <path d="M78 61 L91 50 L96 65 L109 46 L115 63 L129 51 L135 68" fill="#b7c8b3"/>
+ <path d="M156 38 L164 25 L170 39 L180 20 L185 36" fill="#b7c8b3"/>
+ <path d="M174 35 L185 28 L196 31" fill="none" stroke="#273b3d" stroke-width="3"/>
+ <ellipse cx="211" cy="31" rx="4.5" ry="3.7" fill="#f3d978" stroke="#152b30" stroke-width="2"/>
+ <circle cx="212" cy="31" r="1.5" fill="#101a1e" stroke="none"/>
+ <path d="M225 43 L234 45 L227 49" fill="none" stroke="#18282a" stroke-width="2"/>
+ <path d="M120 85 C137 84 144 90 148 100 L136 106 L127 97Z" fill="url(#b)"/>
+ <path d="" fill="none" stroke="#294b4c" stroke-width="12"/>
+ <path d="M82 107 L89 126 L73 139 L55 141 M136 106 L128 124 L143 139 L164 140" fill="none" stroke="#294b4c" stroke-width="12"/>
+ <path d="M47 141 L63 141 M157 140 L174 140" fill="none" stroke="#172a2d" stroke-width="6"/>
+ <path d="M52 139 l-3 5 M60 139 l-1 5 M165 138 l2 5" fill="none" stroke="#d9e1cc" stroke-width="2"/>
+ <path d="M119 85 L136 91 L143 104 L132 109" fill="none" stroke="#b6c6b6" stroke-width="4"/>
+</g>
+</svg>
