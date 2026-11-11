@@ -22,7 +22,9 @@
         </section>
         <section class="game-panel">
           <div class="panel-head"><span><i></i> LIVE FEED // SECTOR 01</span><span id="game-state">STANDBY</span></div>
-          <div class="game-setup">
+          
+          <div class="canvas-wrap">
+<div class="game-setup">
             <div class="character-picker" aria-label="Elegir personaje">
             <button class="character-card active" data-character="blue" type="button">
               <span class="character-number">01 / RAPTOR</span><span class="character-art blue-art"><img src="%BASE_URL%assets/sprites/blue-idle.svg" alt="" /></span>
@@ -43,7 +45,7 @@
               </div>
             </div>
           </div>
-          <div class="canvas-wrap">
+
             <canvas id="game" width="960" height="540" aria-label="Juego de plataformas Frantic Search"></canvas>
             <div id="overlay" class="game-overlay">
               <div class="overlay-content"><span class="overlay-kicker">FRANTIC SEARCH</span><h2>THE WILD<br><em>IS WATCHING.</em></h2><p>Prepará el equipo. Beta necesita que lleguemos.</p><button id="overlay-start" type="button" hidden>CONTINUAR <span>↗</span></button></div>
@@ -57,14 +59,16 @@
                 <div class="story-actions"><span id="story-progress">1 / 1</span><button id="story-next" type="button">CONTINUAR ↗</button></div>
               </div>
             </section>
-          </div>
-
-          <div class="hud-strip">
+          
+<div class="hud-strip">
             <div><small>DISTANCIA</small><b id="distance">0000 m</b></div>
             <div><small>RESCATOS</small><b id="rescues">00</b></div>
             <div><small>RÉCORD</small><b id="best">0000 m</b></div>
             <div class="objective"><small id="campaign-chapter">COASTAL HIGHWAY</small><b id="campaign-objective">FOLLOW THE CONVOY</b><small id="ability-status" class="ability-readout">HABILIDAD LISTA</small><small id="health-status" class="health-readout">INTEGRIDAD 03/03</small><small id="interaction-hint" class="interaction-readout"></small></div>
           </div>
+</div>
+
+          
           
         </section>
       </main>
