@@ -1,8 +1,8 @@
-# AVOID — Operation: Lost Hatchling
+# Frantic Search — Operation: Lost Hatchling
 
 **Version 1.0.0 · 2D survival-platformer · HTML5 Canvas · JavaScript · Vite**
 
-AVOID is an unofficial fan-made dinosaur survival-platformer. Play as Blue or Vasti, keep the other protagonist by your side, and rescue Beta from a clandestine poaching and research operation.
+Frantic Search is an unofficial fan-made dinosaur survival-platformer. Play as Blue or Vasti, keep the other protagonist by your side, and rescue Beta from a clandestine poaching and research operation.
 
 ## Campaign
 
@@ -84,31 +84,12 @@ The automated suite covers campaign gating, facility terminal interaction, Beta 
 
 The repository includes `vercel.json` with Vite framework detection, `npm run build`, and the `dist` output directory.
 
-1. Import `lu-developer476/Avoid` into Vercel.
+1. Import `lu-developer476/Frantic-Search` into Vercel.
 2. Select **main** as the Production Branch.
 3. Keep the Vite build settings: Build Command `npm run build`, Output Directory `dist`.
 4. Deploy.
 
 Vercel uses the root asset path (`/`). After Git integration is connected, pushes to `main` trigger production deployments and other branches can be used for previews.
-
-## Deploy to GitHub Pages
-
-The repository includes `.github/workflows/deploy.yml`. On pushes to `main` it runs tests, builds the root deployment, builds the repository-subpath version and deploys the Pages artifact. Pull requests run verification but do not publish.
-
-**One-time repository setting:** open **Settings → Pages → Build and deployment → Source** and select **GitHub Actions**.
-
-After the first successful workflow deployment, the site is available at:
-
-**https://lu-developer476.github.io/Avoid/**
-
-Vite automatically uses `/Avoid/` as the asset base for this deployment, while Vercel keeps `/`. Both targets use the same source code.
-
-You can also run the Pages build locally:
-
-```bash
-GITHUB_PAGES=true npm run build
-npm run preview
-```
 
 ## Repository scripts
 
@@ -116,8 +97,7 @@ npm run preview
 |---|---|
 | `npm run dev` | Local Vite development server |
 | `npm test` | Automated Node.js tests |
-| `npm run build` | Production build for Vercel / root hosting |
-| `GITHUB_PAGES=true npm run build` | Production build for GitHub Pages |
+| `npm run build` | Production build for Vercel |
 | `npm run preview` | Preview the last production build |
 | `npm run check` | Run tests and root production build |
 
