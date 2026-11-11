@@ -1,6 +1,7 @@
 import "./styles/main.css";
 import { GAME, LEVELS } from "./config/GameConfig.js";
 import { AudioManager } from "./audio/AudioManager.js";
+import { MusicManager } from "./audio/MusicManager.js";
 import { SaveManager } from "./storage/SaveManager.js";
 import { InputManager } from "./core/InputManager.js";
 import { Player } from "./entities/Player.js";
@@ -39,6 +40,7 @@ const storyNextButton = document.querySelector("#story-next");
 
 const save = new SaveManager();
 const audio = new AudioManager();
+const music = new MusicManager();
 const input = new InputManager(window, canvas);
 const physics = new PhysicsSystem({ gravity: GAME.gravity, worldBottom: GAME.height + 150 });
 
@@ -418,6 +420,7 @@ function burst(x, y, color = "#d8f36a", count = 12) {
       size: rand(2, 5)
     });
   }
+  if (particles.length > 280) particles.splice(0, particles.length - 280);
 }
 
 
@@ -595,6 +598,7 @@ function updateCampaignHud() {
 function renderStoryPanel() {
   if (!campaign.sceneOpen) {
     storyPanel?.classList.add("hidden");
+    music.setDucked(false);
     return;
   }
   const scene = campaign.activeScene;
@@ -606,6 +610,7 @@ function renderStoryPanel() {
   storyProgress.textContent = (scene.index + 1) + " / " + scene.lines.length;
   storyNextButton.textContent = scene.index + 1 >= scene.lines.length ? "CONTINUAR ↗" : "SIGUIENTE →";
   storyPanel.classList.remove("hidden");
+  music.setDucked(true);
 }
 
 function showCampaignEnding() {
@@ -676,6 +681,8 @@ function finishCampaign() {
     bestDistance: Math.max(save.get("bestDistance"), Math.floor(distance))
   });
   audio.rescue();
+  music.setTheme("victory");
+  music.setPaused(false);
   beta?.extract();
   renderStoryPanel();
 }
@@ -1134,6 +1141,7 @@ function update(delta) {
   syncEncounters();
   syncBossEncounter();
   syncFacility();
+  music.setTheme(activeBoss ? "boss" : beta?.state === "following" ? "extraction" : level().environment === "wild" ? "coastal" : level().environment);
   campaign.updateLocation(player.x);
   updateCampaignHud();
   if (campaign.sceneOpen) return;
@@ -1370,6 +1378,9 @@ function resetPlayer() {
 function start() {
   audio.unlock();
   resetPlayer();
+  music.start(audio.context, "coastal");
+  music.setPaused(false);
+  music.setEnabled(audio.enabled);
   overlay.classList.add("hidden");
   running = true;
   paused = false;
@@ -1391,6 +1402,8 @@ function start() {
 function endGame() {
   if (!running) return;
   running = false;
+  music.setTheme("defeat");
+  music.setPaused(false);
   audio.hit();
   burst(player.x + player.w / 2, player.y + player.h / 2, "#e8a77d", 24);
   save.update({
@@ -1410,6 +1423,7 @@ function endGame() {
 function togglePause() {
   if (!running) return;
   paused = !paused;
+  music.setPaused(paused);
   stateLabel.textContent = paused ? "PAUSED" : "IN PROGRESS";
   if (paused) {
     overlay.querySelector(".overlay-kicker").textContent = "OPERATION PAUSED";
@@ -1452,6 +1466,7 @@ document.querySelector("#overlay-start").addEventListener("click", () => {
 document.querySelector("#sound-toggle").addEventListener("click", () => {
   const enabled = !audio.enabled;
   audio.setEnabled(enabled);
+  music.setEnabled(enabled);
   document.querySelector("#sound-toggle").innerHTML = enabled ? "♫ <span>SONIDO</span>" : "♪ <span>SILENCIO</span>";
   save.update({ muted: !enabled });
 });
@@ -1484,6 +1499,7 @@ updateCampaignHud();
 renderStoryPanel();
 if (save.get("muted")) {
   audio.setEnabled(false);
+  music.setEnabled(false);
   document.querySelector("#sound-toggle").innerHTML = "♪ <span>SILENCIO</span>";
 }
 
