@@ -6,7 +6,7 @@ export class Beta {
     this.h = 48;
     this.groundY = groundY;
     this.state = "confined";
-    this.followDistance = 118;
+    this.followDistance = 112;
     this.animation = 0;
     this.facing = -1;
   }
@@ -18,7 +18,7 @@ export class Beta {
     const targetX = player.x - this.followDistance;
     const difference = targetX - this.x;
     if (Math.abs(difference) > 10) {
-      this.x += Math.sign(difference) * Math.min(Math.abs(difference), 245 * delta);
+      this.x += Math.sign(difference) * Math.min(Math.abs(difference), 520 * delta);
       this.facing = difference > 0 ? 1 : -1;
     }
     const targetY = player.y + player.h - this.h;
