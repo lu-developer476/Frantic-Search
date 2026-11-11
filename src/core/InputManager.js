@@ -10,6 +10,7 @@ export class InputManager {
   constructor(target = window, surface = null) {
     this.target = target;
     this.keys = new Set();
+    this.virtualDown = new Set();
     this.pressed = new Set();
     this.downHandler = (event) => {
       const action = this.actionFor(event.code);
@@ -21,6 +22,7 @@ export class InputManager {
     this.upHandler = (event) => this.keys.delete(event.code);
     this.blurHandler = () => {
       this.keys.clear();
+      this.virtualDown.clear();
       this.pressed.clear();
     };
     target.addEventListener("keydown", this.downHandler);
@@ -36,7 +38,16 @@ export class InputManager {
   }
 
   isDown(action) {
-    return BINDINGS[action]?.some((code) => this.keys.has(code)) ?? false;
+    return this.virtualDown.has(action) || (BINDINGS[action]?.some((code) => this.keys.has(code)) ?? false);
+  }
+
+  setAction(action, active) {
+    if (active) {
+      if (!this.virtualDown.has(action)) this.pressed.add(action);
+      this.virtualDown.add(action);
+    } else {
+      this.virtualDown.delete(action);
+    }
   }
 
   consume(action) {
