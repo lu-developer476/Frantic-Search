@@ -58,9 +58,9 @@ export class IndoraptorBoss extends BossEnemy {
     if (this.attackName === "pounce") {
       return {
         x: this.direction > 0 ? this.x + this.w - 22 : this.x - 112,
-        y: this.y + 20,
+        y: this.baseY + 14,
         w: 132,
-        h: 62
+        h: 56
       };
     }
     return {
