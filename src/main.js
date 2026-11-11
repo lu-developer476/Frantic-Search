@@ -1,7 +1,7 @@
 import "./styles/main.css";
 import { GAME, LEVELS } from "./config/GameConfig.js";
 import { AudioManager } from "./audio/AudioManager.js";
-import { MusicManager } from "./audio/MusicManager.js";
+import { AdaptiveMusic } from "./audio/AdaptiveMusic.js";
 import { SaveManager } from "./storage/SaveManager.js";
 import { InputManager } from "./core/InputManager.js";
 import { Player } from "./entities/Player.js";
@@ -40,7 +40,7 @@ const storyNextButton = document.querySelector("#story-next");
 
 const save = new SaveManager();
 const audio = new AudioManager();
-const music = new MusicManager();
+const music = new AdaptiveMusic();
 const input = new InputManager(window, canvas);
 const physics = new PhysicsSystem({ gravity: GAME.gravity, worldBottom: GAME.height + 150 });
 
