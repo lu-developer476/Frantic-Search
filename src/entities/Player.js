@@ -19,7 +19,8 @@ export class Player {
     this.abilityCooldown = 0;
     this.isSlamming = false;
     this.shockwavePending = false;
-    this.applyCharacterStats();
+    this.setCharacter(character);
+    this.y = groundY - this.h;
   }
 
   applyCharacterStats() {
