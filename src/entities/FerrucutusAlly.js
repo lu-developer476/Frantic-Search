@@ -1,6 +1,8 @@
 export class FerrucutusAlly {
   constructor({ id, x, groundY }) {
     this.id = id;
+    this.startX = x;
+    this.departed = false;
     this.x = x;
     this.y = groundY - 74;
     this.w = 104;
@@ -16,6 +18,13 @@ export class FerrucutusAlly {
   }
 
   update(delta, player, world, hunters) {
+    if (this.departed) return null;
+    if (!this.bridge && player.x > this.startX + 1320 && this.state !== "charge") {
+      this.departed = true;
+      this.state = "depart";
+      return { type: "departed" };
+    }
+
     this.attackCooldown = Math.max(0, this.attackCooldown - delta);
     this.bridgeCooldown = Math.max(0, this.bridgeCooldown - delta);
     this.stateTimer = Math.max(0, this.stateTimer - delta);
