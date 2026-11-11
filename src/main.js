@@ -387,12 +387,19 @@ function pruneEncounterBookkeeping() {
     ...world.allySpawns.map((spawn) => spawn.id),
     ...allies.map((ally) => ally.id)
   ]);
+  const activeBossIds = new Set([
+    ...world.bossSpawns.map((spawn) => spawn.id),
+    ...bosses.map((boss) => boss.id)
+  ]);
 
   for (const id of seenHunterSpawns) {
     if (!activeHunterIds.has(id)) seenHunterSpawns.delete(id);
   }
   for (const id of seenAllySpawns) {
     if (!activeAllyIds.has(id)) seenAllySpawns.delete(id);
+  }
+  for (const id of seenBossSpawns) {
+    if (!activeBossIds.has(id)) seenBossSpawns.delete(id);
   }
 }
 
@@ -726,6 +733,9 @@ function handleAbilityImpact() {
       damageHunter(hunter, 2, "vasti-stomp");
     }
   }
+  if (activeBoss && Math.abs(activeBoss.x + activeBoss.w / 2 - (player.x + player.w / 2)) < radius + 80) {
+    damageBoss(activeBoss, 2, "vasti-shockwave");
+  }
   world.obstacles = world.obstacles.filter((obstacle) => {
     const close = Math.abs(obstacle.x + obstacle.w / 2 - (player.x + player.w / 2)) < radius;
     const sameLevel = Math.abs(obstacle.y - (player.y + player.h - obstacle.h)) < 105;
@@ -743,6 +753,7 @@ function handleAbilityImpact() {
 function update(delta) {
   if (!running || paused) return;
   elapsed += delta;
+  bossCueTimer = Math.max(0, bossCueTimer - delta);
   world.update(delta);
 
   player.update(delta, input);
@@ -756,10 +767,15 @@ function update(delta) {
     endGame();
     return;
   }
+  if (activeBoss && !activeBoss.defeated && player.x > activeBoss.arenaMaxX) {
+    player.x = activeBoss.arenaMaxX;
+    player.vx = Math.min(0, player.vx);
+  }
 
   world.extendTo(player.x + 2800);
   world.pruneBehind(player.x);
   syncEncounters();
+  syncBossEncounter();
   distance = Math.max(0, player.x - GAME.playerX);
   cameraX = Math.max(0, player.x - 330);
 
@@ -787,6 +803,28 @@ function update(delta) {
     }
   }
 
+  if (activeBoss) {
+    const boss = activeBoss;
+    const bossEvent = boss.update(delta, player);
+    if (bossEvent === "telegraph") audio.bossWarning();
+    if (bossEvent === "attack") audio.bossAttack();
+
+    if (
+      player.dashTimer > 0 &&
+      !boss.defeated &&
+      !dashHitIds.has(boss.id) &&
+      CollisionSystem.bodyHit(player, boss)
+    ) {
+      dashHitIds.add(boss.id);
+      damageBoss(boss, 1, "blue-dash");
+    }
+
+    if (!boss.defeated && CollisionSystem.bossAttackHit(player, boss)) {
+      damagePlayer();
+      if (player.health <= 0) return;
+    }
+  }
+
   for (const ally of allies) {
     const event = ally.update(delta, player, world, hunters);
     if (event?.type === "ally-strike") {
@@ -800,6 +838,7 @@ function update(delta) {
 
   allies = allies.filter((ally) => !ally.departed);
   hunters = hunters.filter((hunter) => hunter.x + hunter.w >= cameraX - 1100);
+  bosses = bosses.filter((boss) => boss.x + boss.w >= cameraX - 850 || boss === activeBoss);
   pruneEncounterBookkeeping();
   if (player.dashTimer <= 0) dashHitIds.clear();
   handleAbilityImpact();
@@ -844,6 +883,9 @@ function render() {
   for (const ally of allies) {
     if (ally.x + ally.w >= cameraX - 100 && ally.x <= cameraX + GAME.width + 100) drawFerrucutus(ally);
   }
+  for (const boss of bosses) {
+    if (boss.x + boss.w >= cameraX - 180 && boss.x <= cameraX + GAME.width + 180) drawBoss(boss);
+  }
   for (const particle of particles) {
     ctx.globalAlpha = Math.max(0, particle.life / particle.max);
     ctx.fillStyle = particle.color;
@@ -884,7 +926,8 @@ function render() {
   ctx.font = "10px monospace";
   ctx.fillText(selected === "blue" ? "BLUE // DOUBLE JUMP + DASH" : "VASTI // HEAVY STOMP", 24, GAME.height - 18);
   ctx.fillStyle = "#d8f36a";
-  ctx.fillText("FERRUCUTUS SUPPORT // HUNTER AI ACTIVE", GAME.width - 292, GAME.height - 18);
+  ctx.fillText("FERRUCUTUS SUPPORT // APEX AI ACTIVE", GAME.width - 292, GAME.height - 18);
+  drawBossHud();
 }
 
 function frame(now) {
@@ -909,6 +952,11 @@ function resetPlayer() {
   allies = [];
   seenHunterSpawns = new Set();
   seenAllySpawns = new Set();
+  seenBossSpawns = new Set();
+  bosses = [];
+  activeBoss = null;
+  bossCueTimer = 0;
+  bossCueTitle = "";
   dashHitIds = new Set();
   syncEncounters();
   cameraX = 0;
