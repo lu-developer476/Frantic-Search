@@ -620,6 +620,15 @@ function drawBoss(boss) {
   if (boss.kind === "indoraptor") drawIndoraptor(boss);
   else drawIndominus(boss);
 
+  if (boss.isVulnerable && !boss.defeated) {
+    ctx.save();
+    ctx.strokeStyle = "#d8f36a";
+    ctx.lineWidth = 3;
+    ctx.globalAlpha = 0.48 + Math.sin(elapsed * 16) * 0.22;
+    ctx.strokeRect(boss.x + 3, boss.y + 3, boss.w - 6, boss.h - 6);
+    ctx.restore();
+  }
+
   if (boss.state === "attacking" && boss.attackBox) {
     const box = boss.attackBox;
     ctx.fillStyle = "#ff75522b";
@@ -756,7 +765,7 @@ function handleAbilityImpact() {
       damageHunter(hunter, 2, "vasti-stomp");
     }
   }
-  if (activeBoss && Math.abs(activeBoss.x + activeBoss.w / 2 - (player.x + player.w / 2)) < radius + 80) {
+  if (activeBoss && Math.abs(activeBoss.x + activeBoss.w / 2 - (player.x + player.w / 2)) < radius + Math.max(80, activeBoss.w * 0.45)) {
     damageBoss(activeBoss, 2, "vasti-shockwave");
   }
   world.obstacles = world.obstacles.filter((obstacle) => {
