@@ -152,14 +152,14 @@ export class CampaignManager {
 
   complete() {
     if (!this.flags.betaFreed || this.flags.completed) return false;
-    this.flags.completed = true;
     this.objective = "MISSION COMPLETE";
-    this.queueScene("campaign-complete", "OPERATION COMPLETE", [
+    const queued = this.queueScene("campaign-complete", "OPERATION COMPLETE", [
       { speaker: "MISSION CONTROL", text: "Extraction confirmed. Beta is safe and the clandestine facility has been exposed." },
       { speaker: "BLUE", text: "You're home, little one. We're together again." },
       { speaker: "VASTI", text: "This is not the end of the wild. But this time, we brought our family back." }
     ]);
-    return true;
+    this.flags.completed = true;
+    return queued;
   }
 
   refreshObjective() {
