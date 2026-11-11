@@ -227,6 +227,9 @@ function update(delta) {
   if (!running || paused) return;
   elapsed += delta;
   player.update(delta, input);
+  if (player.consumeJumpEvent()) audio.jump();
+  const abilityEvent = player.consumeAbilityEvent();
+  if (abilityEvent === "dash" || abilityEvent === "stomp") audio.collect();
   const physicsResult = physics.step(player, delta, world.platformsNear(player.x));
   handleAbilityImpact();
   if (physicsResult.fell) {
