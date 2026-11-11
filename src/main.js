@@ -16,6 +16,7 @@ import { CampaignManager } from "./campaign/CampaignManager.js";
 import { Beta } from "./entities/Beta.js";
 import { FacilityConsole } from "./entities/FacilityConsole.js";
 import { SpriteRenderer } from "./rendering/SpriteRenderer.js";
+import { t as uiText, translateText } from "./i18n.js";
 
 const canvas = document.querySelector("#game");
 const desktopPlayback = window.matchMedia("(min-width: 1024px) and (hover: hover) and (pointer: fine)");
@@ -38,10 +39,19 @@ const storySpeaker = document.querySelector("#story-speaker");
 const storyText = document.querySelector("#story-text");
 const storyProgress = document.querySelector("#story-progress");
 const storyNextButton = document.querySelector("#story-next");
+const dinoModal = document.querySelector("#dino-modal");
+const menuToggle = document.querySelector("#menu-toggle");
+const navMenu = document.querySelector("#nav-menu");
+const canvasWrap = document.querySelector(".canvas-wrap");
+const soundIcon = document.querySelector("#sound-icon");
+const soundLabel = document.querySelector("#sound-label");
 
 const save = new SaveManager();
 const audio = new AudioManager();
 const music = new AdaptiveMusic();
+let locale = save.get("language") || "es";
+let environmentMode = save.get("environmentMode") || "normal";
+let desktopBlocked = false;
 const input = new InputManager(window, canvas);
 const physics = new PhysicsSystem({ gravity: GAME.gravity, worldBottom: GAME.height + 150 });
 
@@ -77,6 +87,8 @@ const rand = (min, max) => min + Math.random() * (max - min);
 const level = () => [...LEVELS].reverse().find((item) => distance >= item.distance) || LEVELS[0];
 const currentMusicTheme = () => campaign.flags.completed ? "victory" : activeBoss ? "boss" : beta?.state === "following" ? "extraction" : level().environment === "wild" ? "coastal" : level().environment;
 const best = () => Math.max(save.get("bestDistance"), Math.floor(distance));
+const ui = (key) => uiText(key, locale);
+const tr = (value) => translateText(value, locale);
 
 function roundedRect(context, x, y, width, height, radius) {
   context.beginPath();
@@ -277,7 +289,7 @@ function drawFacilityProp(prop) {
     ctx.fillRect(prop.x + 36, prop.y + 58, prop.w - 72, prop.h - 80);
     ctx.fillStyle = "#d8f36a";
     ctx.font = "10px monospace";
-    ctx.fillText("CELL BLOCK C", prop.x + 48, prop.y + prop.h - 28);
+    ctx.fillText(tr("CELL BLOCK C"), prop.x + 48, prop.y + prop.h - 28);
   }
 }
 
@@ -301,7 +313,7 @@ function drawFacilityConsole(consoleEntity) {
   if (consoleEntity.activated) {
     ctx.fillStyle = "#d8f36a";
     ctx.font = "9px monospace";
-    ctx.fillText("ONLINE", x - 2, y - 10);
+    ctx.fillText(tr("ONLINE"), x - 2, y - 10);
   }
   ctx.restore();
 }
@@ -320,7 +332,7 @@ function drawBeta(entity) {
     ctx.strokeRect(x - 12, y - 12, entity.w + 24, entity.h + 15);
     ctx.fillStyle = "#ed8e55";
     ctx.font = "9px monospace";
-    ctx.fillText("CONTAINMENT // BETA", x - 24, y - 22);
+    ctx.fillText(tr("CONTAINMENT // BETA"), x - 24, y - 22);
   }
   if (spriteRenderer.draw(ctx, "beta", x, y, entity.w, entity.h, { facing: entity.facing })) {
     ctx.restore();
@@ -367,10 +379,10 @@ function drawExtractionMarker(x) {
   ctx.fillRect(x + 22, GAME.groundY - 166, 154, 4);
   ctx.fillStyle = "#edf3e5";
   ctx.font = "11px monospace";
-  ctx.fillText(beta?.state === "following" || beta?.state === "extracted" ? "EXTRACTION" : "EXIT LOCKED", x + 28, GAME.groundY - 139);
+  ctx.fillText(tr(beta?.state === "following" || beta?.state === "extracted" ? "EXTRACTION" : "EXIT LOCKED"), x + 28, GAME.groundY - 139);
   ctx.fillStyle = "#d8f36a";
   ctx.font = "8px monospace";
-  ctx.fillText("EAST GATE", x + 60, GAME.groundY - 123);
+  ctx.fillText(tr("EAST GATE"), x + 60, GAME.groundY - 123);
 }
 
 function drawObstacle(obstacle) {
@@ -435,7 +447,7 @@ function drawFerrucutus(ally) {
     if (ally.state === "brace" || ally.state === "bridge" || ally.state === "charge") {
       ctx.fillStyle = "#d8f36a";
       ctx.font = "10px monospace";
-      ctx.fillText(ally.state === "charge" ? "ALLY ATTACK" : "FERRUCUTUS // SUPPORT", x - 15, y - 14);
+      ctx.fillText(tr(ally.state === "charge" ? "ALLY ATTACK" : "FERRUCUTUS // SUPPORT"), x - 15, y - 14);
     }
     return;
   }
@@ -490,11 +502,11 @@ function drawFerrucutus(ally) {
   if (ally.state === "brace" || ally.state === "bridge") {
     ctx.fillStyle = "#d8f36a";
     ctx.font = "10px monospace";
-    ctx.fillText("FERRUCUTUS // SUPPORT", x - 15, y - 14);
+    ctx.fillText(tr("FERRUCUTUS // SUPPORT"), x - 15, y - 14);
   } else if (ally.state === "charge") {
     ctx.fillStyle = "#e8c58a";
     ctx.font = "10px monospace";
-    ctx.fillText("ALLY ATTACK", x + 8, y - 14);
+    ctx.fillText(tr("ALLY ATTACK"), x + 8, y - 14);
   }
 }
 
@@ -545,7 +557,7 @@ function drawHunter(hunter) {
   } else if (defeated) {
     ctx.fillStyle = "#d8f36a";
     ctx.font = "9px monospace";
-    ctx.fillText("CAPTIVE FREE", x - 14, y - 8);
+    ctx.fillText(tr("CAPTIVE FREE"), x - 14, y - 8);
   }
 
   if (!defeated) {
@@ -592,8 +604,8 @@ function syncFacility() {
 }
 
 function updateCampaignHud() {
-  if (campaignObjectiveLabel) campaignObjectiveLabel.textContent = campaign.objective;
-  if (campaignChapterLabel) campaignChapterLabel.textContent = campaign.chapter;
+  if (campaignObjectiveLabel) campaignObjectiveLabel.textContent = tr(campaign.objective);
+  if (campaignChapterLabel) campaignChapterLabel.textContent = tr(campaign.chapter);
   if (rescuesLabel) rescuesLabel.textContent = String(rescues).padStart(2, "0");
 }
 
@@ -606,11 +618,11 @@ function renderStoryPanel() {
   const scene = campaign.activeScene;
   const line = campaign.currentLine;
   if (!scene || !line || !storyPanel) return;
-  storyTitle.textContent = scene.title;
-  storySpeaker.textContent = line.speaker;
-  storyText.textContent = line.text;
+  storyTitle.textContent = tr(scene.title);
+  storySpeaker.textContent = tr(line.speaker);
+  storyText.textContent = tr(line.text);
   storyProgress.textContent = (scene.index + 1) + " / " + scene.lines.length;
-  storyNextButton.textContent = scene.index + 1 >= scene.lines.length ? "CONTINUAR ↗" : "SIGUIENTE →";
+  storyNextButton.textContent = scene.index + 1 >= scene.lines.length ? ui("continue") : ui("next");
   storyPanel.classList.remove("hidden");
   music.setDucked(true);
 }
@@ -618,12 +630,12 @@ function renderStoryPanel() {
 function showCampaignEnding() {
   if (!campaign.flags.completed) return;
   storyPanel?.classList.add("hidden");
-  overlay.querySelector(".overlay-kicker").textContent = "OPERATION COMPLETE";
-  overlay.querySelector("h2").innerHTML = "WE BROUGHT<br><em>HER HOME.</em>";
-  overlay.querySelector("p").textContent = "Beta fue rescatada. La instalación clandestina quedó expuesta. Campaña completada.";
-  overlay.querySelector("button").textContent = "JUGAR DE NUEVO ↗";
+  overlay.querySelector(".overlay-kicker").textContent = ui("operationComplete");
+  overlay.querySelector("h2").innerHTML = locale === "es" ? "LA TRAJIMOS<br><em>A CASA.</em>" : "WE BROUGHT<br><em>HER HOME.</em>";
+  overlay.querySelector("p").textContent = ui("rescuedMessage");
+  overlay.querySelector("button").textContent = ui("replay");
   overlay.classList.remove("hidden");
-  stateLabel.textContent = "MISSION COMPLETE";
+  stateLabel.textContent = ui("missionComplete");
 }
 
 function advanceStory() {
@@ -820,7 +832,7 @@ function drawIndoraptor(boss) {
     ctx.setLineDash([]);
     ctx.fillStyle = "#ff9b7e";
     ctx.font = "11px monospace";
-    ctx.fillText(boss.attackName === "pounce" ? "POUNCE INCOMING" : "CLAW STRIKE", boss.x - 5, boss.y - 18);
+    ctx.fillText(tr(boss.attackName === "pounce" ? "POUNCE INCOMING" : "CLAW STRIKE"), boss.x - 5, boss.y - 18);
   }
 }
 
@@ -914,7 +926,7 @@ function drawIndominus(boss) {
       ctx.stroke();
       ctx.fillStyle = "#ffc078";
       ctx.font = "11px monospace";
-      ctx.fillText("SONIC ROAR // JUMP", boss.x + 25, boss.y - 18);
+      ctx.fillText(tr("SONIC ROAR // JUMP"), boss.x + 25, boss.y - 18);
     } else {
       ctx.setLineDash([9, 6]);
       ctx.strokeRect(
@@ -927,7 +939,7 @@ function drawIndominus(boss) {
       ctx.fillStyle = "#ffc078";
       ctx.font = "11px monospace";
       ctx.fillText(
-        boss.attackName === "charge" ? "CHARGE INCOMING" : "TAIL SWEEP",
+        tr(boss.attackName === "charge" ? "CHARGE INCOMING" : "TAIL SWEEP"),
         boss.x + 20,
         boss.y - 18
       );
@@ -982,7 +994,7 @@ function drawBossHud() {
     ctx.font = "12px monospace";
     ctx.textAlign = "center";
     ctx.fillText(
-      activeBoss.kind === "indoraptor" ? "MINIBOSS // INDORAPTOR" : "MINIBOSS // INDOMINUS REX",
+      tr(activeBoss.kind === "indoraptor" ? "MINIBOSS // INDORAPTOR" : "MINIBOSS // INDOMINUS REX"),
       GAME.width / 2,
       barY - 11
     );
@@ -992,11 +1004,11 @@ function drawBossHud() {
     ctx.fillRect(barX, barY, barWidth * (activeBoss.health / activeBoss.maxHealth), 9);
     ctx.fillStyle = "#b9c4b8";
     ctx.font = "9px monospace";
-    ctx.fillText("FASE " + activeBoss.phase, GAME.width / 2, barY + 23);
+    ctx.fillText((locale === "es" ? "FASE " : "PHASE ") + activeBoss.phase, GAME.width / 2, barY + 23);
     ctx.fillStyle = activeBoss.isVulnerable ? "#d8f36a" : "#a5b0a5";
     ctx.font = "8px monospace";
     ctx.fillText(
-      activeBoss.isVulnerable ? "VENTANA DE ATAQUE // EXPUESTO" : "ESPERÁ SU RECUPERACIÓN",
+      tr(activeBoss.isVulnerable ? "VENTANA DE ATAQUE // EXPUESTO" : "ESPERÁ SU RECUPERACIÓN"),
       GAME.width / 2,
       barY + 35
     );
@@ -1014,7 +1026,7 @@ function drawBossHud() {
     ctx.fillStyle = "#d8f36a";
     ctx.font = "11px monospace";
     ctx.textAlign = "center";
-    ctx.fillText("APEX THREAT DETECTED", GAME.width / 2, 211);
+    ctx.fillText(tr("APEX THREAT DETECTED"), GAME.width / 2, 211);
     ctx.fillStyle = "#f0f2e9";
     ctx.font = "bold 29px sans-serif";
     ctx.fillText(bossCueTitle, GAME.width / 2, 249);
@@ -1242,11 +1254,11 @@ function update(delta) {
   bestLabel.textContent = Math.floor(best()).toString().padStart(4, "0") + " m";
   if (abilityLabel) {
     const ready = player.abilityCooldown <= 0;
-    abilityLabel.textContent = ready ? "HABILIDAD LISTA" : "RECARGA " + player.abilityCooldown.toFixed(1) + "s";
+    abilityLabel.textContent = ready ? ui("abilityReady") : ui("cooldown") + " " + player.abilityCooldown.toFixed(1) + "s";
     abilityLabel.classList.toggle("ready", ready);
   }
   if (healthLabel) {
-    healthLabel.textContent = "INTEGRIDAD " + String(player.health).padStart(2, "0") + "/03";
+    healthLabel.textContent = ui("integrity") + " " + String(player.health).padStart(2, "0") + "/03";
   }
   if (beta?.state === "following" && extractionX && player.x >= extractionX && beta.x >= extractionX - 220) {
     finishCampaign();
@@ -1255,8 +1267,8 @@ function update(delta) {
     const nearbyConsole = facilityConsoles.find((terminal) => terminal.canInteract(player));
     const nearBeta = beta && beta.state === "confined" && Math.abs(player.x - beta.x) < 112;
     interactionHintLabel.textContent = nearbyConsole
-      ? "E // " + (nearbyConsole.kind === "power" ? "ACTIVAR ENERGÍA" : "ABRIR SEGURIDAD")
-      : nearBeta ? "E // BETA" : beta?.state === "following" ? "BETA // ESCORTANDO" : "";
+      ? "E // " + (nearbyConsole.kind === "power" ? ui("activatePower") : ui("openSecurity"))
+      : nearBeta ? "E // " + ui("beta") : beta?.state === "following" ? "BETA // " + ui("escorting") : "";
   }
 }
 
@@ -1316,26 +1328,26 @@ function render() {
     if (terminal.canInteract(player)) {
       ctx.fillStyle = "#d8f36a";
       ctx.font = "10px monospace";
-      ctx.fillText("E // INTERACT", terminal.x - 18, terminal.y - 24);
+      ctx.fillText(tr("E // INTERACT"), terminal.x - 18, terminal.y - 24);
     }
   }
   if (beta && beta.state === "confined" && Math.abs(player.x - beta.x) < 112) {
     ctx.fillStyle = "#d8f36a";
     ctx.font = "10px monospace";
-    ctx.fillText(campaign.canFreeBeta() ? "E // FREE BETA" : "CELL LOCKED", beta.x - 12, beta.y - 30);
+    ctx.fillText(tr(campaign.canFreeBeta() ? "E // FREE BETA" : "CELL LOCKED"), beta.x - 12, beta.y - 30);
   }
   ctx.restore();
 
   ctx.fillStyle = "#eaf0d9";
   ctx.font = "11px monospace";
-  ctx.fillText(level().name, 24, 34);
+  ctx.fillText(tr(level().name), 24, 34);
   ctx.fillStyle = "#d8f36a";
   ctx.fillRect(24, 47, Math.min(220, distance / 12), 3);
   ctx.fillStyle = "#d2a27d";
   ctx.font = "10px monospace";
-  ctx.fillText(selected === "blue" ? "BLUE // DOUBLE JUMP + DASH" : "VASTI // HEAVY STOMP", 24, GAME.height - 18);
+  ctx.fillText(tr(selected === "blue" ? "BLUE // DOUBLE JUMP + DASH" : "VASTI // HEAVY STOMP"), 24, GAME.height - 18);
   ctx.fillStyle = "#d8f36a";
-  ctx.fillText("FERRUCUTUS SUPPORT // APEX AI ACTIVE", GAME.width - 292, GAME.height - 18);
+  ctx.fillText(tr("FERRUCUTUS SUPPORT // APEX AI ACTIVE"), GAME.width - 292, GAME.height - 18);
   drawBossHud();
 }
 
@@ -1380,7 +1392,9 @@ function resetPlayer() {
 function start() {
   if (!desktopPlayback.matches) return;
   audio.unlock();
+  dinoModal.classList.add("hidden");
   overlay.querySelector("button").hidden = true;
+  dinoModal.classList.add("hidden");
   resetPlayer();
   music.start(audio.context, currentMusicTheme());
   music.setPaused(false);
@@ -1392,9 +1406,9 @@ function start() {
   accumulator = 0;
   distance = 0;
   rescues = 0;
-  stateLabel.textContent = "IN PROGRESS";
+  stateLabel.textContent = ui("inProgress");
   rescuesLabel.textContent = "00";
-  if (healthLabel) healthLabel.textContent = "INTEGRIDAD 03/03";
+  if (healthLabel) healthLabel.textContent = ui("integrity") + " 03/03";
   campaign.begin();
   updateCampaignHud();
   renderStoryPanel();
@@ -1415,12 +1429,12 @@ function endGame() {
     rescues: save.get("rescues") + rescues
   });
   bestLabel.textContent = String(save.get("bestDistance")).padStart(4, "0") + " m";
-  stateLabel.textContent = "SIGNAL LOST";
-  overlay.querySelector(".overlay-kicker").textContent = "MISSION INTERRUPTED";
-  overlay.querySelector("h2").innerHTML = "THE WILD<br><em>STRIKES BACK.</em>";
-  overlay.querySelector("p").textContent = "Distancia: " + Math.floor(distance) + " m · Rescates: " + rescues + ". Volvé a intentarlo.";
+  stateLabel.textContent = ui("signalLost");
+  overlay.querySelector(".overlay-kicker").textContent = ui("missionInterrupted");
+  overlay.querySelector("h2").innerHTML = locale === "es" ? "LA NATURALEZA<br><em>CONTRAATACA.</em>" : "THE WILD<br><em>STRIKES BACK.</em>";
+  overlay.querySelector("p").textContent = ui("defeatMessage").replace("{distance}", String(Math.floor(distance))).replace("{rescues}", String(rescues));
   overlay.querySelector("button").hidden = false;
-  overlay.querySelector("button").textContent = "REINTENTAR ↗";
+  overlay.querySelector("button").textContent = ui("retry");
   overlay.classList.remove("hidden");
   render();
 }
@@ -1429,13 +1443,13 @@ function togglePause() {
   if (!desktopPlayback.matches || !running) return;
   paused = !paused;
   music.setPaused(paused);
-  stateLabel.textContent = paused ? "PAUSED" : "IN PROGRESS";
+  stateLabel.textContent = paused ? ui("paused") : ui("inProgress");
   if (paused) {
-    overlay.querySelector(".overlay-kicker").textContent = "OPERATION PAUSED";
-    overlay.querySelector("h2").innerHTML = "CATCH YOUR<br><em>BREATH.</em>";
-    overlay.querySelector("p").textContent = "La operación está en pausa.";
+    overlay.querySelector(".overlay-kicker").textContent = ui("operationPaused");
+    overlay.querySelector("h2").innerHTML = ui("pauseTitle");
+    overlay.querySelector("p").textContent = ui("pausedMessage");
     overlay.querySelector("button").hidden = false;
-    overlay.querySelector("button").textContent = "CONTINUAR ↗";
+    overlay.querySelector("button").textContent = ui("continue");
     overlay.classList.remove("hidden");
   } else {
     overlay.querySelector("button").hidden = true;
@@ -1450,7 +1464,9 @@ function selectCharacter(value) {
   selected = value;
   save.update({ selectedCharacter: value });
   document.querySelectorAll(".character-card").forEach((card) => {
-    card.classList.toggle("active", card.dataset.character === value);
+    const active = card.dataset.character === value;
+    card.classList.toggle("active", active);
+    card.setAttribute("aria-pressed", String(active));
   });
   if (!running) {
     player = new Player(selected, GAME.playerX, GAME.groundY);
@@ -1461,15 +1477,107 @@ function selectCharacter(value) {
 document.querySelectorAll(".character-card").forEach((card) => {
   card.addEventListener("click", () => selectCharacter(card.dataset.character));
 });
-document.querySelector("#start-button").addEventListener("click", start);
+document.querySelector("#start-button").addEventListener("click", openDinoModal);
 storyNextButton?.addEventListener("click", advanceStory);
 document.querySelector("#overlay-start").addEventListener("click", () => {
   if (paused) {
     togglePause();
     return;
   }
-  start();
+  openDinoModal();
 });
+function openDinoModal() {
+  if (!desktopPlayback.matches || running) return;
+  selectCharacter(selected);
+  dinoModal.classList.remove("hidden");
+  document.querySelector("#confirm-character").focus();
+}
+
+function closeDinoModal() {
+  dinoModal.classList.add("hidden");
+  document.querySelector("#start-button").focus();
+}
+
+function startFromDinoModal() {
+  if (dinoModal.classList.contains("hidden") || !desktopPlayback.matches) return;
+  dinoModal.classList.add("hidden");
+  start();
+}
+
+function setMenuOpen(open) {
+  navMenu.classList.toggle("hidden", !open);
+  menuToggle.classList.toggle("open", open);
+  menuToggle.setAttribute("aria-expanded", String(open));
+  menuToggle.setAttribute("aria-label", ui(open ? "closeMenu" : "openMenu"));
+}
+
+function setLanguage(nextLocale) {
+  if (!["es", "en"].includes(nextLocale)) return;
+  locale = nextLocale;
+  save.update({ language: locale });
+  applyLanguage();
+  updateCampaignHud();
+  renderStoryPanel();
+  render();
+}
+
+function applyLanguage() {
+  document.documentElement.lang = locale;
+  document.querySelectorAll("[data-i18n]").forEach((element) => {
+    element.textContent = ui(element.dataset.i18n);
+  });
+  document.querySelectorAll("[data-i18n-aria]").forEach((element) => {
+    element.setAttribute("aria-label", ui(element.dataset.i18nAria));
+  });
+  document.querySelectorAll("[data-language]").forEach((button) => {
+    const active = button.dataset.language === locale;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+  soundLabel.textContent = audio.enabled ? ui("sound") : ui("silence");
+  if (desktopBlocked) {
+    stateLabel.textContent = ui("desktopOnly");
+    overlay.querySelector(".overlay-kicker").textContent = ui("desktopRequired");
+    overlay.querySelector("h2").innerHTML = ui("desktopOverlayTitle");
+    overlay.querySelector("p").textContent = ui("desktopMessage");
+  } else if (!running && !paused && !campaign.flags.completed) {
+    overlay.querySelector(".overlay-kicker").textContent = "FRANTIC SEARCH";
+    overlay.querySelector("h2").innerHTML = ui("wildWatching");
+    overlay.querySelector("p").textContent = ui("startMessage");
+    if (stateLabel.textContent) stateLabel.textContent = ui("standby");
+  }
+}
+
+function setEnvironmentMode(mode) {
+  if (!["normal", "mud", "fog"].includes(mode)) return;
+  environmentMode = mode;
+  save.update({ environmentMode });
+  canvasWrap.classList.remove("mode-mud", "mode-fog");
+  if (mode === "mud") canvasWrap.classList.add("mode-mud");
+  if (mode === "fog") canvasWrap.classList.add("mode-fog");
+  document.querySelectorAll("[data-mode]").forEach((button) => {
+    const active = button.dataset.mode === mode;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+}
+
+dinoModal.addEventListener("click", (event) => {
+  if (event.target === dinoModal) closeDinoModal();
+});
+document.querySelector("#cancel-character").addEventListener("click", closeDinoModal);
+document.querySelector("#confirm-character").addEventListener("click", startFromDinoModal);
+menuToggle.addEventListener("click", () => setMenuOpen(navMenu.classList.contains("hidden")));
+document.querySelectorAll("[data-language]").forEach((button) => {
+  button.addEventListener("click", () => setLanguage(button.dataset.language));
+});
+document.querySelectorAll("[data-mode]").forEach((button) => {
+  button.addEventListener("click", () => setEnvironmentMode(button.dataset.mode));
+});
+document.addEventListener("pointerdown", (event) => {
+  if (!navMenu.classList.contains("hidden") && !event.target.closest(".nav-actions")) setMenuOpen(false);
+});
+
 document.querySelector("#sound-toggle").addEventListener("click", () => {
   const enabled = !audio.enabled;
   audio.setEnabled(enabled);
@@ -1479,14 +1587,24 @@ document.querySelector("#sound-toggle").addEventListener("click", () => {
     music.setPaused(paused);
     music.setDucked(campaign.sceneOpen);
   }
-  document.querySelector("#sound-toggle").innerHTML = enabled ? "♫ <span>SONIDO</span>" : "♪ <span>SILENCIO</span>";
+  soundIcon.textContent = enabled ? "♫" : "♪";
+  soundLabel.textContent = enabled ? ui("sound") : ui("silence");
   save.update({ muted: !enabled });
 });
 window.addEventListener("keydown", (event) => {
   if (!desktopPlayback.matches) return;
+  if (event.code === "Escape" && !event.repeat) {
+    if (!dinoModal.classList.contains("hidden")) closeDinoModal();
+    else if (!navMenu.classList.contains("hidden")) setMenuOpen(false);
+    return;
+  }
+  if (event.code === "Enter" && !event.repeat && !dinoModal.classList.contains("hidden")) {
+    startFromDinoModal();
+    return;
+  }
   if (event.code === "KeyP" && !event.repeat && !campaign.sceneOpen) togglePause();
   if (event.code === "Enter" && !event.repeat && campaign.sceneOpen) advanceStory();
-  else if (event.code === "Enter" && !running && !paused) start();
+  else if (event.code === "Enter" && !running && !paused) openDinoModal();
 });
 
 bestLabel.textContent = String(save.get("bestDistance")).padStart(4, "0") + " m";
@@ -1496,7 +1614,8 @@ renderStoryPanel();
 if (save.get("muted")) {
   audio.setEnabled(false);
   music.setEnabled(false);
-  document.querySelector("#sound-toggle").innerHTML = "♪ <span>SILENCIO</span>";
+  soundIcon.textContent = "♪";
+  soundLabel.textContent = ui("silence");
 }
 
 function syncDesktopAccess() {
@@ -1514,20 +1633,23 @@ function syncDesktopAccess() {
       storyPanel.classList.add("hidden");
     }
     overlayStartButton.hidden = true;
-    stateLabel.textContent = "DESKTOP ONLY";
-    overlay.querySelector(".overlay-kicker").textContent = "DESKTOP REQUIRED";
-    overlay.querySelector("h2").innerHTML = "DESKTOP<br><em>ONLY.</em>";
-    overlay.querySelector("p").textContent = "Frantic Search se puede jugar únicamente en una computadora con teclado y mouse.";
+    desktopBlocked = true;
+    dinoModal.classList.add("hidden");
+    stateLabel.textContent = ui("desktopOnly");
+    overlay.querySelector(".overlay-kicker").textContent = ui("desktopRequired");
+    overlay.querySelector("h2").innerHTML = ui("desktopOverlayTitle");
+    overlay.querySelector("p").textContent = ui("desktopMessage");
     overlay.classList.remove("hidden");
     render();
     return;
   }
 
-  if (stateLabel.textContent === "DESKTOP ONLY") {
-    stateLabel.textContent = "STANDBY";
+  if (desktopBlocked) {
+    desktopBlocked = false;
+    stateLabel.textContent = ui("standby");
     overlay.querySelector(".overlay-kicker").textContent = "FRANTIC SEARCH";
-    overlay.querySelector("h2").innerHTML = "THE WILD<br><em>IS WATCHING.</em>";
-    overlay.querySelector("p").textContent = "Prepará el equipo. Beta necesita que lleguemos.";
+    overlay.querySelector("h2").innerHTML = ui("wildWatching");
+    overlay.querySelector("p").textContent = ui("startMessage");
     overlay.classList.remove("hidden");
   }
 }
