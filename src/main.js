@@ -11,6 +11,9 @@ import { IndominusRexBoss } from "./entities/IndominusRexBoss.js";
 import { PhysicsSystem } from "./systems/PhysicsSystem.js";
 import { CollisionSystem } from "./systems/CollisionSystem.js";
 import { PlatformWorld } from "./world/PlatformWorld.js";
+import { CampaignManager } from "./campaign/CampaignManager.js";
+import { Beta } from "./entities/Beta.js";
+import { FacilityConsole } from "./entities/FacilityConsole.js";
 
 const canvas = document.querySelector("#game");
 const ctx = canvas.getContext("2d");
@@ -21,6 +24,15 @@ const rescuesLabel = document.querySelector("#rescues");
 const bestLabel = document.querySelector("#best");
 const abilityLabel = document.querySelector("#ability-status");
 const healthLabel = document.querySelector("#health-status");
+const campaignObjectiveLabel = document.querySelector("#campaign-objective");
+const campaignChapterLabel = document.querySelector("#campaign-chapter");
+const interactionHintLabel = document.querySelector("#interaction-hint");
+const storyPanel = document.querySelector("#story-panel");
+const storyTitle = document.querySelector("#story-title");
+const storySpeaker = document.querySelector("#story-speaker");
+const storyText = document.querySelector("#story-text");
+const storyProgress = document.querySelector("#story-progress");
+const storyNextButton = document.querySelector("#story-next");
 
 const save = new SaveManager();
 const audio = new AudioManager();
@@ -49,6 +61,11 @@ let bossCueTimer = 0;
 let bossCueTitle = "";
 let dashHitIds = new Set();
 let particles = [];
+let campaign = new CampaignManager();
+let beta = null;
+let facilityConsoles = [];
+let extractionX = null;
+let campaignSaved = false;
 
 const rand = (min, max) => min + Math.random() * (max - min);
 const level = () => [...LEVELS].reverse().find((item) => distance >= item.distance) || LEVELS[0];
