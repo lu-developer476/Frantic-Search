@@ -294,7 +294,7 @@ function drawHunter(hunter) {
   ctx.save();
   const x = hunter.x;
   const y = hunter.y;
-  const alert = hunter.state === "windup" || hunter.state === "attack";
+  const alert = hunter.state === "investigate" || hunter.state === "windup" || hunter.state === "attack";
   const stunned = hunter.state === "stunned";
   const defeated = hunter.defeated;
 
@@ -453,10 +453,9 @@ function update(delta) {
   for (const hunter of hunters) {
     const previousState = hunter.state;
     hunter.update(delta, player);
-    if (previousState !== hunter.state && hunter.state === "windup") audio.collect();
+    if (previousState !== hunter.state && (hunter.state === "investigate" || hunter.state === "windup")) audio.collect();
 
     if (
-      abilityEvent === "dash" &&
       player.dashTimer > 0 &&
       !hunter.defeated &&
       !dashHitIds.has(hunter.id) &&
