@@ -74,6 +74,7 @@ let campaignSaved = false;
 
 const rand = (min, max) => min + Math.random() * (max - min);
 const level = () => [...LEVELS].reverse().find((item) => distance >= item.distance) || LEVELS[0];
+const currentMusicTheme = () => campaign.flags.completed ? "victory" : activeBoss ? "boss" : beta?.state === "following" ? "extraction" : level().environment === "wild" ? "coastal" : level().environment;
 const best = () => Math.max(save.get("bestDistance"), Math.floor(distance));
 
 function roundedRect(context, x, y, width, height, radius) {
@@ -1141,7 +1142,7 @@ function update(delta) {
   syncEncounters();
   syncBossEncounter();
   syncFacility();
-  music.setTheme(activeBoss ? "boss" : beta?.state === "following" ? "extraction" : level().environment === "wild" ? "coastal" : level().environment);
+  music.setTheme(currentMusicTheme());
   campaign.updateLocation(player.x);
   updateCampaignHud();
   if (campaign.sceneOpen) return;
@@ -1378,7 +1379,7 @@ function resetPlayer() {
 function start() {
   audio.unlock();
   resetPlayer();
-  music.start(audio.context, "coastal");
+  music.start(audio.context, currentMusicTheme());
   music.setPaused(false);
   music.setEnabled(audio.enabled);
   overlay.classList.add("hidden");
@@ -1467,6 +1468,11 @@ document.querySelector("#sound-toggle").addEventListener("click", () => {
   const enabled = !audio.enabled;
   audio.setEnabled(enabled);
   music.setEnabled(enabled);
+  if (enabled) {
+    music.start(audio.context, currentMusicTheme());
+    music.setPaused(paused);
+    music.setDucked(campaign.sceneOpen);
+  }
   document.querySelector("#sound-toggle").innerHTML = enabled ? "♫ <span>SONIDO</span>" : "♪ <span>SILENCIO</span>";
   save.update({ muted: !enabled });
 });
