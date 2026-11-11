@@ -5,7 +5,7 @@ const SPRITES = [
 ];
 
 export class SpriteRenderer {
-  constructor(baseUrl = import.meta.env.BASE_URL) {
+  constructor(baseUrl = import.meta.env?.BASE_URL ?? "/") {
     this.baseUrl = baseUrl.endsWith("/") ? baseUrl : baseUrl + "/";
     this.images = new Map();
     this.failed = new Set();
