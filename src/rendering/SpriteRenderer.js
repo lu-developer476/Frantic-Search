@@ -53,12 +53,12 @@ export class SpriteRenderer {
     const prefix = kind === "blue" ? "blue" : "vasti";
     let pose = prefix + "-idle";
 
-    if (player?.duck) {
+    if (kind === "blue" && player?.dashTimer > 0) {
+      pose = "blue-dash";
+    } else if (player?.duck) {
       pose = prefix + "-duck";
     } else if (player && !player.onGround) {
       pose = prefix + "-jump";
-    } else if (kind === "blue" && player?.dashTimer > 0) {
-      pose = "blue-dash";
     } else if (player && Math.abs(player.vx) > 30) {
       const frame = Math.floor(elapsed * 10) % 2 === 0 ? "a" : "b";
       pose = prefix + "-run-" + frame;
