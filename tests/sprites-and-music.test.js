@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { MusicManager } from "../src/audio/MusicManager.js";
+import { AdaptiveMusic } from "../src/audio/AdaptiveMusic.js";
 import { SpriteRenderer } from "../src/rendering/SpriteRenderer.js";
 
 const spriteNames = [
@@ -48,7 +48,7 @@ class FakeAudioContext {
 }
 
 test("music manager schedules original music and switches adaptive themes", () => {
-  const music = new MusicManager();
+  const music = new AdaptiveMusic();
   const context = new FakeAudioContext();
   assert.equal(music.start(context, "coastal"), true);
   music.schedule();
