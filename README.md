@@ -42,6 +42,7 @@ Vercel configuration: Framework Preset **Vite**, Build Command **npm run build**
 - X: character-specific ability
 - P: pause
 - Pointer / touch on the game area: jump
+- Touch controls on small screens: move, jump and use ability
 
 ## Platformer engine — 0.2.0
 
