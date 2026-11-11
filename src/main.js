@@ -486,6 +486,8 @@ function update(delta) {
     }
   }
 
+  allies = allies.filter((ally) => !ally.departed);
+  hunters = hunters.filter((hunter) => hunter.x + hunter.w >= cameraX - 1100);
   if (player.dashTimer <= 0) dashHitIds.clear();
   handleAbilityImpact();
 
