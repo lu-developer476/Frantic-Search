@@ -97,7 +97,6 @@ export class BossEnemy {
     }
 
     if (this.state === "attacking") {
-      this.stateTimer = Math.max(0, this.stateTimer - delta);
       this.attackProgress = 1 - this.stateTimer / this.attackDuration();
       this.onAttack(delta, target);
 
