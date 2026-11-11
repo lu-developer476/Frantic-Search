@@ -1,101 +1,126 @@
 # AVOID — Operation: Lost Hatchling
 
-A fan-made 2D survival-platformer built with HTML5 Canvas 2D, vanilla JavaScript ES modules, CSS3 and Vite.
+**Version 1.0.0 · 2D survival-platformer · HTML5 Canvas · JavaScript · Vite**
 
-## Story
+AVOID is an unofficial fan-made dinosaur survival-platformer. Play as Blue or Vasti, keep the other protagonist by your side, and rescue Beta from a clandestine poaching and research operation.
 
-Blue and Vasti pursue a poacher convoy carrying Beta toward an unregistered research complex. The campaign follows the trail from the coastal highway through the redwood frontier and into a clandestine containment facility. The objective is to defeat the apex threats, restore the facility systems, release Beta and escort her to the east extraction gate.
+## Campaign
 
-## Stack
+The finite campaign runs through six chapters:
 
-- HTML5 Canvas 2D
-- Vanilla JavaScript (ES modules)
-- CSS3
-- Web Audio API (procedural sound effects)
-- LocalStorage (settings and campaign completion statistics)
-- Vite
-- Vercel static hosting
+1. **Coastal Highway** — follow the poacher convoy.
+2. **Redwood Frontier** — survive the forest route and encounter the Indoraptor.
+3. **Poacher Black Site** — breach the clandestine complex.
+4. **Containment Perimeter** — defeat the Indominus Rex.
+5. **Beta Containment** — restore auxiliary power, release the security lock and free Beta.
+6. **Extraction Zone** — escort Beta to the east gate and complete the rescue.
 
-## Development
+Dialogue scenes pause the simulation. The campaign only completes after Beta has been freed and reaches the extraction gate with the player.
 
-Requires Node.js 20+.
+## Characters and encounters
 
-\`\`\`bash
-npm install
-npm run dev
-\`\`\`
+- **Blue:** fast movement, double jump and evasive dash.
+- **Vasti:** heavier movement, ground shockwave and aerial ground-slam.
+- **Beta:** captive hatchling who becomes an escort companion after the facility systems are restored.
+- **Ferrucutus Cerastes:** ally that helps bridge selected gaps and attacks enemies during exposed windows.
+- **Poachers:** state-driven patrol, investigation, pursuit and melee attack AI.
+- **Indoraptor:** pounce and claw patterns with two phases.
+- **Indominus Rex:** sonic roar, charge and tail sweep with two phases.
 
-## Production
+## Art, animation and audio — release 1.0.0
 
-\`\`\`bash
-npm run build
-npm run preview
-\`\`\`
+- 16 original, self-contained SVG vector sprites for Blue, Vasti, Beta, Ferrucutus, hunters, Indoraptor and Indominus Rex.
+- Separate player poses for idle, run cycles, jump, duck and dash.
+- Sprite images are preloaded and cached; the Canvas geometry remains as a safe fallback if a sprite cannot load.
+- Original adaptive soundtrack synthesized at runtime with Web Audio API. Themes change across the coast, forest, black site, facility, boss encounters, extraction and victory.
+- Procedural sound effects for movement, damage, rescue and boss events.
+- No remote music, image or font downloads are required at runtime.
 
-Vercel configuration: Framework Preset **Vite**, Build Command **npm run build**, Output Directory **dist**.
+## Performance and accessibility
+
+- Fixed-step physics simulation at 60 Hz with a capped frame delta.
+- World sections and off-screen encounter entities are pruned as the camera advances.
+- Canvas rendering is limited to visible world actors; transient particles are capped.
+- Production builds target ES2022, minify JavaScript and CSS, and omit source maps.
+- Reduced-motion preferences are respected by the interface.
+- Keyboard and touch controls are supported.
 
 ## Controls
 
-- A / D or Left / Right: move horizontally
-- Space / Arrow Up / W: jump
-- Arrow Down / S: duck while grounded
-- X: character-specific ability (Blue dash / Vasti stomp)
-- E / F: interact with terminals and Beta
-- P: pause
-- Pointer / touch on the game area: jump
-- Mobile touch controls: move, jump, use ability and interact
+| Action | Keyboard | Touch |
+|---|---|---|
+| Move | A / D or ← / → | ← / → |
+| Jump | Space / W / ↑ | ↑ |
+| Duck | S / ↓ | — |
+| Character ability | X | X |
+| Interact with terminal / Beta | E or F | E |
+| Pause | P | — |
+| Advance story dialogue | Enter | Continue button |
 
-## Platformer engine — 0.2.0
+## Local development
 
-- Side-scrolling camera, horizontal movement, acceleration, gravity and one-way platform landings.
-- Floating ledges, floor segments, traversable gaps and coyote-time jump input.
-- Blue: double jump and evasive dash.
-- Vasti: ground shockwave and aerial ground-slam.
-- Fixed-step simulation at 60 Hz and streamed world sections.
-- Both protagonists remain visible; the unselected dinosaur follows the controlled character.
+Requires Node.js **20.19+** or **22.12+**.
 
-## Allies and enemies — 0.3.0
+```bash
+npm install
+npm run dev
+```
 
-- Ferrucutus Cerastes scouts selected sectors, bridges certain floor gaps and charges nearby poachers.
-- Poachers use patrol, investigate, pursue, telegraph, attack, stun and defeat states.
-- Hunters have health; defeating a carrier releases a captive and increments the rescue counter.
-- Player integrity, temporary post-hit invulnerability, collision feedback and audio cues.
+## Tests and production build
 
-## Miniboss encounters — 0.4.0
+The project uses Node's built-in test runner; no test framework dependency is required.
 
-- Indoraptor encounter: pounce and claw patterns with a faster second phase.
-- Indominus Rex encounter: sonic roar, charge and tail sweep with a faster second phase.
-- Arena boundaries, clear attack telegraphs, boss health bars, vulnerability windows and phase cues.
-- Blue, Vasti and Ferrucutus can damage bosses during exposed recovery windows.
+```bash
+npm test
+npm run build
+npm run preview
+# or run tests and build in one command
+npm run check
+```
 
-## Narrative campaign — 0.5.0
+The automated suite covers campaign gating, facility terminal interaction, Beta escort, finite world generation, miniboss phases and hitboxes, sprite availability, sprite loading and adaptive music scheduling.
 
-- Opening briefing and chapter scenes pause gameplay until the player advances the dialogue.
-- Campaign chapters: Coastal Highway, Redwood Frontier, Poacher Black Site, Containment Perimeter, Beta Containment and Extraction Zone.
-- Facility exteriors, security fences, perimeter lighting, containment structures and an east extraction gate are rendered as world scenery.
-- The final facility is a finite level segment; world generation stops at the extraction area.
-- Two interactive terminals control the auxiliary power relay and containment security lock. The security terminal stays locked until power is restored.
-- Beta is a distinct hatchling entity. She appears confined in cell block C, can be freed only after both systems are online and the Indominus Rex is defeated, then follows the player.
-- The campaign completes only when the rescued Beta reaches the extraction gate with the player.
-- A final narrative sequence confirms the rescue and saves campaign-completion statistics locally.
-- E / F and the on-screen mobile interaction control activate the terminals and release Beta.
+## Deploy to Vercel
 
-## Known limitations
+The repository includes `vercel.json` with Vite framework detection, `npm run build`, and the `dist` output directory.
 
-- This is a finite prototype campaign, not yet a full production-length game with multiple branching paths or replayable mission selection.
-- Narrative is delivered through dialogue panels; there are no voiced performances or cinematic camera sequences yet.
-- Facility structures, Beta and dinosaur models use original Canvas geometry placeholders rather than final illustrated sprites.
-- The extraction finale is a playable objective, but there is no persistent world map, chapter select or New Game+ system yet.
-- A production Vite build and end-to-end browser playtest still need to run in an environment with package registry access.
+1. Import `lu-developer476/Avoid` into Vercel.
+2. Select **main** as the Production Branch.
+3. Keep the Vite build settings: Build Command `npm run build`, Output Directory `dist`.
+4. Deploy.
 
-## Planned next steps
+Vercel uses the root asset path (`/`). After Git integration is connected, pushes to `main` trigger production deployments and other branches can be used for previews.
 
-1. Replace geometric character placeholders with original sprite sheets and animation states.
-2. Add mission-specific checkpoints, save/resume and campaign chapter selection.
-3. Add richer stealth, environmental puzzles and poacher weapon behaviours.
-4. Polish narrative presentation, sound design, difficulty and accessibility.
-5. Run production build, cross-browser playtests and deploy to Vercel.
+## Deploy to GitHub Pages
+
+The repository includes `.github/workflows/deploy.yml`. On pushes to `main` it runs tests, builds the root deployment, builds the repository-subpath version and deploys the Pages artifact. Pull requests run verification but do not publish.
+
+**One-time repository setting:** open **Settings → Pages → Build and deployment → Source** and select **GitHub Actions**.
+
+After the first successful workflow deployment, the site is available at:
+
+**https://lu-developer476.github.io/Avoid/**
+
+Vite automatically uses `/Avoid/` as the asset base for this deployment, while Vercel keeps `/`. Both targets use the same source code.
+
+You can also run the Pages build locally:
+
+```bash
+GITHUB_PAGES=true npm run build
+npm run preview
+```
+
+## Repository scripts
+
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Local Vite development server |
+| `npm test` | Automated Node.js tests |
+| `npm run build` | Production build for Vercel / root hosting |
+| `GITHUB_PAGES=true npm run build` | Production build for GitHub Pages |
+| `npm run preview` | Preview the last production build |
+| `npm run check` | Run tests and root production build |
 
 ## Originality and rights
 
-This is an unofficial fan-made implementation and is not affiliated with Universal Products & Experiences or Amblin Entertainment. Prototype visuals are generated with original Canvas geometry; no Pixeljam game assets, source code, sprites or audio are copied. Any franchise-inspired artwork is original fan art rather than extracted material.
+This is an unofficial fan-made project and is not affiliated with Universal Products & Experiences or Amblin Entertainment. Character sprites and soundtrack are original assets created for this project. No assets, sprites, code or music from Pixeljam's Dino Run are included.
