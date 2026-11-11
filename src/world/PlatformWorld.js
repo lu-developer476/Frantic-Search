@@ -71,6 +71,17 @@ export class PlatformWorld {
       });
     }
 
+    if (index === 2 || index === 3 || index === 4) {
+      const propsStart = index * this.sectionLength;
+      this.facilityProps.push(
+        { x: propsStart + 90, y: 255, w: 220, h: 175, kind: "facility-building" },
+        { x: propsStart + 410, y: 225, w: 300, h: 205, kind: index === 4 ? "containment-wing" : "facility-building" },
+        { x: propsStart + 1040, y: 270, w: 245, h: 160, kind: "facility-building" },
+        { x: propsStart + 130, y: 150, w: 18, h: 280, kind: "facility-lamp" },
+        { x: propsStart + 1160, y: 140, w: 18, h: 290, kind: "facility-lamp" }
+      );
+    }
+
     if (index === 2) {
       this.bossSpawns.push({
         id: "indoraptor-encounter",
