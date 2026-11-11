@@ -7,13 +7,18 @@ export class PlatformWorld {
     this.hunterSpawns = [];
     this.allySpawns = [];
     this.bossSpawns = [];
+    this.facilitySpawns = null;
+    this.facilityProps = [];
     this.generatedSections = 0;
     this.bridgeSequence = 0;
     this.extendTo(2800);
   }
 
   extendTo(worldX) {
-    while (this.generatedSections * this.sectionLength < worldX) {
+    while (
+      this.generatedSections * this.sectionLength < worldX &&
+      this.generatedSections <= 5
+    ) {
       this.generateSection(this.generatedSections);
       this.generatedSections += 1;
     }
@@ -24,17 +29,18 @@ export class PlatformWorld {
     const floorHeight = 110;
 
     const isBossArena = index === 2 || index === 4;
+    const isFinalArea = index === 5;
     this.platforms.push(
-      { x: start, y: this.groundY, w: 730, h: floorHeight, kind: "ground" },
-      ...(isBossArena ? [{ x: start + 730, y: this.groundY, w: 170, h: floorHeight, kind: "ground" }] : []),
-      { x: start + 900, y: this.groundY, w: 620, h: floorHeight, kind: "ground" },
+      { x: start, y: this.groundY, w: isFinalArea ? 1900 : 730, h: floorHeight, kind: "ground" },
+      ...(!isFinalArea && isBossArena ? [{ x: start + 730, y: this.groundY, w: 170, h: floorHeight, kind: "ground" }] : []),
+      ...(!isFinalArea ? [{ x: start + 900, y: this.groundY, w: 620, h: floorHeight, kind: "ground" }] : []),
       { x: start + 250, y: 354, w: 165, h: 18, kind: "ledge" },
       { x: start + 505, y: 306, w: 150, h: 18, kind: "ledge" },
       { x: start + 695, y: 365, w: 215, h: 18, kind: "ledge" },
       { x: start + 1090, y: 342, w: 185, h: 18, kind: "ledge" }
     );
 
-    const obstacleSet = isBossArena ? [] : [
+    const obstacleSet = isBossArena || isFinalArea ? [] : [
       { offset: 445, type: index % 3 === 0 ? "crate" : "rock", w: 52, h: 52 },
       { offset: 1320, type: index % 2 === 0 ? "crate" : "rock", w: 55, h: 58 }
     ];
@@ -48,7 +54,7 @@ export class PlatformWorld {
       });
     }
 
-    if (!isBossArena) {
+    if (!isBossArena && !isFinalArea) {
       this.hunterSpawns.push({
         id: "hunter-" + index,
         x: start + 1045,
@@ -58,7 +64,7 @@ export class PlatformWorld {
       });
     }
 
-    if (index % 3 === 0 || isBossArena) {
+    if ((index % 3 === 0 || isBossArena) && !isFinalArea) {
       this.allySpawns.push({
         id: "ferrucutus-" + index,
         x: start + (isBossArena ? 560 : 500)
@@ -79,6 +85,28 @@ export class PlatformWorld {
         kind: "indominus",
         x: start + 760
       });
+    }
+
+    if (isFinalArea) {
+      this.facilitySpawns = {
+        consoles: [
+          { id: "aux-power", kind: "power", x: start + 245 },
+          { id: "security-lock", kind: "security", x: start + 520 }
+        ],
+        beta: start + 900,
+        extraction: start + 1510
+      };
+      this.facilityProps.push(
+        { x: start + 50, y: 220, w: 210, h: 210, kind: "facility-building" },
+        { x: start + 310, y: 180, w: 390, h: 250, kind: "facility-building" },
+        { x: start + 760, y: 230, w: 260, h: 200, kind: "containment-wing" },
+        { x: start + 1110, y: 245, w: 260, h: 185, kind: "facility-building" },
+        { x: start + 140, y: 290, w: 1700, h: 14, kind: "security-fence" },
+        { x: start + 150, y: 90, w: 28, h: 340, kind: "facility-lamp" },
+        { x: start + 610, y: 80, w: 28, h: 350, kind: "facility-lamp" },
+        { x: start + 1170, y: 80, w: 28, h: 350, kind: "facility-lamp" },
+        { x: start + 1530, y: 80, w: 28, h: 350, kind: "facility-lamp" }
+      );
     }
   }
 
@@ -144,6 +172,7 @@ export class PlatformWorld {
     this.hunterSpawns = this.hunterSpawns.filter((spawn) => spawn.x >= cutoff);
     this.allySpawns = this.allySpawns.filter((spawn) => spawn.x >= cutoff);
     this.bossSpawns = this.bossSpawns.filter((spawn) => spawn.x >= cutoff);
+    this.facilityProps = this.facilityProps.filter((prop) => prop.x + prop.w >= cutoff);
   }
 
   platformsNear(worldX, range = 1200) {
