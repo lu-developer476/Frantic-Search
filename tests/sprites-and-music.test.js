@@ -18,7 +18,7 @@ test("every production actor sprite is present and self-contained", () => {
     assert.match(svg, /<svg\b/);
     assert.match(svg, /viewBox=/);
     assert.match(svg, /xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
-    assert.doesNotMatch(svg, /https?:\/\//g, "sprites should not depend on remote images");
+    assert.doesNotMatch(svg, /href=/i, "sprites should not depend on remote images");
   }
 });
 
