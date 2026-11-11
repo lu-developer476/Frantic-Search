@@ -23,8 +23,10 @@ export class PlatformWorld {
     const start = index * this.sectionLength;
     const floorHeight = 110;
 
+    const isBossArena = index === 2 || index === 4;
     this.platforms.push(
       { x: start, y: this.groundY, w: 730, h: floorHeight, kind: "ground" },
+      ...(isBossArena ? [{ x: start + 730, y: this.groundY, w: 170, h: floorHeight, kind: "ground" }] : []),
       { x: start + 900, y: this.groundY, w: 620, h: floorHeight, kind: "ground" },
       { x: start + 250, y: 354, w: 165, h: 18, kind: "ledge" },
       { x: start + 505, y: 306, w: 150, h: 18, kind: "ledge" },
@@ -32,7 +34,7 @@ export class PlatformWorld {
       { x: start + 1090, y: 342, w: 185, h: 18, kind: "ledge" }
     );
 
-    const obstacleSet = [
+    const obstacleSet = isBossArena ? [] : [
       { offset: 445, type: index % 3 === 0 ? "crate" : "rock", w: 52, h: 52 },
       { offset: 1320, type: index % 2 === 0 ? "crate" : "rock", w: 55, h: 58 }
     ];
@@ -46,18 +48,20 @@ export class PlatformWorld {
       });
     }
 
-    this.hunterSpawns.push({
-      id: "hunter-" + index,
-      x: start + 1045,
-      patrolStart: start + 955,
-      patrolEnd: start + 1270,
-      carriesCaptive: true
-    });
+    if (!isBossArena) {
+      this.hunterSpawns.push({
+        id: "hunter-" + index,
+        x: start + 1045,
+        patrolStart: start + 955,
+        patrolEnd: start + 1270,
+        carriesCaptive: true
+      });
+    }
 
-    if (index % 3 === 0) {
+    if (index % 3 === 0 || isBossArena) {
       this.allySpawns.push({
         id: "ferrucutus-" + index,
-        x: start + 500
+        x: start + (isBossArena ? 560 : 500)
       });
     }
 
