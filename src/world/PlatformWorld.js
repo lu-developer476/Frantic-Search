@@ -6,6 +6,7 @@ export class PlatformWorld {
     this.obstacles = [];
     this.hunterSpawns = [];
     this.allySpawns = [];
+    this.bossSpawns = [];
     this.generatedSections = 0;
     this.bridgeSequence = 0;
     this.extendTo(2800);
@@ -57,6 +58,22 @@ export class PlatformWorld {
       this.allySpawns.push({
         id: "ferrucutus-" + index,
         x: start + 500
+      });
+    }
+
+    if (index === 2) {
+      this.bossSpawns.push({
+        id: "indoraptor-encounter",
+        kind: "indoraptor",
+        x: start + 820
+      });
+    }
+
+    if (index === 4) {
+      this.bossSpawns.push({
+        id: "indominus-encounter",
+        kind: "indominus",
+        x: start + 760
       });
     }
   }
@@ -122,6 +139,7 @@ export class PlatformWorld {
     );
     this.hunterSpawns = this.hunterSpawns.filter((spawn) => spawn.x >= cutoff);
     this.allySpawns = this.allySpawns.filter((spawn) => spawn.x >= cutoff);
+    this.bossSpawns = this.bossSpawns.filter((spawn) => spawn.x >= cutoff);
   }
 
   platformsNear(worldX, range = 1200) {
