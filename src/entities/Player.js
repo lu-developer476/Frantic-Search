@@ -15,6 +15,7 @@ export class Player {
     this.jumpCount = 0;
     this.coyoteTimer = 0;
     this.invulnerable = 0;
+    this.health = 3;
     this.dashTimer = 0;
     this.abilityCooldown = 0;
     this.isSlamming = false;
@@ -102,6 +103,13 @@ export class Player {
       this.isSlamming = true;
       this.vy = 980;
     }
+    return true;
+  }
+
+  takeHit() {
+    if (this.invulnerable > 0 || this.health <= 0) return false;
+    this.health = Math.max(0, this.health - 1);
+    this.invulnerable = 1.15;
     return true;
   }
 
