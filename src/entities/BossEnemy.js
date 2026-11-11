@@ -26,7 +26,7 @@ export class BossEnemy {
     this.preferredDistance = preferredDistance;
     this.moveSpeed = moveSpeed;
     this.baseAttackCooldown = attackCooldown;
-    this.attackCooldown = 1.2;
+    this.attackCooldown = attackCooldown;
     this.damageCooldown = 0;
     this.state = "dormant";
     this.stateTimer = 0;
