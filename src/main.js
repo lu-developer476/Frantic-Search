@@ -519,59 +519,6 @@ function update(delta) {
   }
 }
 
-
-  if (!running || paused) return;
-  elapsed += delta;
-  player.update(delta, input);
-  if (player.consumeJumpEvent()) audio.jump();
-  const abilityEvent = player.consumeAbilityEvent();
-  if (abilityEvent === "dash" || abilityEvent === "stomp") audio.collect();
-  if (abilityEvent === "slam") audio.hit();
-  const physicsResult = physics.step(player, delta, world.platformsNear(player.x));
-  handleAbilityImpact();
-  if (physicsResult.fell) {
-    endGame();
-    return;
-  }
-
-  world.extendTo(player.x + 2800);
-  world.pruneBehind(player.x);
-  distance = Math.max(0, player.x - GAME.playerX);
-  cameraX = Math.max(0, player.x - 330);
-
-  for (const obstacle of world.obstacles) {
-    if (!obstacle.passed && obstacle.x + obstacle.w < player.x) {
-      obstacle.passed = true;
-      if (obstacle.type === "hunter") {
-        rescues += 1;
-        audio.rescue();
-        burst(obstacle.x, obstacle.y, "#d8f36a", 18);
-      }
-    }
-    if (!obstacle.passed && player.invulnerable <= 0 && CollisionSystem.obstacleHit(player, obstacle)) {
-      endGame();
-      return;
-    }
-  }
-
-  for (const particle of particles) {
-    particle.x += particle.vx * delta;
-    particle.y += particle.vy * delta;
-    particle.vy += 600 * delta;
-    particle.life -= delta;
-  }
-  particles = particles.filter((particle) => particle.life > 0);
-
-  distanceLabel.textContent = Math.floor(distance).toString().padStart(4, "0") + " m";
-  rescuesLabel.textContent = String(rescues).padStart(2, "0");
-  bestLabel.textContent = Math.floor(best()).toString().padStart(4, "0") + " m";
-  if (abilityLabel) {
-    const ready = player.abilityCooldown <= 0;
-    abilityLabel.textContent = ready ? "HABILIDAD LISTA" : "RECARGA " + player.abilityCooldown.toFixed(1) + "s";
-    abilityLabel.classList.toggle("ready", ready);
-  }
-}
-
 function render() {
   drawBackground();
   ctx.save();
