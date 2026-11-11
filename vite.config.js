@@ -4,7 +4,7 @@ const repositoryName = process.env.GITHUB_REPOSITORY?.split("/")[1] || "Avoid";
 const isGitHubPages = process.env.GITHUB_PAGES === "true";
 
 export default defineConfig({
-  base: isGitHubPages ? \`/\${repositoryName}/\` : "/",
+  base: isGitHubPages ? "/" + repositoryName + "/" : "/",
   build: {
     outDir: "dist",
     emptyOutDir: true,
