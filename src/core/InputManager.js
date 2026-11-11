@@ -3,7 +3,8 @@ const BINDINGS = {
   right: ["ArrowRight", "KeyD"],
   jump: ["Space", "ArrowUp", "KeyW"],
   duck: ["ArrowDown", "KeyS"],
-  ability: ["KeyX"]
+  ability: ["KeyX"],
+  interact: ["KeyE", "KeyF"]
 };
 
 export class InputManager {
