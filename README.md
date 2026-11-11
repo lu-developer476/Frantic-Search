@@ -58,21 +58,21 @@ Vercel configuration: Framework Preset **Vite**, Build Command **npm run build**
 ## Allies and enemies — 0.3.0
 
 - Ferrucutus Cerastes appears in selected sectors and scouts ahead of the player.
-- When a traversable floor gap is close, Ferrucutus moves into position and creates a temporary support bridge.
+- When a floor gap is close, Ferrucutus moves into position and creates a temporary support bridge.
 - Ferrucutus can charge nearby poachers and interrupt their attacks.
 - Poachers use a state-driven AI: patrol, investigate, pursue, telegraph, attack, stun and defeat.
-- Enemy attacks have a visible wind-up and a short lunge window.
+- Enemy attacks show a wind-up and a short lunge window.
 - Blue can interrupt a hunter with her dash; Vasti can defeat nearby hunters with a ground shockwave or landing slam.
-- Hunters have health and can be defeated. Defeating a carrier releases a captive and adds to the rescue counter.
-- The player has three integrity points and temporary invulnerability after taking damage.
-- Encounter actors and expired escort sections are pruned as the camera advances.
-- Procedural Canvas silhouettes and sound cues communicate support, alerts, attacks, damage and rescues.
+- Hunters have health and can be defeated. Defeating a carrier releases a captive and increments the rescue counter.
+- The player has three integrity points and brief invulnerability after taking damage.
+- Expired support bridges, escort actors and distant hunter entities are cleaned up as the camera advances.
+- Procedural Canvas silhouettes and audio cues communicate ally support, alerts, attacks, damage and rescues.
 
 ## Known limitations
 
 - The world is still an endless sequence of generated sections, not yet a finite campaign with checkpoints.
 - Ferrucutus and poachers use original geometric prototype art rather than final character models and animations.
-- Poacher AI is currently melee-only; there are no ranged weapons, stealth systems or multi-wave encounter scripting.
+- Poacher AI is currently melee-only; ranged weapons, stealth and multi-wave encounter scripting are not implemented.
 - Rescued captives are represented by the rescue counter; Beta is not yet an interactable escort objective.
 - Ferrucutus currently provides temporary bridge support and melee assistance; additional ally behaviors remain planned.
 - Indoraptor and Indominus Rex boss logic is not implemented yet.
