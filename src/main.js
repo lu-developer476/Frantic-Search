@@ -198,6 +198,149 @@ function drawPlatform(platform) {
   ctx.fillRect(platform.x + 12, platform.y + platform.h, platform.w - 24, 7);
 }
 
+function drawFacilityProp(prop) {
+  if (prop.kind === "security-fence") {
+    ctx.fillStyle = "#171f22";
+    ctx.fillRect(prop.x, prop.y, prop.w, prop.h);
+    ctx.fillStyle = "#71817d";
+    ctx.fillRect(prop.x, prop.y, prop.w, 3);
+    for (let x = prop.x + 8; x < prop.x + prop.w; x += 26) {
+      ctx.fillStyle = "#778580";
+      ctx.fillRect(x, prop.y - 38, 3, 38);
+    }
+    return;
+  }
+
+  if (prop.kind === "facility-lamp") {
+    ctx.fillStyle = "#202a2c";
+    ctx.fillRect(prop.x + 10, prop.y, 8, prop.h);
+    ctx.fillStyle = "#87958a";
+    ctx.fillRect(prop.x, prop.y, 28, 8);
+    ctx.fillStyle = "#e4d9a1";
+    ctx.fillRect(prop.x + 4, prop.y + 8, 20, 8);
+    ctx.fillStyle = "#e4d9a122";
+    ctx.beginPath();
+    ctx.moveTo(prop.x + 4, prop.y + 16);
+    ctx.lineTo(prop.x - 65, GAME.groundY);
+    ctx.lineTo(prop.x + 93, GAME.groundY);
+    ctx.closePath();
+    ctx.fill();
+    return;
+  }
+
+  ctx.fillStyle = prop.kind === "containment-wing" ? "#424c50" : "#313d42";
+  ctx.fillRect(prop.x, prop.y, prop.w, prop.h);
+  ctx.fillStyle = "#68777a";
+  ctx.fillRect(prop.x, prop.y, prop.w, 7);
+  ctx.fillStyle = "#182326";
+  for (let x = prop.x + 18; x < prop.x + prop.w - 18; x += 52) {
+    ctx.fillRect(x, prop.y + 35, 31, Math.max(28, prop.h - 72));
+    ctx.fillStyle = prop.kind === "containment-wing" ? "#8cb1a4" : "#758a85";
+    ctx.fillRect(x + 5, prop.y + 41, 21, 4);
+    ctx.fillStyle = "#182326";
+  }
+  ctx.fillStyle = "#d8f36a";
+  ctx.fillRect(prop.x + 14, prop.y + 16, Math.min(90, prop.w - 28), 3);
+  if (prop.kind === "containment-wing") {
+    ctx.strokeStyle = "#a9b7a4";
+    ctx.lineWidth = 4;
+    ctx.strokeRect(prop.x + 32, prop.y + 54, prop.w - 64, prop.h - 72);
+    ctx.fillStyle = "#8bb6a044";
+    ctx.fillRect(prop.x + 36, prop.y + 58, prop.w - 72, prop.h - 80);
+    ctx.fillStyle = "#d8f36a";
+    ctx.font = "10px monospace";
+    ctx.fillText("CELL BLOCK C", prop.x + 48, prop.y + prop.h - 28);
+  }
+}
+
+function drawFacilityConsole(consoleEntity) {
+  const x = consoleEntity.x;
+  const y = consoleEntity.y;
+  ctx.save();
+  ctx.fillStyle = "#202a2d";
+  roundedRect(ctx, x, y + 18, consoleEntity.w, 60, 6);
+  ctx.fillStyle = "#71817b";
+  ctx.fillRect(x + 5, y + 20, consoleEntity.w - 10, 5);
+  ctx.fillStyle = consoleEntity.activated ? "#d8f36a" : "#e18c62";
+  roundedRect(ctx, x + 8, y + 7, consoleEntity.w - 16, 28, 4);
+  ctx.fillStyle = "#14201f";
+  ctx.fillRect(x + 12, y + 12, consoleEntity.w - 24, 17);
+  ctx.fillStyle = consoleEntity.activated ? "#d8f36a" : "#e18c62";
+  ctx.fillRect(x + 17, y + 17, consoleEntity.w - 34, 4);
+  ctx.fillStyle = "#9aa69d";
+  ctx.font = "8px monospace";
+  ctx.fillText(consoleEntity.kind === "power" ? "PWR" : "LOCK", x + 7, y + 2);
+  if (consoleEntity.activated) {
+    ctx.fillStyle = "#d8f36a";
+    ctx.font = "9px monospace";
+    ctx.fillText("ONLINE", x - 2, y - 10);
+  }
+  ctx.restore();
+}
+
+function drawBeta(entity) {
+  if (!entity) return;
+  const bob = Math.sin(entity.animation * 5) * 2;
+  const x = entity.x;
+  const y = entity.y + bob;
+  ctx.save();
+  if (entity.state === "confined") {
+    ctx.fillStyle = "#a3c9ba1b";
+    roundedRect(ctx, x - 12, y - 12, entity.w + 24, entity.h + 15, 12);
+    ctx.strokeStyle = "#9bb5ac";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x - 12, y - 12, entity.w + 24, entity.h + 15);
+    ctx.fillStyle = "#ed8e55";
+    ctx.font = "9px monospace";
+    ctx.fillText("CONTAINMENT // BETA", x - 24, y - 22);
+  }
+  ctx.translate(entity.facing < 0 ? x + entity.w : x, y);
+  if (entity.facing < 0) ctx.scale(-1, 1);
+  ctx.fillStyle = "#6f9c8b";
+  ctx.beginPath();
+  ctx.moveTo(14, 29);
+  ctx.lineTo(-10, 23);
+  ctx.lineTo(8, 36);
+  ctx.fill();
+  ctx.fillStyle = "#83b3a1";
+  ctx.beginPath();
+  ctx.ellipse(24, 27, 19, 15, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(37, 18, 13, 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#c8d8bb";
+  ctx.beginPath();
+  ctx.arc(42, 15, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#6f9c8b";
+  ctx.lineWidth = 6;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(18, 37);
+  ctx.lineTo(17, 45);
+  ctx.moveTo(31, 37);
+  ctx.lineTo(34, 45);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawExtractionMarker(x) {
+  if (!Number.isFinite(x)) return;
+  ctx.fillStyle = "#1b2929";
+  ctx.fillRect(x, GAME.groundY - 190, 18, 190);
+  ctx.fillRect(x + 180, GAME.groundY - 190, 18, 190);
+  ctx.fillRect(x, GAME.groundY - 190, 198, 16);
+  ctx.fillStyle = "#d8f36a";
+  ctx.fillRect(x + 22, GAME.groundY - 166, 154, 4);
+  ctx.fillStyle = "#edf3e5";
+  ctx.font = "11px monospace";
+  ctx.fillText("EXTRACTION", x + 28, GAME.groundY - 139);
+  ctx.fillStyle = "#d8f36a";
+  ctx.font = "8px monospace";
+  ctx.fillText("EAST GATE", x + 60, GAME.groundY - 123);
+}
+
 function drawObstacle(obstacle) {
   ctx.save();
   if (obstacle.type === "crate") {
