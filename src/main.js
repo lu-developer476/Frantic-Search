@@ -1535,16 +1535,34 @@ function applyLanguage() {
     button.setAttribute("aria-pressed", String(active));
   });
   soundLabel.textContent = audio.enabled ? ui("sound") : ui("silence");
+  menuToggle.setAttribute("aria-label", ui(navMenu.classList.contains("hidden") ? "openMenu" : "closeMenu"));
+
   if (desktopBlocked) {
     stateLabel.textContent = ui("desktopOnly");
     overlay.querySelector(".overlay-kicker").textContent = ui("desktopRequired");
     overlay.querySelector("h2").innerHTML = ui("desktopOverlayTitle");
     overlay.querySelector("p").textContent = ui("desktopMessage");
-  } else if (!running && !paused && !campaign.flags.completed) {
+  } else if (running) {
+    stateLabel.textContent = ui("inProgress");
+  } else if (paused) {
+    stateLabel.textContent = ui("paused");
+    overlay.querySelector(".overlay-kicker").textContent = ui("operationPaused");
+    overlay.querySelector("h2").innerHTML = ui("pauseTitle");
+    overlay.querySelector("p").textContent = ui("pausedMessage");
+    overlay.querySelector("button").textContent = ui("continue");
+  } else if (campaign.flags.completed) {
+    showCampaignEnding();
+  } else if (["SIGNAL LOST", "SEÑAL PERDIDA"].includes(stateLabel.textContent)) {
+    stateLabel.textContent = ui("signalLost");
+    overlay.querySelector(".overlay-kicker").textContent = ui("missionInterrupted");
+    overlay.querySelector("h2").innerHTML = locale === "es" ? "LA NATURALEZA<br><em>CONTRAATACA.</em>" : "THE WILD<br><em>STRIKES BACK.</em>";
+    overlay.querySelector("p").textContent = ui("defeatMessage").replace("{distance}", String(Math.floor(distance))).replace("{rescues}", String(rescues));
+    overlay.querySelector("button").textContent = ui("retry");
+  } else {
+    stateLabel.textContent = ui("standby");
     overlay.querySelector(".overlay-kicker").textContent = "FRANTIC SEARCH";
     overlay.querySelector("h2").innerHTML = ui("wildWatching");
     overlay.querySelector("p").textContent = ui("startMessage");
-    if (stateLabel.textContent) stateLabel.textContent = ui("standby");
   }
 }
 
@@ -1656,6 +1674,8 @@ function syncDesktopAccess() {
 
 desktopPlayback.addEventListener("change", syncDesktopAccess);
 
+applyLanguage();
+setEnvironmentMode(environmentMode);
 selectCharacter(selected);
 render();
 syncDesktopAccess();
