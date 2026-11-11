@@ -309,7 +309,7 @@ function drawFacilityConsole(consoleEntity) {
   ctx.fillRect(x + 17, y + 17, consoleEntity.w - 34, 4);
   ctx.fillStyle = "#9aa69d";
   ctx.font = "8px monospace";
-  ctx.fillText(consoleEntity.kind === "power" ? "PWR" : "LOCK", x + 7, y + 2);
+  ctx.fillText(locale === "es" ? (consoleEntity.kind === "power" ? "ENE" : "SEG") : (consoleEntity.kind === "power" ? "PWR" : "LOCK"), x + 7, y + 2);
   if (consoleEntity.activated) {
     ctx.fillStyle = "#d8f36a";
     ctx.font = "9px monospace";
@@ -1536,6 +1536,8 @@ function applyLanguage() {
   });
   soundLabel.textContent = audio.enabled ? ui("sound") : ui("silence");
   menuToggle.setAttribute("aria-label", ui(navMenu.classList.contains("hidden") ? "openMenu" : "closeMenu"));
+  if (healthLabel) healthLabel.textContent = ui("integrity") + " " + String(player.health).padStart(2, "0") + "/03";
+  if (abilityLabel) abilityLabel.textContent = player.abilityCooldown <= 0 ? ui("abilityReady") : ui("cooldown") + " " + player.abilityCooldown.toFixed(1) + "s";
 
   if (desktopBlocked) {
     stateLabel.textContent = ui("desktopOnly");
