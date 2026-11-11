@@ -355,7 +355,7 @@ function drawExtractionMarker(x) {
   ctx.fillRect(x + 22, GAME.groundY - 166, 154, 4);
   ctx.fillStyle = "#edf3e5";
   ctx.font = "11px monospace";
-  ctx.fillText("EXTRACTION", x + 28, GAME.groundY - 139);
+  ctx.fillText(beta?.state === "following" || beta?.state === "extracted" ? "EXTRACTION" : "EXIT LOCKED", x + 28, GAME.groundY - 139);
   ctx.fillStyle = "#d8f36a";
   ctx.font = "8px monospace";
   ctx.fillText("EAST GATE", x + 60, GAME.groundY - 123);
@@ -1095,6 +1095,11 @@ function update(delta) {
       player.x = arenaRight;
       player.vx = Math.min(0, player.vx);
     }
+  }
+
+  if (beta?.state === "confined" && extractionX && player.x + player.w > extractionX - 18) {
+    player.x = extractionX - player.w - 18;
+    player.vx = Math.min(0, player.vx);
   }
 
   world.extendTo(player.x + 2800);
