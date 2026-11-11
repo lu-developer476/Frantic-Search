@@ -13,10 +13,17 @@
         <a class="brand" href="#" aria-label="Frantic Search inicio"><span>FRANTIC <span class="brand-dot">SEARCH</span></span></a>
         <button class="sound-toggle" id="sound-toggle" type="button" aria-label="Activar o desactivar sonido">♫ <span>SONIDO</span></button>
       </header>
-      <section class="page-title"><h1>OPERATION:<br><em>LOST HATCHLING</em></h1></section>
+      <section class="page-title"><h1><span>OPERATION:</span><em>LOST HATCHLING</em></h1></section>
       <main class="layout">
-        <section class="intro">
-          <div class="character-picker" aria-label="Elegir personaje">
+        <section class="desktop-only-notice" aria-labelledby="desktop-only-title">
+          <span class="notice-kicker">FRANTIC SEARCH // DESKTOP ONLY</span>
+          <h2 id="desktop-only-title">LA OPERACIÓN<br><em>REQUIERE DESKTOP.</em></h2>
+          <p>Este juego está diseñado para jugarse en una computadora con teclado y mouse.</p>
+        </section>
+        <section class="game-panel">
+          <div class="panel-head"><span><i></i> LIVE FEED // SECTOR 01</span><span id="game-state">STANDBY</span></div>
+          <div class="game-setup">
+            <div class="character-picker" aria-label="Elegir personaje">
             <button class="character-card active" data-character="blue" type="button">
               <span class="character-number">01 / RAPTOR</span><span class="character-art blue-art"><img src="%BASE_URL%assets/sprites/blue-idle.svg" alt="" /></span>
               <strong>BLUE</strong><small>VELOCIDAD · DOBLE SALTO · DASH</small>
@@ -26,18 +33,20 @@
               <strong>VASTI</strong><small>FUERZA · PISOTÓN DE IMPACTO</small>
             </button>
           </div>
-          <div class="mission-brief">
+            <div class="mission-details">
+              <div class="mission-brief">
             <div class="brief-icon">⌖</div><div><span class="eyebrow">MISIÓN PRINCIPAL</span><p>Encontrar y rescatar a <b>BETA</b>. Los cazadores furtivos la trasladan hacia un punto de extracción clandestino.</p></div>
           </div>
-          <button id="start-button" class="start-button" type="button"><span>INICIAR OPERACIÓN</span><b>→</b></button>
-          <p class="controls-note">A / D MOVER <span>·</span> ESPACIO / ↑ SALTAR <span>·</span> ↓ AGACHARSE <span>·</span> X HABILIDAD <span>·</span> E INTERACTUAR <span>·</span> P PAUSAR</p>
-        </section>
-        <section class="game-panel">
-          <div class="panel-head"><span><i></i> LIVE FEED // SECTOR 01</span><span id="game-state">STANDBY</span></div>
+              <div class="mission-actions">
+                <button id="start-button" class="start-button" type="button"><span>INICIAR OPERACIÓN</span><b>→</b></button>
+                <p class="controls-note">A / D MOVER <span>·</span> ESPACIO / ↑ SALTAR <span>·</span> ↓ AGACHARSE <span>·</span> X HABILIDAD <span>·</span> E INTERACTUAR <span>·</span> P PAUSAR</p>
+              </div>
+            </div>
+          </div>
           <div class="canvas-wrap">
             <canvas id="game" width="960" height="540" aria-label="Juego de plataformas Frantic Search"></canvas>
             <div id="overlay" class="game-overlay">
-              <div class="overlay-content"><span class="overlay-kicker">FRANTIC SEARCH</span><h2>THE WILD<br><em>IS WATCHING.</em></h2><p>Prepará el equipo. Beta necesita que lleguemos.</p><button id="overlay-start" type="button">COMENZAR <span>↗</span></button></div>
+              <div class="overlay-content"><span class="overlay-kicker">FRANTIC SEARCH</span><h2>THE WILD<br><em>IS WATCHING.</em></h2><p>Prepará el equipo. Beta necesita que lleguemos.</p><button id="overlay-start" type="button" hidden>CONTINUAR <span>↗</span></button></div>
             </div>
             <section id="story-panel" class="story-panel hidden" role="dialog" aria-modal="true" aria-labelledby="story-title">
               <div class="story-card">
@@ -49,13 +58,7 @@
               </div>
             </section>
           </div>
-          <div class="touch-controls" aria-label="Controles táctiles">
-            <button type="button" data-action="left" aria-label="Mover a la izquierda">←</button>
-            <button type="button" data-action="right" aria-label="Mover a la derecha">→</button>
-            <button type="button" data-action="jump" aria-label="Saltar">↑</button>
-            <button type="button" data-action="ability" aria-label="Usar habilidad">X</button>
-            <button type="button" data-action="interact" aria-label="Interactuar">E</button>
-          </div>
+
           <div class="hud-strip">
             <div><small>DISTANCIA</small><b id="distance">0000 m</b></div>
             <div><small>RESCATOS</small><b id="rescues">00</b></div>
