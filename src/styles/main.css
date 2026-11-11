@@ -217,3 +217,17 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden}
  .dialog-actions{flex-direction:column-reverse}
  .dialog-back,.dialog-confirm{width:100%}
 }
+
+
+/* Restore the gameplay canvas as the actual, full-size game stage */
+#app{grid-template-rows:auto auto minmax(0,1fr);min-height:0}
+.layout{height:auto;min-height:0;align-self:stretch;display:block;overflow:hidden}
+.game-panel{display:grid;width:100%;height:100%;min-width:0;min-height:0;grid-template-rows:auto minmax(0,1fr);overflow:hidden}
+.canvas-wrap{position:relative;isolation:isolate;display:block;width:100%;height:100%;min-width:0;min-height:0;aspect-ratio:auto;overflow:hidden;background:#172522}
+.canvas-wrap canvas#game{position:absolute;z-index:0;inset:0;display:block;width:100%;height:100%;min-width:0;min-height:0;max-width:none;max-height:none;object-fit:contain;object-position:center;background:#172522}
+.canvas-wrap .game-setup{z-index:5}
+.canvas-wrap .hud-strip{z-index:5}
+.canvas-wrap .game-overlay{z-index:2;pointer-events:none;background:linear-gradient(90deg,rgba(8,17,16,.76),rgba(8,17,16,.28) 55%,rgba(8,17,16,.04) 100%)}
+.canvas-wrap .game-overlay .overlay-content{max-width:490px;pointer-events:auto}
+.canvas-wrap .dino-modal{z-index:12}
+.canvas-wrap .story-panel{z-index:8}
