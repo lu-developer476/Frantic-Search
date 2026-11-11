@@ -126,6 +126,7 @@ export class CampaignManager {
       ]);
     }
     this.refreshObjective();
+    return kind === "power" || kind === "security";
   }
 
   canFreeBeta() {
