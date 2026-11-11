@@ -14,9 +14,12 @@ import { PlatformWorld } from "./world/PlatformWorld.js";
 import { CampaignManager } from "./campaign/CampaignManager.js";
 import { Beta } from "./entities/Beta.js";
 import { FacilityConsole } from "./entities/FacilityConsole.js";
+import { SpriteRenderer } from "./rendering/SpriteRenderer.js";
 
 const canvas = document.querySelector("#game");
-const ctx = canvas.getContext("2d");
+const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
+ctx.imageSmoothingEnabled = true;
+const spriteRenderer = new SpriteRenderer();
 const overlay = document.querySelector("#overlay");
 const stateLabel = document.querySelector("#game-state");
 const distanceLabel = document.querySelector("#distance");
@@ -77,7 +80,8 @@ function roundedRect(context, x, y, width, height, radius) {
   context.fill();
 }
 
-function drawDino(x, y, width, height, color, kind, phase = 0, alpha = 1, facing = 1) {
+function drawDino(x, y, width, height, color, kind, phase = 0, alpha = 1, facing = 1, actor = null) {
+  if (spriteRenderer.drawDinosaur(ctx, kind, x, y, width, height, actor, phase, alpha)) return;
   ctx.save();
   ctx.globalAlpha = alpha;
   ctx.translate(facing < 0 ? x + width : x, y);
@@ -314,6 +318,10 @@ function drawBeta(entity) {
     ctx.font = "9px monospace";
     ctx.fillText("CONTAINMENT // BETA", x - 24, y - 22);
   }
+  if (spriteRenderer.draw(ctx, "beta", x, y, entity.w, entity.h, { facing: entity.facing })) {
+    ctx.restore();
+    return;
+  }
   ctx.translate(entity.facing < 0 ? x + entity.w : x, y);
   if (entity.facing < 0) ctx.scale(-1, 1);
   ctx.fillStyle = "#6f9c8b";
@@ -418,6 +426,14 @@ function drawFerrucutus(ally) {
   const y = ally.y;
   const phase = elapsed * 7;
   const step = Math.sin(phase) * 6;
+  if (spriteRenderer.draw(ctx, "ferrucutus", x, y, ally.w, ally.h, { facing: ally.direction })) {
+    if (ally.state === "brace" || ally.state === "bridge" || ally.state === "charge") {
+      ctx.fillStyle = "#d8f36a";
+      ctx.font = "10px monospace";
+      ctx.fillText(ally.state === "charge" ? "ALLY ATTACK" : "FERRUCUTUS // SUPPORT", x - 15, y - 14);
+    }
+    return;
+  }
   ctx.save();
   ctx.translate(x, y);
   ctx.fillStyle = "#a9a477";
@@ -478,42 +494,46 @@ function drawFerrucutus(ally) {
 }
 
 function drawHunter(hunter) {
-  ctx.save();
   const x = hunter.x;
   const y = hunter.y;
   const alert = hunter.state === "investigate" || hunter.state === "windup" || hunter.state === "attack";
-  const stunned = hunter.state === "stunned";
   const defeated = hunter.defeated;
 
-  ctx.globalAlpha = defeated ? 0.48 : 1;
-  ctx.fillStyle = defeated ? "#4f5a50" : "#343c37";
-  roundedRect(ctx, x + 8, y + 18, 24, 39, 5);
-  ctx.fillStyle = "#b6a083";
-  ctx.beginPath();
-  ctx.arc(x + 20, y + 11, 11, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#202a28";
-  ctx.fillRect(x + 7, y + 4, 26, 7);
-  ctx.fillStyle = "#a3a58e";
-  ctx.fillRect(x + 8, y + 27, 7, 23);
-  ctx.fillRect(x + 25, y + 27, 7, 23);
-  ctx.strokeStyle = "#303a35";
-  ctx.lineWidth = 7;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(x + 14, y + 53);
-  ctx.lineTo(x + 11, y + 64);
-  ctx.moveTo(x + 26, y + 53);
-  ctx.lineTo(x + 30, y + 64);
-  ctx.stroke();
+  if (!spriteRenderer.draw(ctx, "hunter", x - 6, y - 5, hunter.w + 12, hunter.h + 8, {
+    alpha: defeated ? 0.48 : 1,
+    facing: hunter.direction
+  })) {
+    ctx.save();
+    ctx.globalAlpha = defeated ? 0.48 : 1;
+    ctx.fillStyle = defeated ? "#4f5a50" : "#343c37";
+    roundedRect(ctx, x + 8, y + 18, 24, 39, 5);
+    ctx.fillStyle = "#b6a083";
+    ctx.beginPath();
+    ctx.arc(x + 20, y + 11, 11, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#202a28";
+    ctx.fillRect(x + 7, y + 4, 26, 7);
+    ctx.fillStyle = "#a3a58e";
+    ctx.fillRect(x + 8, y + 27, 7, 23);
+    ctx.fillRect(x + 25, y + 27, 7, 23);
+    ctx.strokeStyle = "#303a35";
+    ctx.lineWidth = 7;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(x + 14, y + 53);
+    ctx.lineTo(x + 11, y + 64);
+    ctx.moveTo(x + 26, y + 53);
+    ctx.lineTo(x + 30, y + 64);
+    ctx.stroke();
+    ctx.restore();
+  }
 
   if (alert && !defeated) {
     ctx.fillStyle = "#ed8e55";
-    ctx.fillRect(x + 17, y - 10, 5, 13);
     ctx.beginPath();
-    ctx.arc(x + 19.5, y + 7, 2, 0, Math.PI * 2);
+    ctx.arc(x + 20, y - 6, 4, 0, Math.PI * 2);
     ctx.fill();
-  } else if (stunned) {
+  } else if (hunter.state === "stunned") {
     ctx.fillStyle = "#d8f36a";
     ctx.font = "16px monospace";
     ctx.fillText("✳", x + 12, y - 3);
@@ -529,7 +549,6 @@ function drawHunter(hunter) {
     ctx.fillStyle = hunter.health > 1 ? "#d8f36a" : "#ed8e55";
     ctx.fillRect(x + 5, y - 18, 30 * hunter.health / 2, 4);
   }
-  ctx.restore();
 
   const attack = hunter.attackBox;
   if (attack) {
@@ -725,6 +744,8 @@ function drawIndoraptor(boss) {
   const y = boss.y;
   const phase = elapsed * 10;
   const stride = Math.sin(phase) * 5;
+  const spriteDrawn = spriteRenderer.draw(ctx, "indoraptor", boss.x - 4, boss.y - 4, boss.w + 8, boss.h + 8, { alpha: boss.defeated ? 0.4 : 1, facing: boss.direction });
+  if (!spriteDrawn) {
   ctx.save();
   ctx.globalAlpha = boss.defeated ? 0.4 : 1;
   ctx.translate(x, y);
@@ -775,6 +796,8 @@ function drawIndoraptor(boss) {
   ctx.fill();
   ctx.restore();
 
+
+  }
   if (boss.state === "telegraph") {
     ctx.strokeStyle = "#ff806c";
     ctx.lineWidth = 3;
@@ -797,6 +820,8 @@ function drawIndominus(boss) {
   const y = boss.y;
   const phase = elapsed * 5;
   const stride = Math.sin(phase) * 4;
+  const spriteDrawn = spriteRenderer.draw(ctx, "indominus", boss.x - 4, boss.y - 4, boss.w + 8, boss.h + 8, { alpha: boss.defeated ? 0.4 : 1, facing: boss.direction });
+  if (!spriteDrawn) {
   ctx.save();
   ctx.globalAlpha = boss.defeated ? 0.4 : 1;
   ctx.translate(x, y);
@@ -850,6 +875,8 @@ function drawIndominus(boss) {
   ctx.fillRect(202, 60, 18, 4);
   ctx.restore();
 
+
+  }
   if (boss.state === "telegraph") {
     ctx.strokeStyle = "#ffb26b";
     ctx.lineWidth = 3;
@@ -1260,7 +1287,8 @@ function render() {
   drawDino(
     companionX, companionY, companionWidth, companionHeight,
     companionIsBlue ? "#75a99b" : "#d2a27d",
-    companionIsBlue ? "blue" : "vasti", elapsed - 0.12, 0.95, player.facing
+    companionIsBlue ? "blue" : "vasti", elapsed - 0.12, 0.95, player.facing,
+    { onGround: true, vx: 0, facing: player.facing }
   );
 
   const isBlue = selected === "blue";
@@ -1268,7 +1296,7 @@ function render() {
   drawDino(
     player.x, player.y, player.w, player.h,
     isBlue ? "#75a99b" : "#d2a27d",
-    isBlue ? "blue" : "vasti", elapsed, blink ? 0.35 : 1, player.facing
+    isBlue ? "blue" : "vasti", elapsed, blink ? 0.35 : 1, player.facing, player
   );
   if (player.dashTimer > 0) {
     ctx.fillStyle = "#d8f36a66";
