@@ -371,3 +371,16 @@ test("moving characters use gait frames and stationary bosses return to idle",()
  assert.equal(hunter.motionSpeed,0);
 });
 
+test("character selection dialog stays inside the game viewport without scrolling",()=>{
+ const css=readFileSync(resolve("src/styles/main.css"),"utf8");
+ const layout=css.split("/* Character selection: fixed viewport, no scrolling, bounded sprite art */").at(-1);
+ assert.ok(layout && layout!==css,"the final selection layout override exists");
+ assert.match(layout,/grid-template-rows:auto auto auto minmax\(0,1fr\) auto/);
+ assert.match(layout,/width:min\(860px,100%\)/);
+ assert.match(layout,/height:100%/);
+ assert.match(layout,/max-height:none/);
+ assert.match(layout,/overflow:hidden/);
+ assert.match(layout,/max-width:min\(82%,190px\)/);
+ assert.match(layout,/max-height:min\(100%,145px\)/);
+ assert.match(layout,/grid-template-rows:auto minmax\(0,1fr\) auto auto/);
+});

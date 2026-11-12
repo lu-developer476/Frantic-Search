@@ -672,3 +672,102 @@ html.site-mode-beige .desktop-only-notice p,html.site-mode-gray .desktop-only-no
   image-rendering: pixelated !important;
   image-rendering: crisp-edges !important;
 }
+
+/* Character selection: fixed viewport, no scrolling, bounded sprite art */
+.dino-modal{
+  padding:clamp(8px,1.4vw,16px);
+  overflow:hidden;
+}
+.dino-dialog{
+  display:grid;
+  grid-template-rows:auto auto auto minmax(0,1fr) auto;
+  width:min(860px,100%);
+  height:100%;
+  max-height:none;
+  min-height:0;
+  overflow:hidden;
+  padding:clamp(14px,2.2vw,24px);
+}
+.dino-dialog .dialog-kicker{margin-bottom:6px}
+.dino-dialog h2{font-size:clamp(30px,3.8vw,44px)}
+.dino-dialog .dialog-description{margin:8px 0 12px}
+.dino-dialog .character-picker{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:clamp(10px,1.6vw,16px);
+  width:100%;
+  height:100%;
+  min-width:0;
+  min-height:0;
+  align-items:stretch;
+}
+.dino-dialog .character-card{
+  display:grid;
+  grid-template-rows:auto minmax(0,1fr) auto auto;
+  align-content:stretch;
+  width:100%;
+  height:100%;
+  min-width:0;
+  min-height:0;
+  overflow:hidden;
+  padding:clamp(9px,1.4vw,16px);
+}
+.dino-dialog .character-art{
+  display:grid;
+  place-items:center;
+  width:100%;
+  height:100%;
+  min-width:0;
+  min-height:0;
+  margin:4px 0;
+  overflow:hidden;
+}
+.dino-dialog .character-art img{
+  display:block;
+  width:auto;
+  height:auto;
+  max-width:min(82%,190px);
+  max-height:min(100%,145px);
+  object-fit:contain;
+  object-position:center;
+}
+.dino-dialog .character-card strong{font-size:clamp(22px,2.3vw,28px)}
+.dino-dialog .character-card small{
+  display:block;
+  min-width:0;
+  overflow-wrap:break-word;
+  line-height:1.3;
+}
+.dino-dialog .dialog-actions{
+  min-height:0;
+  margin-top:12px;
+  padding-top:12px;
+}
+@media(max-height:620px) and (min-width:1024px){
+  .dino-dialog{padding:12px 18px}
+  .dino-dialog .dialog-description{margin:5px 0 8px}
+  .dino-dialog .character-art img{max-height:105px}
+  .dino-dialog .dialog-actions{margin-top:8px;padding-top:8px}
+}
+@media(max-width:560px){
+  .dino-dialog{padding:12px}
+  .dino-dialog .character-card{min-height:0;padding:8px}
+  .dino-dialog .character-art{height:100%;min-height:0}
+  .dino-dialog .character-art img{max-width:86%;max-height:110px}
+  .dino-dialog .dialog-actions{flex-direction:row}
+  .dino-dialog .dialog-back,.dino-dialog .dialog-confirm{
+    width:auto;
+    min-width:0;
+    min-height:38px;
+    padding:8px 10px;
+  }
+  .dino-dialog .dialog-confirm{gap:8px}
+  .dino-dialog .character-card small{font-size:7px}
+}
+@media(max-width:420px){
+  .dino-dialog .dialog-actions button{
+    padding-inline:8px;
+    font-size:8px;
+    letter-spacing:.03em;
+  }
+}
