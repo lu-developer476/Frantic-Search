@@ -152,6 +152,18 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
 });
 
 
+test("Vasti renders the exact repository reference image and animates it on the game canvas",()=>{
+ const rendererSource=readFileSync(resolve("src/rendering/SpriteRenderer.js"),"utf8");
+ assert.match(rendererSource,/references\\/vastatosaurus-rex\\.jpg/);
+ assert.match(rendererSource,/preloadVastiReference\\(\\)/);
+ assert.match(rendererSource,/drawReferenceVasti\\(/);
+ assert.match(rendererSource,/context\\.imageSmoothingEnabled=false/);
+ for(const pose of ["vasti-run-a","vasti-run-b","vasti-jump","vasti-duck","vasti-stomp","vasti-slam","vasti-attack","vasti-impact","vasti-land","vasti-recover"])
+  assert.ok(rendererSource.includes('pose==="'+pose+'"'),pose+" must animate the reference image");
+ const reference=readFileSync(resolve("public/references/vastatosaurus-rex.jpg"));
+ assert.ok(reference.length>1000,"the in-game source reference image must be present");
+});
+
 test("game rendering uses the native canvas instead of a low-resolution blur buffer", () => {
   const mainSource = readFileSync(resolve("src/main.js"), "utf8");
   assert.match(mainSource, /const ctx = canvas\.getContext/);
@@ -213,7 +225,7 @@ test("sprite renderer uses base paths and draws cached images without reloading"
   try {
     const renderer = new SpriteRenderer("/Avoid/");
     const image = renderer.get("violeta-idle");
-    assert.equal(image.src, "/Avoid/assets/sprites/violeta-idle.svg?v=20261112-vasti-vrex-rebuild-1");
+    assert.equal(image.src, "/Avoid/assets/sprites/violeta-idle.svg?v=20261112-vasti-reference-in-game-2");
     assert.equal(renderer.get("violeta-idle"), image);
     image.complete = true;
     image.naturalWidth = 240;
