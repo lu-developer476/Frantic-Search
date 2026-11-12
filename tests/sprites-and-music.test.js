@@ -331,6 +331,22 @@ test("every character has a dedicated crouch sprite without changing its sprite 
  }
 });
 
+test("player sprites keep dash priority and anchor the crouch pose to the ground",()=>{
+ const renderer=Object.create(SpriteRenderer.prototype);
+ const draws=[];
+ renderer.draw=(_context,name,x,y,width,height,options)=>{draws.push({name,x,y,width,height,options});return true;};
+ renderer.drawDinosaur({},"blue",100,200,64,42,{dashTimer:.1,duck:false,animationState:"attack",onGround:true,vx:340,normalHeight:62,facing:1},1);
+ assert.equal(draws[0].name,"blue-dash");
+ draws.length=0;
+ renderer.drawDinosaur({},"blue",100,200,64,42,{dashTimer:0,duck:true,animationState:null,onGround:true,vx:0,normalHeight:62,facing:1},1);
+ assert.equal(draws[0].name,"blue-duck");
+ assert.equal(draws[0].y,180);
+ assert.equal(draws[0].height,62);
+ draws.length=0;
+ renderer.drawDinosaur({},"blue",100,200,64,62,{dashTimer:0,duck:false,animationState:null,onGround:true,vx:120,normalHeight:62,facing:1},.5);
+ assert.match(draws[0].name,/^blue-run-/);
+});
+
 test("all actors select their dedicated crouch pose",()=>{
  const actors=["blue","vasti","beta","ferrucutus","hunter","indoraptor","indominus"];
  for(const actor of actors)assert.equal(selectActorPose(actor,{state:"ducking"}),actor+"-duck");

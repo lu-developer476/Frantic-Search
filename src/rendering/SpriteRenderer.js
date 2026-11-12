@@ -78,15 +78,14 @@ export class SpriteRenderer{
 
  drawDinosaur(context,kind,x,y,width,height,player,elapsed,alpha=1){
   const prefix=kind==="blue"?"blue":"vasti";
-  let pose;
-  if(player?.animationState)pose=selectActorPose(prefix,player,elapsed);
+  let pose=selectActorPose(prefix,player,elapsed);
+  if(player?.dashTimer>0&&kind==="blue")pose="blue-dash";
   else if(player?.duck)pose=prefix+"-duck";
-  else if(player?.dashTimer>0&&kind==="blue")pose="blue-dash";
-  else if(player&&!player.onGround)pose=prefix+"-jump";
-  else if(player&&Math.abs(player.vx)>30){
+  else if(player&&!player.onGround&&!player.animationState)pose=prefix+"-jump";
+  else if(player&&Math.abs(player.vx)>30&&!player.animationState){
    const fps=Math.max(8,Math.min(13,Math.abs(player.vx)/27));
    pose=prefix+"-run-"+(Math.floor(elapsed*fps+phaseOf(player,kind))%2===0?"a":"b");
-  }else pose=prefix+"-idle";
+  }else if(!player?.animationState)pose=prefix+"-idle";
 
   const crouching=player?.duck===true&&pose===prefix+"-duck";
   const naturalHeight=crouching?(player?.normalHeight??height):height;
