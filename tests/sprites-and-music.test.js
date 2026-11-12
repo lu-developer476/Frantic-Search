@@ -31,6 +31,7 @@ test("every production actor sprite is present and resolves its intended source"
     if (sheetBased) {
       assert.match(svg, /href="\.\.\/\.\.\/references\/velociraptor-sprite-sheet\.png"/);
       assert.match(svg, /mask-type="luminance"/);
+      assert.match(svg, /feFuncR type="linear" slope="-24" intercept="22\.8"/, "white source pixels must become transparent");
       assert.match(svg, /data-source="velociraptor-sprite-sheet\.png"/);
     } else {
       assert.match(svg, /shape-rendering="crispEdges"/);

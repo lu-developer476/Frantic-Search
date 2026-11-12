@@ -9,9 +9,9 @@
     <filter id="white-key" x="0" y="0" width="1264" height="843" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
       <feColorMatrix type="saturate" values="0"/>
       <feComponentTransfer>
-        <feFuncR type="linear" slope="24" intercept="-1.2"/>
-        <feFuncG type="linear" slope="24" intercept="-1.2"/>
-        <feFuncB type="linear" slope="24" intercept="-1.2"/>
+        <feFuncR type="linear" slope="-24" intercept="22.8"/>
+        <feFuncG type="linear" slope="-24" intercept="22.8"/>
+        <feFuncB type="linear" slope="-24" intercept="22.8"/>
       </feComponentTransfer>
     </filter>
     <mask id="sprite-cutout" maskUnits="userSpaceOnUse" mask-type="luminance" x="111" y="69" width="104" height="78">
