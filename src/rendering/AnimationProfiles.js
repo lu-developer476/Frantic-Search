@@ -1,7 +1,7 @@
 export const ACTOR_ANIMATION_PROFILES = Object.freeze({
- blue:{base:"blue-idle",duck:"blue-duck",states:{attack:"blue-attack",landing:"blue-land",impact:"blue-impact",recovery:"blue-recover"},frames:["blue-run-a","blue-run-b"],fps:10},
+ blue:{base:"violeta-idle",duck:"violeta-duck",states:{attack:"violeta-attack",landing:"violeta-land",impact:"violeta-impact",recovery:"violeta-recover"},frames:["violeta-run-a","violeta-run-b"],fps:10},
  vasti:{base:"vasti-idle",duck:"vasti-duck",states:{attack:"vasti-attack",landing:"vasti-land",impact:"vasti-impact",recovery:"vasti-recover"},frames:["vasti-run-a","vasti-run-b"],fps:8.5},
- beta:{base:"beta",duck:"beta-duck",states:{},moving:["following","extracted"],frames:["beta-run-a","beta-run-b"],fps:8.2},
+ beta:{base:"rosa",duck:"rosa-duck",states:{},moving:["following","extracted"],frames:["rosa-run-a","rosa-run-b"],fps:8.2},
  ferrucutus:{base:"ferrucutus",duck:"ferrucutus-duck",crouching:["brace","bridge","holding-bridge"],states:{attack:"ferrucutus-attack",landing:"ferrucutus-land",impact:"ferrucutus-impact",recovery:"ferrucutus-recover"},moving:["scout","brace","bridge","holding-bridge","charge"],frames:["ferrucutus-step-a","ferrucutus-step-b"],fps:5.4},
  hunter:{base:"hunter",duck:"hunter-duck",states:{attack:"hunter-attack",landing:"hunter-land",impact:"hunter-impact",recovery:"hunter-recover"},moving:["patrol","pursuit"],frames:["hunter-run-a","hunter-run-b"],fps:10.5},
  indoraptor:{base:"indoraptor",duck:"indoraptor-duck",states:{attack:"indoraptor-attack",landing:"indoraptor-land",impact:"indoraptor-impact",recovery:"indoraptor-recover"},moving:["stalking"],frames:["indoraptor-run-a","indoraptor-run-b"],fps:9.2},

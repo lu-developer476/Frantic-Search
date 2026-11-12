@@ -1,16 +1,16 @@
 import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.js";
 
-const SPRITE_ASSET_VERSION="20261112-raptor-remaster-1";
+const SPRITE_ASSET_VERSION="20261112-violeta-rosa-1";
 const BASE=[
- "blue-idle","blue-run-a","blue-run-b","blue-jump","blue-dash","blue-duck",
+ "violeta-idle","violeta-run-a","violeta-run-b","violeta-jump","violeta-dash","violeta-duck",
  "vasti-idle","vasti-run-a","vasti-run-b","vasti-jump","vasti-duck",
- "beta","beta-run-a","beta-run-b","beta-duck",
+ "rosa","rosa-run-a","rosa-run-b","rosa-duck",
  "ferrucutus","ferrucutus-step-a","ferrucutus-step-b","ferrucutus-duck",
  "hunter","hunter-run-a","hunter-run-b","hunter-duck",
  "indoraptor","indoraptor-run-a","indoraptor-run-b","indoraptor-duck",
  "indominus","indominus-run-a","indominus-run-b","indominus-duck"
 ];
-const SPRITES=[...BASE,...["blue","vasti","beta","ferrucutus","hunter","indoraptor","indominus"].flatMap(name=>["attack","land","impact","recover"].map(pose=>name+"-"+pose))];
+const SPRITES=[...BASE,...["violeta","vasti","rosa","ferrucutus","hunter","indoraptor","indominus"].flatMap(name=>["attack","land","impact","recover"].map(pose=>name+"-"+pose))];
 
 function phaseOf(actor,fallback){
  const key=String(actor?.id??actor?.character??fallback);
@@ -77,9 +77,10 @@ export class SpriteRenderer{
  }
 
  drawDinosaur(context,kind,x,y,width,height,player,elapsed,alpha=1){
-  const prefix=kind==="blue"?"blue":"vasti";
-  let pose=selectActorPose(prefix,player,elapsed);
-  if(player?.dashTimer>0&&kind==="blue")pose="blue-dash";
+  const character=kind==="blue"?"blue":"vasti";
+  const prefix=kind==="blue"?"violeta":"vasti";
+  let pose=selectActorPose(character,player,elapsed);
+  if(player?.dashTimer>0&&kind==="blue")pose="violeta-dash";
   else if(player?.duck)pose=prefix+"-duck";
   else if(player&&!player.onGround&&!player.animationState)pose=prefix+"-jump";
   else if(player&&Math.abs(player.vx)>30&&!player.animationState){

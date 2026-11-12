@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" shape-rendering="crispEdges" role="img" aria-label="Rosa" data-character="Rosa" data-species="Velociraptor" data-age="juvenile" data-lineage="Violeta" data-hide="white" data-back="purple" data-dorsal-stripe="magenta" data-eye="gold-ochre" data-origin="Jurassic World Dominion" data-render-style="pixel-art" data-pixel-grid="4px" data-pose="impact" data-motion-accent="impact">
 <title>Rosa — velociraptor juvenil</title>
-<!-- Original Frantic Search pixel sprite: Blue/Beta-inspired velociraptor anatomy, preserving Rosa's adult/juvenile proportions and white-purple-magenta family pattern. -->
+<!-- Original Frantic Search pixel sprite for Rosa: juvenile white-and-purple velociraptor with a magenta dorsal stripe and ochre-gold eye. -->
 <rect x="92" y="28" width="4" height="4" fill="#202a30"/>
 <rect x="96" y="28" width="4" height="4" fill="#202a30"/>
 <rect x="88" y="32" width="4" height="4" fill="#202a30"/>

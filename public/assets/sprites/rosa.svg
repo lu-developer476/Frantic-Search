@@ -1,16 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" shape-rendering="crispEdges" role="img" aria-label="Rosa" data-character="Rosa" data-species="Velociraptor" data-age="juvenile" data-lineage="Violeta" data-hide="white" data-back="purple" data-dorsal-stripe="magenta" data-eye="gold-ochre" data-origin="Jurassic World Dominion" data-render-style="pixel-art" data-pixel-grid="4px" data-pose="attack" data-motion-accent="attack">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" shape-rendering="crispEdges" role="img" aria-label="Rosa" data-character="Rosa" data-species="Velociraptor" data-age="juvenile" data-lineage="Violeta" data-hide="white" data-back="purple" data-dorsal-stripe="magenta" data-eye="gold-ochre" data-origin="Jurassic World Dominion" data-render-style="pixel-art" data-pixel-grid="4px" data-pose="idle">
 <title>Rosa — velociraptor juvenil</title>
-<!-- Original Frantic Search pixel sprite: Blue/Beta-inspired velociraptor anatomy, preserving Rosa's adult/juvenile proportions and white-purple-magenta family pattern. -->
+<!-- Original Frantic Search pixel sprite for Rosa: juvenile white-and-purple velociraptor with a magenta dorsal stripe and ochre-gold eye. -->
 <rect x="92" y="24" width="4" height="4" fill="#202a30"/>
 <rect x="96" y="24" width="4" height="4" fill="#202a30"/>
+<rect x="100" y="24" width="4" height="4" fill="#202a30"/>
+<rect x="104" y="24" width="4" height="4" fill="#202a30"/>
+<rect x="108" y="24" width="4" height="4" fill="#202a30"/>
 <rect x="80" y="28" width="4" height="4" fill="#202a30"/>
 <rect x="84" y="28" width="4" height="4" fill="#202a30"/>
 <rect x="88" y="28" width="4" height="4" fill="#202a30"/>
 <rect x="92" y="28" width="4" height="4" fill="#4e3d67"/>
 <rect x="96" y="28" width="4" height="4" fill="#4e3d67"/>
-<rect x="100" y="28" width="4" height="4" fill="#202a30"/>
-<rect x="104" y="28" width="4" height="4" fill="#202a30"/>
-<rect x="108" y="28" width="4" height="4" fill="#202a30"/>
+<rect x="100" y="28" width="4" height="4" fill="#78608f"/>
+<rect x="104" y="28" width="4" height="4" fill="#4e3d67"/>
+<rect x="108" y="28" width="4" height="4" fill="#4e3d67"/>
+<rect x="112" y="28" width="4" height="4" fill="#202a30"/>
 <rect x="76" y="32" width="4" height="4" fill="#202a30"/>
 <rect x="80" y="32" width="4" height="4" fill="#78608f"/>
 <rect x="84" y="32" width="4" height="4" fill="#4e3d67"/>
@@ -20,7 +24,8 @@
 <rect x="100" y="32" width="4" height="4" fill="#d936a2"/>
 <rect x="104" y="32" width="4" height="4" fill="#d936a2"/>
 <rect x="108" y="32" width="4" height="4" fill="#4e3d67"/>
-<rect x="112" y="32" width="4" height="4" fill="#202a30"/>
+<rect x="112" y="32" width="4" height="4" fill="#78608f"/>
+<rect x="116" y="32" width="4" height="4" fill="#202a30"/>
 <rect x="52" y="36" width="4" height="4" fill="#202a30"/>
 <rect x="56" y="36" width="4" height="4" fill="#202a30"/>
 <rect x="60" y="36" width="4" height="4" fill="#202a30"/>
@@ -54,7 +59,6 @@
 <rect x="104" y="40" width="4" height="4" fill="#f8f5ed"/>
 <rect x="108" y="40" width="4" height="4" fill="#f8f5ed"/>
 <rect x="112" y="40" width="4" height="4" fill="#202a30"/>
-<rect x="116" y="40" width="4" height="4" fill="#202a30"/>
 <rect x="40" y="44" width="4" height="4" fill="#202a30"/>
 <rect x="44" y="44" width="4" height="4" fill="#4e3d67"/>
 <rect x="48" y="44" width="4" height="4" fill="#4e3d67"/>
@@ -69,8 +73,8 @@
 <rect x="84" y="44" width="4" height="4" fill="#78608f"/>
 <rect x="88" y="44" width="4" height="4" fill="#4e3d67"/>
 <rect x="92" y="44" width="4" height="4" fill="#4e3d67"/>
-<rect x="96" y="44" width="4" height="4" fill="#f8f5ed"/>
-<rect x="100" y="44" width="4" height="4" fill="#f8f5ed"/>
+<rect x="96" y="44" width="4" height="4" fill="#202a30"/>
+<rect x="100" y="44" width="4" height="4" fill="#202a30"/>
 <rect x="104" y="44" width="4" height="4" fill="#202a30"/>
 <rect x="108" y="44" width="4" height="4" fill="#202a30"/>
 <rect x="36" y="48" width="4" height="4" fill="#202a30"/>
@@ -87,9 +91,7 @@
 <rect x="80" y="48" width="4" height="4" fill="#78608f"/>
 <rect x="84" y="48" width="4" height="4" fill="#f8f5ed"/>
 <rect x="88" y="48" width="4" height="4" fill="#f8f5ed"/>
-<rect x="92" y="48" width="4" height="4" fill="#f8f5ed"/>
-<rect x="96" y="48" width="4" height="4" fill="#202a30"/>
-<rect x="100" y="48" width="4" height="4" fill="#202a30"/>
+<rect x="92" y="48" width="4" height="4" fill="#202a30"/>
 <rect x="28" y="52" width="4" height="4" fill="#202a30"/>
 <rect x="32" y="52" width="4" height="4" fill="#202a30"/>
 <rect x="36" y="52" width="4" height="4" fill="#4e3d67"/>
@@ -244,9 +246,4 @@
 <rect x="76" y="104" width="4" height="4" fill="#f2e3c3"/>
 <rect x="84" y="104" width="4" height="4" fill="#f2e3c3"/>
 <rect x="96" y="64" width="4" height="4" fill="#f2e3c3"/>
-<rect x="108" y="44" width="4" height="4" fill="#171d22"/>
-<rect x="112" y="44" width="4" height="4" fill="#171d22"/>
-<rect x="108" y="48" width="4" height="4" fill="#171d22"/>
-<rect x="104" y="48" width="4" height="4" fill="#f8f5ed"/>
-<rect x="112" y="48" width="4" height="4" fill="#f8f5ed"/>
 </svg>

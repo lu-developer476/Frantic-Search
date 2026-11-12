@@ -9,14 +9,14 @@ import { Player } from "../src/entities/Player.js";
 import { HunterEnemy } from "../src/entities/HunterEnemy.js";
 
 const spriteNames = [
-  "blue-idle", "blue-run-a", "blue-run-b", "blue-jump", "blue-dash", "blue-duck",
+  "violeta-idle", "violeta-run-a", "violeta-run-b", "violeta-jump", "violeta-dash", "violeta-duck",
   "vasti-idle", "vasti-run-a", "vasti-run-b", "vasti-jump", "vasti-duck",
-  "beta", "beta-run-a", "beta-run-b", "beta-duck",
+  "rosa", "rosa-run-a", "rosa-run-b", "rosa-duck",
   "ferrucutus", "ferrucutus-step-a", "ferrucutus-step-b", "ferrucutus-duck",
   "hunter", "hunter-run-a", "hunter-run-b", "hunter-duck",
   "indoraptor", "indoraptor-run-a", "indoraptor-run-b", "indoraptor-duck",
   "indominus", "indominus-run-a", "indominus-run-b", "indominus-duck",
-  ...["blue","vasti","beta","ferrucutus","hunter","indoraptor","indominus"].flatMap(n => ["attack","land","impact","recover"].map(p => n+"-"+p))
+  ...["violeta","vasti","rosa","ferrucutus","hunter","indoraptor","indominus"].flatMap(n => ["attack","land","impact","recover"].map(p => n+"-"+p))
 ];
 
 test("every production actor sprite is present and self-contained", () => {
@@ -45,8 +45,8 @@ test("non-hunter creature assets are true block-built pixel sprites", () => {
 
 test("creature sprites preserve the requested species, age and franchise lineages", () => {
   const required = {
-    "blue-idle": [/data-character="Violeta"/, /data-species="Velociraptor"/, /data-age="adult"/, /data-sex="female"/, /data-hide="white"/, /data-back="purple"/, /data-dorsal-stripe="magenta"/, /data-eye="gold-ochre"/],
-    "beta": [/data-character="Rosa"/, /data-species="Velociraptor"/, /data-age="juvenile"/, /data-lineage="Violeta"/, /data-hide="white"/, /data-back="purple"/, /data-dorsal-stripe="magenta"/, /data-eye="gold-ochre"/],
+    "violeta-idle": [/data-character="Violeta"/, /data-species="Velociraptor"/, /data-age="adult"/, /data-sex="female"/, /data-hide="white"/, /data-back="purple"/, /data-dorsal-stripe="magenta"/, /data-eye="gold-ochre"/],
+    "rosa": [/data-character="Rosa"/, /data-species="Velociraptor"/, /data-age="juvenile"/, /data-lineage="Violeta"/, /data-hide="white"/, /data-back="purple"/, /data-dorsal-stripe="magenta"/, /data-eye="gold-ochre"/],
     "vasti-idle": [/data-character="Vasti"/, /data-species="Vastatosaurus rex"/, /data-origin="King Kong 2005"/, /three-fingered forelimbs/, /data-hand-digits="3"/, /data-colors="olive-green brown beige"/],
     "ferrucutus": [/data-character="Ferrucutus Cerastes"/, /data-origin="King Kong 2005"/, /paired nasal horns/],
     "indoraptor": [/data-character="Indoraptor"/, /data-origin="Jurassic World Fallen Kingdom"/, /gold dorsal stripe/],
@@ -60,7 +60,7 @@ test("creature sprites preserve the requested species, age and franchise lineage
 
 test("Violeta has white hide, a purple back, magenta dorsal stripe and ochre-gold eye in all poses", () => {
   for (const pose of ["idle", "run-a", "run-b", "jump", "dash", "duck"]) {
-    const svg = readFileSync(resolve("public/assets/sprites", "blue-" + pose + ".svg"), "utf8");
+    const svg = readFileSync(resolve("public/assets/sprites", "violeta-" + pose + ".svg"), "utf8");
     assert.match(svg, /data-hide="white"/);
     assert.match(svg, /data-back="purple"/);
     assert.match(svg, /data-dorsal-stripe="magenta"/);
@@ -71,7 +71,7 @@ test("Violeta has white hide, a purple back, magenta dorsal stripe and ochre-gol
 });
 
 test("Rosa uses the same family colors as Violeta", () => {
-  const svg = readFileSync(resolve("public/assets/sprites/beta.svg"), "utf8");
+  const svg = readFileSync(resolve("public/assets/sprites/rosa.svg"), "utf8");
   assert.match(svg, /data-lineage="Violeta"/);
   assert.match(svg, /data-hide="white"/);
   assert.match(svg, /data-back="purple"/);
@@ -91,7 +91,7 @@ test("all Vasti poses declare three fingers and have olive, brown and beige pale
 });
 
 test("Violeta and Vasti run cycles contain two distinct animation frames", () => {
-  for (const prefix of ["blue", "vasti"]) {
+  for (const prefix of ["violeta", "vasti"]) {
     const a = readFileSync(resolve("public/assets/sprites", prefix + "-run-a.svg"), "utf8");
     const b = readFileSync(resolve("public/assets/sprites", prefix + "-run-b.svg"), "utf8");
     assert.notEqual(a, b, prefix + " run frames must not be duplicates");
@@ -129,7 +129,7 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
   globalThis.Image = FakeImage;
   try {
     const renderer = new SpriteRenderer("/assets/");
-    assert.match(renderer.get("blue-idle").src, /blue-idle\.svg\?v=20261112-raptor-remaster-1$/);
+    assert.match(renderer.get("violeta-idle").src, /violeta-idle\.svg\?v=20261112-violeta-rosa-1$/);
   } finally {
     if (previousImage === undefined) delete globalThis.Image;
     else globalThis.Image = previousImage;
@@ -195,9 +195,9 @@ test("sprite renderer uses base paths and draws cached images without reloading"
   globalThis.Image = FakeImage;
   try {
     const renderer = new SpriteRenderer("/Avoid/");
-    const image = renderer.get("blue-idle");
-    assert.equal(image.src, "/Avoid/assets/sprites/blue-idle.svg?v=20261112-raptor-remaster-1");
-    assert.equal(renderer.get("blue-idle"), image);
+    const image = renderer.get("violeta-idle");
+    assert.equal(image.src, "/Avoid/assets/sprites/violeta-idle.svg?v=20261112-violeta-rosa-1");
+    assert.equal(renderer.get("violeta-idle"), image);
     image.complete = true;
     image.naturalWidth = 240;
     image.naturalHeight = 170;
@@ -210,7 +210,7 @@ test("sprite renderer uses base paths and draws cached images without reloading"
       scale(...args) { calls.push(["scale", ...args]); },
       drawImage(...args) { calls.push(["drawImage", ...args]); }
     };
-    assert.equal(renderer.draw(context, "blue-idle", 10, 20, 64, 62, { facing: -1 }), true);
+    assert.equal(renderer.draw(context, "violeta-idle", 10, 20, 64, 62, { facing: -1 }), true);
     assert.equal(calls.some((call) => call[0] === "drawImage"), true);
     assert.equal(renderer.readiness().ready, 1);
   } finally {
@@ -220,9 +220,9 @@ test("sprite renderer uses base paths and draws cached images without reloading"
 });
 
 test("Rosa, Ferrucutus, hunters and both bosses have distinct pixel-art gait frames", () => {
- const frames=[["beta-run-a","runA"],["beta-run-b","runB"],["ferrucutus-step-a","stepA"],["ferrucutus-step-b","stepB"],["hunter-run-a","runA"],["hunter-run-b","runB"],["indoraptor-run-a","runA"],["indoraptor-run-b","runB"],["indominus-run-a","runA"],["indominus-run-b","runB"]];
+ const frames=[["rosa-run-a","runA"],["rosa-run-b","runB"],["ferrucutus-step-a","stepA"],["ferrucutus-step-b","stepB"],["hunter-run-a","runA"],["hunter-run-b","runB"],["indoraptor-run-a","runA"],["indoraptor-run-b","runB"],["indominus-run-a","runA"],["indominus-run-b","runB"]];
  for(const [name,pose] of frames){const svg=readFileSync(resolve("public/assets/sprites",name+".svg"),"utf8");assert.match(svg,/^<svg/);assert.match(svg,/shape-rendering="crispEdges"/);assert.match(svg,new RegExp('data-pose="'+pose+'"'));}
- for(const pair of [["beta-run-a","beta-run-b"],["ferrucutus-step-a","ferrucutus-step-b"],["hunter-run-a","hunter-run-b"],["indoraptor-run-a","indoraptor-run-b"],["indominus-run-a","indominus-run-b"]]){const a=readFileSync(resolve("public/assets/sprites",pair[0]+".svg"),"utf8");const b=readFileSync(resolve("public/assets/sprites",pair[1]+".svg"),"utf8");assert.notEqual(a,b);}
+ for(const pair of [["rosa-run-a","rosa-run-b"],["ferrucutus-step-a","ferrucutus-step-b"],["hunter-run-a","hunter-run-b"],["indoraptor-run-a","indoraptor-run-b"],["indominus-run-a","indominus-run-b"]]){const a=readFileSync(resolve("public/assets/sprites",pair[0]+".svg"),"utf8");const b=readFileSync(resolve("public/assets/sprites",pair[1]+".svg"),"utf8");assert.notEqual(a,b);}
 });
 test("actor animation profiles select their own cycles and preserve defeated poses",()=>{
  const renderer=Object.create(SpriteRenderer.prototype),selected=[];renderer.draw=(_ctx,name)=>{selected.push(name);return true;};
@@ -233,7 +233,7 @@ test("actor animation profiles select their own cycles and preserve defeated pos
  renderer.drawAnimated({},"indominus",0,0,224,150,{id:"rex",state:"stalking"},1,{});
  renderer.drawAnimated({},"indominus",0,0,224,150,{id:"rex",state:"attacking",attackName:"roar"},1,{});
  renderer.drawAnimated({},"indominus",0,0,224,150,{id:"rex",state:"attacking",attackName:"charge"},1,{});
- assert.ok(selected[0].startsWith("beta-run-"));assert.ok(selected[1].startsWith("ferrucutus-step-"));assert.ok(selected[2].startsWith("hunter-run-"));assert.ok(selected[3].startsWith("indoraptor-run-"));assert.ok(selected[4].startsWith("indominus-run-"));
+ assert.ok(selected[0].startsWith("rosa-run-"));assert.ok(selected[1].startsWith("ferrucutus-step-"));assert.ok(selected[2].startsWith("hunter-run-"));assert.ok(selected[3].startsWith("indoraptor-run-"));assert.ok(selected[4].startsWith("indominus-run-"));
  assert.equal(selected[5],"indominus","Indominus roar should use its heavy idle/roar pose");
  assert.ok(selected[6].startsWith("indominus-run-"),"Indominus charge should use its run cycle");
  renderer.drawAnimated({},"indominus",0,0,224,150,{id:"rex",state:"defeated",defeated:true},1,{});assert.equal(selected[7],"indominus");
@@ -254,7 +254,7 @@ test("all actor profiles resolve explicit attack, landing, impact and recovery S
  }
 });
 test("pose selection follows live simulation state and preserves boss attack distinctions",()=>{
- assert.equal(selectActorPose("blue",{animationState:"attack"}),"blue-attack");
+ assert.equal(selectActorPose("blue",{animationState:"attack"}),"violeta-attack");
  assert.equal(selectActorPose("vasti",{animationState:"landing"}),"vasti-land");
  assert.equal(selectActorPose("hunter",{state:"stunned"}),"hunter-impact");
  assert.equal(selectActorPose("indoraptor",{state:"recovering"}),"indoraptor-recover");
@@ -282,7 +282,7 @@ test("player attack, impact and landing animations transition through recovery",
 });
 
 test("all non-hunter standing poses use the shared crisp pixel grid", () => {
- const actors=["blue-idle","blue-attack","blue-land","blue-impact","blue-recover","beta","beta-attack","beta-land","beta-impact","beta-recover","vasti-idle","vasti-attack","vasti-land","vasti-impact","vasti-recover","ferrucutus","ferrucutus-attack","ferrucutus-land","ferrucutus-impact","ferrucutus-recover","indoraptor","indoraptor-attack","indoraptor-land","indoraptor-impact","indoraptor-recover","indominus","indominus-attack","indominus-land","indominus-impact","indominus-recover"];
+ const actors=["violeta-idle","violeta-attack","violeta-land","violeta-impact","violeta-recover","rosa","rosa-attack","rosa-land","rosa-impact","rosa-recover","vasti-idle","vasti-attack","vasti-land","vasti-impact","vasti-recover","ferrucutus","ferrucutus-attack","ferrucutus-land","ferrucutus-impact","ferrucutus-recover","indoraptor","indoraptor-attack","indoraptor-land","indoraptor-impact","indoraptor-recover","indominus","indominus-attack","indominus-land","indominus-impact","indominus-recover"];
  for(const name of actors){
   const svg=readFileSync(resolve("public/assets/sprites",name+".svg"),"utf8");
   assert.match(svg,/data-render-style="pixel-art"/,name+" uses pixel blocks");
@@ -307,26 +307,26 @@ test("player sprites keep dash priority and anchor the crouch pose to the ground
  const draws=[];
  renderer.draw=(_context,name,x,y,width,height,options)=>{draws.push({name,x,y,width,height,options});return true;};
  renderer.drawDinosaur({},"blue",100,200,64,42,{dashTimer:.1,duck:false,animationState:"attack",onGround:true,vx:340,normalHeight:62,facing:1},1);
- assert.equal(draws[0].name,"blue-dash");
+ assert.equal(draws[0].name,"violeta-dash");
  draws.length=0;
  renderer.drawDinosaur({},"blue",100,200,64,42,{dashTimer:0,duck:true,animationState:null,onGround:true,vx:0,normalHeight:62,facing:1},1);
- assert.equal(draws[0].name,"blue-duck");
+ assert.equal(draws[0].name,"violeta-duck");
  assert.equal(draws[0].y,180);
  assert.equal(draws[0].height,62);
  draws.length=0;
  renderer.drawDinosaur({},"blue",100,200,64,62,{dashTimer:0,duck:false,animationState:null,onGround:true,vx:120,normalHeight:62,facing:1},.5);
- assert.match(draws[0].name,/^blue-run-/);
+ assert.match(draws[0].name,/^violeta-run-/);
 });
 
 test("all actors select their dedicated crouch pose",()=>{
  const actors=["blue","vasti","beta","ferrucutus","hunter","indoraptor","indominus"];
  for(const actor of actors)assert.equal(selectActorPose(actor,{state:"ducking"}),actor+"-duck");
  assert.equal(selectActorPose("ferrucutus",{state:"brace",motionSpeed:100}),"ferrucutus-duck");
- assert.equal(selectActorPose("blue",{duck:true}),"blue-duck");
+ assert.equal(selectActorPose("blue",{duck:true}),"violeta-duck");
 });
 
 test("moving characters use gait frames and stationary bosses return to idle",()=>{
- assert.match(selectActorPose("beta",{state:"following",motionSpeed:110},.2),/^beta-run-/);
+ assert.match(selectActorPose("beta",{state:"following",motionSpeed:110},.2),/^rosa-run-/);
  assert.match(selectActorPose("ferrucutus",{state:"charge",motionSpeed:160},.3),/^ferrucutus-step-/);
  assert.match(selectActorPose("hunter",{state:"pursuit",motionSpeed:110},.3),/^hunter-run-/);
  assert.match(selectActorPose("indoraptor",{state:"stalking",motionSpeed:90},.4),/^indoraptor-run-/);
@@ -371,7 +371,7 @@ test("all non-hunter dinosaur frames are self-contained pixel assets",()=>{
 });
 
 test("dinosaur sprites use a consistent pixel grid in every resting pose",()=>{
- for(const filename of ["blue-idle.svg","beta.svg","vasti-idle.svg","ferrucutus.svg","indoraptor.svg","indominus.svg"]){
+ for(const filename of ["violeta-idle.svg","rosa.svg","vasti-idle.svg","ferrucutus.svg","indoraptor.svg","indominus.svg"]){
   const svg=readFileSync(resolve("public/assets/sprites",filename),"utf8");
   assert.match(svg,/data-pixel-grid="4px"/,filename+" declares its pixel grid");
   assert.match(svg,/data-render-style="pixel-art"/,filename+" is block-built");

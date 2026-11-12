@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" shape-rendering="crispEdges" role="img" aria-label="Violeta" data-character="Violeta" data-species="Velociraptor" data-age="adult" data-sex="female" data-lineage="Rosa" data-hide="white" data-back="purple" data-dorsal-stripe="magenta" data-eye="gold-ochre" data-origin="Jurassic World" data-render-style="pixel-art" data-pixel-grid="4px" data-pose="runB">
 <title>Violeta — velociraptor adulta</title>
-<!-- Original Frantic Search pixel sprite: Blue/Beta-inspired velociraptor anatomy, preserving Violeta's adult/juvenile proportions and white-purple-magenta family pattern. -->
+<!-- Original Frantic Search pixel sprite for Violeta: adult white-and-purple velociraptor with a magenta dorsal stripe and ochre-gold eye. -->
 <rect x="92" y="12" width="4" height="4" fill="#202a30"/>
 <rect x="96" y="12" width="4" height="4" fill="#202a30"/>
 <rect x="100" y="12" width="4" height="4" fill="#202a30"/>
