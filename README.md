@@ -1,6 +1,6 @@
 # Frantic Search — Operation: Lost Hatchling
 
-**Version 1.2.0 · 2D pixel-art survival-platformer · HTML5 Canvas · JavaScript · Vite**
+**Version 1.3.0 · 2D pixel-art survival-platformer · HTML5 Canvas · JavaScript · Vite**
 
 Frantic Search is an unofficial fan-made dinosaur survival-platformer. Play as Violeta or Vasti, keep the other protagonist by your side, and rescue Rosa from a clandestine poaching and research operation.
 
@@ -27,18 +27,18 @@ Dialogue scenes pause the simulation. The campaign only completes after Rosa has
 
 ## Characters and encounters
 
-- **Violeta:** fast movement, double jump and evasive dash.
-- **Vasti:** heavier movement, ground shockwave and aerial ground-slam.
-- **Rosa:** captive hatchling who becomes an escort companion after the facility systems are restored.
-- **Ferrucutus Cerastes:** ally that helps bridge selected gaps and attacks enemies during exposed windows.
+- **Violeta:** adult female Velociraptor with a slate-gray hide and characteristic blue dorsal stripe; fast movement, double jump and evasive dash.
+- **Vasti:** Vastatosaurus rex from *King Kong* (2005), with a reinforced skull, crocodilian armor scales and three-fingered forelimbs; heavy movement, ground shockwave and aerial ground-slam.
+- **Rosa:** Violeta's juvenile Velociraptor offspring, sharing her blue-striped family pattern; she becomes an escort companion after the facility systems are restored.
+- **Ferrucutus Cerastes:** *King Kong* (2005) ceratopsian with a heavy quadrupedal body, spiked oval frill and paired nasal horns; ally that helps bridge selected gaps and attacks enemies during exposed windows.
 - **Poachers:** state-driven patrol, investigation, pursuit and melee attack AI.
-- **Indoraptor:** pounce and claw patterns with two phases.
-- **Indominus Rex:** sonic roar, charge and tail sweep with two phases.
+- **Indoraptor:** *Jurassic World: Fallen Kingdom* hybrid, with a lean black body, gold dorsal stripe and elongated clawed forelimbs; pounce and claw patterns with two phases.
+- **Indominus Rex:** *Jurassic World* hybrid, with a massive pale body, elongated skull and prominent dorsal osteoderms; sonic roar, charge and tail sweep with two phases.
 
-## Art, animation and audio — release 1.2.0
+## Art, animation and audio — release 1.3.0
 
 - Original self-contained, hard-edged pixel-art SVG sprites replace the former smooth vector illustrations. Characters are built from stepped pixel clusters and a limited arcade palette.
-- Violeta and Vasti have distinct idle, two-frame run, jump and duck poses; Violeta also has a dash pose. Rosa, Ferrucutus, poachers, Indoraptor and Indominus Rex use matching pixel-art silhouettes.
+- Violeta and Vasti have distinct idle, two-frame run, jump and duck poses; Violeta also has a dash pose. Rosa, Ferrucutus, poachers, Indoraptor and Indominus Rex use matching pixel-art silhouettes. Species-specific anatomy and franchise-lineage metadata are covered by the automated suite.
 - The sprites are rendered through a 320×180 low-resolution buffer and nearest-neighbour upscaling, matching the game's crisp 8-bit presentation.
 - Sprite images are preloaded and cached; the Canvas geometry remains as a safe fallback if a sprite cannot load.
 - Original adaptive soundtrack synthesized at runtime with Web Audio API. Themes change across the coast, forest, black site, facility, boss encounters, extraction and victory.

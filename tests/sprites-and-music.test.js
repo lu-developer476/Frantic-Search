@@ -24,6 +24,29 @@ test("every production actor sprite is present and self-contained", () => {
   }
 });
 
+test("creature sprites preserve the requested species, age and franchise lineages", () => {
+  const required = {
+    "blue-idle": [/data-character="Violeta"/, /data-species="Velociraptor"/, /data-age="adult"/, /data-sex="female"/],
+    "beta": [/data-character="Rosa"/, /data-species="Velociraptor"/, /data-age="juvenile"/, /data-lineage="Violeta"/],
+    "vasti-idle": [/data-character="Vasti"/, /data-species="Vastatosaurus rex"/, /data-origin="King Kong 2005"/, /three-fingered forelimbs/],
+    "ferrucutus": [/data-character="Ferrucutus Cerastes"/, /data-origin="King Kong 2005"/, /paired nasal horns/],
+    "indoraptor": [/data-character="Indoraptor"/, /data-origin="Jurassic World Fallen Kingdom"/, /gold dorsal stripe/],
+    "indominus": [/data-character="Indominus Rex"/, /data-origin="Jurassic World"/, /dorsal osteoderms/]
+  };
+  for (const [name, markers] of Object.entries(required)) {
+    const asset = readFileSync(resolve("public/assets/sprites", name + ".svg"), "utf8");
+    for (const marker of markers) assert.match(asset, marker, name + " must preserve its identity");
+  }
+});
+
+test("Violeta and Vasti run cycles contain two distinct animation frames", () => {
+  for (const prefix of ["blue", "vasti"]) {
+    const a = readFileSync(resolve("public/assets/sprites", prefix + "-run-a.svg"), "utf8");
+    const b = readFileSync(resolve("public/assets/sprites", prefix + "-run-b.svg"), "utf8");
+    assert.notEqual(a, b, prefix + " run frames must not be duplicates");
+  }
+});
+
 class FakeNode {
   constructor() {
     this.gain = { value: 1, setTargetAtTime: () => {}, setValueAtTime: () => {}, linearRampToValueAtTime: () => {}, exponentialRampToValueAtTime: () => {} };
