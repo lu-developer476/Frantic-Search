@@ -1,3 +1,14 @@
+import { GAME, LEVELS } from "../config/GameConfig.js";
+
+const FERRUCUTUS_CAGE_OFFSETS = [
+  [220, 540, 1040],
+  [280, 650, 1080],
+  [280, 1300, 2520],
+  [250, 850],
+  [150, 540],
+  [150, 420]
+];
+
 export class PlatformWorld {
   constructor(groundY) {
     this.groundY = groundY;
@@ -5,7 +16,8 @@ export class PlatformWorld {
     this.platforms = [];
     this.obstacles = [];
     this.hunterSpawns = [];
-    this.allySpawns = [];
+    this.allySpawns = []; // Kept empty for compatibility; Ferrucutus now spawn as captives.
+    this.ferrucutusCageSpawns = [];
     this.bossSpawns = [];
     this.facilitySpawns = null;
     this.facilityProps = [];
@@ -30,6 +42,21 @@ export class PlatformWorld {
 
     const isBossArena = index === 2 || index === 4;
     const isFinalArea = index === 5;
+
+    for (let levelIndex = 0; levelIndex < LEVELS.length; levelIndex += 1) {
+      const offsets = FERRUCUTUS_CAGE_OFFSETS[levelIndex] ?? [];
+      offsets.forEach((offset, rescueIndex) => {
+        const x = GAME.playerX + LEVELS[levelIndex].distance + offset;
+        if (x >= start && x < start + this.sectionLength) {
+          this.ferrucutusCageSpawns.push({
+            id: "ferrucutus-cage-" + levelIndex + "-" + (rescueIndex + 1),
+            x,
+            levelIndex,
+            rescueIndex
+          });
+        }
+      });
+    }
     this.platforms.push(
       { x: start, y: this.groundY, w: isFinalArea ? 1900 : 730, h: floorHeight, kind: "ground" },
       ...(!isFinalArea && isBossArena ? [{ x: start + 730, y: this.groundY, w: 170, h: floorHeight, kind: "ground" }] : []),
@@ -61,13 +88,6 @@ export class PlatformWorld {
         patrolStart: start + 955,
         patrolEnd: start + 1270,
         carriesCaptive: true
-      });
-    }
-
-    if ((index % 3 === 0 || isBossArena) && !isFinalArea) {
-      this.allySpawns.push({
-        id: "ferrucutus-" + index,
-        x: start + (isBossArena ? 560 : 500)
       });
     }
 
@@ -182,6 +202,7 @@ export class PlatformWorld {
     );
     this.hunterSpawns = this.hunterSpawns.filter((spawn) => spawn.x >= cutoff);
     this.allySpawns = this.allySpawns.filter((spawn) => spawn.x >= cutoff);
+    this.ferrucutusCageSpawns = this.ferrucutusCageSpawns.filter((spawn) => spawn.x >= cutoff);
     this.bossSpawns = this.bossSpawns.filter((spawn) => spawn.x >= cutoff);
     this.facilityProps = this.facilityProps.filter((prop) => prop.x + prop.w >= cutoff);
   }

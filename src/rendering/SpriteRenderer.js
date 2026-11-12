@@ -1,6 +1,6 @@
 import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.js";
 
-const SPRITE_ASSET_VERSION = "20261112-vasti-articulated-rig-1";
+const SPRITE_ASSET_VERSION = "20261112-ferrucutus-rescue-rig-1";
 const VASTI_RIG_PARTS = [
   "vasti-rig-body",
   "vasti-rig-tail",
@@ -8,6 +8,10 @@ const VASTI_RIG_PARTS = [
   "vasti-rig-leg-front",
   "vasti-rig-foreleg",
   "vasti-rig-jaw"
+];
+const FERRUCUTUS_RIG_PARTS = [
+  "ferrucutus-rig-body","ferrucutus-rig-tail","ferrucutus-rig-leg-back",
+  "ferrucutus-rig-leg-front","ferrucutus-rig-foreleg","ferrucutus-rig-jaw"
 ];
 const BASE = [
   "violeta-idle","violeta-run-a","violeta-run-b","violeta-jump","violeta-dash","violeta-duck",
@@ -21,6 +25,7 @@ const BASE = [
 const SPRITES = [
   ...BASE,
   ...VASTI_RIG_PARTS,
+  ...FERRUCUTUS_RIG_PARTS,
   ...["violeta","rosa","ferrucutus","hunter","indoraptor","indominus"]
     .flatMap(name => ["attack","land","impact","recover"].map(pose => name + "-" + pose))
 ];
@@ -265,8 +270,114 @@ export class SpriteRenderer {
     return result;
   }
 
+
+  drawFerrucutusRig(context, width, height, actor, elapsed, pose, alpha) {
+    // The source artwork faces left. Rescued Ferrucutus use +1 when moving right.
+    const direction = actor?.direction ?? actor?.facing ?? -1;
+    const mirror = direction > 0;
+    const phase = phaseOf(actor, "ferrucutus");
+    const gait = Math.sin(elapsed * 5.4 * Math.PI + phase);
+    const idle = Math.sin(elapsed * 1.7 + phase);
+    let tailAngle = idle * 0.04;
+    let backLegAngle = idle * 0.018;
+    let frontLegAngle = -idle * 0.018;
+    let forelegAngle = idle * 0.025;
+    let jawAngle = Math.max(0, idle) * 0.018;
+
+    if (pose === "ferrucutus-step-a" || pose === "ferrucutus-step-b") {
+      tailAngle = gait * 0.105;
+      backLegAngle = gait * 0.29;
+      frontLegAngle = -gait * 0.31;
+      forelegAngle = -gait * 0.18;
+      jawAngle = 0.025 + Math.max(0, gait) * 0.035;
+    } else if (pose === "ferrucutus-attack") {
+      tailAngle = -0.1; backLegAngle = -0.08; frontLegAngle = 0.08;
+      forelegAngle = -0.22; jawAngle = 0.24;
+    } else if (pose === "ferrucutus-impact") {
+      tailAngle = 0.15; backLegAngle = 0.12; frontLegAngle = -0.1;
+      forelegAngle = 0.17; jawAngle = 0.22;
+    } else if (pose === "ferrucutus-land") {
+      tailAngle = 0.08; backLegAngle = 0.16; frontLegAngle = -0.14;
+      forelegAngle = 0.1; jawAngle = 0.04;
+    } else if (pose === "ferrucutus-recover") {
+      tailAngle = idle * 0.065; forelegAngle = -idle * 0.04; jawAngle = 0.025;
+    } else if (pose === "ferrucutus-duck") {
+      tailAngle = 0.11; backLegAngle = 0.1; frontLegAngle = 0.08;
+      forelegAngle = 0.14; jawAngle = 0;
+    }
+
+    context.save();
+    if (mirror) { context.translate(width, 0); context.scale(-1, 1); }
+    const drawPart = (name, pivotX, pivotY, angle) => {
+      const px = pivotX / 440 * width;
+      const py = pivotY / 261 * height;
+      context.save();
+      context.translate(px, py);
+      context.rotate(angle);
+      const drawn = this.draw(context, name, -px, -py, width, height, { alpha });
+      context.restore();
+      return drawn;
+    };
+    const drawn = [
+      drawPart("ferrucutus-rig-tail", 302, 146, tailAngle),
+      drawPart("ferrucutus-rig-leg-back", 224, 158, backLegAngle),
+      drawPart("ferrucutus-rig-leg-front", 145, 158, frontLegAngle),
+      drawPart("ferrucutus-rig-body", 0, 0, 0),
+      drawPart("ferrucutus-rig-foreleg", 158, 132, forelegAngle),
+      drawPart("ferrucutus-rig-jaw", 91, 117, jawAngle)
+    ].every(Boolean);
+    context.restore();
+    return drawn;
+  }
+
+  drawReferenceFerrucutus(context, x, y, width, height, actor, elapsed, alpha = 1, poseOverride = null) {
+    const pose = poseOverride ?? selectActorPose("ferrucutus", actor, elapsed);
+    const phase = phaseOf(actor, "ferrucutus");
+    let bob = 0, tilt = 0, sx = 1, sy = 1;
+    if (pose === "ferrucutus-step-a" || pose === "ferrucutus-step-b") {
+      const gait = Math.sin(elapsed * 5.4 * Math.PI + phase);
+      bob = Math.round(Math.abs(gait) * 1.5);
+      tilt = gait * 0.025;
+      sx = 1 + Math.abs(gait) * 0.018;
+      sy = 1 - Math.abs(gait) * 0.025;
+    } else if (pose === "ferrucutus-attack") {
+      tilt = -0.035; sx = 1.025;
+    } else if (pose === "ferrucutus-impact") {
+      tilt = 0.04; bob = 1;
+    } else if (pose === "ferrucutus-land") {
+      sy = 0.94; bob = 2;
+    } else if (pose === "ferrucutus-recover") {
+      bob = Math.round(Math.max(0, Math.sin(elapsed * 13 + phase)) * 1.5);
+    } else {
+      const breath = Math.sin(elapsed * 1.7 + phase);
+      bob = Math.round(breath * 0.8);
+      sy = 1 + breath * 0.009;
+    }
+    const w = Math.max(1, Math.round(width * sx));
+    const h = Math.max(1, Math.round(height * sy));
+    const dx = Math.round(x + (width - w) / 2);
+    const dy = Math.round(y + (height - h) / 2 + bob);
+    context.save();
+    context.translate(dx + w / 2, dy + h / 2);
+    context.rotate(tilt);
+    context.translate(-w / 2, -h / 2);
+    const rigReady = FERRUCUTUS_RIG_PARTS.every(name => {
+      const image = this.get(name);
+      return image?.complete && image.naturalWidth > 0;
+    });
+    const result = rigReady
+      ? this.drawFerrucutusRig(context, w, h, actor, elapsed, pose, alpha)
+      : this.draw(context, "ferrucutus", 0, 0, w, h, {
+          alpha,
+          facing: (actor?.direction ?? actor?.facing ?? -1) > 0 ? -1 : 1
+        });
+    context.restore();
+    return result;
+  }
+
   drawAnimated(context, character, x, y, width, height, actor, elapsed, options = {}) {
     if (character === "vasti" && this.drawReferenceVasti(context, x, y, width, height, actor, elapsed, options.alpha ?? 1)) return true;
+    if (character === "ferrucutus" && this.drawReferenceFerrucutus(context, x, y, width, height, actor, elapsed, options.alpha ?? 1)) return true;
     const pose = selectActorPose(character, actor, elapsed);
     const profile = ACTOR_ANIMATION_PROFILES[character];
     const phase = phaseOf(actor, character);
