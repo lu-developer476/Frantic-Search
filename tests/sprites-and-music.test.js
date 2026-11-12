@@ -47,8 +47,8 @@ test("remaining non-hunter creature assets use crisp, self-contained pixel artwo
     assert.match(svg, /data-render-style="pixel-art"/);
     assert.match(svg, /data-pixel-grid="4px"/);
     assert.match(svg, /shape-rendering="crispEdges"/);
-    assert.ok((svg.match(/<rect\\b/g) || []).length >= 30);
-    assert.match(svg, /<(?:path|rect)\\b/);
+    assert.ok((svg.match(/<rect\b/g) || []).length >= 30);
+    assert.match(svg, /<(?:path|rect)\b/);
     assert.doesNotMatch(svg, /href=/i);
     assert.doesNotMatch(svg, /linearGradient|radialGradient/);
   }
@@ -485,13 +485,13 @@ test("Vasti's complete animation set follows the Vastatosaurus rex reference sil
   const artwork = [];
   for (const pose of poses) {
     const svg = readFileSync(resolve("public/assets/sprites", "vasti-" + pose + ".svg"), "utf8");
-    assert.match(svg, /data-reference="vastatosaurus-rex\\.jpg"/);
+    assert.match(svg, /data-reference="vastatosaurus-rex\.jpg"/);
     assert.match(svg, /data-hand-digits="3"/);
     assert.match(svg, /data-anatomy="three-fingered forelimbs/);
     assert.match(svg, /data-render-style="pixel-art"/);
     assert.match(svg, /data-pixel-grid="4px"/);
     assert.match(svg, /shape-rendering="crispEdges"/);
-    assert.match(svg, /<(?:path|rect)\\b/);
+    assert.match(svg, /<(?:path|rect)\b/);
     artwork.push(svg);
   }
   assert.equal(new Set(artwork).size, poses.length, "every Vasti pose must have its own artwork");

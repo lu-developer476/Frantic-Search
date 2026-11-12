@@ -97,69 +97,64 @@ const best = () => Math.max(save.get("bestDistance"), Math.floor(distance));
 const ui = (key) => uiText(key, locale);
 const tr = (value) => translateText(value, locale);
 
-function roundedRect(context, x, y, width, height, radius) {
-  context.beginPath();
-  context.roundRect(x, y, width, height, radius);
-  context.fill();
-}
-
 function drawDino(x, y, width, height, color, kind, phase = 0, alpha = 1, facing = 1, actor = null) {
-  spriteRenderer.drawDinosaur(ctx, kind, x, y, width, height, actor, phase, alpha);
-  return;
+  if (spriteRenderer.drawDinosaur(ctx, kind, x, y, width, height, actor, phase, alpha)) return;
+
+  // Pixel-cell fallback follows the same low, long-bodied V-Rex silhouette as the SVG set.
+  const palette = kind === "vasti"
+    ? { edge: "#202720", deep: "#3f4b35", hide: "#586341", mid: "#68784e", light: "#77845a", brown: "#887454", belly: "#c9b991", eye: "#d1a148" }
+    : { edge: "#202720", deep: "#3f4b35", hide: color || "#586341", mid: "#68784e", light: "#77845a", brown: "#887454", belly: "#c9b991", eye: "#d1a148" };
+
   ctx.save();
-  ctx.globalAlpha = alpha;
+  ctx.globalAlpha *= alpha;
+  ctx.imageSmoothingEnabled = false;
   ctx.translate(facing < 0 ? x + width : x, y);
   if (facing < 0) ctx.scale(-1, 1);
-  const leg = Math.sin(phase * 13) * 7;
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(18, height * 0.56);
-  ctx.lineTo(-12, height * 0.42);
-  ctx.lineTo(8, height * 0.67);
-  ctx.lineTo(26, height * 0.69);
-  ctx.fill();
-  roundedRect(ctx, 16, height * 0.36, width * 0.55, height * 0.43, kind === "blue" ? 13 : 18);
-  ctx.beginPath();
-  ctx.moveTo(width * 0.48, height * 0.49);
-  ctx.lineTo(width * 0.63, height * 0.12);
-  ctx.lineTo(width * 0.83, height * 0.14);
-  ctx.lineTo(width * 0.78, height * 0.55);
-  ctx.fill();
-  roundedRect(ctx, width * 0.64, height * 0.06, width * 0.34, height * 0.22, 9);
-  ctx.fillRect(width * 0.86, height * 0.2, width * 0.14, 5);
-  ctx.fillStyle = "#111918";
-  ctx.beginPath();
-  ctx.arc(width * 0.88, height * 0.12, 3, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = color;
-  ctx.lineWidth = kind === "vasti" ? 11 : 7;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(width * 0.35, height * 0.72);
-  ctx.lineTo(width * 0.31 + leg, height * 0.96);
-  ctx.moveTo(width * 0.62, height * 0.72);
-  ctx.lineTo(width * 0.66 - leg, height * 0.96);
-  ctx.stroke();
-  if (kind === "blue") {
-    ctx.strokeStyle = "#d5e7e0";
-    ctx.lineWidth = 3;
-    for (let i = 0; i < 4; i += 1) {
-      ctx.beginPath();
-      ctx.moveTo(width * (0.28 + i * 0.12), height * 0.43);
-      ctx.lineTo(width * (0.34 + i * 0.12), height * 0.58);
-      ctx.stroke();
-    }
-  } else {
-    ctx.fillStyle = "#e8b58d";
-    ctx.beginPath();
-    ctx.moveTo(width * 0.25, height * 0.38);
-    ctx.lineTo(width * 0.48, height * 0.43);
-    ctx.lineTo(width * 0.35, height * 0.52);
-    ctx.fill();
-  }
+  ctx.scale(width / 128, height / 128);
+  const cell = (fill, px, py, w, h) => {
+    ctx.fillStyle = fill;
+    ctx.fillRect(px, py, w, h);
+  };
+
+  // Muscular hind legs and broad feet.
+  cell(palette.edge, 36, 64, 24, 40);
+  cell(palette.deep, 40, 72, 12, 28);
+  cell(palette.edge, 60, 64, 20, 44);
+  cell(palette.hide, 64, 72, 12, 28);
+  cell(palette.brown, 28, 100, 20, 4);
+  cell(palette.brown, 72, 100, 20, 4);
+
+  // Long, tapering tail and deep barrel torso.
+  cell(palette.edge, 4, 56, 44, 16);
+  cell(palette.mid, 8, 56, 32, 8);
+  cell(palette.hide, 12, 60, 32, 4);
+  cell(palette.brown, 12, 64, 24, 4);
+  cell(palette.edge, 28, 44, 64, 32);
+  cell(palette.hide, 32, 48, 52, 24);
+  cell(palette.light, 40, 48, 36, 8);
+  cell(palette.brown, 40, 64, 40, 8);
+  cell(palette.belly, 44, 64, 32, 8);
+
+  // Compact skull, blunt muzzle and ochre eye.
+  cell(palette.edge, 76, 36, 48, 32);
+  cell(palette.light, 84, 40, 40, 20);
+  cell(palette.brown, 88, 56, 32, 8);
+  cell(palette.belly, 96, 56, 20, 4);
+  cell(palette.edge, 108, 40, 8, 4);
+  cell(palette.eye, 112, 40, 4, 4);
+  cell(palette.edge, 120, 48, 4, 4);
+
+  // Three short digits on the tucked forelimb.
+  cell(palette.edge, 76, 64, 12, 8);
+  cell(palette.deep, 80, 68, 4, 4);
+  cell(palette.edge, 78, 72, 4, 8);
+  cell(palette.edge, 82, 72, 4, 8);
+  cell(palette.edge, 86, 72, 4, 8);
+  cell(palette.brown, 78, 76, 4, 4);
+  cell(palette.belly, 82, 76, 4, 4);
+  cell(palette.belly, 86, 76, 4, 4);
   ctx.restore();
 }
-
 function drawBackground() {
   const scene = level();
   const shift = (cameraX * 0.13) % 1120;

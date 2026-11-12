@@ -28,7 +28,7 @@ Dialogue scenes pause the simulation. The campaign only completes after Rosa has
 ## Characters and encounters
 
 - **Violeta:** adult female Velociraptor with white hide, purple back, magenta dorsal stripe and golden-ochre eyes; fast movement, double jump and evasive dash.
-- **Vasti:** Vastatosaurus rex from *King Kong* (2005), with a reinforced skull, olive-green, brown and beige hide, crocodilian armor scales and five-fingered forelimbs; heavy movement, ground shockwave and aerial ground-slam.
+- **Vasti:** Vastatosaurus rex from *King Kong* (2005), redesigned from `public/references/vastatosaurus-rex.jpg`: low, long-bodied profile, broad blunt skull, long tapering tail, short three-fingered forelimbs, powerful hind legs and muted olive-grey/brown hide with a sand-coloured underside; heavy movement, ground shockwave and aerial ground-slam.
 - **Rosa:** Violeta's juvenile Velociraptor offspring, sharing Violeta's white, purple and magenta family pattern; she becomes an escort companion after the facility systems are restored.
 - **Ferrucutus Cerastes:** *King Kong* (2005) ceratopsian with a heavy quadrupedal body, spiked oval frill and paired nasal horns; ally that helps bridge selected gaps and attacks enemies during exposed windows.
 - **Poachers:** state-driven patrol, investigation, pursuit and melee attack AI.
@@ -38,9 +38,9 @@ Dialogue scenes pause the simulation. The campaign only completes after Rosa has
 ## Art, animation and audio — release 1.3.1
 
 - Original self-contained, hard-edged pixel-art SVG sprites replace the former smooth vector illustrations. Violeta and Rosa now share a Blue/Beta-inspired velociraptor design language while retaining their adult/juvenile silhouettes, white hides, purple backs, magenta dorsal stripes and ochre-gold eyes.
-- Violeta and Vasti have distinct idle, two-frame run, jump and duck poses; Violeta also has a dash pose. Vasti additionally uses dedicated grounded-stomp and aerial ground-slam sprites, while retaining the reference design's reinforced skull, long tail, three-fingered forelimbs and olive/brown/beige palette across every pose. Rosa, Ferrucutus, poachers, Indoraptor and Indominus Rex use matching pixel-art silhouettes. Species-specific anatomy and franchise-lineage metadata are covered by the automated suite.
+- Vasti's eleven SVG poses are rebuilt against `public/references/vastatosaurus-rex.jpg`: idle, two-frame run, jump, crouch, attack, impact, landing, recovery, grounded stomp and aerial slam. Every frame keeps the same low profile, long tail, blunt skull, three-fingered forelimbs and muted olive/brown/sand palette. Violeta, Rosa, Ferrucutus, poachers, Indoraptor and Indominus Rex retain their own pixel-art silhouettes. Species-specific anatomy and franchise-lineage metadata are covered by the automated suite.
 - The sprites are rendered through a 320×180 low-resolution buffer and nearest-neighbour upscaling, matching the game's crisp 8-bit presentation.
-- Sprite images are preloaded and cached; the Canvas geometry remains as a safe fallback if a sprite cannot load.
+- Sprite images are preloaded and cached; if one fails to load, a crisp pixel-cell Canvas fallback preserves the dinosaur's silhouette.
 - Original adaptive soundtrack synthesized at runtime with Web Audio API. Themes change across the coast, forest, black site, facility, boss encounters, extraction and victory.
 - Procedural sound effects for movement, damage, rescue and boss events.
 - No remote music, image or font downloads are required at runtime.
