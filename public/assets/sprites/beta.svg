@@ -1,16 +1,1 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 130">
-<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b4d2b1"/><stop offset=".55" stop-color="#6f9e8a"/><stop offset="1" stop-color="#365d59"/></linearGradient></defs>
-<g stroke="#203b3a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
-<path d="M53 75 C31 79 12 63 6 50 C25 57 41 55 60 59Z" fill="url(#g)"/>
-<path d="M46 66 C55 44 81 37 106 44 C126 50 133 72 121 91 C103 108 69 101 51 88Z" fill="url(#g)"/>
-<path d="M66 82 C85 94 110 88 125 72 C122 96 103 105 81 99Z" fill="#c6cfaa" stroke="none"/>
-<path d="M105 63 C116 48 128 29 139 27 C151 25 157 39 151 50 L137 78 L119 86Z" fill="url(#g)"/>
-<path d="M136 30 C148 17 167 17 177 29 L175 43 L154 51 L140 46Z" fill="url(#g)"/>
-<path d="M151 45 L178 42 L171 52 L151 54Z" fill="#426f69"/>
-<path d="M63 48 L73 36 L80 49 L92 34 L99 51" fill="#d2d2ad"/>
-<ellipse cx="164" cy="31" rx="3.5" ry="3" fill="#e6d37f"/>
-<path d="M57 88 L53 110 L67 114 L80 111 M104 88 L105 108 L119 111 L132 108" fill="none" stroke="#456c61" stroke-width="9"/>
-<path d="M64 111 L82 112 M114 109 L133 109" fill="none" stroke="#203b3a" stroke-width="4"/>
-<path d="M60 58 L81 48 L99 56 L112 64" fill="none" stroke="#d6e1bf" stroke-width="4"/>
-</g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 168" shape-rendering="crispEdges"><rect width="240" height="168" fill="none"/><polygon points="7,10 10,9 13,10 16,9 19,9 20,7 22,6 23,4 27,4 28,5 31,5 32,7 30,8 27,8 26,9 23,9 22,12 21,15 18,16 15,16 13,15 10,14 8,13 5,12 2,12 1,11 4,10" fill="#d982a5"/><polygon points="9,11 12,11 15,12 18,11 20,10 21,12 20,14 17,15 14,14 11,13" fill="#a94f78"/><polygon points="14,12 18,12 20,13 19,15 15,15 12,14" fill="#f3c5ca"/><rect x="120" y="48" width="12" height="24" fill="#a94f78"/><rect x="132" y="42" width="18" height="12" fill="#d982a5"/><rect x="150" y="48" width="18" height="6" fill="#a94f78"/><polygon points="11,9 12,7 13,9 15,6 16,9 18,7 19,9" fill="#f6d4a0"/><polygon points="21,6 22,3 23,6 24,4 25,6" fill="#f6d4a0"/><rect x="162" y="48" width="24" height="6" fill="#a94f78"/><rect x="168" y="54" width="18" height="6" fill="#18232a"/><rect x="162" y="36" width="6" height="6" fill="#ffe36b"/><rect x="162" y="36" width="6" height="6" fill="#18232a"/><rect x="78" y="84" width="18" height="18" fill="#d982a5"/><rect x="114" y="84" width="18" height="18" fill="#d982a5"/><rect x="72" y="102" width="24" height="6" fill="#d982a5"/><rect x="114" y="102" width="24" height="6" fill="#d982a5"/><rect x="54" y="114" width="36" height="6" fill="#29343a"/><rect x="114" y="114" width="36" height="6" fill="#29343a"/><rect x="84" y="60" width="12" height="6" fill="#f6d4a0"/><rect x="102" y="66" width="12" height="6" fill="#a94f78"/><rect x="102" y="60" width="18" height="6" fill="#f6c9b9"/><rect x="120" y="66" width="12" height="6" fill="#f6c9b9"/></svg>
