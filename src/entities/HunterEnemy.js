@@ -16,9 +16,19 @@ export class HunterEnemy {
     this.direction = 1;
     this.alerted = false;
     this.defeated = false;
+    this.motionSpeed = 0;
   }
 
   update(delta, target) {
+    const previousX = this.x;
+    try {
+      return this.updateBehavior(delta, target);
+    } finally {
+      this.motionSpeed = delta > 0 ? (this.x - previousX) / delta : 0;
+    }
+  }
+
+  updateBehavior(delta, target) {
     if (this.defeated) return null;
 
     this.attackCooldown = Math.max(0, this.attackCooldown - delta);

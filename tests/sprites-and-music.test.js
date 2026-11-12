@@ -6,15 +6,16 @@ import { AdaptiveMusic } from "../src/audio/AdaptiveMusic.js";
 import { SpriteRenderer } from "../src/rendering/SpriteRenderer.js";
 import { selectActorPose } from "../src/rendering/AnimationProfiles.js";
 import { Player } from "../src/entities/Player.js";
+import { HunterEnemy } from "../src/entities/HunterEnemy.js";
 
 const spriteNames = [
   "blue-idle", "blue-run-a", "blue-run-b", "blue-jump", "blue-dash", "blue-duck",
   "vasti-idle", "vasti-run-a", "vasti-run-b", "vasti-jump", "vasti-duck",
-  "beta", "beta-run-a", "beta-run-b",
-  "ferrucutus", "ferrucutus-step-a", "ferrucutus-step-b",
-  "hunter", "hunter-run-a", "hunter-run-b",
-  "indoraptor", "indoraptor-run-a", "indoraptor-run-b",
-  "indominus", "indominus-run-a", "indominus-run-b",
+  "beta", "beta-run-a", "beta-run-b", "beta-duck",
+  "ferrucutus", "ferrucutus-step-a", "ferrucutus-step-b", "ferrucutus-duck",
+  "hunter", "hunter-run-a", "hunter-run-b", "hunter-duck",
+  "indoraptor", "indoraptor-run-a", "indoraptor-run-b", "indoraptor-duck",
+  "indominus", "indominus-run-a", "indominus-run-b", "indominus-duck",
   ...["blue","vasti","beta","ferrucutus","hunter","indoraptor","indominus"].flatMap(n => ["attack","land","impact","recover"].map(p => n+"-"+p))
 ];
 
@@ -117,7 +118,7 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
   globalThis.Image = FakeImage;
   try {
     const renderer = new SpriteRenderer("/assets/");
-    assert.match(renderer.get("blue-idle").src, /blue-idle\.svg\?v=20261112-dino-ink-mask-3$/);
+    assert.match(renderer.get("blue-idle").src, /blue-idle\.svg\?v=20261112-ink-crouch-4$/);
   } finally {
     if (previousImage === undefined) delete globalThis.Image;
     else globalThis.Image = previousImage;
@@ -184,7 +185,7 @@ test("sprite renderer uses base paths and draws cached images without reloading"
   try {
     const renderer = new SpriteRenderer("/Avoid/");
     const image = renderer.get("blue-idle");
-    assert.equal(image.src, "/Avoid/assets/sprites/blue-idle.svg?v=20261112-dino-ink-mask-3");
+    assert.equal(image.src, "/Avoid/assets/sprites/blue-idle.svg?v=20261112-ink-crouch-4");
     assert.equal(renderer.get("blue-idle"), image);
     image.complete = true;
     image.naturalWidth = 240;
@@ -291,28 +292,66 @@ test("all non-hunter standing poses keep the feet aligned with the body directio
 });
 
 
-test("dinosaur sprite detail fills stay inside the original black ink contours",()=>{
+test("all dinosaur color shapes are bounded by local ink masks and hunter artwork remains unmasked",()=>{
  const directory=resolve("public/assets/sprites");
- const dinosaurSprites=readdirSync(directory).filter(name=>name.endsWith(".svg")&&!name.startsWith("hunter"));
- assert.equal(dinosaurSprites.length,47);
- for(const filename of dinosaurSprites){
+ const dinosaurs=readdirSync(directory).filter(name=>name.endsWith(".svg")&&!name.startsWith("hunter"));
+ assert.equal(dinosaurs.length,51);
+ for(const filename of dinosaurs){
   const svg=readFileSync(resolve(directory,filename),"utf8");
   assert.match(svg,/viewBox="0 0 128 128"/,filename+" keeps its original canvas");
-  const maskIds=[...svg.matchAll(/<mask id="(dino-outline-mask-\\d+)" maskUnits="userSpaceOnUse"/g)].map(match=>match[1]);
-  assert.ok(maskIds.length>0,filename+" defines an ink-boundary mask");
-  for(const id of maskIds){
-   assert.ok(svg.includes('mask="url(#'+id+')"'),filename+" applies "+id+" to color detail");
-   const start=svg.indexOf('<mask id="'+id+'"');
-   const end=svg.indexOf("</mask>",start);
-   assert.ok(start>=0&&end>start,filename+" has a closed mask definition");
-   const mask=svg.slice(start,end);
-   assert.match(mask,/fill="#ffffff"/,filename+" masks to the silhouette");
-   assert.match(mask,/stroke="#000000"/,filename+" keeps the contour stroke clear");
+  const ids=[...svg.matchAll(/<mask id="(dino-ink-mask-\d+)" maskUnits="userSpaceOnUse"/g)].map(match=>match[1]);
+  assert.ok(ids.length>0,filename+" defines local ink masks");
+  const refs=[...svg.matchAll(/mask="url\(#(dino-ink-mask-\d+)\)"/g)].map(match=>match[1]);
+  assert.ok(refs.length>0,filename+" applies masks to color detail");
+  for(const id of refs)assert.ok(ids.includes(id),filename+" references a defined mask "+id);
+  for(const id of ids){
+   const definitionStart=svg.indexOf('<mask id="'+id+'"');
+   const definitionEnd=svg.indexOf("</mask>",definitionStart);
+   assert.ok(definitionStart>=0&&definitionEnd>definitionStart,filename+" has a closed mask definition");
+   const mask=svg.slice(definitionStart,definitionEnd);
+   assert.match(mask,/fill="#ffffff"/,filename+" preserves the interior");
+   assert.match(mask,/stroke="#000000"/,filename+" reserves the black contour");
   }
   assert.doesNotMatch(svg,/<(polygon|path|rect|circle|ellipse|polyline)(?=[a-z])/,filename+" has valid SVG tag spacing");
  }
  for(const filename of readdirSync(directory).filter(name=>name.startsWith("hunter")&&name.endsWith(".svg"))){
   const svg=readFileSync(resolve(directory,filename),"utf8");
-  assert.doesNotMatch(svg,/<mask|mask=/,filename+" remains on the original hunter treatment");
+  assert.doesNotMatch(svg,/<mask|mask=/,filename+" retains the hunter block-art style");
  }
 });
+
+test("every character has a dedicated crouch sprite without changing its sprite canvas",()=>{
+ const actors=["blue","vasti","beta","ferrucutus","hunter","indoraptor","indominus"];
+ for(const actor of actors){
+  const svg=readFileSync(resolve("public/assets/sprites",actor+"-duck.svg"),"utf8");
+  assert.match(svg,/data-pose="duck"/,actor+" has a crouch pose");
+  assert.match(svg,/data-pose-transform="duck"/,actor+" has a separate crouch silhouette");
+  assert.match(svg,actor==="hunter"?/viewBox="0 0 240 168"/:/viewBox="0 0 128 128"/,actor+" keeps its original canvas size");
+  assert.match(svg,/shape-rendering="crispEdges"/,actor+" keeps pixel edges");
+ }
+});
+
+test("all actors select their dedicated crouch pose",()=>{
+ const actors=["blue","vasti","beta","ferrucutus","hunter","indoraptor","indominus"];
+ for(const actor of actors)assert.equal(selectActorPose(actor,{state:"ducking"}),actor+"-duck");
+ assert.equal(selectActorPose("ferrucutus",{state:"brace",motionSpeed:100}),"ferrucutus-duck");
+ assert.equal(selectActorPose("blue",{duck:true}),"blue-duck");
+});
+
+test("moving characters use gait frames and stationary bosses return to idle",()=>{
+ assert.match(selectActorPose("beta",{state:"following",motionSpeed:110},.2),/^beta-run-/);
+ assert.match(selectActorPose("ferrucutus",{state:"charge",motionSpeed:160},.3),/^ferrucutus-step-/);
+ assert.match(selectActorPose("hunter",{state:"pursuit",motionSpeed:110},.3),/^hunter-run-/);
+ assert.match(selectActorPose("indoraptor",{state:"stalking",motionSpeed:90},.4),/^indoraptor-run-/);
+ assert.match(selectActorPose("indominus",{state:"stalking",motionSpeed:90},.5),/^indominus-run-/);
+ assert.equal(selectActorPose("indoraptor",{state:"stalking",motionSpeed:0}),"indoraptor");
+ assert.equal(selectActorPose("indominus",{state:"stalking",motionSpeed:0}),"indominus");
+ assert.equal(selectActorPose("hunter",{state:"patrol",motionSpeed:0}),"hunter");
+ const hunter=new HunterEnemy({id:"test-hunter",x:100,patrolStart:0,patrolEnd:400,groundY:100});
+ hunter.update(.25,{x:900,y:0,w:60,h:62});
+ assert.equal(hunter.motionSpeed,52);
+ hunter.takeDamage(1);
+ hunter.update(.1,{x:900,y:0,w:60,h:62});
+ assert.equal(hunter.motionSpeed,0);
+});
+

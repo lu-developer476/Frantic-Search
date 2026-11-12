@@ -15,9 +15,19 @@ export class FerrucutusAlly {
     this.bridge = null;
     this.direction = 1;
     this.strikes = 0;
+    this.motionSpeed = 0;
   }
 
   update(delta, player, world, hunters, apexBoss = null) {
+    const previousX = this.x;
+    try {
+      return this.updateBehavior(delta, player, world, hunters, apexBoss);
+    } finally {
+      this.motionSpeed = delta > 0 ? (this.x - previousX) / delta : 0;
+    }
+  }
+
+  updateBehavior(delta, player, world, hunters, apexBoss = null) {
     if (this.departed) return null;
     if (!this.bridge && player.x > this.startX + 1320 && this.state !== "charge") {
       this.departed = true;

@@ -39,6 +39,7 @@ export class BossEnemy {
     this.arenaMaxX = x + 560;
     this.attackIndex = 0;
     this.warning = false;
+    this.motionSpeed = 0;
   }
 
   get phase() {
@@ -58,6 +59,8 @@ export class BossEnemy {
   }
 
   update(delta, target) {
+    const previousX = this.x;
+    this.motionSpeed = 0;
     if (!this.active || this.defeated) return null;
 
     this.attackCooldown = Math.max(0, this.attackCooldown - delta);
@@ -81,6 +84,7 @@ export class BossEnemy {
       }
       this.x = Math.max(this.arenaMinX, Math.min(this.arenaMaxX - this.w, this.x));
       this.y = this.baseY;
+      this.motionSpeed = delta > 0 ? (this.x - previousX) / delta : 0;
 
       if (distance <= this.detectionRange && this.attackCooldown <= 0) {
         this.beginAttack(distance, target);
@@ -104,6 +108,7 @@ export class BossEnemy {
     if (this.state === "attacking") {
       this.attackProgress = 1 - this.stateTimer / this.attackDuration();
       this.onAttack(delta, target);
+      this.motionSpeed = delta > 0 ? (this.x - previousX) / delta : 0;
 
       if (this.stateTimer <= 0) {
         this.state = "recovering";
