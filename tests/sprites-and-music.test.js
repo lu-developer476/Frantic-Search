@@ -10,7 +10,7 @@ import { HunterEnemy } from "../src/entities/HunterEnemy.js";
 
 const spriteNames = [
   "violeta-idle", "violeta-run-a", "violeta-run-b", "violeta-jump", "violeta-dash", "violeta-duck",
-  "vasti-idle", "vasti-run-a", "vasti-run-b", "vasti-jump", "vasti-duck",
+  "vasti-idle", "vasti-run-a", "vasti-run-b", "vasti-jump", "vasti-duck", "vasti-stomp", "vasti-slam",
   "rosa", "rosa-run-a", "rosa-run-b", "rosa-duck",
   "ferrucutus", "ferrucutus-step-a", "ferrucutus-step-b", "ferrucutus-duck",
   "hunter", "hunter-run-a", "hunter-run-b", "hunter-duck",
@@ -141,7 +141,7 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
   globalThis.Image = FakeImage;
   try {
     const renderer = new SpriteRenderer("/assets/");
-    assert.match(renderer.get("violeta-idle").src, /violeta-idle\.svg\?v=20261112-violeta-rosa-2$/);
+    assert.match(renderer.get("violeta-idle").src, /violeta-idle\.svg\?v=20261112-vasti-reference-3$/);
   } finally {
     if (previousImage === undefined) delete globalThis.Image;
     else globalThis.Image = previousImage;
@@ -210,7 +210,7 @@ test("sprite renderer uses base paths and draws cached images without reloading"
   try {
     const renderer = new SpriteRenderer("/Avoid/");
     const image = renderer.get("violeta-idle");
-    assert.equal(image.src, "/Avoid/assets/sprites/violeta-idle.svg?v=20261112-violeta-rosa-2");
+    assert.equal(image.src, "/Avoid/assets/sprites/violeta-idle.svg?v=20261112-vasti-reference-3");
     assert.equal(renderer.get("violeta-idle"), image);
     image.complete = true;
     image.naturalWidth = 240;
@@ -400,7 +400,7 @@ test("character selection dialog stays inside the game viewport without scrollin
 test("all non-hunter dinosaur frames resolve valid source assets", () => {
   const directory = resolve("public/assets/sprites");
   const dinosaurs = readdirSync(directory).filter(name => name.endsWith(".svg") && !name.startsWith("hunter"));
-  assert.equal(dinosaurs.length, 51);
+  assert.equal(dinosaurs.length, 53);
   for (const filename of dinosaurs) {
     const svg = readFileSync(resolve(directory, filename), "utf8");
     assert.match(svg, /^(?:<\?xml[^>]+>\s*)?<svg\b/);
@@ -444,4 +444,34 @@ test("Violeta, Rosa and Vasti use dedicated crouch silhouettes from their correc
   assert.match(vasti, /data-pixel-grid="4px"/);
   assert.match(vasti, /shape-rendering="crispEdges"/);
   assert.match(vasti, /<rect/);
+});
+
+
+test("Vasti has dedicated grounded stomp and aerial slam animations derived from its reference silhouette", () => {
+  for (const [pose, accent] of [["stomp", "stomp"], ["slam", "slam"]]) {
+    const svg = readFileSync(resolve("public/assets/sprites", "vasti-" + pose + ".svg"), "utf8");
+    assert.match(svg, /data-character="Vasti"/);
+    assert.match(svg, /data-hand-digits="3"/);
+    assert.match(svg, /data-colors="olive-green brown beige"/);
+    assert.match(svg, /data-render-style="pixel-art"/);
+    assert.match(svg, /data-pixel-grid="4px"/);
+    assert.match(svg, new RegExp('data-pose="' + pose + '"'));
+    assert.match(svg, new RegExp('data-motion-accent="' + accent + '"'));
+    assert.match(svg, /<rect\b/);
+  }
+});
+
+test("Vasti's ability selects a grounded stomp or an aerial ground-slam pose", () => {
+  const grounded = new Player("vasti", 100, 430);
+  assert.equal(grounded.useAbility(), true);
+  assert.equal(grounded.animationState, "stomp");
+  assert.equal(selectActorPose("vasti", grounded), "vasti-stomp");
+  assert.equal(grounded.consumeShockwave(), true);
+
+  const airborne = new Player("vasti", 100, 430);
+  airborne.onGround = false;
+  assert.equal(airborne.useAbility(), true);
+  assert.equal(airborne.animationState, "slam");
+  assert.equal(airborne.isSlamming, true);
+  assert.equal(selectActorPose("vasti", airborne), "vasti-slam");
 });
