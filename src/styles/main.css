@@ -57,14 +57,14 @@
 
 /* Single-viewport desktop composition */
 html,body{width:100%;height:100%;margin:0;overflow:hidden}
-#app{display:grid;grid-template-rows:auto auto minmax(0,1fr);width:100%;height:100vh;height:100dvh;min-height:0;overflow:hidden}
+#app{display:grid;grid-template-rows:auto minmax(0,1fr);width:100%;height:100vh;height:100dvh;min-height:0;overflow:hidden}
 .topbar{height:clamp(52px,8vh,70px);min-height:0;padding-inline:clamp(18px,4vw,60px)}
 .page-title{width:100%;max-width:1500px;min-width:0;margin:0 auto;padding:clamp(8px,1.2vh,15px) clamp(18px,4vw,60px) 0}
 .page-title h1{display:block;width:100%;margin:0;font-size:clamp(34px,6vw,92px);font-weight:800;line-height:.88;letter-spacing:-.035em;white-space:nowrap;text-align:left}
 .page-title h1 span,.page-title h1 em{display:inline;white-space:nowrap}
 .page-title h1 em{margin:0}
 .layout{width:100%;max-width:1500px;height:100%;min-height:0;min-width:0;margin:0 auto;padding:clamp(8px,1.2vh,14px) clamp(18px,4vw,60px) clamp(10px,1.4vh,16px);overflow:hidden}
-.game-panel{display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;height:100%;min-height:0;min-width:0;overflow:hidden}
+.game-panel{display:grid;grid-template-rows:auto minmax(0,1fr) auto;height:100%;min-height:0;min-width:0;overflow:hidden}
 .panel-head{padding:9px 14px}
 .game-setup{max-height:clamp(126px,20vh,170px);min-height:0;padding:clamp(8px,1.2vh,14px);gap:clamp(12px,1.7vw,24px);overflow:hidden}
 .game-setup .character-card{padding:clamp(8px,1vh,12px)}
@@ -99,7 +99,7 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden}
   .hud-strip>div{padding:6px 9px}
 }
 @media(max-width:1023px),(hover:none),(pointer:coarse){
-  #app{grid-template-rows:auto auto minmax(0,1fr)}
+  #app{grid-template-rows:auto minmax(0,1fr)}
   .page-title{padding-top:10px}
   .page-title h1{display:block;font-size:clamp(34px,8vw,62px);line-height:.88;white-space:normal}
   .page-title h1 span,.page-title h1 em{display:inline;white-space:normal}
@@ -210,7 +210,7 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden}
 
 
 /* Restore the gameplay canvas as the actual, full-size game stage */
-#app{grid-template-rows:auto auto minmax(0,1fr);min-height:0}
+#app{grid-template-rows:auto minmax(0,1fr);min-height:0}
 .layout{height:auto;min-height:0;align-self:stretch;display:block;overflow:hidden}
 .game-panel{display:grid;width:100%;height:100%;min-width:0;min-height:0;grid-template-rows:auto minmax(0,1fr);overflow:hidden}
 .canvas-wrap{position:relative;isolation:isolate;display:block;width:100%;height:100%;min-width:0;min-height:0;aspect-ratio:auto;overflow:hidden;background:#172522}
@@ -289,10 +289,10 @@ html.site-mode-beige .brand,
 html.site-mode-gray .brand{color:var(--site-text)}
 html.site-mode-beige .brand-dot,
 html.site-mode-gray .brand-dot,
-html.site-mode-beige .page-title h1 em,
-html.site-mode-gray .page-title h1 em{color:var(--site-accent)}
-html.site-mode-beige .page-title h1,
-html.site-mode-gray .page-title h1{color:var(--site-text)}
+html.site-mode-beige .operation-title em,
+html.site-mode-gray .operation-title em{color:var(--site-accent)}
+html.site-mode-beige .operation-title,
+html.site-mode-gray .operation-title{color:var(--site-text)}
 
 /* Site controls and hamburger menu */
 html.site-mode-beige .sound-toggle,
@@ -488,3 +488,35 @@ html.site-mode-beige .notice-kicker,
 html.site-mode-gray .notice-kicker,
 html.site-mode-beige .desktop-only-notice em,
 html.site-mode-gray .desktop-only-notice em{color:var(--site-accent)}
+
+
+/* The operation heading lives in the navbar instead of taking a full page row. */
+.topbar{gap:clamp(10px,2vw,28px)}
+.operation-title{
+  flex:1;
+  min-width:0;
+  margin:0 clamp(8px,1.5vw,24px);
+  color:#f1f4eb;
+  font-family:var(--font-condensed);
+  font-size:clamp(17px,2.45vw,32px);
+  font-weight:800;
+  line-height:.92;
+  letter-spacing:-.025em;
+  text-align:center;
+  white-space:nowrap;
+}
+.operation-title em{color:var(--acid);font-style:normal}
+#app{grid-template-rows:auto minmax(0,1fr)}
+@media(max-height:720px) and (min-width:1024px) and (hover:hover) and (pointer:fine){
+  .operation-title{font-size:clamp(16px,2vw,25px)}
+}
+@media(max-width:1023px),(hover:none),(pointer:coarse){
+  #app{grid-template-rows:auto minmax(0,1fr)}
+}
+@media(max-width:560px){
+  .topbar{height:58px;min-height:58px;padding-inline:12px;gap:6px}
+  .brand{flex-shrink:0;font-size:11px;letter-spacing:.09em}
+  .operation-title{font-size:clamp(9px,2.9vw,14px);margin:0 5px;letter-spacing:-.02em}
+  .nav-actions{flex-shrink:0;gap:7px}
+  .menu-toggle{width:38px;height:38px}
+}

@@ -609,10 +609,10 @@ function updateCampaignHud() {
   if (rescuesLabel) rescuesLabel.textContent = String(rescues).padStart(2, "0");
 }
 
-function renderStoryPanel() {
+function renderStoryPanel({ syncAudio = true } = {}) {
   if (!campaign.sceneOpen) {
     storyPanel?.classList.add("hidden");
-    music.setDucked(false);
+    if (syncAudio) music.setDucked(false);
     return;
   }
   const scene = campaign.activeScene;
@@ -624,7 +624,7 @@ function renderStoryPanel() {
   storyProgress.textContent = (scene.index + 1) + " / " + scene.lines.length;
   storyNextButton.textContent = scene.index + 1 >= scene.lines.length ? ui("continue") : ui("next");
   storyPanel.classList.remove("hidden");
-  music.setDucked(true);
+  if (syncAudio) music.setDucked(true);
 }
 
 function showCampaignEnding() {
@@ -1512,13 +1512,17 @@ function setMenuOpen(open) {
 }
 
 function setLanguage(nextLocale) {
-  if (!["es", "en"].includes(nextLocale)) return;
+  if (!["es", "en"].includes(nextLocale) || nextLocale === locale) return;
+
   locale = nextLocale;
   save.update({ language: locale });
   applyLanguage();
   updateCampaignHud();
-  renderStoryPanel();
-  render();
+
+  // A language change updates presentation only: never touch simulation time,
+  // pause state, audio state, or the active animation-frame chain.
+  if (campaign.sceneOpen) renderStoryPanel({ syncAudio: false });
+  if (!running || paused) render();
 }
 
 function applyLanguage() {
