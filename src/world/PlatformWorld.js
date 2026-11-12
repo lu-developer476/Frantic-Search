@@ -1,12 +1,12 @@
 import { GAME, LEVELS } from "../config/GameConfig.js";
 
-const FERRUCUTUS_CAGE_OFFSETS = [
-  [120, 385, 785],
-  [130, 550, 950],
-  [280, 1300, 2520],
-  [250, 520],
-  [150, 540],
-  [150, 420]
+const FERRUCUTUS_CAGE_LAYOUT = [
+  [{ offset: 120 }, { offset: 565, elevation: 65 }, { offset: 950, elevation: 88 }],
+  [{ offset: 130 }, { offset: 550 }, { offset: 1095, elevation: 88 }],
+  [{ offset: 280 }, { offset: 1300 }, { offset: 2595, elevation: 88 }],
+  [{ offset: 250 }, { offset: 520 }],
+  [{ offset: 150 }, { offset: 540 }],
+  [{ offset: 150 }, { offset: 420 }]
 ];
 
 export class PlatformWorld {
@@ -44,13 +44,14 @@ export class PlatformWorld {
     const isFinalArea = index === 5;
 
     for (let levelIndex = 0; levelIndex < LEVELS.length; levelIndex += 1) {
-      const offsets = FERRUCUTUS_CAGE_OFFSETS[levelIndex] ?? [];
-      offsets.forEach((offset, rescueIndex) => {
+      const layout = FERRUCUTUS_CAGE_LAYOUT[levelIndex] ?? [];
+      layout.forEach(({ offset, elevation = 0 }, rescueIndex) => {
         const x = GAME.playerX + LEVELS[levelIndex].distance + offset;
         if (x >= start && x < start + this.sectionLength) {
           this.ferrucutusCageSpawns.push({
             id: "ferrucutus-cage-" + levelIndex + "-" + (rescueIndex + 1),
             x,
+            groundY: this.groundY - elevation,
             levelIndex,
             rescueIndex
           });

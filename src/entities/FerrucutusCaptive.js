@@ -20,7 +20,7 @@ export class FerrucutusCaptive {
     const playerCenter = player.x + player.w / 2;
     const cageCenter = this.x + this.w / 2;
     return Math.abs(playerCenter - cageCenter) <= radius &&
-      Math.abs((player.y + player.h) - this.groundY) < 150;
+      Math.abs((player.y + player.h) - this.groundY) < 64;
   }
 
   rescue() {

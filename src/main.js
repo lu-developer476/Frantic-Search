@@ -664,7 +664,7 @@ function syncEncounters() {
     seenFerrucutusCages.add(spawn.id);
     ferrucutusCaptives.push(new FerrucutusCaptive({
       ...spawn,
-      groundY: GAME.groundY
+      groundY: spawn.groundY ?? GAME.groundY
     }));
   }
 }
