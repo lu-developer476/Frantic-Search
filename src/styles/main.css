@@ -278,15 +278,32 @@ html.site-mode-gray{
 }
 
 /* Page shell and typography */
-html.site-mode-beige body,
+html.site-mode-beige body{
+  color:var(--site-text);
+  background:
+    radial-gradient(ellipse at 50% 38%,#d5c5a7 0%,#b49a75 42%,#806344 74%,#4c3523 100%);
+  background-attachment:fixed;
+}
 html.site-mode-gray body{
   color:var(--site-text);
-  background:radial-gradient(ellipse at 75% 32%,var(--site-page-glow) 0%,var(--site-page) 68%);
+  background:
+    radial-gradient(ellipse at 50% 38%,#b8bec5 0%,#858e98 42%,#4a525c 74%,#171b20 100%);
+  background-attachment:fixed;
+}
+html.site-mode-beige .topbar{
+  background:linear-gradient(90deg,rgba(105,75,44,.18),rgba(222,207,179,.76) 26%,rgba(222,207,179,.76) 74%,rgba(105,75,44,.18));
+  border-bottom-color:rgba(83,57,32,.38);
+}
+html.site-mode-gray .topbar{
+  background:linear-gradient(90deg,rgba(20,25,31,.24),rgba(194,200,207,.82) 26%,rgba(194,200,207,.82) 74%,rgba(20,25,31,.24));
+  border-bottom-color:rgba(24,29,35,.38);
 }
 html.site-mode-beige .topbar,
 html.site-mode-gray .topbar{border-bottom-color:var(--line)}
 html.site-mode-beige .brand,
 html.site-mode-gray .brand{color:var(--site-text)}
+html.site-mode-beige .navbar-separator,
+html.site-mode-gray .navbar-separator{color:var(--site-text)}
 html.site-mode-beige .brand-dot,
 html.site-mode-gray .brand-dot,
 html.site-mode-beige .operation-title em,
@@ -490,33 +507,70 @@ html.site-mode-beige .desktop-only-notice em,
 html.site-mode-gray .desktop-only-notice em{color:var(--site-accent)}
 
 
-/* The operation heading lives in the navbar instead of taking a full page row. */
-.topbar{gap:clamp(10px,2vw,28px)}
-.operation-title{
-  flex:1;
+/* Brand link and operation title share one continuous navbar line. */
+.topbar{gap:clamp(8px,1.6vw,24px)}
+.navbar-identity{
+  display:flex;
+  align-items:baseline;
+  flex:1 1 auto;
   min-width:0;
-  margin:0 clamp(8px,1.5vw,24px);
-  color:#f1f4eb;
-  font-family:var(--font-condensed);
-  font-size:clamp(17px,2.45vw,32px);
-  font-weight:800;
-  line-height:.92;
-  letter-spacing:-.025em;
-  text-align:center;
+  gap:clamp(5px,.75vw,11px);
+  overflow:hidden;
   white-space:nowrap;
 }
-.operation-title em{color:var(--acid);font-style:normal}
+.navbar-identity .brand{
+  display:inline-flex;
+  flex:0 0 auto;
+  gap:0;
+  font-size:clamp(12px,1.35vw,17px);
+  letter-spacing:.12em;
+}
+.navbar-separator{
+  flex:0 0 auto;
+  color:inherit;
+  font-weight:900;
+  font-size:clamp(12px,1.35vw,17px);
+}
+.operation-title{
+  flex:0 1 auto;
+  min-width:0;
+  margin:0;
+  color:#f1f4eb;
+  font-family:var(--font-condensed);
+  font-size:clamp(15px,2.1vw,28px);
+  font-weight:500;
+  line-height:.95;
+  letter-spacing:-.018em;
+  text-align:left;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.operation-title em{color:var(--acid);font-style:italic}
 #app{grid-template-rows:auto minmax(0,1fr)}
 @media(max-height:720px) and (min-width:1024px) and (hover:hover) and (pointer:fine){
-  .operation-title{font-size:clamp(16px,2vw,25px)}
+  .operation-title{font-size:clamp(14px,1.85vw,24px)}
 }
 @media(max-width:1023px),(hover:none),(pointer:coarse){
   #app{grid-template-rows:auto minmax(0,1fr)}
 }
 @media(max-width:560px){
-  .topbar{height:58px;min-height:58px;padding-inline:12px;gap:6px}
-  .brand{flex-shrink:0;font-size:11px;letter-spacing:.09em}
-  .operation-title{font-size:clamp(9px,2.9vw,14px);margin:0 5px;letter-spacing:-.02em}
-  .nav-actions{flex-shrink:0;gap:7px}
-  .menu-toggle{width:38px;height:38px}
+  .topbar{height:58px;min-height:58px;padding-inline:10px;gap:5px}
+  .navbar-identity{gap:4px}
+  .navbar-identity .brand{font-size:clamp(8px,2.7vw,10px);letter-spacing:.06em}
+  .navbar-separator{font-size:clamp(8px,2.7vw,10px)}
+  .operation-title{font-size:clamp(8px,2.65vw,10px);letter-spacing:-.025em}
+  .nav-actions{flex:0 0 auto;gap:6px}
+  .menu-toggle{width:36px;height:38px}
 }
+
+
+/* Darker environmental depth belongs to the page surround, not the game screen. */
+html.site-mode-beige .layout{
+  background:linear-gradient(135deg,rgba(91,62,35,.22),transparent 24%,transparent 76%,rgba(91,62,35,.2));
+}
+html.site-mode-gray .layout{
+  background:linear-gradient(135deg,rgba(17,21,26,.26),transparent 24%,transparent 76%,rgba(17,21,26,.28));
+}
+html.site-mode-beige .operation-title em{color:#80582f}
+html.site-mode-gray .operation-title em{color:#475462}
