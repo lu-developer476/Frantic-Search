@@ -538,15 +538,15 @@ html.site-mode-gray .desktop-only-notice em{color:var(--site-accent)}
   color:#f1f4eb;
   font-family:var(--font-condensed);
   font-size:clamp(15px,2.1vw,28px);
-  font-weight:500;
-  line-height:.95;
-  letter-spacing:-.018em;
+  font-weight:800;
+  line-height:.88;
+  letter-spacing:-.035em;
   text-align:left;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
 }
-.operation-title em{color:var(--acid);font-style:italic}
+.operation-title em{color:var(--acid);font-style:normal}
 #app{grid-template-rows:auto minmax(0,1fr)}
 @media(max-height:720px) and (min-width:1024px) and (hover:hover) and (pointer:fine){
   .operation-title{font-size:clamp(14px,1.85vw,24px)}
@@ -559,7 +559,7 @@ html.site-mode-gray .desktop-only-notice em{color:var(--site-accent)}
   .navbar-identity{gap:4px}
   .navbar-identity .brand{font-size:clamp(8px,2.7vw,10px);letter-spacing:.06em}
   .navbar-separator{font-size:clamp(8px,2.7vw,10px)}
-  .operation-title{font-size:clamp(8px,2.65vw,10px);letter-spacing:-.025em}
+  .operation-title{font-size:clamp(8px,2.65vw,10px)}
   .nav-actions{flex:0 0 auto;gap:6px}
   .menu-toggle{width:36px;height:38px}
 }
