@@ -144,7 +144,7 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
   globalThis.Image = FakeImage;
   try {
     const renderer = new SpriteRenderer("/assets/");
-    assert.match(renderer.get("violeta-idle").src, /violeta-idle\.svg\?v=20261112-ferrucutus-rescue-rig-1$/);
+    assert.match(renderer.get("violeta-idle").src, /violeta-idle\.svg\?v=20261112-indominus-articulated-rig-1$/);
   } finally {
     if (previousImage === undefined) delete globalThis.Image;
     else globalThis.Image = previousImage;
@@ -228,7 +228,7 @@ test("sprite renderer uses base paths and draws cached images without reloading"
   try {
     const renderer = new SpriteRenderer("/Avoid/");
     const image = renderer.get("violeta-idle");
-    assert.equal(image.src, "/Avoid/assets/sprites/violeta-idle.svg?v=20261112-ferrucutus-rescue-rig-1");
+    assert.equal(image.src, "/Avoid/assets/sprites/violeta-idle.svg?v=20261112-indominus-articulated-rig-1");
     assert.equal(renderer.get("violeta-idle"), image);
     image.complete = true;
     image.naturalWidth = 240;
@@ -583,4 +583,65 @@ test("Ferrucutus rescues are wired to the interaction action and update the miss
   assert.match(mainSource, /rescues \+= 1/);
   assert.match(mainSource, /new FerrucutusAlly\(/);
   assert.match(mainSource, /drawFerrucutusCage\(/);
+});
+
+
+test("Indominus Rex uses six articulated layers from its exact reference image", () => {
+  const rendererSource = readFileSync(resolve("src/rendering/SpriteRenderer.js"), "utf8");
+  assert.match(rendererSource, /drawIndominusRig\(/);
+  assert.match(rendererSource, /drawReferenceIndominus\(/);
+  assert.match(rendererSource, /character === "indominus"/);
+  assert.match(rendererSource, /jawAngle = -0\.3/);
+  assert.match(rendererSource, /attackName === "roar" \? -0\.56/);
+
+  const reference = readFileSync(resolve("public/references/indominus-rex.jpg"));
+  const names = ["body", "tail", "leg-back", "leg-front", "forelimb", "jaw"];
+  for (const name of names) {
+    const svg = readFileSync(resolve("public/assets/sprites", "indominus-rig-" + name + ".svg"), "utf8");
+    assert.match(svg, /data-reference="indominus-rex\.jpg"/);
+    assert.match(svg, /data-source="embedded-original-reference"/);
+    assert.match(svg, /data:image\/jpeg;base64,/);
+    assert.match(svg, /filter="url\(#paper-key\)"/);
+    const encoded = svg.match(/data:image\/jpeg;base64,([^"]+)/)?.[1];
+    assert.ok(encoded, name + " must embed the original reference");
+    assert.deepEqual(Buffer.from(encoded, "base64"), reference, name + " must use the byte-identical source image");
+  }
+});
+
+test("Indominus jaw opens while running and attacks, and closes in idle", () => {
+  const renderer = Object.create(SpriteRenderer.prototype);
+  const drawn = [];
+  const rotations = [];
+  renderer.get = () => ({ complete: true, naturalWidth: 480 });
+  renderer.draw = (_context, name) => { drawn.push(name); return true; };
+  const context = {
+    save() {}, restore() {}, translate() {}, scale() {},
+    rotate(angle) { rotations.push(angle); }
+  };
+
+  renderer.drawAnimated(context, "indominus", 0, 0, 232, 158, {
+    id: "rex-run", direction: -1, state: "stalking", motionSpeed: 90
+  }, 0.5, {});
+  assert.ok(drawn.includes("indominus-rig-jaw"));
+  assert.ok(rotations.at(-1) < -0.29, "running animation keeps the jaw open");
+
+  drawn.length = 0;
+  rotations.length = 0;
+  renderer.drawAnimated(context, "indominus", 0, 0, 232, 158, {
+    id: "rex-roar", direction: -1, state: "telegraph", attackName: "roar"
+  }, 0.8, {});
+  assert.ok(drawn.includes("indominus-rig-jaw"));
+  assert.ok(rotations.at(-1) <= -0.55, "roar opens the jaw widest");
+
+  rotations.length = 0;
+  renderer.drawAnimated(context, "indominus", 0, 0, 232, 158, {
+    id: "rex-idle", direction: -1, state: "stalking", motionSpeed: 0
+  }, 1, {});
+  assert.equal(rotations.at(-1), 0, "idle pose keeps the mouth closed");
+});
+
+test("Indominus charge attack uses running frames while roar uses the attack pose", () => {
+  assert.match(selectActorPose("indominus", { state: "stalking", motionSpeed: 90 }, 0.5), /^indominus-run-/);
+  assert.match(selectActorPose("indominus", { state: "attacking", attackName: "charge" }, 1), /^indominus-run-/);
+  assert.equal(selectActorPose("indominus", { state: "telegraph", attackName: "roar" }), "indominus-attack");
 });

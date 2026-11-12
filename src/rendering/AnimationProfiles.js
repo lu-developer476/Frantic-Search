@@ -30,6 +30,9 @@ export function selectActorPose(character,actor={},elapsed=0){
   return profile.frames[Math.floor(Math.max(0,elapsed)*(profile.fps??8))%profile.frames.length];
  }
  if(character==="indominus"&&actor.state==="attacking"&&actor.attackName==="roar")return profile.states.attack;
+ if(character==="indominus"&&actor.state==="attacking"&&actor.attackName==="charge"){
+  return profile.frames[Math.floor(Math.max(0,elapsed)*(profile.fps??8))%profile.frames.length];
+ }
  if(actor.state==="attacking"||actor.state==="attack"||actor.state==="charge"){
   return profile.states.attack??profile.base;
  }
