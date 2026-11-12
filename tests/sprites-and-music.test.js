@@ -231,7 +231,6 @@ test("all non-player actors render through their dedicated animation profiles",(
  for(const actor of ["beta","ferrucutus","hunter","indoraptor","indominus"])assert.match(source,new RegExp('drawAnimated\\(ctx, "'+actor+'"'));
 });
 
-import { selectActorPose } from "../src/rendering/AnimationProfiles.js";
 test("all actor profiles resolve explicit attack, landing, impact and recovery SVG frames",()=>{
  for(const name of ["blue","vasti","beta","ferrucutus","hunter","indoraptor","indominus"]){
   for(const pose of ["attack","land","impact","recover"]){
