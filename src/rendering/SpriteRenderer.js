@@ -114,11 +114,11 @@ export class SpriteRenderer{
   return true;
  }
 
- drawReferenceVasti(context,x,y,width,height,actor,elapsed,alpha=1){
+ drawReferenceVasti(context,x,y,width,height,actor,elapsed,alpha=1,poseOverride=null){
   const sprite=this.referenceSprite;
   if(!sprite)return false;
   const phase=phaseOf(actor,"vasti");
-  const pose=selectActorPose("vasti",actor,elapsed);
+  const pose=poseOverride??selectActorPose("vasti",actor,elapsed);
   let bob=0,tilt=0,sx=1,sy=1,offsetY=0;
   if(pose==="vasti-run-a"||pose==="vasti-run-b"){
    const gait=Math.sin(elapsed*9.2*Math.PI+phase);
@@ -189,7 +189,7 @@ export class SpriteRenderer{
    pose=prefix+"-run-"+(Math.floor(elapsed*fps+phaseOf(player,kind))%2===0?"a":"b");
   }else if(!player?.animationState)pose=prefix+"-idle";
 
-  if(kind!=="blue"&&this.drawReferenceVasti(context,x,y,width,height,{...player,animationState:player?.animationState??(pose==="vasti-idle"?null:pose.replace("vasti-",""))},elapsed,alpha))return true;
+  if(kind!=="blue"&&this.drawReferenceVasti(context,x,y,width,height,player??{},elapsed,alpha,pose))return true;
   const crouching=player?.duck===true&&pose===prefix+"-duck";
   const naturalHeight=crouching?(player?.normalHeight??height):height;
   const drawY=crouching?y+height-naturalHeight:y;
