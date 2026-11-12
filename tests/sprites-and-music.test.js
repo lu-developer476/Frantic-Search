@@ -117,7 +117,7 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
   globalThis.Image = FakeImage;
   try {
     const renderer = new SpriteRenderer("/assets/");
-    assert.match(renderer.get("blue-idle").src, /blue-idle\.svg\?v=20261112-actor-motion-3$/);
+    assert.match(renderer.get("blue-idle").src, /blue-idle\.svg\?v=20261112-feet-forward-1$/);
   } finally {
     if (previousImage === undefined) delete globalThis.Image;
     else globalThis.Image = previousImage;
@@ -184,7 +184,7 @@ test("sprite renderer uses base paths and draws cached images without reloading"
   try {
     const renderer = new SpriteRenderer("/Avoid/");
     const image = renderer.get("blue-idle");
-    assert.equal(image.src, "/Avoid/assets/sprites/blue-idle.svg?v=20261112-actor-motion-2");
+    assert.equal(image.src, "/Avoid/assets/sprites/blue-idle.svg?v=20261112-feet-forward-1");
     assert.equal(renderer.get("blue-idle"), image);
     image.complete = true;
     image.naturalWidth = 240;
@@ -268,4 +268,25 @@ test("player attack, impact and landing animations transition through recovery",
  assert.equal(player.animationState,null);
  player.useAbility();
  assert.equal(player.animationState,"attack");
+});
+
+test("all non-hunter standing poses keep the feet aligned with the body direction",()=>{
+ const actors=["blue","vasti","beta","ferrucutus","indoraptor","indominus"];
+ for(const actor of actors){
+  for(const suffix of ["idle","attack","land","impact","recover"]){
+   const filename=suffix==="idle"?(actor==="blue"?"blue-idle.svg":actor==="vasti"?"vasti-idle.svg":actor+".svg"):actor+"-"+suffix+".svg";
+   const svg=readFileSync(resolve("public/assets/sprites",filename),"utf8");
+   assert.match(svg,/data-feet-orientation="forward"/,filename+" declares forward foot alignment");
+   assert.match(svg,/data-foot-facing="forward"/,filename+" marks its foot geometry");
+   assert.match(svg,/shape-rendering="crispEdges"/,filename+" retains pixel edges");
+  }
+ }
+ for(const [filename,offset] of [["blue-idle.svg","88"],["vasti-idle.svg","88"],["ferrucutus.svg","79"]]){
+  const svg=readFileSync(resolve("public/assets/sprites",filename),"utf8");
+  assert.match(svg,new RegExp('data-foot-facing="forward" transform="translate\\('+offset+' 0\\) scale\\(-1 1\\)"'),filename+" corrects the reversed rear foot");
+ }
+ for(const filename of ["hunter.svg","hunter-attack.svg","hunter-land.svg","hunter-impact.svg","hunter-recover.svg"]){
+  const svg=readFileSync(resolve("public/assets/sprites",filename),"utf8");
+  assert.doesNotMatch(svg,/data-feet-orientation|data-foot-facing/,"hunter sprites remain untouched");
+ }
 });
