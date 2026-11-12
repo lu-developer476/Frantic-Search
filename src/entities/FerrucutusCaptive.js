@@ -23,8 +23,8 @@ export class FerrucutusCaptive {
       Math.abs((player.y + player.h) - this.groundY) < 64;
   }
 
-  rescue() {
-    if (this.rescued || this.state !== "confined") return false;
+  rescue(player) {
+    if (this.rescued || this.state !== "confined" || !this.canInteract(player)) return false;
     this.rescued = true;
     this.state = "rescued";
     return true;

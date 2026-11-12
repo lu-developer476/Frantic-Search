@@ -121,9 +121,9 @@ test("Ferrucutus captive can be rescued once and only within interaction range",
   const distantPlayer = { x: 0, y: 364, w: 64, h: 62 };
   const nearbyPlayer = { x: 260, y: 364, w: 64, h: 62 };
   assert.equal(captive.canInteract(distantPlayer), false);
-  assert.equal(captive.rescue(), false);
+  assert.equal(captive.rescue(distantPlayer), false);
   assert.equal(captive.canInteract(nearbyPlayer), true);
-  assert.equal(captive.rescue(), true);
-  assert.equal(captive.rescue(), false);
+  assert.equal(captive.rescue(nearbyPlayer), true);
+  assert.equal(captive.rescue(nearbyPlayer), false);
   assert.equal(captive.canInteract(nearbyPlayer), false);
 });

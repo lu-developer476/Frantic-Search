@@ -605,7 +605,7 @@ function drawFerrucutusCage(captive) {
   ctx.fillRect(x + w - 21, y + 58, 4, 4);
   ctx.fillStyle = "#e8c58a";
   ctx.font = "8px monospace";
-  ctx.fillText("DINO CONTAINMENT", x + 9, y - 7);
+  ctx.fillText(tr("FERRUCUTUS // CONFINED"), x + 9, y - 7);
   ctx.restore();
 }
 
@@ -722,7 +722,7 @@ function advanceStory() {
 
 function interactWithFacility() {
   const captive = ferrucutusCaptives.find((entry) => entry.canInteract(player));
-  if (captive && captive.rescue()) {
+  if (captive && captive.rescue(player)) {
     ferrucutusCaptives = ferrucutusCaptives.filter((entry) => entry !== captive);
     rescues += 1;
     allies.push(new FerrucutusAlly({
