@@ -144,7 +144,7 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
   globalThis.Image = FakeImage;
   try {
     const renderer = new SpriteRenderer("/assets/");
-    assert.match(renderer.get("violeta-idle").src, /violeta-idle\.svg\?v=20261112-vasti-reference-in-game-2$/);
+    assert.match(renderer.get("violeta-idle").src, /violeta-idle\.svg\?v=20261112-vasti-reference-svg-1$/);
   } finally {
     if (previousImage === undefined) delete globalThis.Image;
     else globalThis.Image = previousImage;
@@ -152,12 +152,17 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
 });
 
 
-test("Vasti renders the exact repository reference image and animates it on the game canvas",()=>{
+test("Vasti renders the original reference artwork from a dedicated SVG on the game canvas",()=>{
  const rendererSource=readFileSync(resolve("src/rendering/SpriteRenderer.js"),"utf8");
- for(const marker of ["references/vastatosaurus-rex.jpg","preloadVastiReference()","drawReferenceVasti(","context.imageSmoothingEnabled=false"])
-  assert.ok(rendererSource.includes(marker),marker+" must be implemented");
- for(const pose of ["vasti-run-a","vasti-run-b","vasti-jump","vasti-duck","vasti-stomp","vasti-slam","vasti-attack","vasti-impact","vasti-land","vasti-recover"])
-  assert.ok(rendererSource.includes('pose==="'+pose+'"'),pose+" must animate the reference image");
+ assert.match(rendererSource,/drawReferenceVasti\\(/);
+ assert.match(rendererSource,/public\\/references\\/vastatosaurus-rex\\.jpg/);
+ assert.match(rendererSource,/this\\.draw\\(context,"vasti"/);
+ const svg=readFileSync(resolve("public/assets/sprites/vasti.svg"),"utf8");
+ assert.match(svg,/<svg\\b/);
+ assert.match(svg,/data-reference="vastatosaurus-rex.jpg"/);
+ assert.match(svg,/data-source="embedded-original-reference"/);
+ assert.match(svg,/data:image\\/jpeg;base64,/);
+ assert.match(svg,/filter="url\\(#paper-key\\)"/);
  const reference=readFileSync(resolve("public/references/vastatosaurus-rex.jpg"));
  assert.ok(reference.length>1000,"the in-game source reference image must be present");
 });
