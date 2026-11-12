@@ -97,6 +97,14 @@ test("every campaign level places two or three Ferrucutus containment cages", ()
       : GAME.campaignEndX;
     const spawns = world.ferrucutusCageSpawns.filter((spawn) => spawn.levelIndex === levelIndex);
     assert.ok(spawns.every((spawn) => spawn.x >= levelStart && spawn.x < levelEnd));
+    for (const spawn of spawns) {
+      assert.ok(world.platforms.some((platform) =>
+        platform.kind === "ground" && spawn.x >= platform.x && spawn.x + 164 <= platform.x + platform.w
+      ), "each containment cage must fit on a solid ground section");
+      assert.ok(world.obstacles.every((obstacle) =>
+        spawn.x + 164 <= obstacle.x || spawn.x >= obstacle.x + obstacle.w
+      ), "containment cages must not overlap ordinary obstacles");
+    }
   }
   assert.equal(new Set(world.ferrucutusCageSpawns.map((spawn) => spawn.id)).size, 15);
 });
