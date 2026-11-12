@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { AdaptiveMusic } from "../src/audio/AdaptiveMusic.js";
 import { SpriteRenderer } from "../src/rendering/SpriteRenderer.js";
@@ -117,7 +117,7 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
   globalThis.Image = FakeImage;
   try {
     const renderer = new SpriteRenderer("/assets/");
-    assert.match(renderer.get("blue-idle").src, /blue-idle\.svg\?v=20261112-feet-forward-1$/);
+    assert.match(renderer.get("blue-idle").src, /blue-idle\.svg\?v=20261112-dino-ink-mask-3$/);
   } finally {
     if (previousImage === undefined) delete globalThis.Image;
     else globalThis.Image = previousImage;
@@ -184,7 +184,7 @@ test("sprite renderer uses base paths and draws cached images without reloading"
   try {
     const renderer = new SpriteRenderer("/Avoid/");
     const image = renderer.get("blue-idle");
-    assert.equal(image.src, "/Avoid/assets/sprites/blue-idle.svg?v=20261112-feet-forward-1");
+    assert.equal(image.src, "/Avoid/assets/sprites/blue-idle.svg?v=20261112-dino-ink-mask-3");
     assert.equal(renderer.get("blue-idle"), image);
     image.complete = true;
     image.naturalWidth = 240;
@@ -288,5 +288,32 @@ test("all non-hunter standing poses keep the feet aligned with the body directio
  for(const filename of ["hunter.svg","hunter-attack.svg","hunter-land.svg","hunter-impact.svg","hunter-recover.svg"]){
   const svg=readFileSync(resolve("public/assets/sprites",filename),"utf8");
   assert.doesNotMatch(svg,/data-feet-orientation|data-foot-facing/,"hunter sprites remain untouched");
+ }
+});
+
+
+test("dinosaur sprite detail fills stay inside the original black ink contours",()=>{
+ const directory=resolve("public/assets/sprites");
+ const dinosaurSprites=readdirSync(directory).filter(name=>name.endsWith(".svg")&&!name.startsWith("hunter"));
+ assert.equal(dinosaurSprites.length,47);
+ for(const filename of dinosaurSprites){
+  const svg=readFileSync(resolve(directory,filename),"utf8");
+  assert.match(svg,/viewBox="0 0 128 128"/,filename+" keeps its original canvas");
+  const maskIds=[...svg.matchAll(/<mask id="(dino-outline-mask-\\d+)" maskUnits="userSpaceOnUse"/g)].map(match=>match[1]);
+  assert.ok(maskIds.length>0,filename+" defines an ink-boundary mask");
+  for(const id of maskIds){
+   assert.ok(svg.includes('mask="url(#'+id+')"'),filename+" applies "+id+" to color detail");
+   const start=svg.indexOf('<mask id="'+id+'"');
+   const end=svg.indexOf("</mask>",start);
+   assert.ok(start>=0&&end>start,filename+" has a closed mask definition");
+   const mask=svg.slice(start,end);
+   assert.match(mask,/fill="#ffffff"/,filename+" masks to the silhouette");
+   assert.match(mask,/stroke="#000000"/,filename+" keeps the contour stroke clear");
+  }
+  assert.doesNotMatch(svg,/<(polygon|path|rect|circle|ellipse|polyline)(?=[a-z])/,filename+" has valid SVG tag spacing");
+ }
+ for(const filename of readdirSync(directory).filter(name=>name.startsWith("hunter")&&name.endsWith(".svg"))){
+  const svg=readFileSync(resolve(directory,filename),"utf8");
+  assert.doesNotMatch(svg,/<mask|mask=/,filename+" remains on the original hunter treatment");
  }
 });

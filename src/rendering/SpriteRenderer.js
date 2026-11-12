@@ -1,5 +1,5 @@
 import { selectActorPose } from "./AnimationProfiles.js";
-const SPRITE_ASSET_VERSION="20261112-feet-forward-1";
+const SPRITE_ASSET_VERSION="20261112-dino-ink-mask-3";
 const BASE=["blue-idle","blue-run-a","blue-run-b","blue-jump","blue-dash","blue-duck","vasti-idle","vasti-run-a","vasti-run-b","vasti-jump","vasti-duck","beta","beta-run-a","beta-run-b","ferrucutus","ferrucutus-step-a","ferrucutus-step-b","hunter","hunter-run-a","hunter-run-b","indoraptor","indoraptor-run-a","indoraptor-run-b","indominus","indominus-run-a","indominus-run-b"];
 const SPRITES=[...BASE,...["blue","vasti","beta","ferrucutus","hunter","indoraptor","indominus"].flatMap(n=>["attack","land","impact","recover"].map(p=>n+"-"+p))];
 function phaseOf(actor,fallback){const key=String(actor?.id??actor?.character??fallback);let h=2166136261;for(let i=0;i<key.length;i++){h^=key.charCodeAt(i);h=Math.imul(h,16777619);}return((h>>>0)%997)/997*Math.PI*2;}
