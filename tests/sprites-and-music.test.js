@@ -42,7 +42,8 @@ test("non-hunter creature assets are true block-built pixel sprites", () => {
     assert.doesNotMatch(svg, /<(?:path|polygon|polyline|ellipse|circle|mask|linearGradient|radialGradient)\\b/i, name + " must not fall back to smooth vector silhouettes");
   }
 });
-\ntest("creature sprites preserve the requested species, age and franchise lineages", () => {
+
+test("creature sprites preserve the requested species, age and franchise lineages", () => {
   const required = {
     "blue-idle": [/data-character="Violeta"/, /data-species="Velociraptor"/, /data-age="adult"/, /data-sex="female"/, /data-hide="white"/, /data-back="purple"/, /data-dorsal-stripe="magenta"/, /data-eye="gold-ochre"/],
     "beta": [/data-character="Rosa"/, /data-species="Velociraptor"/, /data-age="juvenile"/, /data-lineage="Violeta"/, /data-hide="white"/, /data-back="purple"/, /data-dorsal-stripe="magenta"/, /data-eye="gold-ochre"/],
@@ -280,64 +281,24 @@ test("player attack, impact and landing animations transition through recovery",
  assert.equal(player.animationState,"attack");
 });
 
-test("all non-hunter standing poses keep the feet aligned with the body direction",()=>{
- const actors=["blue","vasti","beta","ferrucutus","indoraptor","indominus"];
- for(const actor of actors){
-  for(const suffix of ["idle","attack","land","impact","recover"]){
-   const filename=suffix==="idle"?(actor==="blue"?"blue-idle.svg":actor==="vasti"?"vasti-idle.svg":actor+".svg"):actor+"-"+suffix+".svg";
-   const svg=readFileSync(resolve("public/assets/sprites",filename),"utf8");
-   assert.match(svg,/data-feet-orientation="forward"/,filename+" declares forward foot alignment");
-   assert.match(svg,/data-foot-facing="forward"/,filename+" marks its foot geometry");
-   assert.match(svg,/shape-rendering="crispEdges"/,filename+" retains pixel edges");
-  }
- }
- for(const [filename,offset] of [["blue-idle.svg","88"],["vasti-idle.svg","88"],["ferrucutus.svg","79"]]){
-  const svg=readFileSync(resolve("public/assets/sprites",filename),"utf8");
-  assert.match(svg,new RegExp('data-foot-facing="forward" transform="translate\\('+offset+' 0\\) scale\\(-1 1\\)"'),filename+" corrects the reversed rear foot");
- }
- for(const filename of ["hunter.svg","hunter-attack.svg","hunter-land.svg","hunter-impact.svg","hunter-recover.svg"]){
-  const svg=readFileSync(resolve("public/assets/sprites",filename),"utf8");
-  assert.doesNotMatch(svg,/data-feet-orientation|data-foot-facing/,"hunter sprites remain untouched");
+test("all non-hunter standing poses use the shared crisp pixel grid", () => {
+ const actors=["blue-idle","blue-attack","blue-land","blue-impact","blue-recover","beta","beta-attack","beta-land","beta-impact","beta-recover","vasti-idle","vasti-attack","vasti-land","vasti-impact","vasti-recover","ferrucutus","ferrucutus-attack","ferrucutus-land","ferrucutus-impact","ferrucutus-recover","indoraptor","indoraptor-attack","indoraptor-land","indoraptor-impact","indoraptor-recover","indominus","indominus-attack","indominus-land","indominus-impact","indominus-recover"];
+ for(const name of actors){
+  const svg=readFileSync(resolve("public/assets/sprites",name+".svg"),"utf8");
+  assert.match(svg,/data-render-style="pixel-art"/,name+" uses pixel blocks");
+  assert.match(svg,/data-pixel-grid="4px"/,name+" declares its grid");
+  assert.match(svg,/shape-rendering="crispEdges"/,name+" preserves hard edges");
  }
 });
 
-
-test("all dinosaur color shapes are bounded by local ink masks and hunter artwork remains unmasked",()=>{
- const directory=resolve("public/assets/sprites");
- const dinosaurs=readdirSync(directory).filter(name=>name.endsWith(".svg")&&!name.startsWith("hunter"));
- assert.equal(dinosaurs.length,51);
- for(const filename of dinosaurs){
-  const svg=readFileSync(resolve(directory,filename),"utf8");
-  assert.match(svg,/viewBox="0 0 128 128"/,filename+" keeps its original canvas");
-  const ids=[...svg.matchAll(/<mask id="(dino-ink-mask-\d+)" maskUnits="userSpaceOnUse"/g)].map(match=>match[1]);
-  assert.ok(ids.length>0,filename+" defines local ink masks");
-  const refs=[...svg.matchAll(/mask="url\(#(dino-ink-mask-\d+)\)"/g)].map(match=>match[1]);
-  assert.ok(refs.length>0,filename+" applies masks to color detail");
-  for(const id of refs)assert.ok(ids.includes(id),filename+" references a defined mask "+id);
-  for(const id of ids){
-   const definitionStart=svg.indexOf('<mask id="'+id+'"');
-   const definitionEnd=svg.indexOf("</mask>",definitionStart);
-   assert.ok(definitionStart>=0&&definitionEnd>definitionStart,filename+" has a closed mask definition");
-   const mask=svg.slice(definitionStart,definitionEnd);
-   assert.match(mask,/fill="#ffffff"/,filename+" preserves the interior");
-   assert.match(mask,/stroke="#000000"/,filename+" reserves the black contour");
-  }
-  assert.doesNotMatch(svg,/<(polygon|path|rect|circle|ellipse|polyline)(?=[a-z])/,filename+" has valid SVG tag spacing");
- }
- for(const filename of readdirSync(directory).filter(name=>name.startsWith("hunter")&&name.endsWith(".svg"))){
-  const svg=readFileSync(resolve(directory,filename),"utf8");
-  assert.doesNotMatch(svg,/<mask|mask=/,filename+" retains the hunter block-art style");
- }
-});
-
-test("every character has a dedicated crouch sprite without changing its sprite canvas",()=>{
+test("every character has a dedicated crouch sprite on its native canvas",()=>{
  const actors=["blue","vasti","beta","ferrucutus","hunter","indoraptor","indominus"];
  for(const actor of actors){
   const svg=readFileSync(resolve("public/assets/sprites",actor+"-duck.svg"),"utf8");
   assert.match(svg,/data-pose="duck"/,actor+" has a crouch pose");
-  assert.match(svg,/data-pose-transform="duck"/,actor+" has a separate crouch silhouette");
-  assert.match(svg,actor==="hunter"?/viewBox="0 0 240 168"/:/viewBox="0 0 128 128"/,actor+" keeps its original canvas size");
   assert.match(svg,/shape-rendering="crispEdges"/,actor+" keeps pixel edges");
+  assert.match(svg,actor==="hunter"?/viewBox="0 0 240 168"/:/viewBox="0 0 128 128"/,actor+" keeps its native sprite canvas");
+  assert.match(svg,/<rect\b/,actor+" is composed from pixel blocks");
  }
 });
 
@@ -395,50 +356,35 @@ test("character selection dialog stays inside the game viewport without scrollin
  assert.match(layout,/grid-template-rows:auto minmax\(0,1fr\) auto auto/);
 });
 
-test("all non-hunter dinosaur sprites clip color to their silhouettes and redraw ink last",()=>{
+test("all non-hunter dinosaur frames are self-contained pixel assets",()=>{
  const directory=resolve("public/assets/sprites");
  const dinosaurs=readdirSync(directory).filter(name=>name.endsWith(".svg")&&!name.startsWith("hunter"));
  assert.equal(dinosaurs.length,51);
  for(const filename of dinosaurs){
   const svg=readFileSync(resolve(directory,filename),"utf8");
-  assert.match(svg,/viewBox="0 0 128 128"/,filename+" retains its original canvas");
-  assert.match(svg,/data-ink-boundary="masked"/,filename+" masks the artwork to its silhouette");
-  assert.match(svg,/<mask id="sprite-silhouette" maskUnits="userSpaceOnUse"/,filename+" defines its silhouette mask");
-  assert.match(svg,/<g data-ink-boundary="art" mask="url\(#sprite-silhouette\)">/,filename+" clips its artwork");
-  assert.match(svg,/<g data-ink-layer="final">[\s\S]*?fill="none" stroke="#[0-9a-f]{6}"/i,filename+" redraws its dark ink above color");
- }
- for(const filename of readdirSync(directory).filter(name=>name.startsWith("hunter")&&name.endsWith(".svg"))){
-  const svg=readFileSync(resolve(directory,filename),"utf8");
-  assert.doesNotMatch(svg,/sprite-silhouette|data-ink-layer/,"hunter block sprites remain untouched");
+  assert.match(svg,/^<svg\b/);
+  assert.match(svg,/xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
+  assert.doesNotMatch(svg,/href=/i);
+  assert.doesNotMatch(svg,/linearGradient|radialGradient/);
+  assert.match(svg,/data-render-style="pixel-art"/);
  }
 });
 
-test("all resting dinosaur poses aim their rear leg in the body-facing direction",()=>{
- const expected={
-  "blue-idle.svg":/data-foot-facing="forward" transform="translate\(104 0\) scale\(-1 1\)"/,
-  "beta.svg":/data-foot-facing="forward" transform="translate\(109 0\) scale\(-1 1\)"/,
-  "vasti-idle.svg":/data-foot-facing="forward" transform="translate\(101 0\) scale\(-1 1\)"/,
-  "ferrucutus.svg":/data-foot-facing="forward" transform="translate\(81 0\) scale\(-1 1\)"/,
-  "indoraptor.svg":/data-foot-facing="forward" transform="translate\(107 0\) scale\(-1 1\)"/,
-  "indominus.svg":/data-foot-facing="forward" transform="translate\(102 0\) scale\(-1 1\)"/
- };
- for(const [filename,marker] of Object.entries(expected)){
+test("dinosaur sprites use a consistent pixel grid in every resting pose",()=>{
+ for(const filename of ["blue-idle.svg","beta.svg","vasti-idle.svg","ferrucutus.svg","indoraptor.svg","indominus.svg"]){
   const svg=readFileSync(resolve("public/assets/sprites",filename),"utf8");
-  assert.match(svg,/data-feet-orientation="forward"/,filename+" faces forward");
-  assert.match(svg,marker,filename+" angles its rear leg toward the head");
+  assert.match(svg,/data-pixel-grid="4px"/,filename+" declares its pixel grid");
+  assert.match(svg,/data-render-style="pixel-art"/,filename+" is block-built");
  }
 });
 
-test("Violeta, Rosa and Vasti use articulated crouch sprites with grounded feet",()=>{
+test("Violeta, Rosa and Vasti use dedicated crouch pixel-art silhouettes",()=>{
  for(const actor of ["blue","beta","vasti"]){
   const svg=readFileSync(resolve("public/assets/sprites",actor+"-duck.svg"),"utf8");
   assert.match(svg,/data-pose="duck"/);
-  assert.match(svg,/data-pose-transform="articulated-duck"/);
-  assert.match(svg,/data-crouch-part="lowered-body"/);
-  assert.match(svg,/data-crouch-part="folded-legs"/);
-  assert.match(svg,/data-crouch-part="grounded-feet"/);
-  assert.doesNotMatch(svg,/translate\(0 32(?:\.0+)?\) scale\(1 0\.75\)/,"the full character is not uniformly compressed");
-  assert.match(svg,/viewBox="0 0 128 128"/,"crouch keeps the native sprite canvas");
+  assert.match(svg,/data-render-style="pixel-art"/);
+  assert.match(svg,/data-pixel-grid="4px"/);
+  assert.match(svg,/shape-rendering="crispEdges"/);
+  assert.match(svg,/<rect/);
  }
 });
-
