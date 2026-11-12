@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { AdaptiveMusic } from "../src/audio/AdaptiveMusic.js";
 import { SpriteRenderer } from "../src/rendering/SpriteRenderer.js";
+import { selectActorPose } from "../src/rendering/AnimationProfiles.js";
 
 const spriteNames = [
   "blue-idle", "blue-run-a", "blue-run-b", "blue-jump", "blue-dash", "blue-duck",
@@ -12,7 +13,8 @@ const spriteNames = [
   "ferrucutus", "ferrucutus-step-a", "ferrucutus-step-b",
   "hunter", "hunter-run-a", "hunter-run-b",
   "indoraptor", "indoraptor-run-a", "indoraptor-run-b",
-  "indominus", "indominus-run-a", "indominus-run-b"
+  "indominus", "indominus-run-a", "indominus-run-b",
+  ...["blue","vasti","beta","ferrucutus","hunter","indoraptor","indominus"].flatMap(n => ["attack","land","impact","recover"].map(p => n+"-"+p))
 ];
 
 test("every production actor sprite is present and self-contained", () => {
@@ -114,7 +116,7 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
   globalThis.Image = FakeImage;
   try {
     const renderer = new SpriteRenderer("/assets/");
-    assert.match(renderer.get("blue-idle").src, /blue-idle\.svg\?v=20261112-actor-motion-2$/);
+    assert.match(renderer.get("blue-idle").src, /blue-idle\.svg\?v=20261112-actor-motion-3$/);
   } finally {
     if (previousImage === undefined) delete globalThis.Image;
     else globalThis.Image = previousImage;
@@ -226,4 +228,25 @@ test("actor animation profiles select their own cycles and preserve defeated pos
 test("all non-player actors render through their dedicated animation profiles",()=>{
  const source=readFileSync(resolve("src/main.js"),"utf8");
  for(const actor of ["beta","ferrucutus","hunter","indoraptor","indominus"])assert.match(source,new RegExp('drawAnimated\\(ctx, "'+actor+'"'));
+});
+
+import { selectActorPose } from "../src/rendering/AnimationProfiles.js";
+test("all actor profiles resolve explicit attack, landing, impact and recovery SVG frames",()=>{
+ for(const name of ["blue","vasti","beta","ferrucutus","hunter","indoraptor","indominus"]){
+  for(const pose of ["attack","land","impact","recover"]){
+   const svg=readFileSync(resolve("public/assets/sprites",name+"-"+pose+".svg"),"utf8");
+   assert.match(svg,/shape-rendering="crispEdges"/);
+   assert.match(svg,new RegExp('data-pose="'+pose+'"'));
+   assert.match(svg,new RegExp('data-motion-accent="'+({attack:"attack",land:"landing",impact:"impact",recover:"recovery"}[pose])+'"'));
+  }
+ }
+});
+test("pose selection follows live simulation state and preserves boss attack distinctions",()=>{
+ assert.equal(selectActorPose("blue",{animationState:"attack"}),"blue-attack");
+ assert.equal(selectActorPose("vasti",{animationState:"landing"}),"vasti-land");
+ assert.equal(selectActorPose("hunter",{state:"stunned"}),"hunter-impact");
+ assert.equal(selectActorPose("indoraptor",{state:"recovering"}),"indoraptor-recover");
+ assert.equal(selectActorPose("indominus",{state:"attacking",attackName:"roar"}),"indominus-attack");
+ assert.equal(selectActorPose("indominus",{state:"defeated",defeated:true}),"indominus");
+ assert.match(selectActorPose("hunter",{state:"pursuit",motionSpeed:140}),/^hunter-run-/);
 });
