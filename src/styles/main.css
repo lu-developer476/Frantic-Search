@@ -197,12 +197,7 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden}
 .dialog-back:hover{border-color:var(--acid);color:var(--acid)}
 .dino-dialog button:focus-visible{outline:2px solid var(--acid);outline-offset:3px}
 
-/* Environmental modes: two distinct treatments applied to the actual game image */
-.canvas-wrap.mode-beige canvas#game{filter:sepia(.34) saturate(1.12) brightness(1.06) contrast(.98)}
-.canvas-wrap.mode-gray canvas#game{filter:grayscale(.92) brightness(.94) contrast(1.12)}
-.canvas-wrap.mode-beige::before,.canvas-wrap.mode-gray::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none}
-.canvas-wrap.mode-beige::before{background:linear-gradient(180deg,rgba(241,220,181,.08),rgba(185,145,99,.2))}
-.canvas-wrap.mode-gray::before{background:linear-gradient(180deg,rgba(218,225,231,.12),rgba(69,80,94,.2))}
+/* Site ambience is a website theme; the game canvas is deliberately not filtered. */
 
 @media(max-width:560px){
  .nav-menu{right:-2px;padding:14px}
@@ -244,3 +239,252 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden}
  .overlay-controls{font-size:7px}
  .overlay-content #start-button{margin-top:14px;padding:10px 14px}
 }
+
+
+/* Website environment themes: Beige and Gray affect the UI only, never game rendering. */
+html.site-mode-beige{
+  color-scheme:light;
+  --acid:#8c682f;
+  --muted:#6e695d;
+  --line:rgba(75,62,42,.22);
+  --site-page:#e9dfca;
+  --site-page-glow:#f5eddd;
+  --site-surface:#eee5d4;
+  --site-surface-raised:#f7efdf;
+  --site-card:#e5dac5;
+  --site-control:#e9deca;
+  --site-text:#302e26;
+  --site-muted:#6f6a5e;
+  --site-accent:#8c682f;
+  --site-accent-contrast:#fffaf0;
+  --site-shadow:rgba(69,53,29,.14);
+}
+html.site-mode-gray{
+  color-scheme:light;
+  --acid:#596b7d;
+  --muted:#646d76;
+  --line:rgba(47,56,65,.22);
+  --site-page:#d9dde1;
+  --site-page-glow:#eef0f2;
+  --site-surface:#e5e8eb;
+  --site-surface-raised:#f1f3f5;
+  --site-card:#d2d8de;
+  --site-control:#dce1e5;
+  --site-text:#292f35;
+  --site-muted:#646d76;
+  --site-accent:#596b7d;
+  --site-accent-contrast:#ffffff;
+  --site-shadow:rgba(35,43,51,.14);
+}
+
+/* Page shell and typography */
+html.site-mode-beige body,
+html.site-mode-gray body{
+  color:var(--site-text);
+  background:radial-gradient(ellipse at 75% 32%,var(--site-page-glow) 0%,var(--site-page) 68%);
+}
+html.site-mode-beige .topbar,
+html.site-mode-gray .topbar{border-bottom-color:var(--line)}
+html.site-mode-beige .brand,
+html.site-mode-gray .brand{color:var(--site-text)}
+html.site-mode-beige .brand-dot,
+html.site-mode-gray .brand-dot,
+html.site-mode-beige .page-title h1 em,
+html.site-mode-gray .page-title h1 em{color:var(--site-accent)}
+html.site-mode-beige .page-title h1,
+html.site-mode-gray .page-title h1{color:var(--site-text)}
+
+/* Site controls and hamburger menu */
+html.site-mode-beige .sound-toggle,
+html.site-mode-gray .sound-toggle,
+html.site-mode-beige .menu-toggle,
+html.site-mode-gray .menu-toggle{
+  color:var(--site-text);
+  border-color:var(--line);
+  background:var(--site-control);
+}
+html.site-mode-beige .menu-toggle span,
+html.site-mode-gray .menu-toggle span{background:var(--site-text)}
+html.site-mode-beige .nav-menu,
+html.site-mode-gray .nav-menu{
+  color:var(--site-text);
+  border-color:var(--line);
+  background:var(--site-surface-raised);
+  box-shadow:0 22px 60px var(--site-shadow);
+}
+html.site-mode-beige .menu-section>p,
+html.site-mode-gray .menu-section>p{color:var(--site-muted)}
+html.site-mode-beige .menu-section+.menu-section,
+html.site-mode-gray .menu-section+.menu-section{border-top-color:var(--line)}
+html.site-mode-beige .menu-option,
+html.site-mode-gray .menu-option{
+  color:var(--site-text);
+  border-color:var(--line);
+  background:var(--site-control);
+}
+html.site-mode-beige .menu-option:hover,
+html.site-mode-gray .menu-option:hover{border-color:var(--site-accent);color:var(--site-accent)}
+html.site-mode-beige .menu-option.active,
+html.site-mode-gray .menu-option.active{
+  color:var(--site-accent);
+  border-color:var(--site-accent);
+  background:var(--site-card);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--site-accent) 18%,transparent);
+}
+html.site-mode-beige .nav-menu .menu-sound-toggle,
+html.site-mode-gray .nav-menu .menu-sound-toggle{background:var(--site-control);border-color:var(--line)}
+
+/* Game panel chrome and HTML HUD. The canvas pixels below remain original. */
+html.site-mode-beige .game-panel,
+html.site-mode-gray .game-panel{
+  color:var(--site-text);
+  border-color:var(--line);
+  background:var(--site-surface);
+  box-shadow:0 25px 80px var(--site-shadow);
+}
+html.site-mode-beige .panel-head,
+html.site-mode-gray .panel-head,
+html.site-mode-beige .panel-foot,
+html.site-mode-gray .panel-foot{color:var(--site-muted);border-color:var(--line)}
+html.site-mode-beige .panel-head span:last-child,
+html.site-mode-gray .panel-head span:last-child{color:var(--site-accent)}
+html.site-mode-beige .panel-head i,
+html.site-mode-gray .panel-head i{background:var(--site-accent);box-shadow:0 0 12px color-mix(in srgb,var(--site-accent) 42%,transparent)}
+html.site-mode-beige .hud-strip,
+html.site-mode-gray .hud-strip{
+  color:var(--site-text);
+  border-color:var(--line);
+  background:color-mix(in srgb,var(--site-surface-raised) 94%,transparent);
+  backdrop-filter:blur(8px);
+}
+html.site-mode-beige .hud-strip>div,
+html.site-mode-gray .hud-strip>div{border-color:var(--line)}
+html.site-mode-beige .hud-strip small,
+html.site-mode-gray .hud-strip small{color:var(--site-muted)}
+html.site-mode-beige .hud-strip b,
+html.site-mode-gray .hud-strip b{color:var(--site-text)}
+html.site-mode-beige .hud-strip .objective b,
+html.site-mode-gray .hud-strip .objective b,
+html.site-mode-beige .hud-strip .objective .interaction-readout,
+html.site-mode-gray .hud-strip .objective .interaction-readout{color:var(--site-accent)}
+html.site-mode-beige .hud-strip .objective .ability-readout,
+html.site-mode-gray .hud-strip .objective .ability-readout,
+html.site-mode-beige .hud-strip .objective .health-readout,
+html.site-mode-gray .hud-strip .objective .health-readout{color:var(--site-muted)}
+html.site-mode-beige .canvas-wrap,
+html.site-mode-gray .canvas-wrap{background:var(--site-card)}
+html.site-mode-beige canvas#game,
+html.site-mode-gray canvas#game{filter:none!important}
+
+/* Website overlays: launch screen, story and character selection */
+html.site-mode-beige .game-overlay,
+html.site-mode-gray .game-overlay{
+  background:linear-gradient(90deg,
+    color-mix(in srgb,var(--site-surface-raised) 96%,transparent),
+    color-mix(in srgb,var(--site-surface-raised) 84%,transparent) 65%,
+    color-mix(in srgb,var(--site-surface-raised) 48%,transparent));
+}
+html.site-mode-beige .overlay-kicker,
+html.site-mode-gray .overlay-kicker,
+html.site-mode-beige .overlay-objective strong,
+html.site-mode-gray .overlay-objective strong{color:var(--site-accent)}
+html.site-mode-beige .overlay-content h2,
+html.site-mode-gray .overlay-content h2{color:var(--site-text);text-shadow:none}
+html.site-mode-beige .overlay-content h2 em,
+html.site-mode-gray .overlay-content h2 em{color:var(--site-accent)}
+html.site-mode-beige .overlay-content p,
+html.site-mode-gray .overlay-content p,
+html.site-mode-beige .overlay-objective,
+html.site-mode-gray .overlay-objective,
+html.site-mode-beige .overlay-controls,
+html.site-mode-gray .overlay-controls{color:var(--site-muted)}
+html.site-mode-beige .overlay-content #start-button,
+html.site-mode-gray .overlay-content #start-button{
+  color:var(--site-accent-contrast);
+  border-color:var(--site-accent);
+  background:var(--site-accent);
+}
+html.site-mode-beige .overlay-content #start-button:hover,
+html.site-mode-gray .overlay-content #start-button:hover{filter:brightness(1.08)}
+html.site-mode-beige .dino-modal,
+html.site-mode-gray .dino-modal{
+  background:color-mix(in srgb,var(--site-text) 48%,transparent);
+}
+html.site-mode-beige .dino-dialog,
+html.site-mode-gray .dino-dialog,
+html.site-mode-beige .story-card,
+html.site-mode-gray .story-card{
+  color:var(--site-text);
+  border-color:var(--line);
+  background:var(--site-surface-raised);
+  box-shadow:0 26px 90px var(--site-shadow);
+}
+html.site-mode-beige .dino-dialog h2,
+html.site-mode-gray .dino-dialog h2,
+html.site-mode-beige .story-card h2,
+html.site-mode-gray .story-card h2{color:var(--site-text)}
+html.site-mode-beige .dialog-kicker,
+html.site-mode-gray .dialog-kicker,
+html.site-mode-beige .story-kicker,
+html.site-mode-gray .story-kicker,
+html.site-mode-beige .story-speaker,
+html.site-mode-gray .story-speaker{color:var(--site-accent)}
+html.site-mode-beige .dialog-description,
+html.site-mode-gray .dialog-description,
+html.site-mode-beige .story-text,
+html.site-mode-gray .story-text{color:var(--site-muted)}
+html.site-mode-beige .dino-dialog .character-card,
+html.site-mode-gray .dino-dialog .character-card{
+  color:var(--site-text);
+  border-color:var(--line);
+  background:var(--site-card);
+}
+html.site-mode-beige .dino-dialog .character-card.active,
+html.site-mode-gray .dino-dialog .character-card.active{
+  border-color:var(--site-accent);
+  background:var(--site-control);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--site-accent) 18%,transparent);
+}
+html.site-mode-beige .dino-dialog .character-card small,
+html.site-mode-gray .dino-dialog .character-card small,
+html.site-mode-beige .dino-dialog .character-number,
+html.site-mode-gray .dino-dialog .character-number{color:var(--site-muted)}
+html.site-mode-beige .dialog-back,
+html.site-mode-gray .dialog-back{
+  color:var(--site-text);
+  border-color:var(--line);
+  background:transparent;
+}
+html.site-mode-beige .dialog-back:hover,
+html.site-mode-gray .dialog-back:hover{color:var(--site-accent);border-color:var(--site-accent)}
+html.site-mode-beige .dialog-confirm,
+html.site-mode-gray .dialog-confirm,
+html.site-mode-beige .story-actions button,
+html.site-mode-gray .story-actions button{
+  color:var(--site-accent-contrast);
+  border-color:var(--site-accent);
+  background:var(--site-accent);
+}
+html.site-mode-beige .story-actions,
+html.site-mode-gray .story-actions{border-top-color:var(--line)}
+html.site-mode-beige .story-actions span,
+html.site-mode-gray .story-actions span{color:var(--site-muted)}
+html.site-mode-beige button:focus-visible,
+html.site-mode-gray button:focus-visible{outline-color:var(--site-accent)}
+
+/* Mobile notice is a site component too. */
+html.site-mode-beige .desktop-only-notice,
+html.site-mode-gray .desktop-only-notice{
+  color:var(--site-text);
+  border-color:var(--line);
+  background:var(--site-surface);
+  box-shadow:0 25px 80px var(--site-shadow);
+}
+html.site-mode-beige .desktop-only-notice p,
+html.site-mode-gray .desktop-only-notice p{color:var(--site-muted)}
+html.site-mode-beige .desktop-only-notice h2,
+html.site-mode-gray .desktop-only-notice h2{color:var(--site-text)}
+html.site-mode-beige .notice-kicker,
+html.site-mode-gray .notice-kicker,
+html.site-mode-beige .desktop-only-notice em,
+html.site-mode-gray .desktop-only-notice em{color:var(--site-accent)}

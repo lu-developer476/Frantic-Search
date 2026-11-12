@@ -42,7 +42,6 @@ const storyNextButton = document.querySelector("#story-next");
 const dinoModal = document.querySelector("#dino-modal");
 const menuToggle = document.querySelector("#menu-toggle");
 const navMenu = document.querySelector("#nav-menu");
-const canvasWrap = document.querySelector(".canvas-wrap");
 const soundIcon = document.querySelector("#sound-icon");
 const soundLabel = document.querySelector("#sound-label");
 
@@ -1573,8 +1572,9 @@ function setEnvironmentMode(mode) {
   if (!["beige", "gray"].includes(mode)) return;
   environmentMode = mode;
   save.update({ environmentMode });
-  canvasWrap.classList.remove("mode-beige", "mode-gray");
-  canvasWrap.classList.add(`mode-${mode}`);
+  document.documentElement.classList.remove("site-mode-beige", "site-mode-gray");
+  document.documentElement.classList.add(`site-mode-${mode}`);
+  document.documentElement.dataset.environmentMode = mode;
   document.querySelectorAll("[data-mode]").forEach((button) => {
     const active = button.dataset.mode === mode;
     button.classList.toggle("active", active);
