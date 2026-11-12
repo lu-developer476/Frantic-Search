@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 import { AdaptiveMusic } from "../src/audio/AdaptiveMusic.js";
 import { SpriteRenderer } from "../src/rendering/SpriteRenderer.js";
 import { selectActorPose } from "../src/rendering/AnimationProfiles.js";
+import { Player } from "../src/entities/Player.js";
 
 const spriteNames = [
   "blue-idle", "blue-run-a", "blue-run-b", "blue-jump", "blue-dash", "blue-duck",
@@ -249,4 +250,22 @@ test("pose selection follows live simulation state and preserves boss attack dis
  assert.equal(selectActorPose("indominus",{state:"attacking",attackName:"roar"}),"indominus-attack");
  assert.equal(selectActorPose("indominus",{state:"defeated",defeated:true}),"indominus");
  assert.match(selectActorPose("hunter",{state:"pursuit",motionSpeed:140}),/^hunter-run-/);
+});
+
+test("player attack, impact and landing animations transition through recovery",()=>{
+ const player=new Player("blue",100,430);
+ assert.equal(player.takeHit(),true);
+ assert.equal(player.animationState,"impact");
+ player.update(.28,{isDown:()=>false,consume:()=>false});
+ assert.equal(player.animationState,"recovery");
+ player.update(.16,{isDown:()=>false,consume:()=>false});
+ assert.equal(player.animationState,null);
+ player.onLand();
+ assert.equal(player.animationState,"landing");
+ player.update(.2,{isDown:()=>false,consume:()=>false});
+ assert.equal(player.animationState,"recovery");
+ player.update(.16,{isDown:()=>false,consume:()=>false});
+ assert.equal(player.animationState,null);
+ player.useAbility();
+ assert.equal(player.animationState,"attack");
 });
