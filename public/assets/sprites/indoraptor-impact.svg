@@ -1,4 +1,4 @@
-<svg data-pose="impact" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" shape-rendering="crispEdges" role="img" aria-label="Indoraptor" data-character="Indoraptor" data-species="Indoraptor hybrid" data-origin="Jurassic World Fallen Kingdom" data-anatomy="lean black bipedal theropod gold dorsal stripe elongated forelimbs sickle claws"><title>Indoraptor — Indoraptor hybrid</title>
+<svg data-pose="impact" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" shape-rendering="crispEdges" role="img" aria-label="Indoraptor" data-character="Indoraptor" data-species="Indoraptor hybrid" data-origin="Jurassic World Fallen Kingdom" data-anatomy="lean black bipedal theropod gold dorsal stripe elongated forelimbs sickle claws"><title>Indoraptor — Indoraptor hybrid</title><g data-pose-transform="impact" transform="translate(-3 0) skewX(5) scale(.99 1)">
 <g stroke="#15171d" stroke-width="2" stroke-linejoin="miter">
  <polygon points="54,61 39,65 24,63 11,58 4,55 2,60 14,67 30,72 48,70 61,67" fill="#171b22"/>
  <polygon points="39,65 43,55 53,47 68,44 81,48 91,56 93,70 83,81 65,84 47,77" fill="#252a31"/>
@@ -19,4 +19,4 @@
  <polygon points="54,75 67,79 65,94 58,106 48,112 40,108 48,99 49,88" fill="#353c40"/><polygon points="75,77 87,75 91,90 99,103 96,113 84,115 78,108 81,96" fill="#4c5351"/>
  <polygon points="41,107 55,106 61,112 54,116 39,115 35,111" fill="#20262c"/><polygon points="84,109 99,107 105,113 98,117 82,116 78,112" fill="#20262c"/>
  <polygon points="50,111 55,105 58,112 53,117" fill="#e7d5b8"/><polygon points="94,112 100,106 103,113 99,117" fill="#e7d5b8"/>
-</g><g data-motion-accent="impact" shape-rendering="crispEdges"><path d="M4 28h10v4H4zM14 20h4v10h-4zM110 22h10v4h-10z" fill="#ed8e55"/></g></svg>
+</g></g></svg>

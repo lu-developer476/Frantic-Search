@@ -1,4 +1,4 @@
-<svg data-pose="land" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" shape-rendering="crispEdges" role="img" aria-label="Ferrucutus Cerastes" data-character="Ferrucutus Cerastes" data-species="Ceratopsian" data-origin="King Kong 2005" data-anatomy="quadruped oval spiked frill paired nasal horns short thick tail"><title>Ferrucutus Cerastes — Ceratopsian</title>
+<svg data-pose="land" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" shape-rendering="crispEdges" role="img" aria-label="Ferrucutus Cerastes" data-character="Ferrucutus Cerastes" data-species="Ceratopsian" data-origin="King Kong 2005" data-anatomy="quadruped oval spiked frill paired nasal horns short thick tail"><title>Ferrucutus Cerastes — Ceratopsian</title><g data-pose-transform="land" transform="translate(0 5) scale(1 .92)">
 <g stroke="#222b27" stroke-width="2" stroke-linejoin="miter">
  <polygon points="34,62 23,59 12,55 5,52 5,59 17,67 32,71 43,68" fill="#39443b"/>
  <polygon points="28,63 32,50 45,42 65,40 81,45 91,56 91,75 82,84 58,88 38,81" fill="#485648"/>
@@ -15,4 +15,4 @@
  <polygon points="111,43 116,33 119,29 120,42" fill="#e4d6ad"/><polygon points="115,48 124,47 128,50 119,53" fill="#e4d6ad"/>
  <rect x="108" y="43" width="4" height="4" fill="#e0b34b" stroke="none"/>
  <polygon points="43,43 48,36 54,43" fill="#b5b69a"/><polygon points="57,41 63,34 68,42" fill="#aab095"/><polygon points="69,43 74,37 79,45" fill="#c1b99a"/>
-</g><g data-motion-accent="landing" shape-rendering="crispEdges"><path d="M8 116h18v4H8zM102 116h18v4h-18zM20 108h6v4h-6z" fill="#d8f36a"/></g></svg>
+</g></g></svg>
