@@ -1,12 +1,12 @@
 <svg data-feet-orientation="forward" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" shape-rendering="crispEdges" role="img" aria-label="Violeta" data-character="Violeta" data-species="Velociraptor" data-age="adult" data-sex="female" data-lineage="Rosa" data-hide="white" data-back="purple" data-dorsal-stripe="magenta" data-eye="gold-ochre" data-origin="Jurassic World" data-pose="idle"><title>Violeta — Velociraptor</title><g><g stroke="#202a30" stroke-width="2" stroke-linejoin="miter">
  <polygon points="55,73 66,76 65,88 58,98 54,108 44,109 39,106 48,99 51,88" fill="#e8e5dc"/>
  <polygon points="74,75 85,74 88,87 95,98 97,107 87,110 80,106 81,96 75,86" fill="#d7d4cb"/>
- <polygon points="39,105 54,105 58,110 51,113 36,112 31,109" data-foot-facing="forward" transform="translate(88 0) scale(-1 1) fill="#344651"/>
+ <polygon points="39,105 54,105 58,110 51,113 36,112 31,109" data-foot-facing="forward" transform="translate(88 0) scale(-1 1)" fill="#344651"/>
  <polygon points="85,106 99,105 104,110 97,113 83,112 79,109" data-foot-facing="forward" fill="#344651"/>
  <polygon points="51,105 55,100 57,106 55,110" fill="#d1cbbb" stroke="none"/>
  <polygon points="94,106 99,101 101,107 99,111" fill="#d1cbbb" stroke="none"/>
  <polygon points="52,107 56,104 59,98 60,105 56,112" fill="#e0d9c5"/>
- <polygon points="39,110 33,114 30,113 35,108" data-foot-facing="forward" transform="translate(88 0) scale(-1 1) fill="#d8d1bf" stroke="none"/>
+ <polygon points="39,110 33,114 30,113 35,108" data-foot-facing="forward" transform="translate(88 0) scale(-1 1)" fill="#d8d1bf" stroke="none"/>
  <polygon points="94,111 102,114 106,113 100,108" data-foot-facing="forward" fill="#d8d1bf" stroke="none"/></g>
 <g stroke="#202a30" stroke-width="2" stroke-linejoin="miter">
  <polygon points="55,61 42,64 29,61 16,55 7,49 3,45 2,49 9,57 23,65 39,70 55,70 63,65" fill="#4e3d67"/>
