@@ -574,3 +574,7 @@ html.site-mode-gray .layout{
 }
 html.site-mode-beige .operation-title em{color:#80582f}
 html.site-mode-gray .operation-title em{color:#475462}
+
+/* Keep navbar text readable while the darker ambience stays in the outer page margins. */
+html.site-mode-beige .topbar{background:#cdbb9b}
+html.site-mode-gray .topbar{background:#aeb5bd}
