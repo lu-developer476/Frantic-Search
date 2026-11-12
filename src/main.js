@@ -20,8 +20,15 @@ import { t as uiText, translateText } from "./i18n.js";
 
 const canvas = document.querySelector("#game");
 const desktopPlayback = window.matchMedia("(min-width: 1024px) and (hover: hover) and (pointer: fine)");
-const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
-ctx.imageSmoothingEnabled = true;
+const PIXEL_SCALE = 3;
+const pixelCanvas = document.createElement("canvas");
+pixelCanvas.width = Math.round(canvas.width / PIXEL_SCALE);
+pixelCanvas.height = Math.round(canvas.height / PIXEL_SCALE);
+const ctx = pixelCanvas.getContext("2d", { alpha: false, desynchronized: true });
+const displayCtx = canvas.getContext("2d", { alpha: false, desynchronized: true });
+ctx.imageSmoothingEnabled = false;
+ctx.scale(1 / PIXEL_SCALE, 1 / PIXEL_SCALE);
+displayCtx.imageSmoothingEnabled = false;
 const spriteRenderer = new SpriteRenderer();
 const overlay = document.querySelector("#overlay");
 const stateLabel = document.querySelector("#game-state");
@@ -153,90 +160,143 @@ function drawDino(x, y, width, height, color, kind, phase = 0, alpha = 1, facing
 }
 
 function drawBackground() {
-  const currentLevel = level();
-  const gradient = ctx.createLinearGradient(0, 0, 0, GAME.height);
-  gradient.addColorStop(0, currentLevel.sky);
-  gradient.addColorStop(1, "#819078");
-  ctx.fillStyle = gradient;
+  const scene = level();
+  const shift = (cameraX * 0.13) % 1120;
+  const environment = scene.environment;
+  ctx.fillStyle = scene.sky;
   ctx.fillRect(0, 0, GAME.width, GAME.height);
-  ctx.fillStyle = "#192b29";
-  ctx.beginPath();
-  ctx.moveTo(0, 310);
-  for (let x = 0; x <= GAME.width; x += 80) {
-    ctx.lineTo(x, 280 + Math.sin((x + cameraX * 0.12) * 0.013 + elapsed * 0.12) * 34);
-  }
-  ctx.lineTo(GAME.width, GAME.height);
-  ctx.lineTo(0, GAME.height);
-  ctx.fill();
-  for (let i = 0; i < 12; i += 1) {
-    const x = ((i * 113 - cameraX * 0.18) % 1100 + 1100) % 1100 - 60;
-    const y = 270 + (i % 3) * 22;
-    ctx.fillStyle = i % 2 ? "#304638" : "#263b34";
-    ctx.beginPath();
-    ctx.moveTo(x, y + 100);
-    ctx.lineTo(x + 28, y - 30 - (i % 3) * 13);
-    ctx.lineTo(x + 57, y + 100);
-    ctx.fill();
-    ctx.fillRect(x + 24, y + 55, 8, 75);
-  }
-  if (currentLevel.environment === "industrial" || currentLevel.environment === "facility") {
-    ctx.fillStyle = "#111b20";
-    ctx.fillRect(0, 300, GAME.width, 240);
-    for (let i = 0; i < 5; i += 1) {
-      const x = ((i * 240 - cameraX * 0.28) % 1300 + 1300) % 1300 - 120;
-      const height = 115 + (i % 3) * 28;
-      ctx.fillStyle = i % 2 ? "#354247" : "#2b373c";
-      ctx.fillRect(x, 270 - height, 178, height);
-      ctx.fillStyle = "#7c8c85";
-      for (let j = 0; j < 4; j += 1) {
-        ctx.fillRect(x + 18 + j * 38, 285 - height + 26, 19, 5);
-        ctx.fillRect(x + 18 + j * 38, 285 - height + 64, 19, 5);
-      }
-      ctx.fillStyle = "#d8f36a";
-      ctx.fillRect(x + 12, 278 - height, 46, 3);
-    }
-    ctx.fillStyle = "#ed8e5530";
-    ctx.fillRect(0, 356, GAME.width, 3);
+  ctx.fillStyle = scene.sun;
+  ctx.fillRect(770, 58, 34, 34);
+  ctx.fillRect(762, 66, 50, 18);
+  ctx.fillStyle = scene.sunShade;
+  ctx.fillRect(778, 92, 18, 5);
+
+  for (let i = 0; i < 5; i += 1) {
+    const x = ((i * 248 - cameraX * 0.075) % 1180 + 1180) % 1180 - 100;
+    const y = 62 + (i % 3) * 43;
+    ctx.fillStyle = scene.cloudShadow;
+    ctx.fillRect(x + 8, y + 8, 58, 12);
+    ctx.fillRect(x + 20, y, 34, 12);
+    ctx.fillStyle = scene.cloud;
+    ctx.fillRect(x, y + 4, 58, 10);
+    ctx.fillRect(x + 13, y - 4, 35, 12);
   }
 
-  ctx.fillStyle = "#d4dfb022";
-  for (let i = 0; i < 18; i += 1) {
-    const x = (i * 71 + elapsed * 12) % GAME.width;
-    const y = 100 + (i * 47) % 280;
-    ctx.fillRect(x, y, 2, 2);
+  for (let i = -1; i < 6; i += 1) {
+    const x = i * 260 - shift;
+    ctx.fillStyle = scene.mountain;
+    ctx.beginPath();
+    ctx.moveTo(x, 402);
+    ctx.lineTo(x + 52, 326);
+    ctx.lineTo(x + 88, 350);
+    ctx.lineTo(x + 145, 266);
+    ctx.lineTo(x + 204, 350);
+    ctx.lineTo(x + 226, 329);
+    ctx.lineTo(x + 278, 402);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = scene.snow;
+    ctx.fillRect(x + 130, 282, 18, 8);
+    ctx.fillRect(x + 144, 274, 12, 8);
+    ctx.fillRect(x + 159, 288, 12, 7);
+  }
+
+  for (let i = -1; i < 5; i += 1) {
+    const x = i * 310 - ((cameraX * 0.22) % 1240);
+    ctx.fillStyle = scene.ridge;
+    ctx.beginPath();
+    ctx.moveTo(x, 430);
+    ctx.lineTo(x + 22, 370);
+    ctx.lineTo(x + 76, 342);
+    ctx.lineTo(x + 142, 366);
+    ctx.lineTo(x + 202, 326);
+    ctx.lineTo(x + 268, 368);
+    ctx.lineTo(x + 310, 430);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  if (environment === "wild" || environment === "forest") {
+    for (let i = 0; i < 13; i += 1) {
+      const x = ((i * 103 - cameraX * 0.34) % 1160 + 1160) % 1160 - 80;
+      const base = 427 - (i % 3) * 10;
+      const size = 25 + (i % 4) * 8;
+      ctx.fillStyle = scene.treeTrunk;
+      ctx.fillRect(x + size * 0.43, base - size, 8, size + 8);
+      ctx.fillStyle = i % 2 ? scene.tree : scene.treeLight;
+      ctx.fillRect(x + 3, base - size - 18, size + 14, 20);
+      ctx.fillRect(x + 11, base - size - 29, size - 2, 13);
+      ctx.fillRect(x - 5, base - size - 8, 12, 13);
+    }
+  } else {
+    for (let i = 0; i < 6; i += 1) {
+      const x = ((i * 218 - cameraX * 0.29) % 1320 + 1320) % 1320 - 150;
+      const height = 96 + (i % 3) * 30;
+      ctx.fillStyle = scene.buildingShadow;
+      ctx.fillRect(x + 7, 302 - height, 174, height + 128);
+      ctx.fillStyle = scene.building;
+      ctx.fillRect(x, 294 - height, 174, height + 136);
+      ctx.fillStyle = scene.buildingLight;
+      ctx.fillRect(x, 294 - height, 174, 7);
+      for (let j = 0; j < 4; j += 1) {
+        ctx.fillStyle = scene.window;
+        ctx.fillRect(x + 16 + j * 39, 314 - height, 18, 8);
+        ctx.fillRect(x + 16 + j * 39, 350 - height, 18, 8);
+      }
+      ctx.fillStyle = scene.warning;
+      ctx.fillRect(x + 15, 302 - height, 38, 4);
+    }
+  }
+
+  ctx.fillStyle = scene.under;
+  ctx.fillRect(0, 430, GAME.width, 110);
+  ctx.fillStyle = scene.detail;
+  for (let i = 0; i < 24; i += 1) {
+    const x = ((i * 67 - cameraX * 0.48) % 1020 + 1020) % 1020;
+    const y = 408 + (i % 4) * 6;
+    ctx.fillRect(x, y, 5, 3);
+    if (i % 3 === 0) ctx.fillRect(x + 4, y - 4, 3, 5);
   }
 }
 
+
 function drawPlatform(platform) {
+  const scene = level();
   if (platform.kind === "ground") {
-    ctx.fillStyle = level().ground;
+    ctx.fillStyle = scene.soil;
     ctx.fillRect(platform.x, platform.y, platform.w, platform.h);
-    ctx.fillStyle = "#89936b";
-    ctx.fillRect(platform.x, platform.y, platform.w, 5);
-    ctx.fillStyle = "#aab18a55";
-    for (let i = 0; i < Math.floor(platform.w / 42); i += 1) {
-      ctx.fillRect(platform.x + i * 42 + 15, platform.y + 22 + (i % 3) * 9, 13, 2);
+    ctx.fillStyle = scene.grass;
+    ctx.fillRect(platform.x, platform.y, platform.w, 8);
+    ctx.fillStyle = scene.detail;
+    for (let i = 0; i < Math.floor(platform.w / 52); i += 1) {
+      const x = platform.x + i * 52 + 13;
+      ctx.fillRect(x, platform.y + 17 + (i % 3) * 8, 11, 3);
+      if (i % 2 === 0) ctx.fillRect(x + 7, platform.y + 13 + (i % 3) * 8, 4, 5);
+    }
+    ctx.fillStyle = scene.rock;
+    for (let i = 0; i < Math.floor(platform.w / 145); i += 1) {
+      ctx.fillRect(platform.x + i * 145 + 72, platform.y + 34, 8, 4);
+      ctx.fillRect(platform.x + i * 145 + 80, platform.y + 31, 5, 3);
     }
     return;
   }
   if (platform.kind === "ally-bridge") {
     ctx.fillStyle = "#8b9b70";
-    roundedRect(ctx, platform.x, platform.y, platform.w, platform.h, 5);
-    ctx.fillStyle = "#d8f36a";
-    ctx.fillRect(platform.x + 3, platform.y + 2, platform.w - 6, 3);
+    ctx.fillRect(platform.x, platform.y, platform.w, platform.h);
+    ctx.fillStyle = "#f1d66a";
+    ctx.fillRect(platform.x, platform.y, platform.w, 5);
     ctx.fillStyle = "#47563b";
-    for (let x = platform.x + 12; x < platform.x + platform.w - 8; x += 28) {
-      ctx.fillRect(x, platform.y + 7, 12, 3);
-    }
+    for (let x = platform.x + 8; x < platform.x + platform.w - 4; x += 24) ctx.fillRect(x, platform.y + 8, 11, 4);
     return;
   }
-  ctx.fillStyle = "#435543";
-  roundedRect(ctx, platform.x, platform.y, platform.w, platform.h, 5);
-  ctx.fillStyle = "#9aa276";
-  ctx.fillRect(platform.x + 3, platform.y, platform.w - 6, 4);
-  ctx.fillStyle = "#26382f";
-  ctx.fillRect(platform.x + 12, platform.y + platform.h, platform.w - 24, 7);
+  ctx.fillStyle = scene.platform;
+  ctx.fillRect(platform.x, platform.y, platform.w, platform.h);
+  ctx.fillStyle = scene.platformTop;
+  ctx.fillRect(platform.x, platform.y, platform.w, 5);
+  ctx.fillStyle = scene.platformShadow;
+  ctx.fillRect(platform.x + 8, platform.y + platform.h, platform.w - 16, 6);
 }
+
 
 function drawFacilityProp(prop) {
   if (prop.kind === "security-fence") {
@@ -332,7 +392,7 @@ function drawBeta(entity) {
     ctx.strokeRect(x - 12, y - 12, entity.w + 24, entity.h + 15);
     ctx.fillStyle = "#ed8e55";
     ctx.font = "9px monospace";
-    ctx.fillText(tr("CONTAINMENT // BETA"), x - 24, y - 22);
+    ctx.fillText(tr("CONTAINMENT // ROSA"), x - 24, y - 22);
   }
   if (spriteRenderer.draw(ctx, "beta", x, y, entity.w, entity.h, { facing: entity.facing })) {
     ctx.restore();
@@ -388,28 +448,26 @@ function drawExtractionMarker(x) {
 function drawObstacle(obstacle) {
   ctx.save();
   if (obstacle.type === "crate") {
-    ctx.fillStyle = "#7b583c";
-    roundedRect(ctx, obstacle.x, obstacle.y, obstacle.w, obstacle.h, 4);
-    ctx.strokeStyle = "#c19a69";
-    ctx.lineWidth = 4;
-    ctx.strokeRect(obstacle.x + 5, obstacle.y + 5, obstacle.w - 10, obstacle.h - 10);
-    ctx.beginPath();
-    ctx.moveTo(obstacle.x + 6, obstacle.y + 6);
-    ctx.lineTo(obstacle.x + obstacle.w - 6, obstacle.y + obstacle.h - 6);
-    ctx.moveTo(obstacle.x + obstacle.w - 6, obstacle.y + 6);
-    ctx.lineTo(obstacle.x + 6, obstacle.y + obstacle.h - 6);
-    ctx.stroke();
+    ctx.fillStyle = "#a66b3d";
+    ctx.fillRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h);
+    ctx.fillStyle = "#d6a45f";
+    ctx.fillRect(obstacle.x + 4, obstacle.y + 4, obstacle.w - 8, 5);
+    ctx.fillRect(obstacle.x + 4, obstacle.y + obstacle.h - 8, obstacle.w - 8, 4);
+    ctx.fillStyle = "#70472f";
+    ctx.fillRect(obstacle.x + 8, obstacle.y + 10, 5, obstacle.h - 20);
+    ctx.fillRect(obstacle.x + obstacle.w - 13, obstacle.y + 10, 5, obstacle.h - 20);
+    ctx.fillStyle = "#d6a45f";
+    ctx.fillRect(obstacle.x + 9, obstacle.y + 10, obstacle.w - 18, 4);
+    ctx.fillRect(obstacle.x + 9, obstacle.y + obstacle.h - 14, obstacle.w - 18, 4);
   } else if (obstacle.type === "hunter") {
-    ctx.fillStyle = "#c3c8b7";
-    roundedRect(ctx, obstacle.x + 8, obstacle.y + 14, obstacle.w - 16, obstacle.h - 14, 5);
-    ctx.fillStyle = "#b78c62";
-    ctx.beginPath();
-    ctx.arc(obstacle.x + obstacle.w / 2, obstacle.y + 10, 10, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillStyle = "#d1c5a0";
+    ctx.fillRect(obstacle.x + 8, obstacle.y + 14, obstacle.w - 16, obstacle.h - 14);
+    ctx.fillStyle = "#a8794f";
+    ctx.fillRect(obstacle.x + obstacle.w / 2 - 9, obstacle.y, 18, 18);
     ctx.fillStyle = "#303a35";
     ctx.fillRect(obstacle.x + 5, obstacle.y + obstacle.h - 8, obstacle.w - 10, 8);
   } else {
-    ctx.fillStyle = "#b5b99c";
+    ctx.fillStyle = "#b8b08a";
     ctx.beginPath();
     ctx.moveTo(obstacle.x, obstacle.y + obstacle.h);
     ctx.lineTo(obstacle.x + obstacle.w * 0.15, obstacle.y + obstacle.h * 0.35);
@@ -417,10 +475,14 @@ function drawObstacle(obstacle) {
     ctx.lineTo(obstacle.x + obstacle.w * 0.55, obstacle.y);
     ctx.lineTo(obstacle.x + obstacle.w * 0.78, obstacle.y + obstacle.h * 0.4);
     ctx.lineTo(obstacle.x + obstacle.w, obstacle.y + obstacle.h);
+    ctx.closePath();
     ctx.fill();
+    ctx.fillStyle = "#e0d5a4";
+    ctx.fillRect(obstacle.x + obstacle.w * 0.22, obstacle.y + obstacle.h * 0.42, 8, 4);
   }
   ctx.restore();
 }
+
 
 function burst(x, y, color = "#d8f36a", count = 12) {
   for (let i = 0; i < count; i += 1) {
@@ -668,7 +730,7 @@ function interactWithFacility() {
       Math.abs((player.x + player.w / 2) - (beta.x + beta.w / 2)) < 112) {
     if (!campaign.canFreeBeta()) {
       campaign.queueScene("beta-cell-locked-hint", "CELL BLOCK C", [
-        { speaker: "MISSION CONTROL", text: "Beta's cell is still sealed. Restore auxiliary power and disengage the security lock before attempting extraction." }
+        { speaker: "MISSION CONTROL", text: "Rosa's cell is still sealed. Restore auxiliary power and disengage the security lock before attempting extraction." }
       ]);
       renderStoryPanel();
       return true;
@@ -1269,7 +1331,7 @@ function update(delta) {
     const nearBeta = beta && beta.state === "confined" && Math.abs(player.x - beta.x) < 112;
     interactionHintLabel.textContent = nearbyConsole
       ? "E // " + (nearbyConsole.kind === "power" ? ui("activatePower") : ui("openSecurity"))
-      : nearBeta ? "E // " + ui("beta") : beta?.state === "following" ? "BETA // " + ui("escorting") : "";
+      : nearBeta ? "E // " + ui("beta") : beta?.state === "following" ? "ROSA // " + ui("escorting") : "";
   }
 }
 
@@ -1335,7 +1397,7 @@ function render() {
   if (beta && beta.state === "confined" && Math.abs(player.x - beta.x) < 112) {
     ctx.fillStyle = "#d8f36a";
     ctx.font = "10px monospace";
-    ctx.fillText(tr(campaign.canFreeBeta() ? "E // FREE BETA" : "CELL LOCKED"), beta.x - 12, beta.y - 30);
+    ctx.fillText(tr(campaign.canFreeBeta() ? "E // FREE ROSA" : "CELL LOCKED"), beta.x - 12, beta.y - 30);
   }
   ctx.restore();
 
@@ -1346,10 +1408,15 @@ function render() {
   ctx.fillRect(24, 47, Math.min(220, distance / 12), 3);
   ctx.fillStyle = "#d2a27d";
   ctx.font = "10px monospace";
-  ctx.fillText(tr(selected === "blue" ? "BLUE // DOUBLE JUMP + DASH" : "VASTI // HEAVY STOMP"), 24, GAME.height - 18);
+  ctx.fillText(tr(selected === "blue" ? "VIOLETA // DOUBLE JUMP + DASH" : "VASTI // HEAVY STOMP"), 24, GAME.height - 18);
   ctx.fillStyle = "#d8f36a";
   ctx.fillText(tr("FERRUCUTUS SUPPORT // APEX AI ACTIVE"), GAME.width - 292, GAME.height - 18);
   drawBossHud();
+
+  // nearest-neighbour upscale preserves hard pixel edges at every viewport size.
+  displayCtx.imageSmoothingEnabled = false;
+  displayCtx.clearRect(0, 0, canvas.width, canvas.height);
+  displayCtx.drawImage(pixelCanvas, 0, 0, canvas.width, canvas.height);
 }
 
 function frame(now) {

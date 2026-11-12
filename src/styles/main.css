@@ -584,3 +584,79 @@ html.site-mode-gray .operation-title em{color:#475462}
 /* Keep navbar text readable while the darker ambience stays in the outer page margins. */
 html.site-mode-beige .topbar{background:#cdbb9b}
 html.site-mode-gray .topbar{background:#aeb5bd}
+
+/* === 8-bit arcade presentation === */
+:root{--acid:#ffe36b;--line:rgba(255,235,157,.32);--font-condensed:"Courier New",monospace;--font-mono:"Courier New",monospace;--font-body:"Courier New",monospace}
+html,body{background:#172b3a;color:#fff5cf;font-family:"Courier New",monospace}
+body{background:linear-gradient(180deg,#203f52 0%,#152637 100%)}
+.topbar{height:clamp(54px,8vh,68px);padding-inline:clamp(14px,3vw,48px);border-bottom:4px solid #f1cd62;background:#19344a;box-shadow:0 4px 0 #0b1c29}
+.navbar-identity .brand,.navbar-identity .brand strong,.navbar-separator,.operation-title{color:#fff1b9;font-family:"Courier New",monospace;font-weight:900;letter-spacing:.035em;text-shadow:3px 3px 0 #0a1a27}
+.operation-title em{color:#ffe36b}
+.menu-toggle{border:3px solid #f1cd62;background:#294f62;color:#fff4c8;box-shadow:3px 3px 0 #0a1a27}
+.menu-toggle span{height:3px}
+.nav-menu{border:3px solid #f1cd62;border-radius:0;background:#19344a;box-shadow:5px 5px 0 #0a1a27;backdrop-filter:none}
+.menu-section>p{color:#a8dce0}
+.menu-option{border:2px solid #66838a;border-radius:0;background:#25485a;color:#fff4c8;font-family:"Courier New",monospace;font-weight:700}
+.menu-option.active{border-color:#ffe36b;background:#496c56;color:#fff1a8;box-shadow:inset 0 0 0 2px #ffe36b40}
+.game-panel{border:4px solid #132638;border-radius:0;background:#19344a;box-shadow:7px 7px 0 #091722}
+.panel-head{padding:8px 12px;border-bottom:2px solid #f1cd62;background:#24465a;color:#d1e4d6;font-weight:900}
+.panel-head span:last-child{color:#ffe36b}
+.panel-head i{border-radius:0;background:#6df27e;box-shadow:2px 2px 0 #17351f}
+.canvas-wrap{background:#59c7da;border-bottom:3px solid #f1cd62}
+.canvas-wrap canvas#game,canvas#game{image-rendering:pixelated;image-rendering:crisp-edges;background:#59c7da}
+.game-overlay{background:linear-gradient(90deg,rgba(10,28,42,.87),rgba(10,28,42,.62) 65%,rgba(10,28,42,.2));backdrop-filter:none}
+.canvas-wrap .game-overlay{background:linear-gradient(90deg,rgba(9,25,39,.88),rgba(9,25,39,.68) 56%,rgba(9,25,39,.12))}
+.overlay-kicker{color:#ffe36b;font-weight:900;text-shadow:2px 2px #0b1c29}
+.overlay-content h2{color:#fff4ca;font-family:"Courier New",monospace;font-size:clamp(30px,4.2vw,58px);font-weight:900;letter-spacing:-.06em;line-height:.95;text-shadow:4px 4px 0 #102334,7px 7px 0 #07131d}
+.overlay-content h2 em{color:#ffe36b}
+.overlay-content p,.overlay-objective,.overlay-controls{color:#f3efcf;font-family:"Courier New",monospace;font-weight:700;text-shadow:2px 2px #152b3a}
+.overlay-objective strong{color:#ffe36b}
+.overlay-content #start-button,.overlay-content button{border:3px solid #102b39;border-radius:0;background:#f5d45f;color:#183040;box-shadow:4px 4px 0 #081722;font-family:"Courier New",monospace;font-weight:900;text-shadow:none}
+.overlay-content #start-button:hover{background:#fff09a;transform:translate(-1px,-1px);box-shadow:5px 5px 0 #081722}
+.hud-strip{border:3px solid #f1cd62;border-radius:0;background:#18354a;box-shadow:4px 4px 0 rgba(7,19,29,.85);backdrop-filter:none}
+.hud-strip>div{border-color:#52717d}
+.hud-strip small{color:#9bd6d5;font-family:"Courier New",monospace;font-weight:900;letter-spacing:.08em}
+.hud-strip b{color:#fff3c3;font-family:"Courier New",monospace;font-weight:900;text-shadow:2px 2px #0b1b27}
+.hud-strip .objective b,.hud-strip .objective .interaction-readout{color:#ffe36b}
+.hud-strip .objective .ability-readout.ready{color:#7cf28a}
+.hud-strip .objective .health-readout{color:#ff9c78}
+.dino-modal{background:rgba(5,18,29,.86);backdrop-filter:none}
+.dino-dialog,.story-card{border:4px solid #f1cd62;border-radius:0;background:#19384c;color:#fff3c5;box-shadow:7px 7px 0 #081722}
+.dino-dialog h2,.story-card h2{color:#fff3c5;font-family:"Courier New",monospace;font-weight:900;text-shadow:3px 3px #0b1b27}
+.dialog-kicker,.story-kicker,.story-speaker{color:#ffe36b}
+.dialog-description,.story-text{color:#d6e4cf}
+.dino-dialog .character-card{border:3px solid #637f83;border-radius:0;background:#24495a;color:#fff3c5;box-shadow:3px 3px 0 #0b1b27}
+.dino-dialog .character-card.active{border-color:#ffe36b;background:#375e50;box-shadow:inset 0 0 0 2px #ffe36b55,3px 3px 0 #0b1b27}
+.dino-dialog .character-card strong{color:#fff1b7;font-family:"Courier New",monospace;font-weight:900;text-shadow:2px 2px #102334}
+.dino-dialog .character-card small,.dino-dialog .character-number{color:#c5ddd0}
+.dialog-back,.dialog-confirm,.story-actions button{border:3px solid #f1cd62;border-radius:0;font-family:"Courier New",monospace;font-weight:900;box-shadow:3px 3px 0 #081722}
+.dialog-back{color:#fff3c5;background:#24495a}
+.dialog-confirm,.story-actions button{color:#183040;background:#f5d45f}
+.story-actions{border-top:2px solid #547681}
+.story-actions span{color:#a9d4d0}
+.desktop-only-notice{border:4px solid #f1cd62;border-radius:0;background:#19384c;box-shadow:7px 7px 0 #081722;color:#fff3c5}
+.desktop-only-notice h2{font-family:"Courier New",monospace;font-weight:900;text-shadow:3px 3px #0b1b27}
+.desktop-only-notice p{color:#d6e4cf}
+html.site-mode-beige .topbar,html.site-mode-gray .topbar{background:#19344a;border-bottom-color:#f1cd62}
+html.site-mode-beige .brand,html.site-mode-gray .brand,html.site-mode-beige .navbar-separator,html.site-mode-gray .navbar-separator,html.site-mode-beige .operation-title,html.site-mode-gray .operation-title{color:#fff1b9}
+html.site-mode-beige .operation-title em,html.site-mode-gray .operation-title em{color:#ffe36b}
+html.site-mode-beige .game-panel,html.site-mode-gray .game-panel{border-color:#132638;background:#19344a}
+html.site-mode-beige .panel-head,html.site-mode-gray .panel-head{color:#d1e4d6;background:#24465a;border-bottom-color:#f1cd62}
+html.site-mode-beige .panel-head span:last-child,html.site-mode-gray .panel-head span:last-child{color:#ffe36b}
+html.site-mode-beige .hud-strip,html.site-mode-gray .hud-strip{color:#fff3c5;border-color:#f1cd62;background:#18354a}
+html.site-mode-beige .hud-strip>div,html.site-mode-gray .hud-strip>div{border-color:#52717d}
+html.site-mode-beige .hud-strip small,html.site-mode-gray .hud-strip small{color:#9bd6d5}
+html.site-mode-beige .hud-strip b,html.site-mode-gray .hud-strip b{color:#fff3c3}
+html.site-mode-beige .hud-strip .objective b,html.site-mode-gray .hud-strip .objective b,html.site-mode-beige .hud-strip .objective .interaction-readout,html.site-mode-gray .hud-strip .objective .interaction-readout{color:#ffe36b}
+html.site-mode-beige .game-overlay,html.site-mode-gray .game-overlay,html.site-mode-beige .canvas-wrap .game-overlay,html.site-mode-gray .canvas-wrap .game-overlay{background:linear-gradient(90deg,rgba(9,25,39,.88),rgba(9,25,39,.68) 56%,rgba(9,25,39,.12))}
+html.site-mode-beige .overlay-content h2,html.site-mode-gray .overlay-content h2{color:#fff4ca;text-shadow:4px 4px 0 #102334,7px 7px 0 #07131d}
+html.site-mode-beige .overlay-content p,html.site-mode-gray .overlay-content p,html.site-mode-beige .overlay-objective,html.site-mode-gray .overlay-objective,html.site-mode-beige .overlay-controls,html.site-mode-gray .overlay-controls{color:#f3efcf}
+html.site-mode-beige .dino-dialog,html.site-mode-gray .dino-dialog,html.site-mode-beige .story-card,html.site-mode-gray .story-card{color:#fff3c5;border-color:#f1cd62;background:#19384c}
+html.site-mode-beige .dino-dialog h2,html.site-mode-gray .dino-dialog h2,html.site-mode-beige .story-card h2,html.site-mode-gray .story-card h2{color:#fff3c5}
+html.site-mode-beige .dino-dialog .character-card,html.site-mode-gray .dino-dialog .character-card{color:#fff3c5;border-color:#637f83;background:#24495a}
+html.site-mode-beige .dino-dialog .character-card.active,html.site-mode-gray .dino-dialog .character-card.active{border-color:#ffe36b;background:#375e50}
+html.site-mode-beige .dialog-back,html.site-mode-gray .dialog-back{color:#fff3c5;border-color:#637f83;background:#24495a}
+html.site-mode-beige .dialog-confirm,html.site-mode-gray .dialog-confirm,html.site-mode-beige .story-actions button,html.site-mode-gray .story-actions button{color:#183040;border-color:#f1cd62;background:#f5d45f}
+html.site-mode-beige .story-text,html.site-mode-gray .story-text,html.site-mode-beige .dialog-description,html.site-mode-gray .dialog-description{color:#d6e4cf}
+html.site-mode-beige .desktop-only-notice,html.site-mode-gray .desktop-only-notice{color:#fff3c5;border-color:#f1cd62;background:#19384c}
+html.site-mode-beige .desktop-only-notice p,html.site-mode-gray .desktop-only-notice p{color:#d6e4cf}

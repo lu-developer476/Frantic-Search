@@ -1,8 +1,8 @@
 # Frantic Search — Operation: Lost Hatchling
 
-**Version 1.0.0 · 2D survival-platformer · HTML5 Canvas · JavaScript · Vite**
+**Version 1.1.0 · 2D pixel-art survival-platformer · HTML5 Canvas · JavaScript · Vite**
 
-Frantic Search is an unofficial fan-made dinosaur survival-platformer. Play as Blue or Vasti, keep the other protagonist by your side, and rescue Beta from a clandestine poaching and research operation.
+Frantic Search is an unofficial fan-made dinosaur survival-platformer. Play as Violeta or Vasti, keep the other protagonist by your side, and rescue Rosa from a clandestine poaching and research operation.
 
 ## Campaign
 
@@ -12,23 +12,24 @@ The finite campaign runs through six chapters:
 2. **Redwood Frontier** — survive the forest route and encounter the Indoraptor.
 3. **Poacher Black Site** — breach the clandestine complex.
 4. **Containment Perimeter** — defeat the Indominus Rex.
-5. **Beta Containment** — restore auxiliary power, release the security lock and free Beta.
-6. **Extraction Zone** — escort Beta to the east gate and complete the rescue.
+5. **Rosa Containment** — restore auxiliary power, release the security lock and free Rosa.
+6. **Extraction Zone** — escort Rosa to the east gate and complete the rescue.
 
-Dialogue scenes pause the simulation. The campaign only completes after Beta has been freed and reaches the extraction gate with the player.
+Dialogue scenes pause the simulation. The campaign only completes after Rosa has been freed and reaches the extraction gate with the player.
 
 ## Interface, languages and environment modes
 
-- The **Jugar / Play** action opens a dinosaur-selection dialog. The campaign starts only after the player confirms Blue or Vasti.
+- The **Jugar / Play** action opens a dinosaur-selection dialog. The campaign starts only after the player confirms Violeta or Vasti.
 - The hamburger menu contains the **sound toggle**, language selector (**Español / English**) and environmental mode selector.
 - **Beige** applies a warm, sepia-toned treatment; **Gray** applies a cool, monochrome treatment directly to the game scene. The selected language and environmental mode are saved locally.
-- The game canvas is the main play surface; the launch briefing, mission objective and controls are displayed in a single overlay before character selection.
+- The 320×180 internal render buffer is enlarged to the 960×540 logical canvas with nearest-neighbour sampling; characters, terrain, scenery and particles share the same pixel grid.
+- The original campaign, physics, boss encounters, rescue and escort systems remain intact beneath the new arcade presentation.
 
 ## Characters and encounters
 
-- **Blue:** fast movement, double jump and evasive dash.
+- **Violeta:** fast movement, double jump and evasive dash.
 - **Vasti:** heavier movement, ground shockwave and aerial ground-slam.
-- **Beta:** captive hatchling who becomes an escort companion after the facility systems are restored.
+- **Rosa:** captive hatchling who becomes an escort companion after the facility systems are restored.
 - **Ferrucutus Cerastes:** ally that helps bridge selected gaps and attacks enemies during exposed windows.
 - **Poachers:** state-driven patrol, investigation, pursuit and melee attack AI.
 - **Indoraptor:** pounce and claw patterns with two phases.
@@ -36,7 +37,7 @@ Dialogue scenes pause the simulation. The campaign only completes after Beta has
 
 ## Art, animation and audio — release 1.0.0
 
-- 16 original, self-contained SVG vector sprites for Blue, Vasti, Beta, Ferrucutus, hunters, Indoraptor and Indominus Rex.
+- Original self-contained SVG sprites rendered through a 320×180 low-resolution buffer and nearest-neighbour upscaling for a crisp 8-bit arcade presentation.
 - Separate player poses for idle, run cycles, jump, duck and dash.
 - Sprite images are preloaded and cached; the Canvas geometry remains as a safe fallback if a sprite cannot load.
 - Original adaptive soundtrack synthesized at runtime with Web Audio API. Themes change across the coast, forest, black site, facility, boss encounters, extraction and victory.
@@ -60,7 +61,7 @@ Dialogue scenes pause the simulation. The campaign only completes after Beta has
 | Jump | Space / W / ↑ | ↑ |
 | Duck | S / ↓ | — |
 | Character ability | X | X |
-| Interact with terminal / Beta | E or F | E |
+| Interact with terminal / Rosa | E or F | E |
 | Pause | P | — |
 | Advance story dialogue | Enter | Continue button |
 
@@ -85,7 +86,7 @@ npm run preview
 npm run check
 ```
 
-The automated suite covers campaign gating, facility terminal interaction, Beta escort, finite world generation, miniboss phases and hitboxes, sprite availability, sprite loading and adaptive music scheduling.
+The automated suite covers campaign gating, facility terminal interaction, Rosa escort, finite world generation, miniboss phases and hitboxes, sprite availability, sprite loading and adaptive music scheduling.
 
 ## Deploy to Vercel
 
@@ -110,4 +111,4 @@ Vercel uses the root asset path (`/`). After Git integration is connected, pushe
 
 ## Originality and rights
 
-This is an unofficial fan-made project and is not affiliated with Universal Products & Experiences or Amblin Entertainment. Character sprites and soundtrack are original assets created for this project. No assets, sprites, code or music from Pixeljam's Dino Run are included.
+This is an unofficial fan-made project and is not affiliated with Universal Products & Experiences or Amblin Entertainment. Character sprites and soundtrack are original assets created for this project. The visual direction takes inspiration from classic 8-bit side-scrolling arcade runners; no assets, sprites, code or music from Pixeljam's Dino Run are included.
