@@ -154,10 +154,8 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
 
 test("Vasti renders the exact repository reference image and animates it on the game canvas",()=>{
  const rendererSource=readFileSync(resolve("src/rendering/SpriteRenderer.js"),"utf8");
- assert.match(rendererSource,/references\\/vastatosaurus-rex\\.jpg/);
- assert.match(rendererSource,/preloadVastiReference\\(\\)/);
- assert.match(rendererSource,/drawReferenceVasti\\(/);
- assert.match(rendererSource,/context\\.imageSmoothingEnabled=false/);
+ for(const marker of ["references/vastatosaurus-rex.jpg","preloadVastiReference()","drawReferenceVasti(","context.imageSmoothingEnabled=false"])
+  assert.ok(rendererSource.includes(marker),marker+" must be implemented");
  for(const pose of ["vasti-run-a","vasti-run-b","vasti-jump","vasti-duck","vasti-stomp","vasti-slam","vasti-attack","vasti-impact","vasti-land","vasti-recover"])
   assert.ok(rendererSource.includes('pose==="'+pose+'"'),pose+" must animate the reference image");
  const reference=readFileSync(resolve("public/references/vastatosaurus-rex.jpg"));
