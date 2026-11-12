@@ -13,8 +13,10 @@ export class Beta {
 
   update(delta, player) {
     this.animation += delta;
+    this.motionSpeed = 0;
     if (this.state !== "following" && this.state !== "extracted") return;
 
+    const previousX = this.x;
     const targetX = player.x - this.followDistance;
     const difference = targetX - this.x;
     if (Math.abs(difference) > 10) {
@@ -24,6 +26,7 @@ export class Beta {
     const targetY = player.y + player.h - this.h;
     this.y += (targetY - this.y) * Math.min(1, delta * 5);
     if (this.state === "extracted") this.x = targetX;
+    this.motionSpeed = delta > 0 ? (this.x - previousX) / delta : 0;
   }
 
   rescue() {

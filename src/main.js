@@ -381,9 +381,8 @@ function drawFacilityConsole(consoleEntity) {
 
 function drawBeta(entity) {
   if (!entity) return;
-  const bob = Math.sin(entity.animation * 5) * 2;
   const x = entity.x;
-  const y = entity.y + bob;
+  const y = entity.y;
   ctx.save();
   if (entity.state === "confined") {
     ctx.fillStyle = "#a3c9ba1b";
@@ -395,7 +394,7 @@ function drawBeta(entity) {
     ctx.font = "9px monospace";
     ctx.fillText(tr("CONTAINMENT // ROSA"), x - 24, y - 22);
   }
-  spriteRenderer.draw(ctx, "beta", x, y, entity.w, entity.h, { facing: entity.facing });
+  spriteRenderer.drawAnimated(ctx, "beta", x, y, entity.w, entity.h, entity, entity.animation, { facing: entity.facing });
   ctx.restore();
   return;
   ctx.translate(entity.facing < 0 ? x + entity.w : x, y);
@@ -503,9 +502,7 @@ function burst(x, y, color = "#d8f36a", count = 12) {
 function drawFerrucutus(ally) {
   const x = ally.x;
   const y = ally.y;
-  const phase = elapsed * 7;
-  const step = Math.sin(phase) * 6;
-  if (!spriteRenderer.draw(ctx, "ferrucutus", x, y, ally.w, ally.h, { facing: ally.direction })) return;
+  if (!spriteRenderer.drawAnimated(ctx, "ferrucutus", x, y, ally.w, ally.h, ally, elapsed, { facing: ally.direction })) return;
   if (ally.state === "brace" || ally.state === "bridge" || ally.state === "charge") {
     ctx.fillStyle = "#d8f36a";
     ctx.font = "10px monospace";
@@ -575,7 +572,7 @@ function drawHunter(hunter) {
   const alert = hunter.state === "investigate" || hunter.state === "windup" || hunter.state === "attack";
   const defeated = hunter.defeated;
 
-  if (!spriteRenderer.draw(ctx, "hunter", x - 6, y - 5, hunter.w + 12, hunter.h + 8, {
+  if (!spriteRenderer.drawAnimated(ctx, "hunter", x - 6, y - 5, hunter.w + 12, hunter.h + 8, hunter, elapsed, {
     alpha: defeated ? 0.48 : 1,
     facing: hunter.direction
   })) return;
@@ -797,11 +794,7 @@ function damagePlayer() {
 
 
 function drawIndoraptor(boss) {
-  const x = boss.x;
-  const y = boss.y;
-  const phase = elapsed * 10;
-  const stride = Math.sin(phase) * 5;
-  const spriteDrawn = spriteRenderer.draw(ctx, "indoraptor", boss.x - 4, boss.y - 4, boss.w + 8, boss.h + 8, { alpha: boss.defeated ? 0.4 : 1, facing: boss.direction });
+  const spriteDrawn = spriteRenderer.drawAnimated(ctx, "indoraptor", boss.x - 4, boss.y - 4, boss.w + 8, boss.h + 8, boss, elapsed, { alpha: boss.defeated ? 0.4 : 1, facing: boss.direction });
   if (!spriteDrawn) return;
   if (boss.state === "telegraph") {
     ctx.strokeStyle = "#ff806c";
@@ -821,11 +814,7 @@ function drawIndoraptor(boss) {
 }
 
 function drawIndominus(boss) {
-  const x = boss.x;
-  const y = boss.y;
-  const phase = elapsed * 5;
-  const stride = Math.sin(phase) * 4;
-  const spriteDrawn = spriteRenderer.draw(ctx, "indominus", boss.x - 4, boss.y - 4, boss.w + 8, boss.h + 8, { alpha: boss.defeated ? 0.4 : 1, facing: boss.direction });
+  const spriteDrawn = spriteRenderer.drawAnimated(ctx, "indominus", boss.x - 4, boss.y - 4, boss.w + 8, boss.h + 8, boss, elapsed, { alpha: boss.defeated ? 0.4 : 1, facing: boss.direction });
   if (!spriteDrawn) return;
   if (boss.state === "telegraph") {
     ctx.strokeStyle = "#ffb26b";

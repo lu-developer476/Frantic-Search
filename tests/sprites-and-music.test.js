@@ -8,7 +8,11 @@ import { SpriteRenderer } from "../src/rendering/SpriteRenderer.js";
 const spriteNames = [
   "blue-idle", "blue-run-a", "blue-run-b", "blue-jump", "blue-dash", "blue-duck",
   "vasti-idle", "vasti-run-a", "vasti-run-b", "vasti-jump", "vasti-duck",
-  "beta", "ferrucutus", "hunter", "indoraptor", "indominus"
+  "beta", "beta-run-a", "beta-run-b",
+  "ferrucutus", "ferrucutus-step-a", "ferrucutus-step-b",
+  "hunter", "hunter-run-a", "hunter-run-b",
+  "indoraptor", "indoraptor-run-a", "indoraptor-run-b",
+  "indominus", "indominus-run-a", "indominus-run-b"
 ];
 
 test("every production actor sprite is present and self-contained", () => {
@@ -110,7 +114,7 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
   globalThis.Image = FakeImage;
   try {
     const renderer = new SpriteRenderer("/assets/");
-    assert.match(renderer.get("blue-idle").src, /blue-idle\.svg\?v=20261112-sprite-fix-1$/);
+    assert.match(renderer.get("blue-idle").src, /blue-idle\.svg\?v=20261112-actor-motion-2$/);
   } finally {
     if (previousImage === undefined) delete globalThis.Image;
     else globalThis.Image = previousImage;
@@ -177,7 +181,7 @@ test("sprite renderer uses base paths and draws cached images without reloading"
   try {
     const renderer = new SpriteRenderer("/Avoid/");
     const image = renderer.get("blue-idle");
-    assert.equal(image.src, "/Avoid/assets/sprites/blue-idle.svg?v=20261112-sprite-fix-1");
+    assert.equal(image.src, "/Avoid/assets/sprites/blue-idle.svg?v=20261112-actor-motion-2");
     assert.equal(renderer.get("blue-idle"), image);
     image.complete = true;
     image.naturalWidth = 240;
@@ -198,4 +202,24 @@ test("sprite renderer uses base paths and draws cached images without reloading"
     if (previousImage === undefined) delete globalThis.Image;
     else globalThis.Image = previousImage;
   }
+});
+
+test("Rosa, Ferrucutus, hunters and both bosses have distinct pixel-art gait frames", () => {
+ const frames=[["beta-run-a","runA"],["beta-run-b","runB"],["ferrucutus-step-a","stepA"],["ferrucutus-step-b","stepB"],["hunter-run-a","runA"],["hunter-run-b","runB"],["indoraptor-run-a","runA"],["indoraptor-run-b","runB"],["indominus-run-a","runA"],["indominus-run-b","runB"]];
+ for(const [name,pose] of frames){const svg=readFileSync(resolve("public/assets/sprites",name+".svg"),"utf8");assert.match(svg,/^<svg/);assert.match(svg,/shape-rendering="crispEdges"/);assert.match(svg,new RegExp('data-pose="'+pose+'"'));}
+ for(const pair of [["beta-run-a","beta-run-b"],["ferrucutus-step-a","ferrucutus-step-b"],["hunter-run-a","hunter-run-b"],["indoraptor-run-a","indoraptor-run-b"],["indominus-run-a","indominus-run-b"]]){const a=readFileSync(resolve("public/assets/sprites",pair[0]+".svg"),"utf8");const b=readFileSync(resolve("public/assets/sprites",pair[1]+".svg"),"utf8");assert.notEqual(a,b);}
+});
+test("actor animation profiles select their own cycles and preserve defeated poses",()=>{
+ const renderer=Object.create(SpriteRenderer.prototype),selected=[];renderer.draw=(_ctx,name)=>{selected.push(name);return true;};
+ renderer.drawAnimated({},"beta",0,0,48,48,{id:"rosa",state:"following",motionSpeed:160},1,{});
+ renderer.drawAnimated({},"ferrucutus",0,0,104,74,{id:"ferru",state:"charge"},1,{});
+ renderer.drawAnimated({},"hunter",0,0,50,70,{id:"hunter-1",state:"pursuit"},1,{});
+ renderer.drawAnimated({},"indoraptor",0,0,126,92,{id:"raptor",state:"attacking"},1,{});
+ renderer.drawAnimated({},"indominus",0,0,224,150,{id:"rex",state:"stalking"},1,{});
+ assert.ok(selected[0].startsWith("beta-run-"));assert.ok(selected[1].startsWith("ferrucutus-step-"));assert.ok(selected[2].startsWith("hunter-run-"));assert.ok(selected[3].startsWith("indoraptor-run-"));assert.ok(selected[4].startsWith("indominus-run-"));
+ renderer.drawAnimated({},"indominus",0,0,224,150,{id:"rex",state:"defeated",defeated:true},1,{});assert.equal(selected[5],"indominus");
+});
+test("all non-player actors render through their dedicated animation profiles",()=>{
+ const source=readFileSync(resolve("src/main.js"),"utf8");
+ for(const actor of ["beta","ferrucutus","hunter","indoraptor","indominus"])assert.match(source,new RegExp('drawAnimated\\(ctx, "'+actor+'"'));
 });
