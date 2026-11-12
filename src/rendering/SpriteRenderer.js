@@ -69,7 +69,7 @@ export class SpriteRenderer{
   const phase=phaseOf(actor,"vasti");
   let bob=0,offsetY=0,sx=1,sy=1,tilt=0;
   if(pose==="vasti-run-a"||pose==="vasti-run-b"){
-   const gait=Math.sin(elapsed*9.2*Math.PI+phase);bob=Math.round(Math.abs(gait)*2);tilt=gait*.025;
+   const gait=Math.sin(elapsed*9.2*Math.PI+phase);bob=Math.round(Math.abs(gait)*2);tilt=gait*.035;sx=1+Math.abs(gait)*.035;sy=1-Math.abs(gait)*.045;
   }else if(pose==="vasti-jump"){offsetY=-2;tilt=-.035;}
   else if(pose==="vasti-stomp"){sy=.94;sx=1.04;offsetY=2;}
   else if(pose==="vasti-slam"){tilt=.04;sx=1.06;sy=.9;offsetY=3;}
@@ -77,7 +77,7 @@ export class SpriteRenderer{
   else if(pose==="vasti-impact"){tilt=-.035;offsetY=1;}
   else if(pose==="vasti-land"){sx=1.04;sy=.92;offsetY=3;}
   else if(pose==="vasti-recover"){bob=Math.round(Math.max(0,Math.sin(elapsed*18+phase))*1.5);}
-  else if(pose==="vasti-idle"){bob=Math.round(Math.sin(elapsed*2.3+phase)*1.25);}
+  else if(pose==="vasti-idle"){const breath=Math.sin(elapsed*2.3+phase);bob=Math.round(breath*1.25);sy=1+breath*.012;}
   else if(pose==="vasti-duck"){sy=.82;offsetY=6;}
   const w=Math.max(1,Math.round(width*sx)),h=Math.max(1,Math.round(height*sy));
   const dx=Math.round(x+(width-w)/2),dy=Math.round(y+(height-h)/2+bob+offsetY);
