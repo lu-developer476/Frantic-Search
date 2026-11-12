@@ -38,8 +38,8 @@ test("non-hunter creature assets are true block-built pixel sprites", () => {
     const svg = readFileSync(resolve("public/assets/sprites", name + ".svg"), "utf8");
     assert.match(svg, /data-render-style="pixel-art"/, name + " must declare pixel-art rendering");
     assert.match(svg, /data-pixel-grid="4px"/, name + " must use a consistent pixel grid");
-    assert.ok((svg.match(/<rect\\b/g) || []).length >= 30, name + " must be built from visible pixel blocks");
-    assert.doesNotMatch(svg, /<(?:path|polygon|polyline|ellipse|circle|mask|linearGradient|radialGradient)\\b/i, name + " must not fall back to smooth vector silhouettes");
+    assert.ok((svg.match(/<rect\b/g) || []).length >= 30, name + " must be built from visible pixel blocks");
+    assert.doesNotMatch(svg, /<(?:path|polygon|polyline|ellipse|circle|mask|linearGradient|radialGradient)\b/i, name + " must not fall back to smooth vector silhouettes");
   }
 });
 
