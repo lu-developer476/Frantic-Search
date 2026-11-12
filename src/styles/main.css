@@ -660,3 +660,15 @@ html.site-mode-beige .dialog-confirm,html.site-mode-gray .dialog-confirm,html.si
 html.site-mode-beige .story-text,html.site-mode-gray .story-text,html.site-mode-beige .dialog-description,html.site-mode-gray .dialog-description{color:#d6e4cf}
 html.site-mode-beige .desktop-only-notice,html.site-mode-gray .desktop-only-notice{color:#fff3c5;border-color:#f1cd62;background:#19384c}
 html.site-mode-beige .desktop-only-notice p,html.site-mode-gray .desktop-only-notice p{color:#d6e4cf}
+
+
+/* Keep character artwork crisp in both the selection cards and the live game. */
+.character-art img {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  filter: none;
+}
+.canvas-wrap canvas#game {
+  image-rendering: pixelated !important;
+  image-rendering: crisp-edges !important;
+}

@@ -51,7 +51,13 @@ export class SpriteRenderer {
     if (!image || !image.complete || image.naturalWidth === 0) return false;
 
     context.save();
+    context.imageSmoothingEnabled = false;
     context.globalAlpha *= alpha;
+    // Pixel-align the raster target. Fractional camera/entity coordinates soften SVG edges.
+    x = Math.round(x);
+    y = Math.round(y);
+    width = Math.max(1, Math.round(width));
+    height = Math.max(1, Math.round(height));
     if (facing < 0 || flip) {
       context.translate(x + width, y);
       context.scale(-1, 1);

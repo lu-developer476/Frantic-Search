@@ -117,6 +117,24 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
   }
 });
 
+
+test("game rendering uses the native canvas instead of a low-resolution blur buffer", () => {
+  const mainSource = readFileSync(resolve("src/main.js"), "utf8");
+  assert.match(mainSource, /const ctx = canvas\.getContext/);
+  assert.match(mainSource, /ctx\.imageSmoothingEnabled = false/);
+  assert.match(mainSource, /ctx\.translate\(-Math\.round\(cameraX\), 0\)/);
+  assert.doesNotMatch(mainSource, /pixelCanvas|PIXEL_SCALE|displayCtx/);
+});
+
+test("sprite renderer disables smoothing and snaps sprite bounds to integer pixels", () => {
+  const rendererSource = readFileSync(resolve("src/rendering/SpriteRenderer.js"), "utf8");
+  assert.match(rendererSource, /context\.imageSmoothingEnabled = false/);
+  assert.match(rendererSource, /x = Math\.round\(x\)/);
+  assert.match(rendererSource, /y = Math\.round\(y\)/);
+  assert.match(rendererSource, /width = Math\.max\(1, Math\.round\(width\)\)/);
+  assert.match(rendererSource, /height = Math\.max\(1, Math\.round\(height\)\)/);
+});
+
 test("simulation uses one guarded animation-frame scheduler and survives frame errors", () => {
   const mainSource = readFileSync(resolve("src/main.js"), "utf8");
   assert.match(mainSource, /function scheduleFrame\(\)/);

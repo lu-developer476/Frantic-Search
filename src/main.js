@@ -20,15 +20,10 @@ import { t as uiText, translateText } from "./i18n.js";
 
 const canvas = document.querySelector("#game");
 const desktopPlayback = window.matchMedia("(min-width: 1024px) and (hover: hover) and (pointer: fine)");
-const PIXEL_SCALE = 3;
-const pixelCanvas = document.createElement("canvas");
-pixelCanvas.width = Math.round(canvas.width / PIXEL_SCALE);
-pixelCanvas.height = Math.round(canvas.height / PIXEL_SCALE);
-const ctx = pixelCanvas.getContext("2d", { alpha: false, desynchronized: true });
-const displayCtx = canvas.getContext("2d", { alpha: false, desynchronized: true });
+// Render directly to the native 960×540 game canvas. The old 320×180
+// intermediate buffer discarded most sprite detail before it was enlarged again.
+const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
 ctx.imageSmoothingEnabled = false;
-ctx.scale(1 / PIXEL_SCALE, 1 / PIXEL_SCALE);
-displayCtx.imageSmoothingEnabled = false;
 const spriteRenderer = new SpriteRenderer(import.meta.env.BASE_URL, () => {
   // Assets may finish loading while the simulation is running. The normal frame loop
   // will draw them; only force a redraw while the game is static or paused.
@@ -1209,7 +1204,7 @@ function update(delta) {
 function render() {
   drawBackground();
   ctx.save();
-  ctx.translate(-cameraX, 0);
+  ctx.translate(-Math.round(cameraX), 0);
   for (const platform of world.visiblePlatforms(cameraX, GAME.width)) drawPlatform(platform);
   for (const prop of world.facilityProps) {
     if (prop.x + prop.w >= cameraX - 50 && prop.x <= cameraX + GAME.width + 50) drawFacilityProp(prop);
@@ -1284,10 +1279,7 @@ function render() {
   ctx.fillText(tr("FERRUCUTUS SUPPORT // APEX AI ACTIVE"), GAME.width - 292, GAME.height - 18);
   drawBossHud();
 
-  // nearest-neighbour upscale preserves hard pixel edges at every viewport size.
-  displayCtx.imageSmoothingEnabled = false;
-  displayCtx.clearRect(0, 0, canvas.width, canvas.height);
-  displayCtx.drawImage(pixelCanvas, 0, 0, canvas.width, canvas.height);
+  // All actors and scenery were drawn directly at native game resolution.
 }
 
 function cancelScheduledFrame() {
