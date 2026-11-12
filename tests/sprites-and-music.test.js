@@ -156,7 +156,7 @@ test("Vasti renders the original reference artwork from a dedicated SVG on the g
  const rendererSource=readFileSync(resolve("src/rendering/SpriteRenderer.js"),"utf8");
  assert.match(rendererSource,/drawReferenceVasti\(/);
  assert.match(rendererSource,/public\/references\/vastatosaurus-rex\.jpg/);
- assert.match(rendererSource,/this\\.draw\\(context, "vasti"/);
+ assert.match(rendererSource,/this\.draw\(context, "vasti"/);
  const svg=readFileSync(resolve("public/assets/sprites/vasti.svg"),"utf8");
  assert.match(svg,/<svg\b/);
  assert.match(svg,/data-reference="vastatosaurus-rex.jpg"/);
@@ -178,8 +178,8 @@ test("game rendering uses the native canvas instead of a low-resolution blur buf
 
 test("sprite renderer smooths the reference-sheet sprites and snaps bounds to integer pixels", () => {
   const rendererSource = readFileSync(resolve("src/rendering/SpriteRenderer.js"), "utf8");
-  assert.match(rendererSource, /context\.imageSmoothingEnabled=smoothSprite/);
-  assert.match(rendererSource, /const smoothSprite=name==="rosa"/);
+  assert.match(rendererSource, /context\.imageSmoothingEnabled\s*=\s*smoothSprite/);
+  assert.match(rendererSource, /const smoothSprite\s*=\s*name\s*===\s*"rosa"/);
   assert.match(rendererSource, /x = Math\.round\(x\)/);
   assert.match(rendererSource, /y = Math\.round\(y\)/);
   assert.match(rendererSource, /width = Math\.max\(1, Math\.round\(width\)\)/);
