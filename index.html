@@ -12,7 +12,6 @@
       <header class="topbar">
         <a class="brand" href="#" aria-label="Frantic Search inicio"><span>FRANTIC <span class="brand-dot">SEARCH</span></span></a>
         <div class="nav-actions">
-          <button class="sound-toggle" id="sound-toggle" type="button" aria-label="Activar o desactivar sonido" data-i18n-aria="sound"><span id="sound-icon">♫</span> <span id="sound-label" data-i18n="sound">SONIDO</span></button>
           <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav-menu" data-i18n-aria="openMenu">
             <span></span><span></span><span></span>
           </button>
@@ -25,16 +24,22 @@
               </div>
             </div>
             <div class="menu-section">
+              <p data-i18n="audio">AUDIO</p>
+              <button class="sound-toggle menu-sound-toggle" id="sound-toggle" type="button" aria-label="Sonido" data-i18n-aria="sound">
+                <span id="sound-icon" aria-hidden="true">♫</span>
+                <span id="sound-label" data-i18n="sound">SONIDO</span>
+              </button>
+            </div>
+            <div class="menu-section">
               <p data-i18n="environmentMode">MODO AMBIENTAL</p>
               <div class="menu-options mode-options" role="group" aria-label="Modo ambiental" data-i18n-aria="environmentMode">
-                <button type="button" data-mode="normal" class="menu-option active" aria-pressed="true" data-i18n="normal">NORMAL</button>
-                <button type="button" data-mode="mud" class="menu-option" aria-pressed="false" data-i18n="mud">FANGO</button>
-                <button type="button" data-mode="fog" class="menu-option" aria-pressed="false" data-i18n="fog">NEBLINA</button>
+                <button type="button" data-mode="beige" class="menu-option active" aria-pressed="true" data-i18n="beige">BEIGE</button>
+                <button type="button" data-mode="gray" class="menu-option" aria-pressed="false" data-i18n="gray">GRIS</button>
               </div>
             </div>
           </nav>
         </div>
-      </header>eader>
+      </header>
       <section class="page-title"><h1><span>OPERATION:</span> <em>LOST HATCHLING</em></h1></section>
       <main class="layout">
         <section class="desktop-only-notice" aria-labelledby="desktop-only-title">
@@ -46,25 +51,18 @@
           <div class="panel-head"><span><i></i> <span data-i18n="liveFeed">TRANSMISIÓN EN VIVO // SECTOR 01</span></span><span id="game-state" data-i18n="standby">EN ESPERA</span></div>
           
           <div class="canvas-wrap">
-<div class="game-setup">
-            <div class="mission-details">
-              <div class="mission-brief">
-                <div class="brief-icon">⌖</div>
-                <div>
-                  <span class="eyebrow" data-i18n="mainMission">MISIÓN PRINCIPAL</span>
-                  <p><span data-i18n="missionStart">Encontrar y rescatar a</span> <b>BETA</b><span data-i18n="missionEnd">. Los cazadores furtivos la trasladan hacia un punto de extracción clandestino.</span></p>
-                </div>
-              </div>
-              <div class="mission-actions">
-                <button id="start-button" class="start-button" type="button"><span data-i18n="play">JUGAR</span><b>→</b></button>
-                <p class="controls-note" data-i18n="controls">A / D MOVER · ESPACIO / ↑ SALTAR · ↓ AGACHARSE · X HABILIDAD · E INTERACTUAR · P PAUSAR</p>
-              </div>
-            </div>
-          </div>
-
             <canvas id="game" width="960" height="540" aria-label="Juego de plataformas Frantic Search"></canvas>
             <div id="overlay" class="game-overlay">
-              <div class="overlay-content"><span class="overlay-kicker">FRANTIC SEARCH</span><h2>THE WILD<br><em>IS WATCHING.</em></h2><p>Prepará el equipo. Beta necesita que lleguemos.</p><button id="overlay-start" type="button" hidden>CONTINUAR <span>↗</span></button></div>
+              <div class="overlay-content">
+                <span class="overlay-kicker">FRANTIC SEARCH // OPERATION 01</span>
+                <h2>THE WILD<br><em>IS WATCHING.</em></h2>
+                <p class="overlay-objective">
+                  <strong data-i18n="mainMission">MISIÓN PRINCIPAL</strong>
+                  <span data-i18n="missionStart">Encontrar y rescatar a</span> <b>BETA</b><span data-i18n="missionEnd">. Los cazadores furtivos la trasladan hacia un punto de extracción clandestino.</span>
+                </p>
+                <p class="overlay-controls" data-i18n="controls">A / D MOVER · ESPACIO / ↑ SALTAR · ↓ AGACHARSE · X HABILIDAD · E INTERACTUAR · P PAUSAR</p>
+                <button id="start-button" type="button"><span data-i18n="play">JUGAR</span><span aria-hidden="true">↗</span></button>
+              </div>
             </div>
             <section id="dino-modal" class="dino-modal hidden" role="dialog" aria-modal="true" aria-labelledby="dino-modal-title">
               <div class="dino-dialog">

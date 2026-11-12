@@ -197,18 +197,13 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden}
 .dialog-back:hover{border-color:var(--acid);color:var(--acid)}
 .dino-dialog button:focus-visible{outline:2px solid var(--acid);outline-offset:3px}
 
-/* Environmental modes: cosmetic atmosphere modifiers */
-.canvas-wrap.mode-mud::before,.canvas-wrap.mode-fog::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none}
-.canvas-wrap.mode-mud::before{background:
-  radial-gradient(ellipse at 14% 100%,rgba(113,67,34,.42),transparent 38%),
-  radial-gradient(ellipse at 82% 100%,rgba(91,54,29,.38),transparent 42%),
-  linear-gradient(0deg,rgba(94,57,31,.22),transparent 34%)}
-.canvas-wrap.mode-mud::after{content:"";position:absolute;left:0;right:0;bottom:0;height:17%;z-index:1;pointer-events:none;background:repeating-linear-gradient(174deg,transparent 0 18px,rgba(143,94,48,.18) 19px 22px,transparent 23px 39px);opacity:.8}
-.canvas-wrap.mode-fog::before{background:
-  linear-gradient(90deg,rgba(199,215,204,.16),rgba(206,218,210,.04) 25%,rgba(207,220,213,.18) 52%,rgba(193,208,200,.06) 76%,rgba(207,219,211,.2)),
-  radial-gradient(ellipse at 48% 50%,rgba(211,224,216,.28),transparent 68%);backdrop-filter:blur(1.5px)}
-.canvas-wrap.mode-fog::after{content:"";position:absolute;inset:-12%;z-index:1;pointer-events:none;background:radial-gradient(ellipse at 25% 45%,rgba(223,232,224,.2),transparent 44%),radial-gradient(ellipse at 72% 62%,rgba(217,228,219,.17),transparent 48%);animation:fog-drift 16s ease-in-out infinite alternate}
-@keyframes fog-drift{from{transform:translate3d(-2%,0,0)}to{transform:translate3d(2%,1%,0)}}
+/* Environmental modes: two distinct treatments applied to the actual game image */
+.canvas-wrap.mode-beige canvas#game{filter:sepia(.34) saturate(1.12) brightness(1.06) contrast(.98)}
+.canvas-wrap.mode-gray canvas#game{filter:grayscale(.92) brightness(.94) contrast(1.12)}
+.canvas-wrap.mode-beige::before,.canvas-wrap.mode-gray::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none}
+.canvas-wrap.mode-beige::before{background:linear-gradient(180deg,rgba(241,220,181,.08),rgba(185,145,99,.2))}
+.canvas-wrap.mode-gray::before{background:linear-gradient(180deg,rgba(218,225,231,.12),rgba(69,80,94,.2))}
+
 @media(max-width:560px){
  .nav-menu{right:-2px;padding:14px}
  .dino-dialog{padding:18px}
@@ -231,3 +226,21 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden}
 .canvas-wrap .game-overlay .overlay-content{max-width:490px;pointer-events:auto}
 .canvas-wrap .dino-modal{z-index:12}
 .canvas-wrap .story-panel{z-index:8}
+
+/* Hamburger menu and launch overlay */
+.menu-options.mode-options{grid-template-columns:repeat(2,minmax(0,1fr))}
+.nav-menu .menu-sound-toggle{display:flex;align-items:center;justify-content:flex-start;width:100%;min-height:42px;padding:11px 12px;background:#202c29;border-color:var(--line);text-align:left}
+.nav-menu .menu-sound-toggle #sound-label{margin-left:10px}
+.canvas-wrap .game-overlay{place-items:center start}
+.canvas-wrap .game-overlay .overlay-content{max-width:min(620px,72%);padding:clamp(24px,5vw,58px)}
+.overlay-objective{max-width:54ch;margin:18px 0 12px;color:#e0e6dc;font-size:clamp(12px,1.15vw,15px);line-height:1.65}
+.overlay-objective strong{display:block;margin-bottom:5px;color:var(--acid);font-family:var(--font-mono);font-size:9px;letter-spacing:.16em}
+.overlay-controls{max-width:58ch;margin:0;color:#aab7ac;font-family:var(--font-mono);font-size:clamp(7px,.7vw,9px);letter-spacing:.04em;line-height:1.7}
+.overlay-content #start-button{display:inline-flex;align-items:center;justify-content:space-between;gap:28px;min-width:190px;margin-top:22px;padding:13px 16px;border:1px solid var(--acid);background:var(--acid);color:#17201a;text-shadow:none;font-weight:700}
+.overlay-content #start-button:hover{background:#e8ff8a}
+@media(max-height:720px) and (min-width:1024px) and (hover:hover) and (pointer:fine){
+ .canvas-wrap .game-overlay .overlay-content{padding:24px 30px}
+ .overlay-objective{margin:12px 0 8px;font-size:11px}
+ .overlay-controls{font-size:7px}
+ .overlay-content #start-button{margin-top:14px;padding:10px 14px}
+}

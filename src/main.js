@@ -50,7 +50,8 @@ const save = new SaveManager();
 const audio = new AudioManager();
 const music = new AdaptiveMusic();
 let locale = save.get("language") || "es";
-let environmentMode = save.get("environmentMode") || "normal";
+const savedEnvironmentMode = save.get("environmentMode");
+let environmentMode = ["beige", "gray"].includes(savedEnvironmentMode) ? savedEnvironmentMode : "beige";
 let desktopBlocked = false;
 const input = new InputManager(window, canvas);
 const physics = new PhysicsSystem({ gravity: GAME.gravity, worldBottom: GAME.height + 150 });
@@ -634,6 +635,7 @@ function showCampaignEnding() {
   overlay.querySelector("h2").innerHTML = locale === "es" ? "LA TRAJIMOS<br><em>A CASA.</em>" : "WE BROUGHT<br><em>HER HOME.</em>";
   overlay.querySelector("p").textContent = ui("rescuedMessage");
   overlay.querySelector("button").textContent = ui("replay");
+  overlay.querySelector("button").hidden = false;
   overlay.classList.remove("hidden");
   stateLabel.textContent = ui("missionComplete");
 }
@@ -1477,9 +1479,8 @@ function selectCharacter(value) {
 document.querySelectorAll(".character-card").forEach((card) => {
   card.addEventListener("click", () => selectCharacter(card.dataset.character));
 });
-document.querySelector("#start-button").addEventListener("click", openDinoModal);
 storyNextButton?.addEventListener("click", advanceStory);
-document.querySelector("#overlay-start").addEventListener("click", () => {
+document.querySelector("#start-button").addEventListener("click", () => {
   if (paused) {
     togglePause();
     return;
@@ -1569,12 +1570,11 @@ function applyLanguage() {
 }
 
 function setEnvironmentMode(mode) {
-  if (!["normal", "mud", "fog"].includes(mode)) return;
+  if (!["beige", "gray"].includes(mode)) return;
   environmentMode = mode;
   save.update({ environmentMode });
-  canvasWrap.classList.remove("mode-mud", "mode-fog");
-  if (mode === "mud") canvasWrap.classList.add("mode-mud");
-  if (mode === "fog") canvasWrap.classList.add("mode-fog");
+  canvasWrap.classList.remove("mode-beige", "mode-gray");
+  canvasWrap.classList.add(`mode-${mode}`);
   document.querySelectorAll("[data-mode]").forEach((button) => {
     const active = button.dataset.mode === mode;
     button.classList.toggle("active", active);
@@ -1638,7 +1638,7 @@ if (save.get("muted")) {
 function syncDesktopAccess() {
   const canPlay = desktopPlayback.matches;
   const startButton = document.querySelector("#start-button");
-  const overlayStartButton = document.querySelector("#overlay-start");
+  const overlayStartButton = document.querySelector("#start-button");
   startButton.disabled = !canPlay;
   overlayStartButton.disabled = !canPlay;
 

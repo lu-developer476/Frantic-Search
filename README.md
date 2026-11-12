@@ -20,8 +20,9 @@ Dialogue scenes pause the simulation. The campaign only completes after Beta has
 ## Interface, languages and environment modes
 
 - The **Jugar / Play** action opens a dinosaur-selection dialog. The campaign starts only after the player confirms Blue or Vasti.
-- The navigation menu supports **Español** and **English**.
-- **Fango / Mud** adds an earthy, muddy atmosphere; **Neblina / Fog** adds a low-visibility mist effect. The selected language and environment mode are saved locally.
+- The hamburger menu contains the **sound toggle**, language selector (**Español / English**) and environmental mode selector.
+- **Beige** applies a warm, sepia-toned treatment; **Gray** applies a cool, monochrome treatment directly to the game scene. The selected language and environmental mode are saved locally.
+- The game canvas is the main play surface; the launch briefing, mission objective and controls are displayed in a single overlay before character selection.
 
 ## Characters and encounters
 
