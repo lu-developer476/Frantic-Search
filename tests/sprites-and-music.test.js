@@ -17,6 +17,8 @@ test("every production actor sprite is present and self-contained", () => {
     const svg = readFileSync(path, "utf8");
     assert.match(svg, /<svg\b/);
     assert.match(svg, /viewBox=/);
+    assert.match(svg, /shape-rendering="crispEdges"/, "sprites must preserve hard pixel edges");
+    assert.doesNotMatch(svg, /linearGradient|radialGradient/, "sprites should use flat arcade colors, not smooth gradients");
     assert.match(svg, /xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
     assert.doesNotMatch(svg, /href=/i, "sprites should not depend on remote images");
   }

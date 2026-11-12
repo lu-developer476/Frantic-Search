@@ -1,6 +1,6 @@
 # Frantic Search — Operation: Lost Hatchling
 
-**Version 1.1.0 · 2D pixel-art survival-platformer · HTML5 Canvas · JavaScript · Vite**
+**Version 1.2.0 · 2D pixel-art survival-platformer · HTML5 Canvas · JavaScript · Vite**
 
 Frantic Search is an unofficial fan-made dinosaur survival-platformer. Play as Violeta or Vasti, keep the other protagonist by your side, and rescue Rosa from a clandestine poaching and research operation.
 
@@ -35,10 +35,11 @@ Dialogue scenes pause the simulation. The campaign only completes after Rosa has
 - **Indoraptor:** pounce and claw patterns with two phases.
 - **Indominus Rex:** sonic roar, charge and tail sweep with two phases.
 
-## Art, animation and audio — release 1.0.0
+## Art, animation and audio — release 1.2.0
 
-- Original self-contained SVG sprites rendered through a 320×180 low-resolution buffer and nearest-neighbour upscaling for a crisp 8-bit arcade presentation.
-- Separate player poses for idle, run cycles, jump, duck and dash.
+- Original self-contained, hard-edged pixel-art SVG sprites replace the former smooth vector illustrations. Characters are built from stepped pixel clusters and a limited arcade palette.
+- Violeta and Vasti have distinct idle, two-frame run, jump and duck poses; Violeta also has a dash pose. Rosa, Ferrucutus, poachers, Indoraptor and Indominus Rex use matching pixel-art silhouettes.
+- The sprites are rendered through a 320×180 low-resolution buffer and nearest-neighbour upscaling, matching the game's crisp 8-bit presentation.
 - Sprite images are preloaded and cached; the Canvas geometry remains as a safe fallback if a sprite cannot load.
 - Original adaptive soundtrack synthesized at runtime with Web Audio API. Themes change across the coast, forest, black site, facility, boss encounters, extraction and victory.
 - Procedural sound effects for movement, damage, rescue and boss events.
