@@ -5,7 +5,7 @@ export class FerrucutusAlly {
     this.departed = false;
     this.x = x;
     this.y = groundY - 74;
-    this.w = 104;
+    this.w = 124;
     this.h = 74;
     this.groundY = groundY;
     this.state = "scout";

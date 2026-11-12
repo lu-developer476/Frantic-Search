@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { PlatformWorld } from "../src/world/PlatformWorld.js";
+import { GAME, LEVELS } from "../src/config/GameConfig.js";
+import { FerrucutusCaptive } from "../src/entities/FerrucutusCaptive.js";
 import { IndoraptorBoss } from "../src/entities/IndoraptorBoss.js";
 import { IndominusRexBoss } from "../src/entities/IndominusRexBoss.js";
 import { CollisionSystem } from "../src/systems/CollisionSystem.js";
@@ -77,4 +79,36 @@ test("telegraphed boss attacks have dodgeable attack hitboxes", () => {
   boss.y = boss.baseY;
   const groundedPlayer = { x: boss.x + boss.w - 2, y: 368, w: 64, h: 62 };
   assert.equal(CollisionSystem.bossAttackHit(groundedPlayer, boss), true);
+});
+
+
+test("every campaign level places two or three Ferrucutus containment cages", () => {
+  const world = new PlatformWorld(GAME.groundY);
+  world.extendTo(50000);
+  const counts = LEVELS.map((level, levelIndex) =>
+    world.ferrucutusCageSpawns.filter((spawn) => spawn.levelIndex === levelIndex).length
+  );
+  assert.deepEqual(counts, [3, 3, 3, 2, 2, 2]);
+
+  for (const [levelIndex, level] of LEVELS.entries()) {
+    const levelStart = GAME.playerX + level.distance;
+    const levelEnd = levelIndex + 1 < LEVELS.length
+      ? GAME.playerX + LEVELS[levelIndex + 1].distance
+      : GAME.campaignEndX;
+    const spawns = world.ferrucutusCageSpawns.filter((spawn) => spawn.levelIndex === levelIndex);
+    assert.ok(spawns.every((spawn) => spawn.x >= levelStart && spawn.x < levelEnd));
+  }
+  assert.equal(new Set(world.ferrucutusCageSpawns.map((spawn) => spawn.id)).size, 15);
+});
+
+test("Ferrucutus captive can be rescued once and only within interaction range", () => {
+  const captive = new FerrucutusCaptive({ id: "captive-test", x: 300, groundY: 430 });
+  const distantPlayer = { x: 0, y: 364, w: 64, h: 62 };
+  const nearbyPlayer = { x: 260, y: 364, w: 64, h: 62 };
+  assert.equal(captive.canInteract(distantPlayer), false);
+  assert.equal(captive.rescue(), false);
+  assert.equal(captive.canInteract(nearbyPlayer), true);
+  assert.equal(captive.rescue(), true);
+  assert.equal(captive.rescue(), false);
+  assert.equal(captive.canInteract(nearbyPlayer), false);
 });

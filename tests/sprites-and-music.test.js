@@ -552,3 +552,35 @@ test("left and right arrows set the player's facing used by Vasti's mirrored rig
   player.update(1 / 60, input);
   assert.equal(player.facing, -1, "ArrowLeft uses the left-facing direction");
 });
+
+
+test("Ferrucutus uses an articulated rig cut from its exact reference image", () => {
+  const rendererSource = readFileSync(resolve("src/rendering/SpriteRenderer.js"), "utf8");
+  assert.match(rendererSource, /drawReferenceFerrucutus\(/);
+  assert.match(rendererSource, /drawFerrucutusRig\(/);
+  assert.match(rendererSource, /character === "ferrucutus"/);
+  assert.match(rendererSource, /const mirror = direction > 0/);
+
+  const reference = readFileSync(resolve("public/references/ferrecutus-cerastes.jpg"));
+  const names = ["body", "tail", "leg-back", "leg-front", "foreleg", "jaw"];
+  for (const name of names) {
+    const svg = readFileSync(resolve("public/assets/sprites", "ferrucutus-rig-" + name + ".svg"), "utf8");
+    assert.match(svg, /data-reference="ferrecutus-cerastes\.jpg"/);
+    assert.match(svg, /data-source="embedded-original-reference"/);
+    assert.match(svg, /data:image\/jpeg;base64,/);
+    assert.match(svg, /filter="url\(#paper-key\)"/);
+    const encoded = svg.match(/data:image\/jpeg;base64,([^"]+)/)?.[1];
+    assert.ok(encoded, name + " must embed the source reference");
+    assert.deepEqual(Buffer.from(encoded, "base64"), reference, name + " must contain the exact original image");
+  }
+});
+
+test("Ferrucutus rescues are wired to the interaction action and update the mission rescue count", () => {
+  const mainSource = readFileSync(resolve("src/main.js"), "utf8");
+  assert.match(mainSource, /input\.consume\("interact"\)/);
+  assert.match(mainSource, /captive\.canInteract\(player\)/);
+  assert.match(mainSource, /captive\.rescue\(\)/);
+  assert.match(mainSource, /rescues \+= 1/);
+  assert.match(mainSource, /new FerrucutusAlly\(/);
+  assert.match(mainSource, /drawFerrucutusCage\(/);
+});

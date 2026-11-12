@@ -7,6 +7,7 @@ import { InputManager } from "./core/InputManager.js";
 import { Player } from "./entities/Player.js";
 import { HunterEnemy } from "./entities/HunterEnemy.js";
 import { FerrucutusAlly } from "./entities/FerrucutusAlly.js";
+import { FerrucutusCaptive } from "./entities/FerrucutusCaptive.js";
 import { IndoraptorBoss } from "./entities/IndoraptorBoss.js";
 import { IndominusRexBoss } from "./entities/IndominusRexBoss.js";
 import { PhysicsSystem } from "./systems/PhysicsSystem.js";
@@ -75,8 +76,9 @@ let player = new Player(selected, GAME.playerX, GAME.groundY);
 let world = new PlatformWorld(GAME.groundY);
 let hunters = [];
 let allies = [];
+let ferrucutusCaptives = [];
+let seenFerrucutusCages = new Set();
 let seenHunterSpawns = new Set();
-let seenAllySpawns = new Set();
 let seenBossSpawns = new Set();
 let bosses = [];
 let activeBoss = null;
@@ -561,6 +563,52 @@ function drawFerrucutus(ally) {
   }
 }
 
+
+function drawFerrucutusCage(captive) {
+  const { x, y, w, h } = captive;
+  const ground = captive.groundY;
+  const frame = "#1a2425";
+  const steel = "#71817e";
+  const highlight = "#aeb8a4";
+  ctx.save();
+  ctx.fillStyle = "#101918dd";
+  ctx.fillRect(x + 5, ground - 24, w - 10, 21);
+  ctx.fillStyle = frame;
+  ctx.fillRect(x, y + 8, 8, h - 18);
+  ctx.fillRect(x + w - 8, y + 8, 8, h - 18);
+  ctx.fillRect(x + 4, y, w - 8, 10);
+  ctx.fillRect(x + 4, ground - 18, w - 8, 8);
+
+  spriteRenderer.drawAnimated(
+    ctx, "ferrucutus", captive.dinosaurX, captive.dinosaurY,
+    captive.dinosaurW, captive.dinosaurH, captive, elapsed
+  );
+
+  ctx.fillStyle = steel;
+  for (let barX = x + 13; barX < x + w - 8; barX += 27) {
+    ctx.fillRect(barX, y + 10, 4, h - 30);
+    ctx.fillStyle = highlight;
+    ctx.fillRect(barX + 1, y + 12, 1, h - 34);
+    ctx.fillStyle = steel;
+  }
+  ctx.fillStyle = frame;
+  ctx.fillRect(x + 3, y + 34, w - 6, 5);
+  ctx.fillRect(x + 3, y + 82, w - 6, 5);
+  ctx.fillStyle = highlight;
+  ctx.fillRect(x + 6, y + 10, w - 12, 2);
+  ctx.fillRect(x + 6, ground - 16, w - 12, 2);
+  ctx.fillStyle = "#202c2d";
+  ctx.fillRect(x + w - 27, y + 42, 16, 25);
+  ctx.fillStyle = "#e18a58";
+  ctx.fillRect(x + w - 23, y + 47, 8, 5);
+  ctx.fillStyle = "#d8f36a";
+  ctx.fillRect(x + w - 21, y + 58, 4, 4);
+  ctx.fillStyle = "#e8c58a";
+  ctx.font = "8px monospace";
+  ctx.fillText("DINO CONTAINMENT", x + 9, y - 7);
+  ctx.restore();
+}
+
 function drawHunter(hunter) {
   const x = hunter.x;
   const y = hunter.y;
@@ -611,10 +659,10 @@ function syncEncounters() {
     }));
   }
 
-  for (const spawn of world.allySpawns) {
-    if (seenAllySpawns.has(spawn.id)) continue;
-    seenAllySpawns.add(spawn.id);
-    allies.push(new FerrucutusAlly({
+  for (const spawn of world.ferrucutusCageSpawns) {
+    if (seenFerrucutusCages.has(spawn.id)) continue;
+    seenFerrucutusCages.add(spawn.id);
+    ferrucutusCaptives.push(new FerrucutusCaptive({
       ...spawn,
       groundY: GAME.groundY
     }));
@@ -673,6 +721,21 @@ function advanceStory() {
 }
 
 function interactWithFacility() {
+  const captive = ferrucutusCaptives.find((entry) => entry.canInteract(player));
+  if (captive && captive.rescue()) {
+    ferrucutusCaptives = ferrucutusCaptives.filter((entry) => entry !== captive);
+    rescues += 1;
+    allies.push(new FerrucutusAlly({
+      id: "rescued-" + captive.id,
+      x: captive.x + 18,
+      groundY: GAME.groundY
+    }));
+    audio.rescue();
+    burst(captive.x + captive.w / 2, captive.y + captive.h / 2, "#d8f36a", 26);
+    updateCampaignHud();
+    return true;
+  }
+
   for (const terminal of facilityConsoles) {
     if (!terminal.canInteract(player)) continue;
     if (terminal.kind === "security" && !campaign.flags.powerRestored) {
@@ -734,9 +797,9 @@ function pruneEncounterBookkeeping() {
     ...world.hunterSpawns.map((spawn) => spawn.id),
     ...hunters.map((hunter) => hunter.id)
   ]);
-  const activeAllyIds = new Set([
-    ...world.allySpawns.map((spawn) => spawn.id),
-    ...allies.map((ally) => ally.id)
+  const activeFerrucutusCageIds = new Set([
+    ...world.ferrucutusCageSpawns.map((spawn) => spawn.id),
+    ...ferrucutusCaptives.map((captive) => captive.id)
   ]);
   const activeBossIds = new Set([
     ...world.bossSpawns.map((spawn) => spawn.id),
@@ -746,8 +809,8 @@ function pruneEncounterBookkeeping() {
   for (const id of seenHunterSpawns) {
     if (!activeHunterIds.has(id)) seenHunterSpawns.delete(id);
   }
-  for (const id of seenAllySpawns) {
-    if (!activeAllyIds.has(id)) seenAllySpawns.delete(id);
+  for (const id of seenFerrucutusCages) {
+    if (!activeFerrucutusCageIds.has(id)) seenFerrucutusCages.delete(id);
   }
   for (const id of seenBossSpawns) {
     if (!activeBossIds.has(id)) seenBossSpawns.delete(id);
@@ -1140,6 +1203,7 @@ function update(delta) {
   }
 
   allies = allies.filter((ally) => !ally.departed);
+  ferrucutusCaptives = ferrucutusCaptives.filter((captive) => captive.x + captive.w >= cameraX - 900);
   hunters = hunters.filter((hunter) => hunter.x + hunter.w >= cameraX - 1100);
   beta?.update(delta, player);
   bosses = bosses.filter((boss) => boss.x + boss.w >= cameraX - 850 || boss === activeBoss);
@@ -1179,9 +1243,12 @@ function update(delta) {
   if (interactionHintLabel) {
     const nearbyConsole = facilityConsoles.find((terminal) => terminal.canInteract(player));
     const nearBeta = beta && beta.state === "confined" && Math.abs(player.x - beta.x) < 112;
+    const nearFerrucutus = ferrucutusCaptives.some((captive) => captive.canInteract(player));
     interactionHintLabel.textContent = nearbyConsole
       ? "E // " + (nearbyConsole.kind === "power" ? ui("activatePower") : ui("openSecurity"))
-      : nearBeta ? "E // " + ui("beta") : beta?.state === "following" ? "ROSA // " + ui("escorting") : "";
+      : nearBeta ? "E // " + ui("beta")
+      : nearFerrucutus ? "E // " + ui("freeFerrucutus")
+      : beta?.state === "following" ? "ROSA // " + ui("escorting") : "";
   }
 }
 
@@ -1197,6 +1264,9 @@ function render() {
   for (const terminal of facilityConsoles) drawFacilityConsole(terminal);
   drawExtractionMarker(extractionX);
   for (const obstacle of world.visibleObstacles(cameraX, GAME.width)) drawObstacle(obstacle);
+  for (const captive of ferrucutusCaptives) {
+    if (captive.x + captive.w >= cameraX - 70 && captive.x <= cameraX + GAME.width + 70) drawFerrucutusCage(captive);
+  }
   for (const hunter of hunters) {
     if (hunter.x + hunter.w >= cameraX - 90 && hunter.x <= cameraX + GAME.width + 90) drawHunter(hunter);
   }
@@ -1260,7 +1330,7 @@ function render() {
   ctx.font = "10px monospace";
   ctx.fillText(tr(selected === "blue" ? "VIOLETA // DOUBLE JUMP + DASH" : "VASTI // HEAVY STOMP"), 24, GAME.height - 18);
   ctx.fillStyle = "#d8f36a";
-  ctx.fillText(tr("FERRUCUTUS SUPPORT // APEX AI ACTIVE"), GAME.width - 292, GAME.height - 18);
+  ctx.fillText(tr("FERRUCUTUS RESCUE // SUPPORT ACTIVE"), GAME.width - 314, GAME.height - 18);
   drawBossHud();
 
   // All actors and scenery were drawn directly at native game resolution.
@@ -1330,8 +1400,9 @@ function resetPlayer() {
   world = new PlatformWorld(GAME.groundY);
   hunters = [];
   allies = [];
+  ferrucutusCaptives = [];
   seenHunterSpawns = new Set();
-  seenAllySpawns = new Set();
+  seenFerrucutusCages = new Set();
   seenBossSpawns = new Set();
   bosses = [];
   activeBoss = null;
