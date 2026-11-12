@@ -1,6 +1,6 @@
 import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.js";
 
-const SPRITE_ASSET_VERSION="20261112-violeta-rosa-1";
+const SPRITE_ASSET_VERSION="20261112-violeta-rosa-2";
 const BASE=[
  "violeta-idle","violeta-run-a","violeta-run-b","violeta-jump","violeta-dash","violeta-duck",
  "vasti-idle","vasti-run-a","vasti-run-b","vasti-jump","vasti-duck",
@@ -51,7 +51,8 @@ export class SpriteRenderer{
   const image=this.get(name);
   if(!image||!image.complete||image.naturalWidth===0)return false;
   context.save();
-  context.imageSmoothingEnabled=false;
+  const smoothSprite=name==="rosa"||name.startsWith("rosa-")||name.startsWith("violeta-");
+  context.imageSmoothingEnabled=smoothSprite;
   context.globalAlpha*=alpha;
   x=Math.round(x);y=Math.round(y);
   width=Math.max(1,Math.round(width));height=Math.max(1,Math.round(height));
