@@ -216,8 +216,12 @@ test("actor animation profiles select their own cycles and preserve defeated pos
  renderer.drawAnimated({},"hunter",0,0,50,70,{id:"hunter-1",state:"pursuit"},1,{});
  renderer.drawAnimated({},"indoraptor",0,0,126,92,{id:"raptor",state:"attacking"},1,{});
  renderer.drawAnimated({},"indominus",0,0,224,150,{id:"rex",state:"stalking"},1,{});
+ renderer.drawAnimated({},"indominus",0,0,224,150,{id:"rex",state:"attacking",attackName:"roar"},1,{});
+ renderer.drawAnimated({},"indominus",0,0,224,150,{id:"rex",state:"attacking",attackName:"charge"},1,{});
  assert.ok(selected[0].startsWith("beta-run-"));assert.ok(selected[1].startsWith("ferrucutus-step-"));assert.ok(selected[2].startsWith("hunter-run-"));assert.ok(selected[3].startsWith("indoraptor-run-"));assert.ok(selected[4].startsWith("indominus-run-"));
- renderer.drawAnimated({},"indominus",0,0,224,150,{id:"rex",state:"defeated",defeated:true},1,{});assert.equal(selected[5],"indominus");
+ assert.equal(selected[5],"indominus","Indominus roar should use its heavy idle/roar pose");
+ assert.ok(selected[6].startsWith("indominus-run-"),"Indominus charge should use its run cycle");
+ renderer.drawAnimated({},"indominus",0,0,224,150,{id:"rex",state:"defeated",defeated:true},1,{});assert.equal(selected[7],"indominus");
 });
 test("all non-player actors render through their dedicated animation profiles",()=>{
  const source=readFileSync(resolve("src/main.js"),"utf8");
