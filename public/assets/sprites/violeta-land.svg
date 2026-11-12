@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-     width="128" height="128" viewBox="1154 61 108 84"
+     width="128" height="128" viewBox="1160 70 104 75"
      preserveAspectRatio="xMidYMid meet" role="img" aria-label="Violeta"
      data-character="Violeta" data-species="Velociraptor" data-age="adult" data-palette="purple-mauve" data-source="velociraptor-sprite-sheet.png" data-frame="adult-jump-4" data-pose="land" data-motion-accent="landing">
   <title>Violeta — velociraptor adulta — land</title>
@@ -14,12 +14,9 @@
         <feFuncB type="linear" slope="24" intercept="-1.2"/>
       </feComponentTransfer>
     </filter>
-    <mask id="sprite-cutout" maskUnits="userSpaceOnUse" mask-type="luminance"
-          x="1154" y="61" width="108" height="84">
-      <image href="../../references/velociraptor-sprite-sheet.png" xlink:href="../../references/velociraptor-sprite-sheet.png" x="0" y="0" width="1264" height="843"
-             filter="url(#white-key)"/>
+    <mask id="sprite-cutout" maskUnits="userSpaceOnUse" mask-type="luminance" x="1160" y="70" width="104" height="75">
+      <image href="../../references/velociraptor-sprite-sheet.png" xlink:href="../../references/velociraptor-sprite-sheet.png" x="0" y="0" width="1264" height="843" filter="url(#white-key)"/>
     </mask>
   </defs>
-  <image href="../../references/velociraptor-sprite-sheet.png" xlink:href="../../references/velociraptor-sprite-sheet.png" x="0" y="0" width="1264" height="843"
-         mask="url(#sprite-cutout)" image-rendering="auto"/>
+  <image href="../../references/velociraptor-sprite-sheet.png" xlink:href="../../references/velociraptor-sprite-sheet.png" x="0" y="0" width="1264" height="843" mask="url(#sprite-cutout)" image-rendering="auto"/>
 </svg>

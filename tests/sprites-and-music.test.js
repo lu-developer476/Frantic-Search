@@ -53,8 +53,8 @@ test("remaining non-hunter creature assets are block-built pixel sprites", () =>
 
 test("creature sprites preserve species, age, source sheet and lineage metadata", () => {
   const required = {
-    "violeta-idle": [/data-character="Violeta"/, /data-species="Velociraptor"/, /data-age="adult"/, /data-palette="purple-mauve"/, /data-source="velociraptor-sprite-sheet.png"/, /data-frame="adult-idle-1"/],
-    "rosa": [/data-character="Rosa"/, /data-species="Velociraptor"/, /data-age="juvenile"/, /data-lineage="Violeta"/, /data-palette="purple-mauve"/, /data-source="velociraptor-sprite-sheet.png"/, /data-frame="juvenile-idle-1"/],
+    "violeta-idle": [/data-character="Violeta"/, /data-species="Velociraptor"/, /data-age="adult"/, /data-palette="purple-mauve"/, /data-source="velociraptor-sprite-sheet.png"/, /data-frame="adult-idle-2"/],
+    "rosa": [/data-character="Rosa"/, /data-species="Velociraptor"/, /data-age="juvenile"/, /data-lineage="Violeta"/, /data-palette="purple-mauve"/, /data-source="velociraptor-sprite-sheet.png"/, /data-frame="juvenile-idle-2"/],
     "vasti-idle": [/data-character="Vasti"/, /data-species="Vastatosaurus rex"/, /data-origin="King Kong 2005"/, /three-fingered forelimbs/, /data-hand-digits="3"/, /data-colors="olive-green brown beige"/],
     "ferrucutus": [/data-character="Ferrucutus Cerastes"/, /data-origin="King Kong 2005"/, /paired nasal horns/],
     "indoraptor": [/data-character="Indoraptor"/, /data-origin="Jurassic World Fallen Kingdom"/, /gold dorsal stripe/],
@@ -86,7 +86,7 @@ test("Rosa uses juvenile frames from the same source sheet and lineage", () => {
   assert.match(svg, /data-lineage="Violeta"/);
   assert.match(svg, /data-palette="purple-mauve"/);
   assert.match(svg, /data-source="velociraptor-sprite-sheet.png"/);
-  assert.match(svg, /data-frame="juvenile-idle-1"/);
+  assert.match(svg, /data-frame="juvenile-idle-2"/);
   assert.match(svg, /mask-type="luminance"/);
 });
 
