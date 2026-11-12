@@ -26,9 +26,9 @@ test("every production actor sprite is present and self-contained", () => {
 
 test("creature sprites preserve the requested species, age and franchise lineages", () => {
   const required = {
-    "blue-idle": [/data-character="Violeta"/, /data-species="Velociraptor"/, /data-age="adult"/, /data-sex="female"/],
-    "beta": [/data-character="Rosa"/, /data-species="Velociraptor"/, /data-age="juvenile"/, /data-lineage="Violeta"/],
-    "vasti-idle": [/data-character="Vasti"/, /data-species="Vastatosaurus rex"/, /data-origin="King Kong 2005"/, /three-fingered forelimbs/],
+    "blue-idle": [/data-character="Violeta"/, /data-species="Velociraptor"/, /data-age="adult"/, /data-sex="female"/, /data-hide="white"/, /data-back="purple"/, /data-dorsal-stripe="magenta"/, /data-eye="gold-ochre"/],
+    "beta": [/data-character="Rosa"/, /data-species="Velociraptor"/, /data-age="juvenile"/, /data-lineage="Violeta"/, /data-hide="white"/, /data-back="purple"/, /data-dorsal-stripe="magenta"/, /data-eye="gold-ochre"/],
+    "vasti-idle": [/data-character="Vasti"/, /data-species="Vastatosaurus rex"/, /data-origin="King Kong 2005"/, /five-fingered forelimbs/, /data-hand-digits="5"/, /data-colors="olive-green brown beige"/],
     "ferrucutus": [/data-character="Ferrucutus Cerastes"/, /data-origin="King Kong 2005"/, /paired nasal horns/],
     "indoraptor": [/data-character="Indoraptor"/, /data-origin="Jurassic World Fallen Kingdom"/, /gold dorsal stripe/],
     "indominus": [/data-character="Indominus Rex"/, /data-origin="Jurassic World"/, /dorsal osteoderms/]
@@ -36,6 +36,38 @@ test("creature sprites preserve the requested species, age and franchise lineage
   for (const [name, markers] of Object.entries(required)) {
     const asset = readFileSync(resolve("public/assets/sprites", name + ".svg"), "utf8");
     for (const marker of markers) assert.match(asset, marker, name + " must preserve its identity");
+  }
+});
+
+test("Violeta has white hide, a purple back, magenta dorsal stripe and ochre-gold eye in all poses", () => {
+  for (const pose of ["idle", "run-a", "run-b", "jump", "dash", "duck"]) {
+    const svg = readFileSync(resolve("public/assets/sprites", "blue-" + pose + ".svg"), "utf8");
+    assert.match(svg, /data-hide="white"/);
+    assert.match(svg, /data-back="purple"/);
+    assert.match(svg, /data-dorsal-stripe="magenta"/);
+    assert.match(svg, /data-eye="gold-ochre"/);
+    assert.match(svg, /fill="#d936a2"/);
+    assert.match(svg, /fill="#d5a13c"/);
+  }
+});
+
+test("Rosa uses the same family colors as Violeta", () => {
+  const svg = readFileSync(resolve("public/assets/sprites/beta.svg"), "utf8");
+  assert.match(svg, /data-lineage="Violeta"/);
+  assert.match(svg, /data-hide="white"/);
+  assert.match(svg, /data-back="purple"/);
+  assert.match(svg, /data-dorsal-stripe="magenta"/);
+  assert.match(svg, /fill="#d936a2"/);
+});
+
+test("all Vasti poses declare five fingers and have olive, brown and beige palette", () => {
+  for (const pose of ["idle", "run-a", "run-b", "jump", "duck"]) {
+    const svg = readFileSync(resolve("public/assets/sprites", "vasti-" + pose + ".svg"), "utf8");
+    assert.match(svg, /data-hand-digits="5"/);
+    assert.match(svg, /five-fingered forelimbs/);
+    assert.match(svg, /fill="#586341"/);
+    assert.match(svg, /fill="#887454"/);
+    assert.match(svg, /fill="#f0dfba"/);
   }
 });
 
