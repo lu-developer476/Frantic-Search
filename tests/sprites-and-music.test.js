@@ -384,3 +384,51 @@ test("character selection dialog stays inside the game viewport without scrollin
  assert.match(layout,/max-height:min\(100%,145px\)/);
  assert.match(layout,/grid-template-rows:auto minmax\(0,1fr\) auto auto/);
 });
+
+test("all non-hunter dinosaur sprites clip color to their silhouettes and redraw ink last",()=>{
+ const directory=resolve("public/assets/sprites");
+ const dinosaurs=readdirSync(directory).filter(name=>name.endsWith(".svg")&&!name.startsWith("hunter"));
+ assert.equal(dinosaurs.length,51);
+ for(const filename of dinosaurs){
+  const svg=readFileSync(resolve(directory,filename),"utf8");
+  assert.match(svg,/viewBox="0 0 128 128"/,filename+" retains its original canvas");
+  assert.match(svg,/data-ink-boundary="masked"/,filename+" masks the artwork to its silhouette");
+  assert.match(svg,/<mask id="sprite-silhouette" maskUnits="userSpaceOnUse"/,filename+" defines its silhouette mask");
+  assert.match(svg,/<g data-ink-boundary="art" mask="url\(#sprite-silhouette\)">/,filename+" clips its artwork");
+  assert.match(svg,/<g data-ink-layer="final">[\s\S]*?fill="none" stroke="#[0-9a-f]{6}"/i,filename+" redraws its dark ink above color");
+ }
+ for(const filename of readdirSync(directory).filter(name=>name.startsWith("hunter")&&name.endsWith(".svg"))){
+  const svg=readFileSync(resolve(directory,filename),"utf8");
+  assert.doesNotMatch(svg,/sprite-silhouette|data-ink-layer/,"hunter block sprites remain untouched");
+ }
+});
+
+test("all resting dinosaur poses aim their rear leg in the body-facing direction",()=>{
+ const expected={
+  "blue-idle.svg":/data-foot-facing="forward" transform="translate\(104 0\) scale\(-1 1\)"/,
+  "beta.svg":/data-foot-facing="forward" transform="translate\(109 0\) scale\(-1 1\)"/,
+  "vasti-idle.svg":/data-foot-facing="forward" transform="translate\(101 0\) scale\(-1 1\)"/,
+  "ferrucutus.svg":/data-foot-facing="forward" transform="translate\(81 0\) scale\(-1 1\)"/,
+  "indoraptor.svg":/data-foot-facing="forward" transform="translate\(107 0\) scale\(-1 1\)"/,
+  "indominus.svg":/data-foot-facing="forward" transform="translate\(102 0\) scale\(-1 1\)"/
+ };
+ for(const [filename,marker] of Object.entries(expected)){
+  const svg=readFileSync(resolve("public/assets/sprites",filename),"utf8");
+  assert.match(svg,/data-feet-orientation="forward"/,filename+" faces forward");
+  assert.match(svg,marker,filename+" angles its rear leg toward the head");
+ }
+});
+
+test("Violeta, Rosa and Vasti use articulated crouch sprites with grounded feet",()=>{
+ for(const actor of ["blue","beta","vasti"]){
+  const svg=readFileSync(resolve("public/assets/sprites",actor+"-duck.svg"),"utf8");
+  assert.match(svg,/data-pose="duck"/);
+  assert.match(svg,/data-pose-transform="articulated-duck"/);
+  assert.match(svg,/data-crouch-part="lowered-body"/);
+  assert.match(svg,/data-crouch-part="folded-legs"/);
+  assert.match(svg,/data-crouch-part="grounded-feet"/);
+  assert.doesNotMatch(svg,/translate\(0 32(?:\.0+)?\) scale\(1 0\.75\)/,"the full character is not uniformly compressed");
+  assert.match(svg,/viewBox="0 0 128 128"/,"crouch keeps the native sprite canvas");
+ }
+});
+
