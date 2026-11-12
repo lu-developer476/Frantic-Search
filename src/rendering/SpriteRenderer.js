@@ -482,7 +482,7 @@ export class SpriteRenderer {
     });
     const result = rigReady
       ? this.drawIndominusRig(context, w, h, actor, elapsed, pose, alpha)
-      : this.draw(context, "indominus", 0, 0, w, h, { alpha, facing: facing ?? (actor?.direction ?? -1) });
+      : this.draw(context, pose, 0, 0, w, h, { alpha, facing: facing ?? (actor?.direction ?? -1) });
     context.restore();
     return result;
   }
