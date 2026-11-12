@@ -144,7 +144,7 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
   globalThis.Image = FakeImage;
   try {
     const renderer = new SpriteRenderer("/assets/");
-    assert.match(renderer.get("violeta-idle").src, /violeta-idle\.svg\?v=20261112-vasti-reference-svg-1$/);
+    assert.match(renderer.get("violeta-idle").src, /violeta-idle\.svg\?v=20261112-vasti-articulated-rig-1$/);
   } finally {
     if (previousImage === undefined) delete globalThis.Image;
     else globalThis.Image = previousImage;
@@ -156,7 +156,7 @@ test("Vasti renders the original reference artwork from a dedicated SVG on the g
  const rendererSource=readFileSync(resolve("src/rendering/SpriteRenderer.js"),"utf8");
  assert.match(rendererSource,/drawReferenceVasti\(/);
  assert.match(rendererSource,/public\/references\/vastatosaurus-rex\.jpg/);
- assert.match(rendererSource,/this\.draw\(context,"vasti"/);
+ assert.match(rendererSource,/this\\.draw\\(context, "vasti"/);
  const svg=readFileSync(resolve("public/assets/sprites/vasti.svg"),"utf8");
  assert.match(svg,/<svg\b/);
  assert.match(svg,/data-reference="vastatosaurus-rex.jpg"/);
@@ -228,7 +228,7 @@ test("sprite renderer uses base paths and draws cached images without reloading"
   try {
     const renderer = new SpriteRenderer("/Avoid/");
     const image = renderer.get("violeta-idle");
-    assert.equal(image.src, "/Avoid/assets/sprites/violeta-idle.svg?v=20261112-vasti-reference-in-game-2");
+    assert.equal(image.src, "/Avoid/assets/sprites/violeta-idle.svg?v=20261112-vasti-articulated-rig-1");
     assert.equal(renderer.get("violeta-idle"), image);
     image.complete = true;
     image.naturalWidth = 240;
@@ -510,4 +510,45 @@ test("Vasti's complete animation set follows the Vastatosaurus rex reference sil
     artwork.push(svg);
   }
   assert.equal(new Set(artwork).size, poses.length, "every Vasti pose must have its own artwork");
+});
+
+
+test("Vasti articulated rig separates the original tail, legs, forelimb and lower jaw", () => {
+  const rendererSource = readFileSync(resolve("src/rendering/SpriteRenderer.js"), "utf8");
+  assert.match(rendererSource, /drawVastiRig\(/);
+  assert.match(rendererSource, /const mirror = actorFacing > 0/);
+  assert.match(rendererSource, /drawPart\("vasti-rig-tail"/);
+  assert.match(rendererSource, /drawPart\("vasti-rig-leg-back"/);
+  assert.match(rendererSource, /drawPart\("vasti-rig-leg-front"/);
+  assert.match(rendererSource, /drawPart\("vasti-rig-foreleg"/);
+  assert.match(rendererSource, /drawPart\("vasti-rig-jaw"/);
+
+  const reference = readFileSync(resolve("public/references/vastatosaurus-rex.jpg"));
+  const names = ["body", "tail", "leg-back", "leg-front", "foreleg", "jaw"];
+  for (const name of names) {
+    const svg = readFileSync(resolve("public/assets/sprites", "vasti-rig-" + name + ".svg"), "utf8");
+    assert.match(svg, /data-source="embedded-original-reference"/);
+    assert.match(svg, /data:image\/jpeg;base64,/);
+    assert.match(svg, /filter="url\(#paper-key\)"/);
+    const encoded = svg.match(/data:image\/jpeg;base64,([^"]+)/)?.[1];
+    assert.ok(encoded, name + " must embed the reference image");
+    assert.deepEqual(Buffer.from(encoded, "base64"), reference, name + " must use the exact original image");
+  }
+});
+
+test("left and right arrows set the player's facing used by Vasti's mirrored rig", () => {
+  const inputSource = readFileSync(resolve("src/core/InputManager.js"), "utf8");
+  assert.match(inputSource, /left: \["ArrowLeft", "KeyA"\]/);
+  assert.match(inputSource, /right: \["ArrowRight", "KeyD"\]/);
+  const player = new Player("vasti", 0, 100);
+  const input = {
+    direction: "right",
+    isDown(action) { return action === this.direction; },
+    consume() { return false; }
+  };
+  player.update(1 / 60, input);
+  assert.equal(player.facing, 1, "ArrowRight uses the right-facing direction");
+  input.direction = "left";
+  player.update(1 / 60, input);
+  assert.equal(player.facing, -1, "ArrowLeft uses the left-facing direction");
 });
