@@ -32,11 +32,21 @@ test("every production actor sprite is present and self-contained", () => {
   }
 });
 
-test("creature sprites preserve the requested species, age and franchise lineages", () => {
+
+test("non-hunter creature assets are true block-built pixel sprites", () => {
+  for (const name of spriteNames.filter((entry) => !entry.startsWith("hunter"))) {
+    const svg = readFileSync(resolve("public/assets/sprites", name + ".svg"), "utf8");
+    assert.match(svg, /data-render-style="pixel-art"/, name + " must declare pixel-art rendering");
+    assert.match(svg, /data-pixel-grid="4px"/, name + " must use a consistent pixel grid");
+    assert.ok((svg.match(/<rect\\b/g) || []).length >= 30, name + " must be built from visible pixel blocks");
+    assert.doesNotMatch(svg, /<(?:path|polygon|polyline|ellipse|circle|mask|linearGradient|radialGradient)\\b/i, name + " must not fall back to smooth vector silhouettes");
+  }
+});
+\ntest("creature sprites preserve the requested species, age and franchise lineages", () => {
   const required = {
     "blue-idle": [/data-character="Violeta"/, /data-species="Velociraptor"/, /data-age="adult"/, /data-sex="female"/, /data-hide="white"/, /data-back="purple"/, /data-dorsal-stripe="magenta"/, /data-eye="gold-ochre"/],
     "beta": [/data-character="Rosa"/, /data-species="Velociraptor"/, /data-age="juvenile"/, /data-lineage="Violeta"/, /data-hide="white"/, /data-back="purple"/, /data-dorsal-stripe="magenta"/, /data-eye="gold-ochre"/],
-    "vasti-idle": [/data-character="Vasti"/, /data-species="Vastatosaurus rex"/, /data-origin="King Kong 2005"/, /five-fingered forelimbs/, /data-hand-digits="5"/, /data-colors="olive-green brown beige"/],
+    "vasti-idle": [/data-character="Vasti"/, /data-species="Vastatosaurus rex"/, /data-origin="King Kong 2005"/, /three-fingered forelimbs/, /data-hand-digits="3"/, /data-colors="olive-green brown beige"/],
     "ferrucutus": [/data-character="Ferrucutus Cerastes"/, /data-origin="King Kong 2005"/, /paired nasal horns/],
     "indoraptor": [/data-character="Indoraptor"/, /data-origin="Jurassic World Fallen Kingdom"/, /gold dorsal stripe/],
     "indominus": [/data-character="Indominus Rex"/, /data-origin="Jurassic World"/, /dorsal osteoderms/]
@@ -68,11 +78,11 @@ test("Rosa uses the same family colors as Violeta", () => {
   assert.match(svg, /fill="#d936a2"/);
 });
 
-test("all Vasti poses declare five fingers and have olive, brown and beige palette", () => {
+test("all Vasti poses declare three fingers and have olive, brown and beige palette", () => {
   for (const pose of ["idle", "run-a", "run-b", "jump", "duck"]) {
     const svg = readFileSync(resolve("public/assets/sprites", "vasti-" + pose + ".svg"), "utf8");
-    assert.match(svg, /data-hand-digits="5"/);
-    assert.match(svg, /five-fingered forelimbs/);
+    assert.match(svg, /data-hand-digits="3"/);
+    assert.match(svg, /three-fingered forelimbs/);
     assert.match(svg, /fill="#586341"/);
     assert.match(svg, /fill="#887454"/);
     assert.match(svg, /fill="#f0dfba"/);
@@ -118,7 +128,7 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
   globalThis.Image = FakeImage;
   try {
     const renderer = new SpriteRenderer("/assets/");
-    assert.match(renderer.get("blue-idle").src, /blue-idle\.svg\?v=20261112-ink-boundary-5$/);
+    assert.match(renderer.get("blue-idle").src, /blue-idle\.svg\?v=20261112-pixel-block-1$/);
   } finally {
     if (previousImage === undefined) delete globalThis.Image;
     else globalThis.Image = previousImage;
@@ -185,7 +195,7 @@ test("sprite renderer uses base paths and draws cached images without reloading"
   try {
     const renderer = new SpriteRenderer("/Avoid/");
     const image = renderer.get("blue-idle");
-    assert.equal(image.src, "/Avoid/assets/sprites/blue-idle.svg?v=20261112-ink-boundary-5");
+    assert.equal(image.src, "/Avoid/assets/sprites/blue-idle.svg?v=20261112-pixel-block-1");
     assert.equal(renderer.get("blue-idle"), image);
     image.complete = true;
     image.naturalWidth = 240;
