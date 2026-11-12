@@ -118,7 +118,7 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
   globalThis.Image = FakeImage;
   try {
     const renderer = new SpriteRenderer("/assets/");
-    assert.match(renderer.get("blue-idle").src, /blue-idle\.svg\?v=20261112-ink-crouch-4$/);
+    assert.match(renderer.get("blue-idle").src, /blue-idle\.svg\?v=20261112-ink-boundary-5$/);
   } finally {
     if (previousImage === undefined) delete globalThis.Image;
     else globalThis.Image = previousImage;
@@ -185,7 +185,7 @@ test("sprite renderer uses base paths and draws cached images without reloading"
   try {
     const renderer = new SpriteRenderer("/Avoid/");
     const image = renderer.get("blue-idle");
-    assert.equal(image.src, "/Avoid/assets/sprites/blue-idle.svg?v=20261112-ink-crouch-4");
+    assert.equal(image.src, "/Avoid/assets/sprites/blue-idle.svg?v=20261112-ink-boundary-5");
     assert.equal(renderer.get("blue-idle"), image);
     image.complete = true;
     image.naturalWidth = 240;
