@@ -1,6 +1,6 @@
 import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.js";
 
-const SPRITE_ASSET_VERSION="20261112-pixel-block-1";
+const SPRITE_ASSET_VERSION="20261112-raptor-remaster-1";
 const BASE=[
  "blue-idle","blue-run-a","blue-run-b","blue-jump","blue-dash","blue-duck",
  "vasti-idle","vasti-run-a","vasti-run-b","vasti-jump","vasti-duck",

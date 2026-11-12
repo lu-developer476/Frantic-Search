@@ -37,7 +37,7 @@ Dialogue scenes pause the simulation. The campaign only completes after Rosa has
 
 ## Art, animation and audio — release 1.3.1
 
-- Original self-contained, hard-edged pixel-art SVG sprites replace the former smooth vector illustrations. Characters are built from stepped pixel clusters and a limited arcade palette.
+- Original self-contained, hard-edged pixel-art SVG sprites replace the former smooth vector illustrations. Violeta and Rosa now share a Blue/Beta-inspired velociraptor design language while retaining their adult/juvenile silhouettes, white hides, purple backs, magenta dorsal stripes and ochre-gold eyes.
 - Violeta and Vasti have distinct idle, two-frame run, jump and duck poses; Violeta also has a dash pose. Rosa, Ferrucutus, poachers, Indoraptor and Indominus Rex use matching pixel-art silhouettes. Species-specific anatomy and franchise-lineage metadata are covered by the automated suite.
 - The sprites are rendered through a 320×180 low-resolution buffer and nearest-neighbour upscaling, matching the game's crisp 8-bit presentation.
 - Sprite images are preloaded and cached; the Canvas geometry remains as a safe fallback if a sprite cannot load.
