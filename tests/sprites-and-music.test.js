@@ -117,6 +117,23 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
   }
 });
 
+test("simulation uses one guarded animation-frame scheduler and survives frame errors", () => {
+  const mainSource = readFileSync(resolve("src/main.js"), "utf8");
+  assert.match(mainSource, /function scheduleFrame\(\)/);
+  assert.match(mainSource, /frameRequestId !== null/);
+  assert.match(mainSource, /function handleFrameError\(error\)/);
+  assert.match(mainSource, /catch \(error\) \{\s*handleFrameError\(error\);/);
+  assert.match(mainSource, /document\.addEventListener\("visibilitychange"/);
+  assert.equal((mainSource.match(/requestAnimationFrame\(frame\)/g) || []).length, 1);
+});
+
+test("language changes do not reset, start or stop the simulation frame scheduler", () => {
+  const mainSource = readFileSync(resolve("src/main.js"), "utf8");
+  const languageBlock = mainSource.match(/function setLanguage\(nextLocale\) \{[\s\S]*?\n\}/)?.[0] ?? "";
+  assert.ok(languageBlock.length > 0);
+  assert.doesNotMatch(languageBlock, /scheduleFrame|cancelScheduledFrame|requestAnimationFrame|running\s*=|paused\s*=/);
+});
+
 test("music manager schedules original music and switches adaptive themes", () => {
   const music = new AdaptiveMusic();
   const context = new FakeAudioContext();

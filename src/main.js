@@ -29,7 +29,11 @@ const displayCtx = canvas.getContext("2d", { alpha: false, desynchronized: true 
 ctx.imageSmoothingEnabled = false;
 ctx.scale(1 / PIXEL_SCALE, 1 / PIXEL_SCALE);
 displayCtx.imageSmoothingEnabled = false;
-const spriteRenderer = new SpriteRenderer(import.meta.env.BASE_URL, () => render());
+const spriteRenderer = new SpriteRenderer(import.meta.env.BASE_URL, () => {
+  // Assets may finish loading while the simulation is running. The normal frame loop
+  // will draw them; only force a redraw while the game is static or paused.
+  if (!running || paused) render();
+});
 const overlay = document.querySelector("#overlay");
 const stateLabel = document.querySelector("#game-state");
 const distanceLabel = document.querySelector("#distance");
@@ -67,6 +71,7 @@ let running = false;
 let paused = false;
 let last = 0;
 let accumulator = 0;
+let frameRequestId = null;
 let elapsed = 0;
 let distance = 0;
 let rescues = 0;
@@ -1285,19 +1290,58 @@ function render() {
   displayCtx.drawImage(pixelCanvas, 0, 0, canvas.width, canvas.height);
 }
 
-function frame(now) {
-  const frameDelta = Math.min((now - last) / 1000 || 0, GAME.maxFrameDelta);
-  last = now;
-  accumulator = Math.min(accumulator + frameDelta, GAME.fixedStep * 5);
-  let steps = 0;
-  while (accumulator >= GAME.fixedStep && steps < 5 && running && !paused) {
-    update(GAME.fixedStep);
-    accumulator -= GAME.fixedStep;
-    steps += 1;
+function cancelScheduledFrame() {
+  if (frameRequestId !== null) {
+    cancelAnimationFrame(frameRequestId);
+    frameRequestId = null;
   }
-  if (steps === 5 && accumulator >= GAME.fixedStep) accumulator = 0;
-  render();
-  if (running && !paused) requestAnimationFrame(frame);
+}
+
+function scheduleFrame() {
+  if (!running || paused || frameRequestId !== null || document.hidden) return;
+  frameRequestId = requestAnimationFrame(frame);
+}
+
+function handleFrameError(error) {
+  console.error("[Frantic Search] Simulation frame failed:", error);
+  cancelScheduledFrame();
+  running = false;
+  paused = false;
+  music.setPaused(true);
+  stateLabel.textContent = locale === "es" ? "ERROR DE EJECUCIÓN" : "RUNTIME ERROR";
+  overlay.querySelector(".overlay-kicker").textContent = "FRANTIC SEARCH // RUNTIME";
+  overlay.querySelector("h2").textContent = locale === "es" ? "SIMULACIÓN DETENIDA." : "SIMULATION STOPPED.";
+  overlay.querySelector("p").textContent = locale === "es"
+    ? "Se produjo un error durante la actualización o el dibujo. Abrí la consola para ver el detalle y volvé a iniciar la operación."
+    : "An error occurred while updating or drawing the game. Open the console for details, then restart the operation.";
+  overlay.querySelector("button").hidden = false;
+  overlay.querySelector("button").textContent = ui("retry");
+  overlay.classList.remove("hidden");
+}
+
+function frame(now) {
+  // Clear the handle first so this callback can safely schedule its successor.
+  frameRequestId = null;
+  if (!running || paused || document.hidden) return;
+
+  try {
+    const frameDelta = Math.min((now - last) / 1000 || 0, GAME.maxFrameDelta);
+    last = now;
+    accumulator = Math.min(accumulator + frameDelta, GAME.fixedStep * 5);
+    let steps = 0;
+    while (accumulator >= GAME.fixedStep && steps < 5 && running && !paused) {
+      update(GAME.fixedStep);
+      accumulator -= GAME.fixedStep;
+      steps += 1;
+    }
+    if (steps === 5 && accumulator >= GAME.fixedStep) accumulator = 0;
+    render();
+  } catch (error) {
+    handleFrameError(error);
+    return;
+  }
+
+  scheduleFrame();
 }
 
 function resetPlayer() {
@@ -1325,6 +1369,7 @@ function resetPlayer() {
 
 function start() {
   if (!desktopPlayback.matches) return;
+  cancelScheduledFrame();
   audio.unlock();
   dinoModal.classList.add("hidden");
   overlay.querySelector("button").hidden = true;
@@ -1348,12 +1393,13 @@ function start() {
   renderStoryPanel();
   last = performance.now();
   render();
-  requestAnimationFrame(frame);
+  scheduleFrame();
 }
 
 function endGame() {
   if (!running) return;
   running = false;
+  cancelScheduledFrame();
   music.setTheme("defeat");
   music.setPaused(false);
   audio.hit();
@@ -1376,6 +1422,7 @@ function endGame() {
 function togglePause() {
   if (!desktopPlayback.matches || !running) return;
   paused = !paused;
+  if (paused) cancelScheduledFrame();
   music.setPaused(paused);
   stateLabel.textContent = paused ? ui("paused") : ui("inProgress");
   if (paused) {
@@ -1390,7 +1437,7 @@ function togglePause() {
     overlay.classList.add("hidden");
     accumulator = 0;
     last = performance.now();
-    requestAnimationFrame(frame);
+    scheduleFrame();
   }
 }
 
@@ -1452,8 +1499,8 @@ function setLanguage(nextLocale) {
   applyLanguage();
   updateCampaignHud();
 
-  // A language change updates presentation only: never touch simulation time,
-  // pause state, audio state, or the active animation-frame chain.
+  // A language change updates presentation only. It must never start, stop,
+  // duplicate or reset the simulation's animation-frame chain.
   if (campaign.sceneOpen) renderStoryPanel({ syncAudio: false });
   if (!running || paused) render();
 }
@@ -1583,6 +1630,7 @@ function syncDesktopAccess() {
     if (running) {
       running = false;
       paused = false;
+      cancelScheduledFrame();
       music.setPaused(true);
       storyPanel.classList.add("hidden");
     }
@@ -1609,6 +1657,21 @@ function syncDesktopAccess() {
 }
 
 desktopPlayback.addEventListener("change", syncDesktopAccess);
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    cancelScheduledFrame();
+    return;
+  }
+  if (running && !paused) {
+    // Browsers throttle RAF in background tabs. Drop stale elapsed time on return.
+    accumulator = 0;
+    last = performance.now();
+    scheduleFrame();
+  } else {
+    render();
+  }
+});
 
 applyLanguage();
 setEnvironmentMode(environmentMode);
