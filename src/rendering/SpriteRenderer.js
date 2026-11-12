@@ -3,14 +3,14 @@ import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.j
 const SPRITE_ASSET_VERSION="20261112-vasti-reference-svg-1";
 const BASE=[
  "violeta-idle","violeta-run-a","violeta-run-b","violeta-jump","violeta-dash","violeta-duck",
- "vasti","vasti-idle","vasti-run-a","vasti-run-b","vasti-jump","vasti-duck",
+ "vasti",
  "rosa","rosa-run-a","rosa-run-b","rosa-duck",
  "ferrucutus","ferrucutus-step-a","ferrucutus-step-b","ferrucutus-duck",
  "hunter","hunter-run-a","hunter-run-b","hunter-duck",
  "indoraptor","indoraptor-run-a","indoraptor-run-b","indoraptor-duck",
  "indominus","indominus-run-a","indominus-run-b","indominus-duck"
 ];
-const SPRITES=[...BASE,"vasti-stomp","vasti-slam",...["violeta","vasti","rosa","ferrucutus","hunter","indoraptor","indominus"].flatMap(name=>["attack","land","impact","recover"].map(pose=>name+"-"+pose))];
+const SPRITES=[...BASE,...["violeta","rosa","ferrucutus","hunter","indoraptor","indominus"].flatMap(name=>["attack","land","impact","recover"].map(pose=>name+"-"+pose))];
 
 function phaseOf(actor,fallback){
  const key=String(actor?.id??actor?.character??fallback);
