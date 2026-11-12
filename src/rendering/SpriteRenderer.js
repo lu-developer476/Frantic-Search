@@ -1,3 +1,5 @@
+const SPRITE_ASSET_VERSION = "20261112-sprite-fix-1";
+
 const SPRITES = [
   "blue-idle", "blue-run-a", "blue-run-b", "blue-jump", "blue-dash", "blue-duck",
   "vasti-idle", "vasti-run-a", "vasti-run-b", "vasti-jump", "vasti-duck",
@@ -5,10 +7,12 @@ const SPRITES = [
 ];
 
 export class SpriteRenderer {
-  constructor(baseUrl = import.meta.env?.BASE_URL ?? "/") {
+  constructor(baseUrl = import.meta.env?.BASE_URL ?? "/", onAssetChange = null) {
     this.baseUrl = baseUrl.endsWith("/") ? baseUrl : baseUrl + "/";
     this.images = new Map();
     this.failed = new Set();
+    this.loaded = new Set();
+    this.onAssetChange = typeof onAssetChange === "function" ? onAssetChange : null;
     this.preload();
   }
 
@@ -21,14 +25,24 @@ export class SpriteRenderer {
     const image = new Image();
     image.decoding = "async";
     image.onload = () => {
+      if (image.naturalWidth > 0) {
+        this.loaded.add(name);
+        this.failed.delete(name);
+      } else {
+        this.failed.add(name);
+        console.error("[Frantic Search] Sprite loaded with zero naturalWidth:", name, image.src);
+      }
       if (typeof image.decode === "function") image.decode().catch(() => {});
+      this.onAssetChange?.(name, this.readiness());
     };
     image.onerror = () => {
       this.failed.add(name);
       this.images.delete(name);
+      console.error("[Frantic Search] Sprite request failed:", name, image.src);
+      this.onAssetChange?.(name, this.readiness());
     };
     this.images.set(name, image);
-    image.src = this.baseUrl + "assets/sprites/" + name + ".svg";
+    image.src = this.baseUrl + "assets/sprites/" + name + ".svg?v=" + SPRITE_ASSET_VERSION;
     return image;
   }
 
@@ -66,14 +80,17 @@ export class SpriteRenderer {
       pose = "blue-idle";
     }
 
-    return this.draw(context, pose, x, y, width, height, {
+    // Prevent the obsolete vector drawing from appearing while a sprite is loading.
+    // onAssetChange triggers a redraw as soon as the requested image settles.
+    this.draw(context, pose, x, y, width, height, {
       alpha,
       facing: player?.facing ?? 1
     });
+    return true;
   }
 
   readiness() {
-    const ready = [...this.images.values()].filter((image) => image.complete && image.naturalWidth > 0).length;
+    const ready = this.loaded.size;
     return { ready, total: SPRITES.length, failed: this.failed.size };
   }
 }

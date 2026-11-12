@@ -104,6 +104,19 @@ class FakeAudioContext {
   createBiquadFilter() { const node = new FakeNode(); this.nodes.push(node); return node; }
 }
 
+test("sprite renderer versions asset URLs to bypass stale cached SVG files", () => {
+  const previousImage = globalThis.Image;
+  class FakeImage { constructor() { this.complete = false; this.naturalWidth = 0; this.src = ""; } }
+  globalThis.Image = FakeImage;
+  try {
+    const renderer = new SpriteRenderer("/assets/");
+    assert.match(renderer.get("blue-idle").src, /blue-idle\.svg\?v=20261112-sprite-fix-1$/);
+  } finally {
+    if (previousImage === undefined) delete globalThis.Image;
+    else globalThis.Image = previousImage;
+  }
+});
+
 test("music manager schedules original music and switches adaptive themes", () => {
   const music = new AdaptiveMusic();
   const context = new FakeAudioContext();
@@ -129,7 +142,7 @@ test("sprite renderer uses base paths and draws cached images without reloading"
   try {
     const renderer = new SpriteRenderer("/Avoid/");
     const image = renderer.get("blue-idle");
-    assert.equal(image.src, "/Avoid/assets/sprites/blue-idle.svg");
+    assert.equal(image.src, "/Avoid/assets/sprites/blue-idle.svg?v=20261112-sprite-fix-1");
     assert.equal(renderer.get("blue-idle"), image);
     image.complete = true;
     image.naturalWidth = 240;

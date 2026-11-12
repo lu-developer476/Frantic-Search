@@ -29,7 +29,7 @@ const displayCtx = canvas.getContext("2d", { alpha: false, desynchronized: true 
 ctx.imageSmoothingEnabled = false;
 ctx.scale(1 / PIXEL_SCALE, 1 / PIXEL_SCALE);
 displayCtx.imageSmoothingEnabled = false;
-const spriteRenderer = new SpriteRenderer();
+const spriteRenderer = new SpriteRenderer(import.meta.env.BASE_URL, () => render());
 const overlay = document.querySelector("#overlay");
 const stateLabel = document.querySelector("#game-state");
 const distanceLabel = document.querySelector("#distance");
@@ -104,7 +104,8 @@ function roundedRect(context, x, y, width, height, radius) {
 }
 
 function drawDino(x, y, width, height, color, kind, phase = 0, alpha = 1, facing = 1, actor = null) {
-  if (spriteRenderer.drawDinosaur(ctx, kind, x, y, width, height, actor, phase, alpha)) return;
+  spriteRenderer.drawDinosaur(ctx, kind, x, y, width, height, actor, phase, alpha);
+  return;
   ctx.save();
   ctx.globalAlpha = alpha;
   ctx.translate(facing < 0 ? x + width : x, y);
@@ -394,10 +395,9 @@ function drawBeta(entity) {
     ctx.font = "9px monospace";
     ctx.fillText(tr("CONTAINMENT // ROSA"), x - 24, y - 22);
   }
-  if (spriteRenderer.draw(ctx, "beta", x, y, entity.w, entity.h, { facing: entity.facing })) {
-    ctx.restore();
-    return;
-  }
+  spriteRenderer.draw(ctx, "beta", x, y, entity.w, entity.h, { facing: entity.facing });
+  ctx.restore();
+  return;
   ctx.translate(entity.facing < 0 ? x + entity.w : x, y);
   if (entity.facing < 0) ctx.scale(-1, 1);
   ctx.fillStyle = "#6f9c8b";
@@ -505,16 +505,13 @@ function drawFerrucutus(ally) {
   const y = ally.y;
   const phase = elapsed * 7;
   const step = Math.sin(phase) * 6;
-  if (spriteRenderer.draw(ctx, "ferrucutus", x, y, ally.w, ally.h, { facing: ally.direction })) {
-    if (ally.state === "brace" || ally.state === "bridge" || ally.state === "charge") {
-      ctx.fillStyle = "#d8f36a";
-      ctx.font = "10px monospace";
-      ctx.fillText(tr(ally.state === "charge" ? "ALLY ATTACK" : "FERRUCUTUS // SUPPORT"), x - 15, y - 14);
-    }
-    return;
+  if (!spriteRenderer.draw(ctx, "ferrucutus", x, y, ally.w, ally.h, { facing: ally.direction })) return;
+  if (ally.state === "brace" || ally.state === "bridge" || ally.state === "charge") {
+    ctx.fillStyle = "#d8f36a";
+    ctx.font = "10px monospace";
+    ctx.fillText(tr(ally.state === "charge" ? "ALLY ATTACK" : "FERRUCUTUS // SUPPORT"), x - 15, y - 14);
   }
-  ctx.save();
-  ctx.translate(x, y);
+  return;
   ctx.fillStyle = "#a9a477";
   ctx.beginPath();
   ctx.moveTo(26, 43);
@@ -581,31 +578,7 @@ function drawHunter(hunter) {
   if (!spriteRenderer.draw(ctx, "hunter", x - 6, y - 5, hunter.w + 12, hunter.h + 8, {
     alpha: defeated ? 0.48 : 1,
     facing: hunter.direction
-  })) {
-    ctx.save();
-    ctx.globalAlpha = defeated ? 0.48 : 1;
-    ctx.fillStyle = defeated ? "#4f5a50" : "#343c37";
-    roundedRect(ctx, x + 8, y + 18, 24, 39, 5);
-    ctx.fillStyle = "#b6a083";
-    ctx.beginPath();
-    ctx.arc(x + 20, y + 11, 11, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#202a28";
-    ctx.fillRect(x + 7, y + 4, 26, 7);
-    ctx.fillStyle = "#a3a58e";
-    ctx.fillRect(x + 8, y + 27, 7, 23);
-    ctx.fillRect(x + 25, y + 27, 7, 23);
-    ctx.strokeStyle = "#303a35";
-    ctx.lineWidth = 7;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(x + 14, y + 53);
-    ctx.lineTo(x + 11, y + 64);
-    ctx.moveTo(x + 26, y + 53);
-    ctx.lineTo(x + 30, y + 64);
-    ctx.stroke();
-    ctx.restore();
-  }
+  })) return;
 
   if (alert && !defeated) {
     ctx.fillStyle = "#ed8e55";
@@ -829,59 +802,7 @@ function drawIndoraptor(boss) {
   const phase = elapsed * 10;
   const stride = Math.sin(phase) * 5;
   const spriteDrawn = spriteRenderer.draw(ctx, "indoraptor", boss.x - 4, boss.y - 4, boss.w + 8, boss.h + 8, { alpha: boss.defeated ? 0.4 : 1, facing: boss.direction });
-  if (!spriteDrawn) {
-  ctx.save();
-  ctx.globalAlpha = boss.defeated ? 0.4 : 1;
-  ctx.translate(x, y);
-  ctx.fillStyle = "#27222f";
-  ctx.beginPath();
-  ctx.moveTo(26, 53);
-  ctx.lineTo(-32, 28);
-  ctx.lineTo(12, 67);
-  ctx.fill();
-  roundedRect(ctx, 25, 35, 75, 39, 17);
-  ctx.fillStyle = "#332b3d";
-  ctx.beginPath();
-  ctx.moveTo(73, 48);
-  ctx.lineTo(91, 13);
-  ctx.lineTo(116, 19);
-  ctx.lineTo(126, 35);
-  ctx.lineTo(110, 53);
-  ctx.lineTo(84, 64);
-  ctx.fill();
-  ctx.fillStyle = "#6a4b68";
-  for (let i = 0; i < 5; i += 1) {
-    const sx = 35 + i * 12;
-    ctx.beginPath();
-    ctx.moveTo(sx, 37);
-    ctx.lineTo(sx + 5, 18 - (i % 2) * 5);
-    ctx.lineTo(sx + 12, 40);
-    ctx.fill();
-  }
-  ctx.strokeStyle = "#51445b";
-  ctx.lineWidth = 9;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(43, 68);
-  ctx.lineTo(38 + stride, 89);
-  ctx.moveTo(83, 68);
-  ctx.lineTo(86 - stride, 89);
-  ctx.stroke();
-  ctx.strokeStyle = "#8a8290";
-  ctx.lineWidth = 5;
-  ctx.beginPath();
-  ctx.moveTo(82, 58);
-  ctx.lineTo(96, 76);
-  ctx.lineTo(108, 70);
-  ctx.stroke();
-  ctx.fillStyle = "#ff6759";
-  ctx.beginPath();
-  ctx.arc(111, 29, 3.5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-
-
-  }
+  if (!spriteDrawn) return;
   if (boss.state === "telegraph") {
     ctx.strokeStyle = "#ff806c";
     ctx.lineWidth = 3;
@@ -905,62 +826,7 @@ function drawIndominus(boss) {
   const phase = elapsed * 5;
   const stride = Math.sin(phase) * 4;
   const spriteDrawn = spriteRenderer.draw(ctx, "indominus", boss.x - 4, boss.y - 4, boss.w + 8, boss.h + 8, { alpha: boss.defeated ? 0.4 : 1, facing: boss.direction });
-  if (!spriteDrawn) {
-  ctx.save();
-  ctx.globalAlpha = boss.defeated ? 0.4 : 1;
-  ctx.translate(x, y);
-  ctx.fillStyle = "#b9b5a8";
-  ctx.beginPath();
-  ctx.moveTo(58, 91);
-  ctx.lineTo(-52, 67);
-  ctx.lineTo(22, 112);
-  ctx.fill();
-  roundedRect(ctx, 34, 55, 126, 74, 30);
-  ctx.fillStyle = "#d1ccbc";
-  ctx.beginPath();
-  ctx.moveTo(126, 69);
-  ctx.lineTo(155, 23);
-  ctx.lineTo(197, 20);
-  ctx.lineTo(222, 42);
-  ctx.lineTo(208, 69);
-  ctx.lineTo(172, 84);
-  ctx.lineTo(140, 91);
-  ctx.fill();
-  ctx.fillStyle = "#8b8a7a";
-  for (let i = 0; i < 8; i += 1) {
-    const sx = 54 + i * 15;
-    ctx.beginPath();
-    ctx.moveTo(sx, 58);
-    ctx.lineTo(sx + 7, 35 - (i % 2) * 8);
-    ctx.lineTo(sx + 14, 64);
-    ctx.fill();
-  }
-  ctx.strokeStyle = "#a19e90";
-  ctx.lineWidth = 17;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(79, 112);
-  ctx.lineTo(75 + stride, 147);
-  ctx.moveTo(143, 112);
-  ctx.lineTo(148 - stride, 147);
-  ctx.stroke();
-  ctx.strokeStyle = "#8d897b";
-  ctx.lineWidth = 11;
-  ctx.beginPath();
-  ctx.moveTo(133, 84);
-  ctx.lineTo(111, 110);
-  ctx.lineTo(124, 117);
-  ctx.stroke();
-  ctx.fillStyle = "#24221f";
-  ctx.beginPath();
-  ctx.arc(194, 38, 4, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#f2eee2";
-  ctx.fillRect(202, 60, 18, 4);
-  ctx.restore();
-
-
-  }
+  if (!spriteDrawn) return;
   if (boss.state === "telegraph") {
     ctx.strokeStyle = "#ffb26b";
     ctx.lineWidth = 3;
