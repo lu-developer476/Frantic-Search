@@ -154,15 +154,15 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
 
 test("Vasti renders the original reference artwork from a dedicated SVG on the game canvas",()=>{
  const rendererSource=readFileSync(resolve("src/rendering/SpriteRenderer.js"),"utf8");
- assert.match(rendererSource,/drawReferenceVasti\\(/);
- assert.match(rendererSource,/public\\/references\\/vastatosaurus-rex\\.jpg/);
- assert.match(rendererSource,/this\\.draw\\(context,"vasti"/);
+ assert.match(rendererSource,/drawReferenceVasti\(/);
+ assert.match(rendererSource,/public\/references\/vastatosaurus-rex\.jpg/);
+ assert.match(rendererSource,/this\.draw\(context,"vasti"/);
  const svg=readFileSync(resolve("public/assets/sprites/vasti.svg"),"utf8");
- assert.match(svg,/<svg\\b/);
+ assert.match(svg,/<svg\b/);
  assert.match(svg,/data-reference="vastatosaurus-rex.jpg"/);
  assert.match(svg,/data-source="embedded-original-reference"/);
- assert.match(svg,/data:image\\/jpeg;base64,/);
- assert.match(svg,/filter="url\\(#paper-key\\)"/);
+ assert.match(svg,/data:image\/jpeg;base64,/);
+ assert.match(svg,/filter="url\(#paper-key\)"/);
  const reference=readFileSync(resolve("public/references/vastatosaurus-rex.jpg"));
  assert.ok(reference.length>1000,"the in-game source reference image must be present");
 });
