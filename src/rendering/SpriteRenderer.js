@@ -1,6 +1,6 @@
 import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.js";
 
-const SPRITE_ASSET_VERSION="20261112-vasti-reference-3";
+const SPRITE_ASSET_VERSION="20261112-vasti-vrex-rebuild-1";
 const BASE=[
  "violeta-idle","violeta-run-a","violeta-run-b","violeta-jump","violeta-dash","violeta-duck",
  "vasti-idle","vasti-run-a","vasti-run-b","vasti-jump","vasti-duck",
@@ -92,8 +92,7 @@ export class SpriteRenderer{
   const crouching=player?.duck===true&&pose===prefix+"-duck";
   const naturalHeight=crouching?(player?.normalHeight??height):height;
   const drawY=crouching?y+height-naturalHeight:y;
-  this.draw(context,pose,x,drawY,width,naturalHeight,{alpha,facing:player?.facing??1});
-  return true;
+  return this.draw(context,pose,x,drawY,width,naturalHeight,{alpha,facing:player?.facing??1});
  }
 
  readiness(){return{ready:this.loaded.size,total:SPRITES.length,failed:this.failed.size};}

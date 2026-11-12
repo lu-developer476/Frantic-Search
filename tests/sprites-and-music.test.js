@@ -41,13 +41,16 @@ test("every production actor sprite is present and resolves its intended source"
 });
 
 
-test("remaining non-hunter creature assets are block-built pixel sprites", () => {
+test("remaining non-hunter creature assets use crisp, self-contained pixel artwork", () => {
   for (const name of spriteNames.filter((entry) => !entry.startsWith("hunter") && !entry.startsWith("violeta") && !entry.startsWith("rosa"))) {
     const svg = readFileSync(resolve("public/assets/sprites", name + ".svg"), "utf8");
     assert.match(svg, /data-render-style="pixel-art"/);
     assert.match(svg, /data-pixel-grid="4px"/);
-    assert.ok((svg.match(/<rect\b/g) || []).length >= 30);
-    assert.doesNotMatch(svg, /<(?:path|polygon|polyline|ellipse|circle|mask|linearGradient|radialGradient)\b/i);
+    assert.match(svg, /shape-rendering="crispEdges"/);
+    assert.ok((svg.match(/<rect\\b/g) || []).length >= 30);
+    assert.match(svg, /<(?:path|rect)\\b/);
+    assert.doesNotMatch(svg, /href=/i);
+    assert.doesNotMatch(svg, /linearGradient|radialGradient/);
   }
 });
 
@@ -141,7 +144,7 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
   globalThis.Image = FakeImage;
   try {
     const renderer = new SpriteRenderer("/assets/");
-    assert.match(renderer.get("violeta-idle").src, /violeta-idle\.svg\?v=20261112-vasti-reference-3$/);
+    assert.match(renderer.get("violeta-idle").src, /violeta-idle\.svg\?v=20261112-vasti-vrex-rebuild-1$/);
   } finally {
     if (previousImage === undefined) delete globalThis.Image;
     else globalThis.Image = previousImage;
@@ -210,7 +213,7 @@ test("sprite renderer uses base paths and draws cached images without reloading"
   try {
     const renderer = new SpriteRenderer("/Avoid/");
     const image = renderer.get("violeta-idle");
-    assert.equal(image.src, "/Avoid/assets/sprites/violeta-idle.svg?v=20261112-vasti-reference-3");
+    assert.equal(image.src, "/Avoid/assets/sprites/violeta-idle.svg?v=20261112-vasti-vrex-rebuild-1");
     assert.equal(renderer.get("violeta-idle"), image);
     image.complete = true;
     image.naturalWidth = 240;
@@ -474,4 +477,22 @@ test("Vasti's ability selects a grounded stomp or an aerial ground-slam pose", (
   assert.equal(airborne.animationState, "slam");
   assert.equal(airborne.isSlamming, true);
   assert.equal(selectActorPose("vasti", airborne), "vasti-slam");
+});
+
+
+test("Vasti's complete animation set follows the Vastatosaurus rex reference silhouette", () => {
+  const poses = ["idle","run-a","run-b","jump","duck","attack","impact","land","recover","stomp","slam"];
+  const artwork = [];
+  for (const pose of poses) {
+    const svg = readFileSync(resolve("public/assets/sprites", "vasti-" + pose + ".svg"), "utf8");
+    assert.match(svg, /data-reference="vastatosaurus-rex\\.jpg"/);
+    assert.match(svg, /data-hand-digits="3"/);
+    assert.match(svg, /data-anatomy="three-fingered forelimbs/);
+    assert.match(svg, /data-render-style="pixel-art"/);
+    assert.match(svg, /data-pixel-grid="4px"/);
+    assert.match(svg, /shape-rendering="crispEdges"/);
+    assert.match(svg, /<(?:path|rect)\\b/);
+    artwork.push(svg);
+  }
+  assert.equal(new Set(artwork).size, poses.length, "every Vasti pose must have its own artwork");
 });
