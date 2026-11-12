@@ -507,7 +507,7 @@ html.site-mode-beige .desktop-only-notice em,
 html.site-mode-gray .desktop-only-notice em{color:var(--site-accent)}
 
 
-/* Brand link and operation title share one continuous navbar line. */
+/* One shared type system for the complete navbar identity. */
 .topbar{gap:clamp(8px,1.6vw,24px)}
 .navbar-identity{
   display:flex;
@@ -518,37 +518,42 @@ html.site-mode-gray .desktop-only-notice em{color:var(--site-accent)}
   overflow:hidden;
   white-space:nowrap;
 }
+.navbar-identity .brand,
+.navbar-identity .brand strong,
+.navbar-separator,
+.operation-title{
+  font-family:var(--font-condensed);
+  font-size:clamp(15px,2.1vw,28px);
+  font-weight:800;
+  line-height:.88;
+  letter-spacing:-.035em;
+}
 .navbar-identity .brand{
   display:inline-flex;
   flex:0 0 auto;
   gap:0;
-  font-size:clamp(12px,1.35vw,17px);
-  letter-spacing:.12em;
+  text-decoration:none;
 }
 .navbar-separator{
   flex:0 0 auto;
   color:inherit;
-  font-weight:900;
-  font-size:clamp(12px,1.35vw,17px);
 }
 .operation-title{
   flex:0 1 auto;
   min-width:0;
   margin:0;
   color:#f1f4eb;
-  font-family:var(--font-condensed);
-  font-size:clamp(15px,2.1vw,28px);
-  font-weight:800;
-  line-height:.88;
-  letter-spacing:-.035em;
   text-align:left;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
 }
-.operation-title em{color:var(--acid);font-style:normal}
+.operation-title em{color:var(--acid);font-style:normal;font-weight:inherit}
 #app{grid-template-rows:auto minmax(0,1fr)}
 @media(max-height:720px) and (min-width:1024px) and (hover:hover) and (pointer:fine){
+  .navbar-identity .brand,
+  .navbar-identity .brand strong,
+  .navbar-separator,
   .operation-title{font-size:clamp(14px,1.85vw,24px)}
 }
 @media(max-width:1023px),(hover:none),(pointer:coarse){
@@ -557,8 +562,9 @@ html.site-mode-gray .desktop-only-notice em{color:var(--site-accent)}
 @media(max-width:560px){
   .topbar{height:58px;min-height:58px;padding-inline:10px;gap:5px}
   .navbar-identity{gap:4px}
-  .navbar-identity .brand{font-size:clamp(8px,2.7vw,10px);letter-spacing:.06em}
-  .navbar-separator{font-size:clamp(8px,2.7vw,10px)}
+  .navbar-identity .brand,
+  .navbar-identity .brand strong,
+  .navbar-separator,
   .operation-title{font-size:clamp(8px,2.65vw,10px)}
   .nav-actions{flex:0 0 auto;gap:6px}
   .menu-toggle{width:36px;height:38px}
