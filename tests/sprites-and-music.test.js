@@ -144,7 +144,7 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
   globalThis.Image = FakeImage;
   try {
     const renderer = new SpriteRenderer("/assets/");
-    assert.match(renderer.get("violeta-idle").src, /violeta-idle\.svg\?v=20261112-vasti-articulated-rig-1$/);
+    assert.match(renderer.get("violeta-idle").src, /violeta-idle\.svg\?v=20261112-ferrucutus-rescue-rig-1$/);
   } finally {
     if (previousImage === undefined) delete globalThis.Image;
     else globalThis.Image = previousImage;
@@ -228,7 +228,7 @@ test("sprite renderer uses base paths and draws cached images without reloading"
   try {
     const renderer = new SpriteRenderer("/Avoid/");
     const image = renderer.get("violeta-idle");
-    assert.equal(image.src, "/Avoid/assets/sprites/violeta-idle.svg?v=20261112-vasti-articulated-rig-1");
+    assert.equal(image.src, "/Avoid/assets/sprites/violeta-idle.svg?v=20261112-ferrucutus-rescue-rig-1");
     assert.equal(renderer.get("violeta-idle"), image);
     image.complete = true;
     image.naturalWidth = 240;
