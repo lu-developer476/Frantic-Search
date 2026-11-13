@@ -831,3 +831,19 @@ test("Rosa articulates the tail, limbs, head and jaw across follower states", ()
   assert.equal(selectActorPose("beta", { state: "following", motionSpeed: 150 }).startsWith("rosa-run-"), true);
   assert.equal(selectActorPose("beta", { animationState: "attack" }), "rosa-attack");
 });
+
+test("Rosa is selectable as a playable juvenile velociraptor",()=>{
+ const source=readFileSync(resolve("index.html"),"utf8");
+ assert.ok(source.indexOf('data-character="blue"')<source.indexOf('data-character="rosa"'));
+ assert.ok(source.indexOf('data-character="rosa"')<source.indexOf('data-character="vasti"'));
+ const rosa=new Player("rosa",145,430);
+ assert.equal(rosa.maxJumps,2);assert.equal(rosa.useAbility(),true);assert.equal(rosa.animationState,"attack");
+});
+test("unselected playable characters run independent AI movement and attacks",()=>{
+ const source=readFileSync(resolve("src/main.js"),"utf8");
+ assert.match(source,/new AutonomousCompanion\(character/);
+ assert.match(source,/companion\.update\(delta, player, world, physics, hunters\)/);
+ assert.doesNotMatch(source,/const companionIsBlue = selected !== "blue"/);
+ const ai=readFileSync(resolve("src/entities/AutonomousCompanion.js"),"utf8");
+ assert.match(ai,/obstacle/);assert.match(ai,/gapAhead/);assert.match(ai,/companion-strike/);assert.match(ai,/physics\.step/);
+});

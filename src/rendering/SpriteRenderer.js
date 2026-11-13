@@ -1082,10 +1082,11 @@ export class SpriteRenderer {
   }
 
   drawDinosaur(context, kind, x, y, width, height, player, elapsed, alpha = 1) {
-    const character = kind === "blue" ? "blue" : "vasti";
-    const prefix = kind === "blue" ? "violeta" : "vasti";
+    const character = kind === "blue" ? "blue" : kind === "rosa" ? "beta" : "vasti";
+    const prefix = kind === "blue" ? "violeta" : kind === "rosa" ? "rosa" : "vasti";
     let pose = selectActorPose(character, player, elapsed);
     if (player?.dashTimer > 0 && kind === "blue") pose = "violeta-dash";
+    else if (player?.dashTimer > 0 && kind === "rosa") pose = "rosa-attack";
     else if (player?.duck) pose = prefix + "-duck";
     else if (player && !player.onGround && !player.animationState) pose = prefix + "-jump";
     else if (player && Math.abs(player.vx) > 30 && !player.animationState) {
@@ -1099,7 +1100,8 @@ export class SpriteRenderer {
     const naturalHeight = crouching ? (player?.normalHeight ?? height) : height;
     const drawY = crouching ? y + height - naturalHeight : y;
     if (kind === "blue" && this.drawReferenceVioleta(context, x, drawY, width, naturalHeight, player ?? {}, elapsed, alpha, pose)) return true;
-    if (kind !== "blue" && this.drawReferenceVasti(context, x, y, width, height, player ?? {}, elapsed, alpha, pose)) return true;
+    if (kind === "rosa" && this.drawReferenceRosa(context, x, drawY, width, naturalHeight, player ?? {}, elapsed, alpha, pose)) return true;
+    if (kind !== "blue" && kind !== "rosa" && this.drawReferenceVasti(context, x, y, width, height, player ?? {}, elapsed, alpha, pose)) return true;
     return this.draw(context, pose, x, drawY, width, naturalHeight, { alpha, facing: player?.facing ?? 1 });
   }
 

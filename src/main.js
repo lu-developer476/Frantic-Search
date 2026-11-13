@@ -5,6 +5,7 @@ import { AdaptiveMusic } from "./audio/AdaptiveMusic.js";
 import { SaveManager } from "./storage/SaveManager.js";
 import { InputManager } from "./core/InputManager.js";
 import { Player } from "./entities/Player.js";
+import { AutonomousCompanion } from "./entities/AutonomousCompanion.js";
 import { HunterEnemy } from "./entities/HunterEnemy.js";
 import { FerrucutusAlly } from "./entities/FerrucutusAlly.js";
 import { FerrucutusCaptive } from "./entities/FerrucutusCaptive.js";
@@ -88,6 +89,7 @@ let dashHitIds = new Set();
 let particles = [];
 let campaign = new CampaignManager();
 let beta = null;
+let autonomousCompanions = [];
 let facilityConsoles = [];
 let extractionX = null;
 let campaignSaved = false;
@@ -1166,6 +1168,11 @@ function update(delta) {
     }
   }
 
+  for (const companion of autonomousCompanions) {
+    const event = companion.update(delta, player, world, physics, hunters);
+    if (event?.type === "companion-strike" && !event.hunter.defeated) damageHunter(event.hunter, 1, "companion");
+  }
+
   if (activeBoss) {
     const boss = activeBoss;
     const bossEvent = boss.update(delta, player);
@@ -1284,25 +1291,13 @@ function render() {
   }
   ctx.globalAlpha = 1;
 
-  const companionIsBlue = selected !== "blue";
-  const companionWidth = companionIsBlue ? 60 : 72;
-  const companionHeight = companionIsBlue ? 58 : 62;
-  const companionX = Math.max(0, player.x - 94);
-  const companionY = player.y + player.h - companionHeight + Math.sin(elapsed * 8) * 2;
-  drawDino(
-    companionX, companionY, companionWidth, companionHeight,
-    companionIsBlue ? "#75a99b" : "#d2a27d",
-    companionIsBlue ? "blue" : "vasti", elapsed - 0.12, 0.95, player.facing,
-    { onGround: true, vx: 0, facing: player.facing }
-  );
-
-  const isBlue = selected === "blue";
+  for (const companion of autonomousCompanions) {
+    const actor = companion.actor;
+    if (actor.x + actor.w < cameraX - 90 || actor.x > cameraX + GAME.width + 90) continue;
+    drawDino(actor.x, actor.y, actor.w, actor.h, "#75a99b", actor.character, elapsed + companion.slot * 0.21, 0.96, actor.facing, actor);
+  }
   const blink = player.invulnerable > 0 && Math.floor(elapsed * 18) % 2 === 0;
-  drawDino(
-    player.x, player.y, player.w, player.h,
-    isBlue ? "#75a99b" : "#d2a27d",
-    isBlue ? "blue" : "vasti", elapsed, blink ? 0.35 : 1, player.facing, player
-  );
+  drawDino(player.x, player.y, player.w, player.h, "#75a99b", selected, elapsed, blink ? 0.35 : 1, player.facing, player);
   if (player.dashTimer > 0) {
     ctx.fillStyle = "#d8f36a66";
     ctx.fillRect(player.x - 20, player.y + player.h * 0.48, player.w + 8, 4);
@@ -1328,7 +1323,7 @@ function render() {
   ctx.fillRect(24, 47, Math.min(220, distance / 12), 3);
   ctx.fillStyle = "#d2a27d";
   ctx.font = "10px monospace";
-  ctx.fillText(tr(selected === "blue" ? "VIOLETA // DOUBLE JUMP + DASH" : "VASTI // HEAVY STOMP"), 24, GAME.height - 18);
+  ctx.fillText(tr(selected === "blue" ? "VIOLETA // DOUBLE JUMP + DASH" : selected === "rosa" ? "ROSA // JUVENILE RAPTOR" : "VASTI // HEAVY STOMP"), 24, GAME.height - 18);
   ctx.fillStyle = "#d8f36a";
   ctx.fillText(tr("FERRUCUTUS RESCUE // SUPPORT ACTIVE"), GAME.width - 314, GAME.height - 18);
   drawBossHud();
@@ -1400,6 +1395,7 @@ function resetPlayer() {
   world = new PlatformWorld(GAME.groundY);
   hunters = [];
   allies = [];
+  autonomousCompanions = ["blue", "rosa", "vasti"].filter(character => character !== selected).map((character, index) => new AutonomousCompanion(character, GAME.playerX + (index === 0 ? -116 : 92), GAME.groundY, index));
   ferrucutusCaptives = [];
   seenHunterSpawns = new Set();
   seenFerrucutusCages = new Set();
