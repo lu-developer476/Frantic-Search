@@ -211,6 +211,9 @@ export class SpriteRenderer {
   }
 
   drawReferencePng(context, character, x, y, width, height, actor, elapsed, options = {}, poseOverride = null) {
+    // Tests and lightweight renderers may intentionally use this prototype without
+    // running the browser constructor; in that case preserve the legacy fallback.
+    if (!(this.referenceImages instanceof Map)) return false;
     const definition = this.getReferenceConfig(character, actor);
     if (!definition?.file) return false;
     const image = this.getReferenceImage(definition.file);
