@@ -10,6 +10,7 @@ import { InputManager } from "./core/InputManager.js";
 import { Player } from "./entities/Player.js";
 import { AutonomousCompanion } from "./entities/AutonomousCompanion.js";
 import { HunterEnemy } from "./entities/HunterEnemy.js";
+import { WildDinosaur } from "./entities/WildDinosaur.js";
 import { FerrucutusAlly } from "./entities/FerrucutusAlly.js";
 import { FerrucutusCaptive } from "./entities/FerrucutusCaptive.js";
 import { IndoraptorBoss } from "./entities/IndoraptorBoss.js";
@@ -87,6 +88,19 @@ let cameraX = 0;
 let player = new Player(selected, GAME.playerX, GAME.groundY);
 let world = new PlatformWorld(GAME.groundY);
 let hunters = [];
+let venatosauruses = [];
+let foodSources = [];
+let wildlife = [];
+let seenVenatosaurusSpawns = new Set();
+let seenFoodSpawns = new Set();
+let seenBrontosaurusSpawns = new Set();
+let stegoceratops = null;
+let stegoceratopsCooldown = 0;
+let introSequence = false;
+let levelTransition = null;
+let lastLevelIndex = 0;
+let finalDeparture = false;
+let finalDepartureDone = false;
 let allies = [];
 let ferrucutusCaptives = [];
 let seenFerrucutusCages = new Set();
@@ -106,7 +120,9 @@ let extractionX = null;
 let campaignSaved = false;
 
 const rand = (min, max) => min + Math.random() * (max - min);
-const level = () => [...LEVELS].reverse().find((item) => distance >= item.distance) || LEVELS[0];
+const level = () => levelTransition?.phase === "exit"
+  ? LEVELS[levelTransition.fromIndex]
+  : [...LEVELS].reverse().find((item) => distance >= item.distance) || LEVELS[0];
 const currentMusicTheme = () => campaign.flags.completed ? "victory" : activeBoss ? "boss" : beta?.state === "following" ? "extraction" : level().environment === "wild" ? "coastal" : level().environment;
 const best = () => Math.max(save.get("bestDistance"), Math.floor(distance));
 const ui = (key) => uiText(key, locale);
@@ -710,6 +726,24 @@ function syncEncounters() {
       groundY: spawn.groundY ?? GAME.groundY
     }));
   }
+
+  for (const spawn of world.venatosaurusSpawns) {
+    if (seenVenatosaurusSpawns.has(spawn.id)) continue;
+    seenVenatosaurusSpawns.add(spawn.id);
+    venatosauruses.push(new WildDinosaur({ ...spawn, groundY: GAME.groundY }));
+  }
+
+  for (const spawn of world.foodSpawns) {
+    if (seenFoodSpawns.has(spawn.id)) continue;
+    seenFoodSpawns.add(spawn.id);
+    foodSources.push({ ...spawn, y: GAME.groundY - 82, w: 112, h: 82, consumed: false });
+  }
+
+  for (const spawn of world.brontosaurusSpawns) {
+    if (seenBrontosaurusSpawns.has(spawn.id)) continue;
+    seenBrontosaurusSpawns.add(spawn.id);
+    wildlife.push({ ...spawn, y: GAME.groundY - 178, w: 300, h: 178, facing: 1 });
+  }
 }
 
 function syncFacility() {
@@ -719,6 +753,22 @@ function syncFacility() {
   );
   beta = new Beta({ x: world.facilitySpawns.beta, groundY: GAME.groundY });
   extractionX = world.facilitySpawns.extraction;
+}
+
+function tryEatFood(actor, radius = 150) {
+  if (!actor || actor.health >= (actor.maxHealth ?? 3)) return false;
+  const actorCenter = actor.x + actor.w / 2;
+  const source = foodSources
+    .filter((item) => !item.consumed && Math.abs(item.x + item.w / 2 - actorCenter) <= radius &&
+      Math.abs((item.y + item.h) - (actor.y + actor.h)) < 125)
+    .sort((a, b) => Math.abs(a.x - actor.x) - Math.abs(b.x - actor.x))[0];
+  if (!source) return false;
+  source.consumed = true;
+  actor.health = Math.min(actor.maxHealth ?? 3, actor.health + 1);
+  actor.feedingTimer = 0.75;
+  burst(source.x + source.w / 2, source.y + source.h / 2, "#9bd48a", 14);
+  audio.collect();
+  return true;
 }
 
 function updateCampaignHud() {
@@ -760,7 +810,11 @@ function showCampaignEnding() {
 function advanceStory() {
   campaign.advanceScene();
   renderStoryPanel();
-  if (!campaign.sceneOpen && campaign.flags.completed) showCampaignEnding();
+  if (!campaign.sceneOpen && campaign.flags.completed) {
+    finalDeparture = true;
+    finalDepartureDone = false;
+    storyPanel?.classList.add("hidden");
+  }
 }
 
 function interactWithFacility() {
@@ -815,13 +869,16 @@ function interactWithFacility() {
       return true;
     }
   }
+  const food = foodSources.find((item) => !item.consumed &&
+    Math.abs(item.x + item.w / 2 - (player.x + player.w / 2)) < 145 &&
+    Math.abs((item.y + item.h) - (player.y + player.h)) < 125);
+  if (food && tryEatFood(player)) return true;
   return false;
 }
 
 function finishCampaign() {
   if (campaignSaved || !campaign.complete()) return;
   campaignSaved = true;
-  running = false;
   save.update({
     campaignCompleted: true,
     completedCampaigns: save.get("completedCampaigns") + 1,
@@ -863,6 +920,7 @@ function pruneEncounterBookkeeping() {
 function registerHunterResult(hunter, result) {
   if (!result || !result.hit) return;
   if (result.defeated) {
+    foodSources.push({ id: "food-" + hunter.id, kind: "hunter", x: hunter.x + 2, y: hunter.y + hunter.h - 22, w: 42, h: 20, consumed: false });
     if (result.rescued) {
       rescues += 1;
       audio.rescue();
@@ -883,6 +941,17 @@ function damageHunter(hunter, amount, source) {
   registerHunterResult(hunter, result);
   if (source === "blue-dash" && result.hit) {
     dashHitIds.add(hunter.id);
+  }
+}
+
+function damageVenatosaurus(enemy, amount = 1) {
+  if (!enemy || enemy.defeated) return;
+  const result = enemy.takeDamage(amount);
+  if (!result.hit) return;
+  audio.hit();
+  burst(enemy.x + enemy.w / 2, enemy.y + enemy.h * 0.55, result.defeated ? "#9bd48a" : "#e8a77d", result.defeated ? 22 : 10);
+  if (result.defeated) {
+    foodSources.push({ id: "food-" + enemy.id, kind: "venatosaurus", x: enemy.x + 10, y: enemy.y + enemy.h - 24, w: 54, h: 22, consumed: false });
   }
 }
 
@@ -1118,6 +1187,9 @@ function handleAbilityImpact() {
       damageHunter(hunter, 2, "vasti-stomp");
     }
   }
+  for (const enemy of venatosauruses) {
+    if (!enemy.defeated && Math.abs(enemy.x + enemy.w / 2 - (player.x + player.w / 2)) < radius) damageVenatosaurus(enemy, 2);
+  }
   if (activeBoss && Math.abs(activeBoss.x + activeBoss.w / 2 - (player.x + player.w / 2)) < radius + Math.max(80, activeBoss.w * 0.45)) {
     damageBoss(activeBoss, 2, "vasti-shockwave");
   }
@@ -1135,13 +1207,97 @@ function handleAbilityImpact() {
   burst(player.x + player.w / 2, player.y + player.h, "#d8f36a", 18);
 }
 
+function updateLevelTransition(delta) {
+  if (!levelTransition) return;
+  const speed = 270;
+  if (levelTransition.phase === "exit") {
+    player.x += speed * delta;
+    for (const companion of autonomousCompanions) companion.actor.x += speed * delta;
+    for (const ally of allies) ally.x += speed * delta;
+    if (player.x - levelTransition.cameraX > GAME.width + 130) {
+      const baseX = GAME.playerX + levelTransition.nextDistance;
+      player.x = baseX - 190;
+      for (const companion of autonomousCompanions) companion.actor.x = baseX - 310;
+      cameraX = baseX;
+      levelTransition.phase = "enter";
+    }
+    return;
+  }
+  const baseX = GAME.playerX + levelTransition.nextDistance;
+  player.x = Math.min(baseX + GAME.playerX, player.x + speed * delta);
+  for (const companion of autonomousCompanions) companion.actor.x = Math.min(baseX + 30, companion.actor.x + speed * delta);
+  for (const ally of allies) ally.x += speed * delta;
+  if (player.x >= baseX + GAME.playerX && autonomousCompanions.every((companion) => companion.actor.x >= baseX + 30)) {
+    player.x = baseX + GAME.playerX;
+    for (const companion of autonomousCompanions) companion.actor.x = baseX + 30;
+    allies = allies.filter((ally) => ally.x + ally.w < cameraX + GAME.width + 100);
+    distance = levelTransition.nextDistance;
+    levelTransition = null;
+  }
+}
+
+function activateStegoceratops() {
+  if (stegoceratops || stegoceratopsCooldown > 0 || !running || campaign.flags.completed) return false;
+  stegoceratopsCooldown = 30;
+  stegoceratops = { id: "stegoceratops-special", x: cameraX - 190, y: GAME.groundY - 126, w: 170, h: 126, direction: 1, state: "charge" };
+  audio.collect();
+  return true;
+}
+
+function updateStegoceratops(delta) {
+  stegoceratopsCooldown = Math.max(0, stegoceratopsCooldown - delta);
+  if (!stegoceratops) return;
+  stegoceratops.x += 790 * delta;
+  const overlaps = (target) => stegoceratops.x + stegoceratops.w > target.x + 8 &&
+    stegoceratops.x < target.x + target.w - 8;
+  for (const hunter of hunters) {
+    if (!hunter.defeated && overlaps(hunter)) damageHunter(hunter, 999, "stegoceratops");
+  }
+  for (const enemy of venatosauruses) {
+    if (!enemy.defeated && overlaps(enemy)) damageVenatosaurus(enemy, 999);
+  }
+  for (const boss of bosses) {
+    if (boss.defeated || !overlaps(boss)) continue;
+    if (!boss.isVulnerable) { boss.state = "recovering"; boss.stateTimer = 0; boss.damageCooldown = 0; }
+    damageBoss(boss, 1, "stegoceratops");
+  }
+  if (stegoceratops.x > cameraX + GAME.width + 180) stegoceratops = null;
+}
+
 function update(delta) {
   if (!running || paused || campaign.sceneOpen) return;
   elapsed += delta;
   bossCueTimer = Math.max(0, bossCueTimer - delta);
   world.update(delta);
 
+  if (finalDeparture) {
+    const speed = 265;
+    player.x += speed * delta;
+    for (const companion of autonomousCompanions) companion.actor.x += speed * delta;
+    for (const ally of allies) ally.x += speed * delta;
+    if (beta) beta.x += speed * delta;
+    if (player.x - cameraX > GAME.width + 150) {
+      finalDeparture = false;
+      finalDepartureDone = true;
+      running = false;
+      cancelScheduledFrame();
+      showCampaignEnding();
+    }
+    return;
+  }
+  if (levelTransition) { updateLevelTransition(delta); return; }
+  if (introSequence) {
+    player.x = Math.min(GAME.playerX, player.x + 230 * delta);
+    for (const companion of autonomousCompanions) companion.actor.x = Math.min(GAME.playerX - 116, companion.actor.x + 230 * delta);
+    if (player.x >= GAME.playerX && autonomousCompanions.every((companion) => companion.actor.x >= GAME.playerX - 116)) {
+      player.x = GAME.playerX;
+      for (const companion of autonomousCompanions) companion.actor.x = GAME.playerX - 116;
+      introSequence = false;
+    }
+    return;
+  }
   player.update(delta, input);
+  if (input.consume("special")) activateStegoceratops();
   if (player.consumeJumpEvent()) audio.jump();
   const abilityEvent = player.consumeAbilityEvent();
   if (abilityEvent === "dash" || abilityEvent === "stomp") audio.collect();
@@ -1184,6 +1340,16 @@ function update(delta) {
   }
   distance = Math.max(0, player.x - GAME.playerX);
   cameraX = Math.max(0, player.x - 330);
+  const currentLevelIndex = LEVELS.reduce((current, item, index) => distance >= item.distance ? index : current, 0);
+  if (currentLevelIndex > lastLevelIndex && currentLevelIndex < LEVELS.length) {
+    const nextDistance = LEVELS[currentLevelIndex].distance;
+    player.x = GAME.playerX + nextDistance;
+    distance = nextDistance;
+    cameraX = Math.max(0, player.x - 330);
+    levelTransition = { phase: "exit", fromIndex: lastLevelIndex, nextIndex: currentLevelIndex, nextDistance, cameraX };
+    lastLevelIndex = currentLevelIndex;
+    return;
+  }
 
   for (const hunter of hunters) {
     const previousState = hunter.state;
@@ -1209,7 +1375,24 @@ function update(delta) {
     }
   }
 
+  for (const enemy of venatosauruses) {
+    const targets = [
+      { target: player, kind: "protagonist" },
+      ...autonomousCompanions.map((companion) => ({ target: companion.actor, kind: "protagonist" })),
+      ...venatosauruses.filter((other) => other !== enemy && !other.defeated).map((other) => ({ target: other, kind: "venatosaurus" }))
+    ];
+    const event = enemy.update(delta, targets);
+    if (event?.type === "attack") {
+      if (event.target === player) damagePlayer();
+      else if (venatosauruses.includes(event.target)) damageVenatosaurus(event.target, 1);
+      else if (event.target?.takeHit?.()) { audio.hit(); burst(event.target.x + event.target.w / 2, event.target.y + event.target.h / 2, "#ed8e55", 10); }
+    }
+    tryEatFood(enemy);
+    if (player.dashTimer > 0 && !enemy.defeated && CollisionSystem.bodyHit(player, enemy)) damageVenatosaurus(enemy, 1);
+  }
+
   for (const companion of autonomousCompanions) {
+    tryEatFood(companion.actor);
     const event = companion.update(delta, player, world, physics, hunters, activeBoss);
     if (event?.type === "companion-strike" && !event.hunter.defeated) {
       damageHunter(event.hunter, 1, "companion");
@@ -1258,6 +1441,10 @@ function update(delta) {
     }
   }
 
+  tryEatFood(player);
+  if (activeBoss) tryEatFood(activeBoss);
+  updateStegoceratops(delta);
+
   for (const ally of allies) {
     const event = ally.update(delta, player, world, hunters, activeBoss);
     if (event?.type === "ally-strike") {
@@ -1273,6 +1460,9 @@ function update(delta) {
   }
 
   allies = allies.filter((ally) => !ally.departed);
+  foodSources = foodSources.filter((food) => !food.consumed && food.x + food.w >= cameraX - 1100);
+  venatosauruses = venatosauruses.filter((enemy) => enemy.x + enemy.w >= cameraX - 1100 || !enemy.defeated);
+  wildlife = wildlife.filter((animal) => animal.x + animal.w >= cameraX - 500);
   ferrucutusCaptives = ferrucutusCaptives.filter((captive) => captive.x + captive.w >= cameraX - 900);
   hunters = hunters.filter((hunter) => hunter.x + hunter.w >= cameraX - 1100);
   beta?.update(delta, player);
@@ -1334,6 +1524,31 @@ function render() {
   for (const captive of ferrucutusCaptives) {
     if (captive.x + captive.w >= cameraX - 70 && captive.x <= cameraX + GAME.width + 70) drawFerrucutusCage(captive);
   }
+  for (const animal of wildlife) {
+    if (animal.x + animal.w >= cameraX - 120 && animal.x <= cameraX + GAME.width + 120) {
+      spriteRenderer.drawAnimated(ctx, "brontosaurus", animal.x, animal.y, animal.w, animal.h, animal, elapsed, { alpha: 0.9, facing: animal.facing });
+    }
+  }
+  for (const food of foodSources) {
+    if (food.consumed || food.x + food.w < cameraX - 80 || food.x > cameraX + GAME.width + 80) continue;
+    if (food.kind === "ligocristus") {
+      spriteRenderer.drawAnimated(ctx, "ligocristus", food.x, food.y, food.w, food.h, food, elapsed, { facing: -1 });
+    } else {
+      ctx.fillStyle = food.kind === "hunter" ? "#6b6250" : "#485b45";
+      ctx.fillRect(food.x, food.y + 12, food.w, food.h - 12);
+      ctx.fillStyle = "#9bd48a";
+      ctx.fillRect(food.x + 6, food.y + 8, 12, 4);
+    }
+  }
+  for (const enemy of venatosauruses) {
+    if (enemy.x + enemy.w >= cameraX - 90 && enemy.x <= cameraX + GAME.width + 90) {
+      spriteRenderer.drawAnimated(ctx, enemy.kind, enemy.x, enemy.y, enemy.w, enemy.h, enemy, elapsed, { facing: enemy.direction });
+      if (!enemy.defeated) {
+        ctx.fillStyle = "#17201a"; ctx.fillRect(enemy.x + 16, enemy.y - 12, 76, 4);
+        ctx.fillStyle = "#ed8e55"; ctx.fillRect(enemy.x + 16, enemy.y - 12, 76 * enemy.health / enemy.maxHealth, 4);
+      }
+    }
+  }
   for (const hunter of hunters) {
     if (hunter.x + hunter.w >= cameraX - 90 && hunter.x <= cameraX + GAME.width + 90) drawHunter(hunter);
   }
@@ -1344,6 +1559,7 @@ function render() {
     if (boss.x + boss.w >= cameraX - 180 && boss.x <= cameraX + GAME.width + 180) drawBoss(boss);
   }
   if (beta) drawBeta(beta);
+  if (stegoceratops) spriteRenderer.drawAnimated(ctx, "stegoceratops", stegoceratops.x, stegoceratops.y, stegoceratops.w, stegoceratops.h, stegoceratops, elapsed, { facing: 1 });
   for (const particle of particles) {
     ctx.globalAlpha = Math.max(0, particle.life / particle.max);
     ctx.fillStyle = particle.color;
@@ -1386,6 +1602,8 @@ function render() {
   ctx.fillText(tr(selected === "blue" ? "VIOLETA // DOUBLE JUMP + DASH" : selected === "rosa" ? "ROSA // JUVENILE RAPTOR" : "VASTI // HEAVY STOMP"), 24, GAME.height - 18);
   ctx.fillStyle = "#d8f36a";
   ctx.fillText(tr("FERRUCUTUS RESCUE // SUPPORT ACTIVE"), GAME.width - 314, GAME.height - 18);
+  ctx.fillStyle = stegoceratopsCooldown <= 0 ? "#d8f36a" : "#e8c58a";
+  ctx.fillText("STEGOCERATOPS [C] // " + (stegoceratopsCooldown <= 0 ? "READY" : stegoceratopsCooldown.toFixed(1) + "s"), GAME.width - 250, 34);
   drawBossHud();
 
   // All actors and scenery were drawn directly at native game resolution.
@@ -1452,12 +1670,26 @@ function resetPlayer() {
   extractionX = null;
   campaignSaved = false;
   player = new Player(selected, GAME.playerX, GAME.groundY);
+  player.x = -155;
   world = new PlatformWorld(GAME.groundY);
   hunters = [];
+  venatosauruses = [];
+  foodSources = [];
+  wildlife = [];
+  seenVenatosaurusSpawns = new Set();
+  seenFoodSpawns = new Set();
+  seenBrontosaurusSpawns = new Set();
+  stegoceratops = null;
+  stegoceratopsCooldown = 0;
+  introSequence = true;
+  levelTransition = null;
+  lastLevelIndex = 0;
+  finalDeparture = false;
+  finalDepartureDone = false;
   allies = [];
   autonomousCompanions = ["blue", "vasti"]
     .filter(character => character !== selected)
-    .map((character) => new AutonomousCompanion(character, GAME.playerX - 116, GAME.groundY, 0));
+    .map((character) => new AutonomousCompanion(character, -280, GAME.groundY, 0));
   ferrucutusCaptives = [];
   seenHunterSpawns = new Set();
   seenFerrucutusCages = new Set();
@@ -1504,6 +1736,9 @@ function start() {
 function endGame() {
   if (!running) return;
   running = false;
+  introSequence = false;
+  levelTransition = null;
+  finalDeparture = false;
   cancelScheduledFrame();
   music.setTheme("defeat");
   music.setPaused(false);
