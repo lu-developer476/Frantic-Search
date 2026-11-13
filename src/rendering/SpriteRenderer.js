@@ -1088,7 +1088,7 @@ export class SpriteRenderer {
     if (player?.dashTimer > 0 && kind === "blue") pose = "violeta-dash";
     else if (player?.dashTimer > 0 && kind === "rosa") pose = "rosa-attack";
     else if (player?.duck) pose = prefix + "-duck";
-    else if (player && !player.onGround && !player.animationState) pose = prefix + "-jump";
+    else if (player && !player.onGround && !player.animationState) pose = kind === "rosa" ? "rosa-run-a" : prefix + "-jump";
     else if (player && Math.abs(player.vx) > 30 && !player.animationState) {
       const fps = Math.max(8, Math.min(13, Math.abs(player.vx) / 27));
       pose = prefix + "-run-" + (Math.floor(elapsed * fps + phaseOf(player, kind)) % 2 === 0 ? "a" : "b");
