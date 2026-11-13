@@ -76,6 +76,7 @@ test("telegraphed boss attacks have dodgeable attack hitboxes", () => {
   assert.equal(CollisionSystem.bossAttackHit(airbornePlayer, boss), false);
 
   boss.attackName = "claw";
+  boss.direction = 1;
   boss.y = boss.baseY;
   const groundedPlayer = { x: boss.x + boss.w - 2, y: 368, w: 64, h: 62 };
   assert.equal(CollisionSystem.bossAttackHit(groundedPlayer, boss), true);
