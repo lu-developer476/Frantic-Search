@@ -482,16 +482,10 @@ export class SpriteRenderer {
     context.rotate(tilt);
     context.translate(-renderWidth / 2, -renderHeight / 2);
 
-    const rigReady = typeof this.get === "function" && VIOLETA_RIG_PARTS.every(name => {
-      const image = this.get(name);
-      return image?.complete && image.naturalWidth > 0;
+    const result = this.draw(context, pose, 0, 0, renderWidth, renderHeight, {
+      alpha,
+      facing: actor?.facing ?? 1
     });
-    const result = rigReady
-      ? this.drawVioletaRig(context, renderWidth, renderHeight, actor, elapsed, pose, alpha)
-      : this.draw(context, pose, 0, 0, renderWidth, renderHeight, {
-          alpha,
-          facing: actor?.facing ?? 1
-        });
     context.restore();
     return result;
   }
