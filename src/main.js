@@ -1461,7 +1461,6 @@ function update(delta) {
     }
   }
 
-  tryEatFood(player);
   if (activeBoss) tryEatFood(activeBoss);
   updateStegoceratops(delta);
 
