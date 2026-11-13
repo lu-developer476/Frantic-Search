@@ -771,3 +771,35 @@ html.site-mode-beige .desktop-only-notice p,html.site-mode-gray .desktop-only-no
     letter-spacing:.03em;
   }
 }
+
+
+/* Compact operation HUD: metrics in the header and controls in one low-profile strip. */
+.panel-head{align-items:center;gap:16px;min-height:38px}
+.panel-head .panel-metrics{display:flex;align-items:center;gap:clamp(14px,2.2vw,30px);min-width:0}
+.panel-head .panel-metric{display:flex;align-items:baseline;gap:7px;white-space:nowrap}
+.panel-head .panel-metric small{color:#9bd6d5;font-size:clamp(7px,.62vw,9px);letter-spacing:.08em}
+.panel-head .panel-metric b{color:#fff3c3;font-family:"Courier New",monospace;font-size:clamp(10px,.92vw,13px);font-weight:900;text-shadow:2px 2px #0b1b27}
+.panel-head #game-state{margin-left:auto;white-space:nowrap}
+.hud-strip{display:block;max-height:52px;min-height:0}
+.hud-strip>div.hud-summary{display:grid;grid-template-columns:minmax(150px,1fr) auto auto minmax(0,1.65fr);align-items:center;gap:clamp(9px,1.3vw,18px);width:100%;min-width:0;padding:7px clamp(9px,1.1vw,15px);border:0}
+.hud-summary .objective{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:9px;min-width:0}
+.hud-summary .objective small{display:block;margin:0;color:#9bd6d5;font-size:clamp(6px,.55vw,8px);white-space:nowrap}
+.hud-summary .objective b{display:block;max-width:none;margin:0;color:#ffe36b;font-size:clamp(7px,.66vw,9px);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hud-summary .ability-readout,.hud-summary .interaction-readout{display:block;margin:0;color:#7cf28a;font-size:clamp(6px,.55vw,8px);line-height:1.2;white-space:nowrap}
+.hud-summary .interaction-readout{color:#ffe36b}
+.hud-summary .interaction-readout:empty{display:none}
+.hud-controls{min-width:0;margin:0;color:#d6e4cf;font-family:"Courier New",monospace;font-size:clamp(6px,.55vw,8px);font-weight:900;letter-spacing:.035em;line-height:1.25;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.game-paused .brand,body.game-paused .navbar-separator{display:none!important}
+.overlay-message:empty{display:none}
+@media(max-width:1200px) and (min-width:1024px){
+  .panel-head .panel-metrics{gap:12px}
+  .hud-strip{max-height:48px}
+  .hud-strip>div.hud-summary{grid-template-columns:minmax(130px,1fr) auto minmax(0,1.5fr);gap:9px;padding:6px 9px}
+  .hud-summary .interaction-readout{display:none}
+  .hud-controls{font-size:6px}
+}
+@media(max-height:720px) and (min-width:1024px) and (hover:hover) and (pointer:fine){
+  .hud-strip{max-height:44px}
+  .hud-strip>div.hud-summary{padding:5px 8px;gap:8px}
+  .panel-head{min-height:34px;padding:6px 10px}
+}
