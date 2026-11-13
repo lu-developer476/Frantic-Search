@@ -1169,8 +1169,13 @@ function update(delta) {
   }
 
   for (const companion of autonomousCompanions) {
-    const event = companion.update(delta, player, world, physics, hunters);
-    if (event?.type === "companion-strike" && !event.hunter.defeated) damageHunter(event.hunter, 1, "companion");
+    const event = companion.update(delta, player, world, physics, hunters, activeBoss);
+    if (event?.type === "companion-strike" && !event.hunter.defeated) {
+      damageHunter(event.hunter, 1, "companion");
+    } else if (event?.type === "companion-boss-strike" && !event.boss.defeated) {
+      damageBoss(event.boss, 1, "companion");
+      burst(event.boss.x + event.boss.w / 2, event.boss.y + event.boss.h * 0.65, "#8ed8c0", 9);
+    }
   }
 
   if (activeBoss) {
