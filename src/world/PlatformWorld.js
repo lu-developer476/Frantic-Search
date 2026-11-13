@@ -95,7 +95,7 @@ export class PlatformWorld {
         const x = start + 360 + i * 650 + ((index * 71 + i * 43) % 95);
         this.venatosaurusSpawns.push({
           id: "venatosaurus-" + index + "-" + i,
-          kind: i % 2 === 0 ? "venatosaurus-impavidus" : "venatosaurus-saevidicus",
+          kind: LEVELS[Math.min(index, LEVELS.length - 1)].environment === "wild" ? "venatosaurus-impavidus" : "venatosaurus-saevidicus",
           x,
           patrolStart,
           patrolEnd,
