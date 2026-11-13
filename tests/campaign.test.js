@@ -68,17 +68,27 @@ test("complete narrative can only be queued after Beta is rescued", () => {
   assert.equal(campaign.complete(), false);
 });
 
-test("opening and chapter dialogue is queued in order and can be advanced", () => {
+test("opening and chapter narration is queued in order and can be advanced", () => {
   const campaign = new CampaignManager();
   campaign.begin();
   assert.equal(campaign.activeScene.id, "opening");
   assert.equal(campaign.activeScene.lines.length, 4);
+  assert.ok(campaign.activeScene.lines.every((line) => typeof line === "string" && line.length > 0));
+  assert.equal(typeof campaign.currentLine, "string");
   drainScenes(campaign);
   campaign.updateLocation(1500);
   assert.equal(campaign.activeScene.id, "redwood-arrival");
   drainScenes(campaign);
   campaign.updateLocation(3000);
   assert.equal(campaign.activeScene.id, "black-site-arrival");
+});
+
+test("narrative scenes reject character dialogue objects", () => {
+  const campaign = new CampaignManager();
+  assert.throws(
+    () => campaign.queueScene("character-dialogue", "NOT ALLOWED", [{ speaker: "Violeta", text: "..." }]),
+    TypeError
+  );
 });
 
 test("facility terminals only interact in range and activate once", () => {
