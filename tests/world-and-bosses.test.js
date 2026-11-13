@@ -22,6 +22,35 @@ test("campaign world stops after the finite extraction area", () => {
   assert.equal(finalFloor.w, 1900);
 });
 
+
+test("procedural sections are repeatable for a seed and vary between seeds", () => {
+  const first = new PlatformWorld(GAME.groundY, { seed: 123456 });
+  const repeated = new PlatformWorld(GAME.groundY, { seed: 123456 });
+  const alternate = new PlatformWorld(GAME.groundY, { seed: 654321 });
+  for (const world of [first, repeated, alternate]) world.extendTo(50000);
+
+  const signature = (world) => JSON.stringify({
+    sectionSeeds: world.sectionSeeds,
+    platforms: world.platforms.filter((item) => item.kind === "ledge").map(({ x, y, w }) => [x, y, w]),
+    obstacles: world.obstacles.map(({ x, y, type }) => [x, y, type]),
+    venatosaurus: world.venatosaurusSpawns.map(({ x, direction }) => [x, direction])
+  });
+
+  assert.equal(signature(first), signature(repeated));
+  assert.notEqual(signature(first), signature(alternate));
+});
+
+test("procedural hazards never overlap Ferrucutus containment cages", () => {
+  const world = new PlatformWorld(GAME.groundY, { seed: 98765 });
+  world.extendTo(50000);
+  for (const cage of world.ferrucutusCageSpawns) {
+    assert.ok(world.obstacles.every((obstacle) => {
+      const overlaps = obstacle.x < cage.x + 164 && obstacle.x + obstacle.w > cage.x;
+      return !overlaps;
+    }));
+  }
+});
+
 test("boss arenas have continuous floor and no normal hunter spawns", () => {
   const world = new PlatformWorld(430);
   world.extendTo(9000);
