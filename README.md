@@ -15,7 +15,7 @@ The finite campaign runs through six chapters:
 5. **Rosa Containment** — restore auxiliary power, release the security lock and free Rosa.
 6. **Extraction Zone** — escort Rosa to the east gate and complete the rescue.
 
-Dialogue scenes pause the simulation. The campaign only completes after Rosa has been freed and reaches the extraction gate with the player.
+Narrator interludes pause the simulation so the player can read the story and events. Dinosaurs never speak; all campaign text is delivered in third-person narration. The campaign only completes after Rosa has been freed and reaches the extraction gate with the player.
 
 ## Interface, languages and environment modes
 
@@ -56,6 +56,7 @@ Dialogue scenes pause the simulation. The campaign only completes after Rosa has
 ## Performance and accessibility
 
 - Fixed-step physics simulation at 60 Hz with a capped frame delta.
+- World sections are procedurally varied from a per-run seed; reusing a seed reproduces the same platforms, hazards and wildlife placements.
 - World sections and off-screen encounter entities are pruned as the camera advances.
 - Canvas rendering is limited to visible world actors; transient particles are capped.
 - Production builds target ES2022, minify JavaScript and CSS, and omit source maps.
@@ -73,7 +74,7 @@ Dialogue scenes pause the simulation. The campaign only completes after Rosa has
 | Stegoceratops special ally | C | — |
 | Interact with terminal / Rosa | E or F | E |
 | Pause | P | — |
-| Advance story dialogue | Enter | Continue button |
+| Advance narrator text | Enter | Continue button |
 
 ## Local development
 
