@@ -832,18 +832,23 @@ test("Rosa articulates the tail, limbs, head and jaw across follower states", ()
   assert.equal(selectActorPose("beta", { animationState: "attack" }), "rosa-attack");
 });
 
-test("Rosa is selectable as a playable juvenile velociraptor",()=>{
+test("the playable roster is Violeta and Vasti; Rosa remains the rescue objective",()=>{
  const source=readFileSync(resolve("index.html"),"utf8");
- assert.ok(source.indexOf('data-character="blue"')<source.indexOf('data-character="rosa"'));
- assert.ok(source.indexOf('data-character="rosa"')<source.indexOf('data-character="vasti"'));
- const rosa=new Player("rosa",145,430);
- assert.equal(rosa.maxJumps,2);assert.equal(rosa.useAbility(),true);assert.equal(rosa.animationState,"attack");
+ const cards=[...source.matchAll(/data-character="(blue|rosa|vasti)"/g)].map((match)=>match[1]);
+ assert.deepEqual(cards,["blue","vasti"]);
+ assert.doesNotMatch(source,/data-character="rosa"/);
+ const main=readFileSync(resolve("src/main.js"),"utf8");
+ assert.match(main,/savedCharacter === "vasti" \\? "vasti" : "blue"/);
+ assert.match(main,/new Beta\\(/);
 });
-test("unselected playable characters run independent AI movement and attacks",()=>{
+test("the unselected playable dinosaur is the only autonomous companion",()=>{
  const source=readFileSync(resolve("src/main.js"),"utf8");
- assert.match(source,/new AutonomousCompanion\(character/);
- assert.match(source,/companion\.update\(delta, player, world, physics, hunters, activeBoss\)/);
- assert.doesNotMatch(source,/const companionIsBlue = selected !== "blue"/);
+ assert.match(source,/\\["blue",\\s*"vasti"\\]/);
+ assert.doesNotMatch(source,/\\["blue",\\s*"rosa",\\s*"vasti"\\]/);
+ assert.match(source,/new AutonomousCompanion\\(character/);
+ assert.match(source,/companion\\.update\\(delta, player, world, physics, hunters, activeBoss\\)/);
  const ai=readFileSync(resolve("src/entities/AutonomousCompanion.js"),"utf8");
- assert.match(ai,/obstacle/);assert.match(ai,/gapAhead/);assert.match(ai,/companion-strike/);assert.match(ai,/companion-boss-strike/);assert.match(ai,/physics\.step/);assert.match(ai,/formationX/);
+ assert.match(ai,/obstacle/);assert.match(ai,/gapAhead/);assert.match(ai,/companion-strike/);assert.match(ai,/companion-boss-strike/);assert.match(ai,/companion-shockwave/);assert.match(ai,/physics\\.step/);assert.match(ai,/formationX/);
+ assert.match(ai,/actor.character === "blue"/);
+ assert.match(ai,/actor.character === "vasti"/);
 });

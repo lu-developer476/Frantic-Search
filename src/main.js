@@ -63,7 +63,11 @@ let desktopBlocked = false;
 const input = new InputManager(window, canvas);
 const physics = new PhysicsSystem({ gravity: GAME.gravity, worldBottom: GAME.height + 150 });
 
-let selected = save.get("selectedCharacter");
+const savedCharacter = save.get("selectedCharacter");
+let selected = savedCharacter === "vasti" ? "vasti" : "blue";
+// Rosa is a rescue objective, never a playable character. Migrate old saves
+// that may contain the previous mistaken "rosa" selection back to Violeta.
+if (savedCharacter !== selected) save.update({ selectedCharacter: selected });
 let running = false;
 let paused = false;
 let last = 0;
@@ -1417,7 +1421,9 @@ function resetPlayer() {
   world = new PlatformWorld(GAME.groundY);
   hunters = [];
   allies = [];
-  autonomousCompanions = ["blue", "rosa", "vasti"].filter(character => character !== selected).map((character, index) => new AutonomousCompanion(character, GAME.playerX + (index === 0 ? -116 : 92), GAME.groundY, index));
+  autonomousCompanions = ["blue", "vasti"]
+    .filter(character => character !== selected)
+    .map((character) => new AutonomousCompanion(character, GAME.playerX - 116, GAME.groundY, 0));
   ferrucutusCaptives = [];
   seenHunterSpawns = new Set();
   seenFerrucutusCages = new Set();
@@ -1507,6 +1513,7 @@ function togglePause() {
 }
 
 function selectCharacter(value) {
+  if (value !== "blue" && value !== "vasti") return;
   selected = value;
   save.update({ selectedCharacter: value });
   document.querySelectorAll(".character-card").forEach((card) => {

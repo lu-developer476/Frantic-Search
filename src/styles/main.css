@@ -693,7 +693,7 @@ html.site-mode-beige .desktop-only-notice p,html.site-mode-gray .desktop-only-no
 .dino-dialog .dialog-description{margin:8px 0 12px}
 .dino-dialog .character-picker{
   display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-columns:repeat(2,minmax(0,1fr));
   gap:clamp(10px,1.6vw,16px);
   width:100%;
   height:100%;

@@ -66,13 +66,12 @@ export class AutonomousCompanion {
       actor.animationTimer = 0.24;
       this.attackCooldown = target.kind === "boss" ? 2.1 : 1.55;
       strike = target;
-      const canUseMobilityAbility = (actor.character === "blue" || actor.character === "rosa") &&
+      const canUseMobilityAbility = actor.character === "blue" &&
         target.distance > 58 && target.distance < 175;
       const canUseHeavyAbility = actor.character === "vasti" &&
         actor.onGround && target.distance > 58 && target.distance < 145;
       if (this.abilityCooldown <= 0 && (canUseMobilityAbility || canUseHeavyAbility)) {
-        // Each companion uses its own character ability: Violeta/Rosa dash,
-        // Vasti ground-stomp (or an aerial slam if a later AI decision triggers it).
+        // The playable companion roster is Violeta (dash) and Vasti (stomp).
         this.input.actions.add("ability");
         this.abilityCooldown = actor.character === "vasti" ? 3.2 : 2.8;
       }
