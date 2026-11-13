@@ -870,10 +870,16 @@ test("startup screen is separate from pause and the character picker has no redu
   const html = readFileSync(resolve("index.html"), "utf8");
   const translations = readFileSync(resolve("src/i18n.js"), "utf8");
   const main = readFileSync(resolve("src/main.js"), "utf8");
+  assert.match(html, /<section id="start-screen" class="start-screen"/);
+  assert.match(html, /<div id="overlay" class="game-overlay hidden"/);
+  assert.match(html, /<button id="start-button"/);
+  assert.match(html, /<button id="overlay-action-button"/);
+  assert.match(main, /startButton\.addEventListener\("click", \(\) => openDinoModal\("start"\)\)/);
+  assert.match(main, /overlayActionButton\.addEventListener/);
   assert.match(html, /data-i18n="startTitle"/);
   assert.match(html, /data-i18n="startMessage"/);
   assert.doesNotMatch(html, /ELEGÍ TU DINOSAURIO|Seleccioná el dinosaurio con el que querés comenzar la operación\./);
   assert.doesNotMatch(translations, /selectDinosaur(?:Help)?:/);
   assert.match(main, /ui\("pauseTitle"\)/);
-  assert.match(main, /ui\("startTitle"\)/);
+  assert.match(main, /startScreenTitle\.textContent = ui\("startTitle"\)/);
 });
