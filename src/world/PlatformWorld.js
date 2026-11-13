@@ -1,14 +1,5 @@
 import { GAME, LEVELS } from "../config/GameConfig.js";
 
-const FERRUCUTUS_CAGE_LAYOUT = [
-  [{ offset: 120 }, { offset: 565, elevation: 65 }, { offset: 950, elevation: 88 }],
-  [{ offset: 130 }, { offset: 550 }, { offset: 1095, elevation: 88 }],
-  [{ offset: 280 }, { offset: 1300 }, { offset: 2595, elevation: 88 }],
-  [{ offset: 250 }, { offset: 520 }],
-  [{ offset: 150 }, { offset: 540 }],
-  [{ offset: 150 }, { offset: 420 }]
-];
-
 export class PlatformWorld {
   constructor(groundY) {
     this.groundY = groundY;
@@ -96,10 +87,10 @@ export class PlatformWorld {
       });
     }
 
-    if (!isFinalArea) {
+    {
       const patrolStart = start + 120;
       const patrolEnd = start + this.sectionLength - 90;
-      const venatoCount = index === 2 || index === 4 ? 1 : 2;
+      const venatoCount = isFinalArea ? 1 : index === 2 || index === 4 ? 1 : 2;
       for (let i = 0; i < venatoCount; i += 1) {
         const x = start + 360 + i * 650 + ((index * 71 + i * 43) % 95);
         this.venatosaurusSpawns.push({
