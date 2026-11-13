@@ -1,5 +1,8 @@
 import "./styles/main.css";
+import { inject } from "@vercel/analytics";
 import { GAME, LEVELS } from "./config/GameConfig.js";
+
+inject();
 import { AudioManager } from "./audio/AudioManager.js";
 import { AdaptiveMusic } from "./audio/AdaptiveMusic.js";
 import { SaveManager } from "./storage/SaveManager.js";
