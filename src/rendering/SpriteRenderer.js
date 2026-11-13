@@ -38,7 +38,7 @@ const REFERENCE_PRELOAD_FILES = [
   "velociraptor-eat.gif"
 ];
 
-const SPRITE_ASSET_VERSION = "20261113-all-reference-dinosaurs-environments-2";
+const SPRITE_ASSET_VERSION = "20261113-all-reference-dinosaurs-environments-3";
 const ROSA_RIG_PARTS = [
   "rosa-rig-body",
   "rosa-rig-tail",
