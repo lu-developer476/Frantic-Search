@@ -920,7 +920,7 @@ function pruneEncounterBookkeeping() {
 function registerHunterResult(hunter, result) {
   if (!result || !result.hit) return;
   if (result.defeated) {
-    foodSources.push({ id: "food-" + hunter.id, kind: "hunter", x: hunter.x + 2, y: hunter.y + hunter.h - 22, w: 42, h: 20, consumed: false });
+    foodSources.push({ id: "food-" + hunter.id, kind: hunter instanceof WildDinosaur ? "venatosaurus" : "hunter", x: hunter.x + 2, y: hunter.y + hunter.h - 22, w: 54, h: 22, consumed: false });
     if (result.rescued) {
       rescues += 1;
       audio.rescue();
@@ -1399,7 +1399,7 @@ function update(delta) {
 
   for (const companion of autonomousCompanions) {
     tryEatFood(companion.actor);
-    const event = companion.update(delta, player, world, physics, hunters, activeBoss);
+    const event = companion.update(delta, player, world, physics, [...hunters, ...venatosauruses], activeBoss);
     if (event?.type === "companion-strike" && !event.hunter.defeated) {
       damageHunter(event.hunter, 1, "companion");
     } else if (event?.type === "companion-boss-strike" && !event.boss.defeated) {
@@ -1452,7 +1452,7 @@ function update(delta) {
   updateStegoceratops(delta);
 
   for (const ally of allies) {
-    const event = ally.update(delta, player, world, hunters, activeBoss);
+    const event = ally.update(delta, player, world, [...hunters, ...venatosauruses], activeBoss);
     if (event?.type === "ally-strike") {
       registerHunterResult(event.enemy, event.result);
       audio.collect();
