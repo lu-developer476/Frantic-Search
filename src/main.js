@@ -1404,7 +1404,7 @@ function update(delta) {
       else if (venatosauruses.includes(event.target)) damageVenatosaurus(event.target, 1);
       else if (event.target?.takeHit?.()) { audio.hit(); burst(event.target.x + event.target.w / 2, event.target.y + event.target.h / 2, "#ed8e55", 10); }
     }
-    tryEatFood(enemy);
+    if (!enemy.defeated) tryEatFood(enemy);
     if (player.dashTimer > 0 && !enemy.defeated && !dashHitIds.has(enemy.id) && CollisionSystem.bodyHit(player, enemy)) {
       damageVenatosaurus(enemy, 1);
       dashHitIds.add(enemy.id);
