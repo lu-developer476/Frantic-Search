@@ -425,7 +425,7 @@ test("character selection dialog stays inside the game viewport without scrollin
 test("all non-hunter dinosaur frames resolve valid source assets", () => {
   const directory = resolve("public/assets/sprites");
   const dinosaurs = readdirSync(directory).filter(name => name.endsWith(".svg") && !name.startsWith("hunter") && !name.includes("-rig-"));
-  assert.equal(dinosaurs.length, 52);
+  assert.equal(dinosaurs.length, 53);
   for (const filename of dinosaurs) {
     const svg = readFileSync(resolve(directory, filename), "utf8");
     assert.match(svg, /^(?:<\?xml[^>]+>\s*)?<svg\b/);
