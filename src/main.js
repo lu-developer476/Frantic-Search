@@ -1714,7 +1714,9 @@ window.addEventListener("keydown", (event) => {
   if (event.code === "Enter" && event.target instanceof Element && event.target.closest("button, a, input, select, textarea, [role='button']")) return;
   if (event.code === "KeyP" && !event.repeat && !campaign.sceneOpen) togglePause();
   if (event.code === "Enter" && !event.repeat && campaign.sceneOpen) advanceStory();
-  else if (event.code === "Enter" && !event.repeat && !running && !paused && !desktopBlocked && dinoModal.classList.contains("hidden") && navMenu.classList.contains("hidden")) openDinoModal("start");
+  else if (event.code === "Enter" && !event.repeat && !running && !paused && !desktopBlocked && dinoModal.classList.contains("hidden") && navMenu.classList.contains("hidden")) {
+    openDinoModal(overlay.classList.contains("hidden") ? "start" : "overlay");
+  }
 });
 
 bestLabel.textContent = String(save.get("bestDistance")).padStart(4, "0") + " m";
