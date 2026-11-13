@@ -803,3 +803,9 @@ body.game-paused .brand,body.game-paused .navbar-separator{display:none!importan
   .hud-strip>div.hud-summary{padding:5px 8px;gap:8px}
   .panel-head{min-height:34px;padding:6px 10px}
 }
+
+
+/* Character selection is intentionally reduced to the two playable characters. */
+.dino-dialog{padding:clamp(14px,2.4vw,26px)}
+.dino-dialog .character-picker{margin:0}
+.dino-dialog .dialog-actions{margin-top:14px;padding-top:12px}
