@@ -62,14 +62,41 @@
           
           <div class="canvas-wrap">
             <canvas id="game" width="960" height="540" aria-label="Juego de plataformas Frantic Search"></canvas>
-            <div id="overlay" class="game-overlay">
+            <div id="overlay" class="game-overlay hidden" aria-live="polite">
               <div class="overlay-content">
                 <span class="overlay-kicker">FRANTIC SEARCH // OPERATION 01</span>
-                <h2 data-i18n="startTitle">FRANTIC SEARCH</h2>
-                <p class="overlay-message" data-i18n="startMessage" aria-live="polite">Una operación de rescate en territorio salvaje. Elegí a tu compañero y preparate para salir.</p>
-                <button id="start-button" type="button"><span data-i18n="play">JUGAR</span><span aria-hidden="true">↗</span></button>
+                <h2></h2>
+                <p class="overlay-message"></p>
+                <button id="overlay-action-button" type="button" hidden><span data-i18n="continue">CONTINUAR ↗</span></button>
               </div>
             </div>
+            <section id="start-screen" class="start-screen" aria-labelledby="start-screen-title">
+              <div class="start-screen-copy">
+                <span class="start-screen-kicker" data-i18n="startKicker">FRANTIC SEARCH // UNIDAD DE RESCATE</span>
+                <h2 id="start-screen-title" data-i18n="startTitle">FRANTIC SEARCH</h2>
+                <p id="start-screen-message" data-i18n="startMessage">Una operación de rescate en territorio salvaje. Elegí a tu compañero y preparate para salir.</p>
+                <div class="start-screen-details" aria-label="Detalles de la operación">
+                  <div><strong>01</strong><small>OPERACIÓN</small></div>
+                  <div><strong>COASTAL</strong><small>SECTOR</small></div>
+                  <div><strong>RESCATE</strong><small>OBJETIVO</small></div>
+                </div>
+                <button id="start-button" type="button">
+                  <span data-i18n="play">INICIAR OPERACIÓN</span><b aria-hidden="true">↗</b>
+                </button>
+                <p class="start-screen-hint" data-i18n="startHint">PRIMERO: ELEGÍ A TU COMPAÑERO</p>
+              </div>
+              <div class="start-screen-visual" aria-hidden="true">
+                <span class="start-visual-label">FIELD SCAN // 001</span>
+                <div class="start-visual-radar">
+                  <span class="radar-ring radar-ring-outer"></span>
+                  <span class="radar-ring radar-ring-middle"></span>
+                  <span class="radar-ring radar-ring-inner"></span>
+                  <span class="radar-crosshair"></span>
+                  <span class="radar-ping"></span>
+                </div>
+                <span class="start-visual-coordinate">34° 36' S / 58° 22' W</span>
+              </div>
+            </section>
             <section id="dino-modal" class="dino-modal hidden" role="dialog" aria-modal="true" aria-label="Selección de personaje">
               <div class="dino-dialog">
                 <div class="character-picker" aria-label="Elegir personaje">
