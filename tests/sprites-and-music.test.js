@@ -842,8 +842,8 @@ test("Rosa is selectable as a playable juvenile velociraptor",()=>{
 test("unselected playable characters run independent AI movement and attacks",()=>{
  const source=readFileSync(resolve("src/main.js"),"utf8");
  assert.match(source,/new AutonomousCompanion\(character/);
- assert.match(source,/companion\.update\(delta, player, world, physics, hunters\)/);
+ assert.match(source,/companion\.update\(delta, player, world, physics, hunters, activeBoss\)/);
  assert.doesNotMatch(source,/const companionIsBlue = selected !== "blue"/);
  const ai=readFileSync(resolve("src/entities/AutonomousCompanion.js"),"utf8");
- assert.match(ai,/obstacle/);assert.match(ai,/gapAhead/);assert.match(ai,/companion-strike/);assert.match(ai,/physics\.step/);
+ assert.match(ai,/obstacle/);assert.match(ai,/gapAhead/);assert.match(ai,/companion-strike/);assert.match(ai,/companion-boss-strike/);assert.match(ai,/physics\.step/);assert.match(ai,/formationX/);
 });
