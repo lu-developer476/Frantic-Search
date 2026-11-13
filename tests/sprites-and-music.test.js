@@ -272,13 +272,14 @@ test("Rosa, Ferrucutus, hunters and both bosses have distinct gait frames", () =
 
 test("actor animation profiles select their own cycles and preserve defeated poses",()=>{
  const renderer=Object.create(SpriteRenderer.prototype),selected=[];renderer.draw=(_ctx,name)=>{selected.push(name);return true;};
- renderer.drawAnimated({},"beta",0,0,48,48,{id:"rosa",state:"following",motionSpeed:160},1,{});
- renderer.drawAnimated({},"ferrucutus",0,0,104,74,{id:"ferru",state:"charge"},1,{});
- renderer.drawAnimated({},"hunter",0,0,50,70,{id:"hunter-1",state:"pursuit"},1,{});
- renderer.drawAnimated({},"indoraptor",0,0,126,92,{id:"raptor",state:"attacking"},1,{});
- renderer.drawAnimated({},"indominus",0,0,224,150,{id:"rex",state:"stalking"},1,{});
- renderer.drawAnimated({},"indominus",0,0,224,150,{id:"rex",state:"attacking",attackName:"roar"},1,{});
- renderer.drawAnimated({},"indominus",0,0,224,150,{id:"rex",state:"attacking",attackName:"charge"},1,{});
+ const context={save(){},restore(){},translate(){},rotate(){},scale(){}};
+ renderer.drawAnimated(context,"beta",0,0,48,48,{id:"rosa",state:"following",motionSpeed:160},1,{});
+ renderer.drawAnimated(context,"ferrucutus",0,0,104,74,{id:"ferru",state:"charge"},1,{});
+ renderer.drawAnimated(context,"hunter",0,0,50,70,{id:"hunter-1",state:"pursuit"},1,{});
+ renderer.drawAnimated(context,"indoraptor",0,0,126,92,{id:"raptor",state:"attacking"},1,{});
+ renderer.drawAnimated(context,"indominus",0,0,224,150,{id:"rex",state:"stalking"},1,{});
+ renderer.drawAnimated(context,"indominus",0,0,224,150,{id:"rex",state:"attacking",attackName:"roar"},1,{});
+ renderer.drawAnimated(context,"indominus",0,0,224,150,{id:"rex",state:"attacking",attackName:"charge"},1,{});
  assert.ok(selected[0].startsWith("rosa-run-"));assert.ok(selected[1].startsWith("ferrucutus-step-"));assert.ok(selected[2].startsWith("hunter-run-"));assert.ok(selected[3].startsWith("indoraptor-run-"));assert.ok(selected[4].startsWith("indominus-run-"));
  assert.equal(selected[5],"indominus","Indominus roar should use its heavy idle/roar pose");
  assert.ok(selected[6].startsWith("indominus-run-"),"Indominus charge should use its run cycle");
