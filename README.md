@@ -22,7 +22,7 @@ Dialogue scenes pause the simulation. The campaign only completes after Rosa has
 - The **Jugar / Play** action opens a dinosaur-selection dialog. The campaign starts only after the player confirms Violeta or Vasti.
 - The hamburger menu contains the **sound toggle**, language selector (**Español / English**) and environmental mode selector.
 - **Beige** applies a warm, sepia-toned treatment; **Gray** applies a cool, monochrome treatment directly to the game scene. The selected language and environmental mode are saved locally.
-- The 320×180 internal render buffer is enlarged to the 960×540 logical canvas with nearest-neighbour sampling; characters, terrain, scenery and particles share the same pixel grid.
+- The game renders directly to its 960×540 logical Canvas; pixel-art sprites retain nearest-neighbour sampling and share the scene's coordinate system.
 - The original campaign, physics, boss encounters, rescue and escort systems remain intact beneath the new arcade presentation.
 
 ## Characters and encounters
@@ -37,12 +37,12 @@ Dialogue scenes pause the simulation. The campaign only completes after Rosa has
 
 ## Art, animation and audio — release 1.3.1
 
-- Original self-contained, hard-edged pixel-art SVG sprites replace the former smooth vector illustrations.
-- Indoraptor has two source-backed eight-part articulated rigs, one per supplied generation PNG. Looping GIF previews for idle, walk, jump and eat are included for both generations; gameplay draws the rig layers so the tail, limbs, head and hinged jaw remain independently articulated.
-- Violeta, Rosa and Vasti expose a dedicated feeding state. Feeding animates the head and jaw rhythmically and is not aliased to the attack pose. Violeta and Rosa now share a Blue/Beta-inspired velociraptor design language while retaining their adult/juvenile silhouettes, white hides, purple backs, magenta dorsal stripes and ochre-gold eyes.
-- Vasti uses an eight-part articulated rig cut from `public/references/vastatosaurus-rex.jpg`: torso, tail, two hind legs, two forelimbs, head and hinged jaw. Its feeding cycle adapts the bite timing from `velociraptor-eat.gif` without reusing velociraptor artwork; attack and eat remain separate states. Vasti also animates idle, run, jump, crouch, hit reaction, landing, recovery, grounded stomp and aerial slam.
-- The sprites are rendered through a 320×180 low-resolution buffer and nearest-neighbour upscaling, matching the game's crisp 8-bit presentation.
-- Sprite images are preloaded and cached; if one fails to load, a crisp pixel-cell Canvas fallback preserves the dinosaur's silhouette.
+- The PNG files in `public/references` are the canonical in-game character artwork. The renderer loads them directly, detects their transparent bounds, and draws the cropped sprite at the correct scale without changing collision boxes.
+- Violeta, Rosa, Vasti, Ferrucutus, Indoraptor and Indominus use their corresponding reference PNGs. Indoraptor and Indominus automatically switch to their second-generation PNG when their existing boss health phase changes.
+- The remaining reference PNGs are registered as renderable dinosaur characters for future encounters: Brontosaurus, Ligocristus, Stegoceratops and both Venatosaurus variants.
+- Single-image characters still react to game states: idle breathing, running bounce, jump lean, crouch, attack wind-up, recoil, landing, recovery, feeding motion and defeat poses. These are lightweight Canvas transforms; they do not pretend to articulate separate limbs when the source is a single complete PNG.
+- Existing gameplay actions remain active: Violeta's dash and double jump, Vasti's stomp and aerial slam, Ferrucutus' bridge and ally attacks, Rosa's companion behaviour, and both bosses' attack patterns.
+- PNGs are preloaded and cached. If a reference image cannot be read, the renderer falls back to the existing sprite/fallback path rather than changing physics or character behaviour.
 - Original adaptive soundtrack synthesized at runtime with Web Audio API. Themes change across the coast, forest, black site, facility, boss encounters, extraction and victory.
 - Procedural sound effects for movement, damage, rescue and boss events.
 - No remote music, image or font downloads are required at runtime.
