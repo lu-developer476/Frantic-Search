@@ -137,6 +137,7 @@ test("Indoraptor proportions follow its upright reference and attack hitboxes re
   boss.activate();
   boss.state = "attacking";
   boss.attackName = "claw";
+  boss.direction = 1;
   boss.y = boss.baseY;
   const groundedPlayer = { x: boss.x + boss.w - 2, y: 368, w: 64, h: 62 };
   assert.equal(CollisionSystem.bossAttackHit(groundedPlayer, boss), true);
