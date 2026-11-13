@@ -1239,7 +1239,7 @@ function updateLevelTransition(delta) {
 function activateStegoceratops() {
   if (stegoceratops || stegoceratopsCooldown > 0 || !running || campaign.flags.completed) return false;
   stegoceratopsCooldown = 30;
-  stegoceratops = { id: "stegoceratops-special", x: cameraX - 190, y: GAME.groundY - 126, w: 170, h: 126, direction: 1, state: "charge" };
+  stegoceratops = { id: "stegoceratops-special", x: cameraX - 190, y: GAME.groundY - 126, w: 170, h: 126, direction: 1, state: "charge", hitIds: new Set() };
   audio.collect();
   return true;
 }
@@ -1257,9 +1257,12 @@ function updateStegoceratops(delta) {
     if (!enemy.defeated && overlaps(enemy)) damageVenatosaurus(enemy, 999);
   }
   for (const boss of bosses) {
-    if (boss.defeated || !overlaps(boss)) continue;
-    if (!boss.isVulnerable) { boss.state = "recovering"; boss.stateTimer = 0; boss.damageCooldown = 0; }
-    damageBoss(boss, 1, "stegoceratops");
+    if (boss.defeated || stegoceratops.hitIds.has(boss.id) || !overlaps(boss)) continue;
+    stegoceratops.hitIds.add(boss.id);
+    if (boss.health > 1) {
+      if (!boss.isVulnerable) { boss.state = "recovering"; boss.stateTimer = 0; boss.damageCooldown = 0; }
+      damageBoss(boss, 1, "stegoceratops");
+    }
   }
   if (stegoceratops.x > cameraX + GAME.width + 180) stegoceratops = null;
 }
@@ -1383,7 +1386,7 @@ function update(delta) {
     ];
     const event = enemy.update(delta, targets);
     if (event?.type === "attack") {
-      if (event.target === player) damagePlayer();
+      if (event.target === player) { damagePlayer(); if (player.health <= 0) return; }
       else if (venatosauruses.includes(event.target)) damageVenatosaurus(event.target, 1);
       else if (event.target?.takeHit?.()) { audio.hit(); burst(event.target.x + event.target.w / 2, event.target.y + event.target.h / 2, "#ed8e55", 10); }
     }
@@ -1461,7 +1464,7 @@ function update(delta) {
 
   allies = allies.filter((ally) => !ally.departed);
   foodSources = foodSources.filter((food) => !food.consumed && food.x + food.w >= cameraX - 1100);
-  venatosauruses = venatosauruses.filter((enemy) => enemy.x + enemy.w >= cameraX - 1100 || !enemy.defeated);
+  venatosauruses = venatosauruses.filter((enemy) => enemy.x + enemy.w >= cameraX - 1100);
   wildlife = wildlife.filter((animal) => animal.x + animal.w >= cameraX - 500);
   ferrucutusCaptives = ferrucutusCaptives.filter((captive) => captive.x + captive.w >= cameraX - 900);
   hunters = hunters.filter((hunter) => hunter.x + hunter.w >= cameraX - 1100);
