@@ -628,10 +628,40 @@ function drawHunter(hunter) {
   const alert = hunter.state === "investigate" || hunter.state === "windup" || hunter.state === "attack";
   const defeated = hunter.defeated;
 
-  if (!spriteRenderer.drawAnimated(ctx, "hunter", x - 6, y - 5, hunter.w + 12, hunter.h + 8, hunter, elapsed, {
+  const spriteDrawn = spriteRenderer.drawAnimated(ctx, "hunter", x - 6, y - 5, hunter.w + 12, hunter.h + 8, hunter, elapsed, {
     alpha: defeated ? 0.48 : 1,
     facing: hunter.direction
-  })) return;
+  });
+  if (!spriteDrawn) {
+    // Poachers have no supplied PNG reference, so keep their gameplay actors visible
+    // with a crisp native-Canvas fallback while dinosaur PNGs load independently.
+    const stride = Math.sin(elapsed * 10 + hunter.x * 0.045);
+    ctx.save();
+    ctx.globalAlpha *= defeated ? 0.48 : 1;
+    ctx.translate(hunter.direction < 0 ? x + hunter.w : x, y);
+    if (hunter.direction < 0) ctx.scale(-1, 1);
+    ctx.fillStyle = "#202a29";
+    ctx.fillRect(7, 58, 25, 5);
+    ctx.fillStyle = "#bd9a72";
+    ctx.fillRect(11, 5, 17, 17);
+    ctx.fillStyle = "#3e493f";
+    ctx.fillRect(9, 3, 21, 8);
+    ctx.fillRect(6, 23, 27, 23);
+    ctx.fillStyle = "#ad8050";
+    ctx.fillRect(10, 26, 19, 13);
+    ctx.fillStyle = "#d1c5a0";
+    ctx.fillRect(12, 23, 15, 4);
+    ctx.fillStyle = "#3e493f";
+    ctx.fillRect(5, 28, 7, 18);
+    ctx.fillRect(29, 28, 7, 18);
+    ctx.fillStyle = "#25302b";
+    ctx.fillRect(10, 45, 8, 15 + Math.round(stride * 3));
+    ctx.fillRect(23, 45, 8, 15 - Math.round(stride * 3));
+    ctx.fillStyle = "#141c1b";
+    ctx.fillRect(25, 31, 17, 4);
+    ctx.fillRect(39, 29, 4, 3);
+    ctx.restore();
+  }
 
   if (alert && !defeated) {
     ctx.fillStyle = "#ed8e55";
