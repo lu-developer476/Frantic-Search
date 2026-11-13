@@ -10,16 +10,16 @@ import { CollisionSystem } from "../src/systems/CollisionSystem.js";
 test("campaign world stops after the finite extraction area", () => {
   const world = new PlatformWorld(430);
   world.extendTo(50000);
-  assert.equal(world.generatedSections, 6);
+  assert.equal(world.generatedSections, 7);
   assert.equal(world.bossSpawns.length, 2);
   assert.equal(world.bossSpawns[0].kind, "indoraptor");
   assert.equal(world.bossSpawns[1].kind, "indominus");
   assert.ok(world.facilitySpawns);
-  assert.equal(world.facilitySpawns.extraction, 9010);
+  assert.equal(world.facilitySpawns.extraction, 14400);
   const finalFloor = world.platforms.find((platform) =>
-    platform.kind === "ground" && platform.x === 7500
+    platform.kind === "ground" && platform.x === 12600
   );
-  assert.equal(finalFloor.w, 1900);
+  assert.equal(finalFloor.w, 2100);
 });
 
 
@@ -53,7 +53,7 @@ test("procedural hazards never overlap Ferrucutus containment cages", () => {
 test("boss arenas have continuous floor and no normal hunter spawns", () => {
   const world = new PlatformWorld(430);
   world.extendTo(9000);
-  for (const start of [3000, 6000]) {
+  for (const start of [4200, 8400]) {
     const grounds = world.platforms
       .filter((platform) => platform.kind === "ground" && platform.x >= start && platform.x < start + 1500)
       .sort((a, b) => a.x - b.x);
@@ -117,7 +117,7 @@ test("every campaign level places its capped Ferrucutus containment cages", () =
   const counts = LEVELS.map((level, levelIndex) =>
     world.ferrucutusCageSpawns.filter((spawn) => spawn.levelIndex === levelIndex).length
   );
-  assert.deepEqual(counts, [3, 3, 4, 2, 2, 2]);
+  assert.deepEqual(counts, [1, 1, 2, 1, 0, 0]);
 
   for (const [levelIndex, level] of LEVELS.entries()) {
     const levelStart = GAME.playerX + level.distance;
@@ -142,7 +142,12 @@ test("every campaign level places its capped Ferrucutus containment cages", () =
       }), "containment cages must not overlap ordinary obstacles");
     }
   }
-  assert.equal(new Set(world.ferrucutusCageSpawns.map((spawn) => spawn.id)).size, 16);
+  assert.equal(new Set(world.ferrucutusCageSpawns.map((spawn) => spawn.id)).size, 5);
+  const cagePositions = world.ferrucutusCageSpawns.map((spawn) => spawn.x).sort((a, b) => a - b);
+  for (let index = 1; index < cagePositions.length; index += 1) {
+    assert.ok(cagePositions[index] - cagePositions[index - 1] >= 1000,
+      "rescue encounters must be separated by at least 1000 world units");
+  }
 });
 
 test("Ferrucutus captive can be rescued once and only within interaction range", () => {
