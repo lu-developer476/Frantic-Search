@@ -9,7 +9,7 @@ export const REFERENCE_PNG_CHARACTERS = Object.freeze({
   indoraptor: { first: "indoraptor-first-generation.png", second: "indoraptor-second-generation.png", sourceFacing: 1, scale: 1.34 },
   indominus: { first: "indominus-rex-first-generation.png", second: "indominus-rex-second-generation.png", sourceFacing: -1, scale: 1.18 },
   "indominus-variant": { file: "indominus-rex-second-generation-variant.png", sourceFacing: -1, scale: 1.18 },
-  brontosaurus: { file: "brontosaurus-excelsus-baxteri.png", sourceFacing: 1, scale: 1.18 },
+  brontosaurus: { file: "brontosaurus-excelsus-basteri.png", sourceFacing: 1, scale: 1.18 },
   ligocristus: { file: "ligocristus-innocens.png", sourceFacing: -1, scale: 1.18 },
   stegoceratops: { file: "stegoceratops.png", sourceFacing: -1, scale: 1.18 },
   "venatosaurus-impavidus": { file: "venatosaurus-impavidus.png", sourceFacing: -1, scale: 1.18 },
@@ -30,7 +30,12 @@ const REFERENCE_PRELOAD_FILES = [
   "ligocristus-innocens.png",
   "stegoceratops.png",
   "venatosaurus-impavidus.png",
-  "venatosaurus-saevidicus.png"
+  "venatosaurus-saevidicus.png",
+  // Legacy motion-reference GIFs are cached alongside the canonical environment-matched PNG artwork.
+  "velociraptor-idle.gif",
+  "velociraptor-walk.gif",
+  "velociraptor-jump.gif",
+  "velociraptor-eat.gif"
 ];
 
 const SPRITE_ASSET_VERSION = "20261113-all-reference-dinosaurs-environments-2";
