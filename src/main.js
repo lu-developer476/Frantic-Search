@@ -1743,7 +1743,10 @@ function syncDesktopAccess() {
     desktopBlocked = false;
     stateLabel.textContent = ui("standby");
     overlay.querySelector(".overlay-kicker").textContent = "FRANTIC SEARCH";
-    overlay.querySelector("h2").innerHTML = ui("wildWatching");
+    overlay.querySelector("h2").textContent = ui("startTitle");
+    overlay.querySelector("p").textContent = ui("startMessage");
+    overlay.querySelector("button").hidden = false;
+    overlay.querySelector("button").textContent = ui("play");
     overlay.classList.remove("hidden");
   }
 }
