@@ -28,7 +28,7 @@ const UI = {
     back: "VOLVER",
     confirmPlay: "CONFIRMAR Y JUGAR",
     distance: "DISTANCIA",
-    rescues: "RESCATOS",
+    rescues: "RESCATES",
     record: "RÉCORD",
     abilityReady: "HABILIDAD LISTA",
     cooldown: "RECARGA",
