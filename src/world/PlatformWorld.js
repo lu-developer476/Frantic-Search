@@ -1,5 +1,52 @@
 import { GAME, LEVELS } from "../config/GameConfig.js";
 
+function seededRandom(seed) {
+  let state = seed >>> 0;
+  return () => {
+    state += 0x6d2b79f5;
+    let value = state;
+    value = Math.imul(value ^ (value >>> 15), value | 1);
+    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+    return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function shuffle(items, random) {
+  const result = [...items];
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(random() * (index + 1));
+    [result[index], result[swapIndex]] = [result[swapIndex], result[index]];
+  }
+  return result;
+}
+
+const PLATFORM_LAYOUTS = [
+  [
+    { offset: 205, y: 365, w: 165 },
+    { offset: 455, y: 342, w: 175 },
+    { offset: 765, y: 378, w: 190 },
+    { offset: 1080, y: 350, w: 185 }
+  ],
+  [
+    { offset: 245, y: 380, w: 190 },
+    { offset: 520, y: 350, w: 155 },
+    { offset: 790, y: 365, w: 190 },
+    { offset: 1135, y: 340, w: 165 }
+  ],
+  [
+    { offset: 180, y: 350, w: 175 },
+    { offset: 465, y: 375, w: 185 },
+    { offset: 805, y: 345, w: 170 },
+    { offset: 1100, y: 375, w: 205 }
+  ],
+  [
+    { offset: 260, y: 370, w: 170 },
+    { offset: 545, y: 340, w: 190 },
+    { offset: 850, y: 380, w: 165 },
+    { offset: 1160, y: 355, w: 185 }
+  ]
+];
+
 const FERRUCUTUS_CAGE_WIDTH = 164;
 const FERRUCUTUS_CAGE_SPACING = 184;
 
@@ -41,8 +88,10 @@ function proceduralCagePositions(levelStart, levelEnd, levelIndex, sectionLength
 }
 
 export class PlatformWorld {
-  constructor(groundY) {
+  constructor(groundY, { seed = Math.floor(Math.random() * 0x100000000) } = {}) {
     this.groundY = groundY;
+    this.seed = (seed >>> 0) || 0x9e3779b9;
+    this.sectionSeeds = [];
     this.sectionLength = 1500;
     this.platforms = [];
     this.obstacles = [];
@@ -73,6 +122,9 @@ export class PlatformWorld {
   generateSection(index) {
     const start = index * this.sectionLength;
     const floorHeight = 110;
+    const sectionSeed = (this.seed ^ Math.imul(index + 1, 0x9e3779b1)) >>> 0;
+    const random = seededRandom(sectionSeed);
+    this.sectionSeeds[index] = sectionSeed;
 
     const isBossArena = index === 2 || index === 4;
     const isFinalArea = index === 5;
@@ -96,81 +148,109 @@ export class PlatformWorld {
       });
     }
 
+    const layout = PLATFORM_LAYOUTS[Math.floor(random() * PLATFORM_LAYOUTS.length)];
+    const generatedLedges = layout.map((ledge) => ({
+      x: start + ledge.offset + Math.round((random() - 0.5) * 54),
+      y: ledge.y + Math.round((random() - 0.5) * 10),
+      w: ledge.w + Math.round((random() - 0.5) * 24),
+      h: 18,
+      kind: "ledge"
+    }));
+
     this.platforms.push(
       { x: start, y: this.groundY, w: isFinalArea ? 1900 : 730, h: floorHeight, kind: "ground" },
       ...(!isFinalArea && isBossArena ? [{ x: start + 730, y: this.groundY, w: 170, h: floorHeight, kind: "ground" }] : []),
       ...(!isFinalArea ? [{ x: start + 900, y: this.groundY, w: 620, h: floorHeight, kind: "ground" }] : []),
-      { x: start + 250, y: 354, w: 165, h: 18, kind: "ledge" },
-      { x: start + 505, y: 306, w: 150, h: 18, kind: "ledge" },
-      { x: start + 695, y: 365, w: 215, h: 18, kind: "ledge" },
-      { x: start + 1090, y: 342, w: 185, h: 18, kind: "ledge" }
+      ...generatedLedges
     );
 
-    const obstacleSet = isBossArena || isFinalArea ? [] : [
-      { offset: 445, type: index % 3 === 0 ? "crate" : "rock", w: 52, h: 52 },
-      { offset: 1320, type: index % 2 === 0 ? "crate" : "rock", w: 55, h: 58 }
-    ];
+    if (!isBossArena && !isFinalArea) {
+      const occupiedCages = this.ferrucutusCageSpawns.filter((cage) =>
+        cage.x >= start && cage.x < start + this.sectionLength
+      );
+      const candidateOffsets = shuffle([390, 620, 1320], random);
+      const targetObstacleCount = 1 + Math.floor(random() * 2);
+      let placedObstacles = 0;
 
-    for (const item of obstacleSet) {
-      this.obstacles.push({
-        ...item,
-        x: start + item.offset,
-        y: this.groundY - item.h,
-        passed: false
+      for (const offset of candidateOffsets) {
+        if (placedObstacles >= targetObstacleCount) break;
+        const obstacleX = start + offset + Math.round((random() - 0.5) * 26);
+        const obstacleType = random() < 0.5 ? "crate" : "rock";
+        const width = obstacleType === "crate" ? 52 : 56;
+        const height = obstacleType === "crate" ? 52 : 58;
+        const overlapsCage = occupiedCages.some((cage) =>
+          obstacleX < cage.x + FERRUCUTUS_CAGE_WIDTH + 24 &&
+          obstacleX + width > cage.x - 24
+        );
+        if (overlapsCage) continue;
+
+        this.obstacles.push({
+          x: obstacleX,
+          y: this.groundY - height,
+          w: width,
+          h: height,
+          type: obstacleType,
+          passed: false
+        });
+        placedObstacles += 1;
+      }
+    }
+
+    const patrolStart = start + 120;
+    const patrolEnd = start + this.sectionLength - 90;
+    const venatoCount = isFinalArea ? 1 : isBossArena ? 1 : 2;
+    for (let i = 0; i < venatoCount; i += 1) {
+      const laneStart = i === 0 ? 330 : 930;
+      const x = start + laneStart + Math.round(random() * 150);
+      this.venatosaurusSpawns.push({
+        id: "venatosaurus-" + index + "-" + i,
+        kind: LEVELS[Math.min(index, LEVELS.length - 1)].environment === "wild" ? "venatosaurus-impavidus" : "venatosaurus-saevidicus",
+        x,
+        patrolStart,
+        patrolEnd,
+        direction: random() < 0.5 ? -1 : 1
       });
     }
 
-    {
-      const patrolStart = start + 120;
-      const patrolEnd = start + this.sectionLength - 90;
-      const venatoCount = isFinalArea ? 1 : index === 2 || index === 4 ? 1 : 2;
-      for (let i = 0; i < venatoCount; i += 1) {
-        const x = start + 360 + i * 650 + ((index * 71 + i * 43) % 95);
-        this.venatosaurusSpawns.push({
-          id: "venatosaurus-" + index + "-" + i,
-          kind: LEVELS[Math.min(index, LEVELS.length - 1)].environment === "wild" ? "venatosaurus-impavidus" : "venatosaurus-saevidicus",
-          x,
-          patrolStart,
-          patrolEnd,
-          direction: i % 2 === 0 ? 1 : -1
-        });
-      }
-      const foodCount = index < 2 ? 2 : 1;
-      for (let i = 0; i < foodCount; i += 1) {
-        const x = start + 690 + i * 510 + ((index * 37 + i * 29) % 110);
-        this.foodSpawns.push({
-          id: "ligocristus-" + index + "-" + i,
-          kind: "ligocristus",
-          x,
-          groundY: this.groundY
-        });
-      }
-      if (index === 0 || index === 1) {
-        this.brontosaurusSpawns.push({
-          id: "brontosaurus-" + index,
-          x: start + 980,
-          groundY: this.groundY,
-          kind: "brontosaurus"
-        });
-      }
+    const foodCount = index < 2 ? 2 : 1;
+    for (let i = 0; i < foodCount; i += 1) {
+      const laneStart = i === 0 ? 650 : 1120;
+      const x = start + laneStart + Math.round(random() * 190);
+      this.foodSpawns.push({
+        id: "ligocristus-" + index + "-" + i,
+        kind: "ligocristus",
+        x,
+        groundY: this.groundY
+      });
+    }
+
+    if (index === 0 || index === 1) {
+      this.brontosaurusSpawns.push({
+        id: "brontosaurus-" + index,
+        x: start + 850 + Math.round(random() * 240),
+        groundY: this.groundY,
+        kind: "brontosaurus"
+      });
     }
 
     if (!isBossArena && !isFinalArea) {
+      const hunterX = start + 950 + Math.round(random() * 180);
       this.hunterSpawns.push({
         id: "hunter-" + index,
-        x: start + 1045,
-        patrolStart: start + 955,
-        patrolEnd: start + 1270,
+        x: hunterX,
+        patrolStart: start + 900,
+        patrolEnd: start + 1360,
         carriesCaptive: true
       });
     }
 
     if (index === 2 || index === 3 || index === 4) {
       const propsStart = index * this.sectionLength;
+      const propVariation = Math.round((random() - 0.5) * 50);
       this.facilityProps.push(
-        { x: propsStart + 90, y: 255, w: 220, h: 175, kind: "facility-building" },
+        { x: propsStart + 90 + propVariation, y: 255, w: 220, h: 175, kind: "facility-building" },
         { x: propsStart + 410, y: 225, w: 300, h: 205, kind: index === 4 ? "containment-wing" : "facility-building" },
-        { x: propsStart + 1040, y: 270, w: 245, h: 160, kind: "facility-building" },
+        { x: propsStart + 1040 - propVariation, y: 270, w: 245, h: 160, kind: "facility-building" },
         { x: propsStart + 130, y: 150, w: 18, h: 280, kind: "facility-lamp" },
         { x: propsStart + 1160, y: 140, w: 18, h: 290, kind: "facility-lamp" }
       );
