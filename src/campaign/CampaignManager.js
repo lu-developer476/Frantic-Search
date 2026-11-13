@@ -1,3 +1,5 @@
+import { GAME, LEVELS, WORLD } from "../config/GameConfig.js";
+
 const OPENING = [
   "A poacher convoy crosses the coastal highway, carrying a young Velociraptor toward an unregistered research facility.",
   "An intercepted signal identifies the captive as Rosa, Violeta's daughter. The mission is to locate the containment wing, disable its security systems and bring her back alive.",
@@ -58,28 +60,41 @@ export class CampaignManager {
   }
 
   updateLocation(worldX) {
-    if (worldX >= 1500) {
-      this.chapter = "REDWOOD FRONTIER";
+    const chapterStart = (index) => GAME.playerX + LEVELS[index].distance;
+
+    if (worldX >= chapterStart(1)) {
+      this.chapter = LEVELS[1].name;
       this.objective = "TRACK THE CONVOY";
       this.queueScene("redwood-arrival", "REDWOOD FRONTIER", [
         "The convoy has left the highway and entered the redwood corridor. Heat signatures ahead indicate several armed escorts.",
         "Movement among the trees reveals that the forest is not empty. Every step brings the group closer to the operation's perimeter."
       ]);
     }
-    if (worldX >= 3000) {
-      this.chapter = "POACHER BLACK SITE";
+    if (worldX >= chapterStart(2)) {
+      this.chapter = LEVELS[2].name;
       this.objective = this.flags.indoraptorDefeated ? "PUSH INTO THE FACILITY" : "SURVIVE THE INDORAPTOR";
       this.queueScene("black-site-arrival", "UNREGISTERED FACILITY", [
         "At the edge of the forest, a clandestine research complex comes into view. Armed patrols guard every visible entrance.",
         "An apex predator is moving inside the complex. Its containment signal confirms that the operation is holding a creature powerful enough to threaten the surrounding region."
       ]);
     }
-    if (worldX >= 6000) {
-      this.chapter = "CONTAINMENT WING";
-      this.objective = this.flags.indominusDefeated ? "ENTER THE CONTAINMENT WING" : "NEUTRALIZE THE INDOMINUS";
+    if (worldX >= WORLD.sectionLength * 3) {
+      if (this.flags.indoraptorDefeated) this.objective = "PUSH INTO THE FACILITY";
+      this.queueScene("black-site-interior", "INNER RESEARCH PERIMETER", [
+        "The first perimeter is behind the group. A second service corridor leads deeper into the black site, where transport records and containment systems converge.",
+        "The route is longer than the convoy trail suggested. Patrols are spread across the industrial grounds, and the next containment sector remains ahead."
+      ]);
     }
-    if (worldX >= 7500 && !this.flags.betaFreed) {
-      this.chapter = "ROSA CONTAINMENT";
+    if (worldX >= chapterStart(3)) {
+      this.chapter = LEVELS[3].name;
+      this.objective = this.flags.indominusDefeated ? "ENTER THE CONTAINMENT WING" : "NEUTRALIZE THE INDOMINUS";
+      this.queueScene("containment-perimeter-arrival", "CONTAINMENT PERIMETER", [
+        "The inner perimeter opens onto a reinforced containment yard. Heavy blast doors divide this sector from the cell block.",
+        "The Indominus Rex is guarding the only route forward. Its defeat is required before the facility's auxiliary systems can be reached."
+      ]);
+    }
+    if (worldX >= chapterStart(4)) {
+      this.chapter = LEVELS[4].name;
       this.refreshObjective();
       this.queueScene("facility-entry", "CONTAINMENT WING", [
         "Inside the facility, a security network controls the containment doors and life-support systems.",
@@ -87,9 +102,18 @@ export class CampaignManager {
         "Faint sounds from the cell block confirm that Rosa is still alive. The rescue is close, but the route remains sealed."
       ]);
     }
+
     if (this.flags.betaFreed) {
-      this.chapter = "EXTRACTION";
       this.objective = "ESCORT ROSA TO EXTRACTION";
+      if (worldX >= chapterStart(5)) {
+        this.chapter = LEVELS[5].name;
+        this.queueScene("extraction-arrival", "EXTRACTION ZONE", [
+          "Rosa is out of containment. The service road beyond the cell block leads to the extraction gate.",
+          "The route is still exposed. Keep the group together and reach the east gate to complete the rescue."
+        ]);
+      } else {
+        this.chapter = LEVELS[4].name;
+      }
     }
   }
 
@@ -144,7 +168,7 @@ export class CampaignManager {
   freeBeta() {
     if (!this.canFreeBeta()) return false;
     this.flags.betaFreed = true;
-    this.chapter = "EXTRACTION";
+    this.chapter = LEVELS[4].name;
     this.objective = "ESCORT ROSA TO EXTRACTION";
     this.queueScene("beta-rescued", "SUBJECT ROSA SECURED", [
       "Rosa is freed from containment. After everything that happened, she stays close to Violeta as the rescue team approaches the east service gate.",
