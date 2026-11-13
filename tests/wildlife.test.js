@@ -6,7 +6,7 @@ import { WildDinosaur } from "../src/entities/WildDinosaur.js";
 test("Ferrucutus captives are procedurally generated with a chapter-specific cap", () => {
   const world = new PlatformWorld(430);
   world.extendTo(10000);
-  const expected = [3, 3, 4, 2, 2, 2];
+  const expected = [1, 1, 2, 1, 0, 0];
   for (let levelIndex = 0; levelIndex < expected.length; levelIndex += 1) {
     assert.equal(
       world.ferrucutusCageSpawns.filter((spawn) => spawn.levelIndex === levelIndex).length,
@@ -18,11 +18,12 @@ test("Ferrucutus captives are procedurally generated with a chapter-specific cap
 test("Venatosaurus spawns throughout the campaign and both reference variants are used", () => {
   const world = new PlatformWorld(430);
   world.extendTo(10000);
-  assert.equal(world.venatosaurusSpawns.length, 9);
+  assert.equal(world.venatosaurusSpawns.length, 8);
   assert.ok(world.venatosaurusSpawns.some((spawn) => spawn.kind === "venatosaurus-impavidus"));
   assert.ok(world.venatosaurusSpawns.some((spawn) => spawn.kind === "venatosaurus-saevidicus"));
-  assert.equal(world.foodSpawns.length, 8);
+  assert.equal(world.foodSpawns.length, 5);
   assert.equal(world.brontosaurusSpawns.length, 2);
+  assert.equal(world.hunterSpawns.length, 3);
 });
 
 test("Venatosaurus attacks nearby protagonists and can be defeated", () => {
