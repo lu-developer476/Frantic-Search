@@ -4,7 +4,7 @@ export const ACTOR_ANIMATION_PROFILES = Object.freeze({
  beta:{base:"rosa",duck:"rosa-duck",states:{},moving:["following","extracted"],frames:["rosa-run-a","rosa-run-b"],fps:8.2},
  ferrucutus:{base:"ferrucutus",duck:"ferrucutus-duck",crouching:["brace","bridge","holding-bridge"],states:{attack:"ferrucutus-attack",landing:"ferrucutus-land",impact:"ferrucutus-impact",recovery:"ferrucutus-recover"},moving:["scout","brace","bridge","holding-bridge","charge"],frames:["ferrucutus-step-a","ferrucutus-step-b"],fps:5.4},
  hunter:{base:"hunter",duck:"hunter-duck",states:{attack:"hunter-attack",landing:"hunter-land",impact:"hunter-impact",recovery:"hunter-recover"},moving:["patrol","pursuit"],frames:["hunter-run-a","hunter-run-b"],fps:10.5},
- indoraptor:{base:"indoraptor",duck:"indoraptor-duck",states:{attack:"indoraptor-attack",landing:"indoraptor-land",impact:"indoraptor-impact",recovery:"indoraptor-recover"},moving:["stalking"],frames:["indoraptor-run-a","indoraptor-run-b"],fps:9.2},
+ indoraptor:{base:"indoraptor",duck:"indoraptor-duck",states:{attack:"indoraptor-attack",landing:"indoraptor-land",impact:"indoraptor-impact",recovery:"indoraptor-recover",defeated:"indoraptor-defeated"},moving:["stalking"],frames:["indoraptor-run-a","indoraptor-run-b"],fps:9.2},
  indominus:{base:"indominus",duck:"indominus-duck",states:{attack:"indominus-attack",landing:"indominus-land",impact:"indominus-impact",recovery:"indominus-recover"},moving:["stalking"],frames:["indominus-run-a","indominus-run-b"],fps:4.4}
 });
 
@@ -13,7 +13,7 @@ const CROUCH_STATES = new Set(["duck","ducking","crouch","crouching","crouched"]
 export function selectActorPose(character,actor={},elapsed=0){
  const profile=ACTOR_ANIMATION_PROFILES[character];
  if(!profile)return character;
- if(actor.defeated||actor.state==="defeated")return profile.base;
+ if(actor.defeated||actor.state==="defeated")return character==="indoraptor"?"indoraptor-defeated":profile.base;
 
  if(actor.animationState&&profile.states[actor.animationState])return profile.states[actor.animationState];
  if(actor.state==="stunned"||actor.state==="damaged")return profile.states.impact??profile.base;

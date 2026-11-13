@@ -7,8 +7,8 @@ export class IndoraptorBoss extends BossEnemy {
       kind: "indoraptor",
       x,
       groundY,
-      width: 126,
-      height: 92,
+      width: 136,
+      height: 127,
       health: 8,
       detectionRange: 470,
       preferredDistance: 178,
@@ -58,16 +58,16 @@ export class IndoraptorBoss extends BossEnemy {
     if (this.attackName === "pounce") {
       return {
         x: this.direction > 0 ? this.x + this.w - 22 : this.x - 112,
-        y: this.baseY + 14,
-        w: 132,
-        h: 56
+        y: this.baseY + this.h * 0.6,
+        w: 146,
+        h: 50
       };
     }
     return {
       x: this.direction > 0 ? this.x + this.w - 8 : this.x - 78,
-      y: this.y + 27,
-      w: 88,
-      h: 49
+      y: this.y + this.h * 0.52,
+      w: 98,
+      h: 52
     };
   }
 }

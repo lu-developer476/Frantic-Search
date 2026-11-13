@@ -127,3 +127,16 @@ test("Ferrucutus captive can be rescued once and only within interaction range",
   assert.equal(captive.rescue(nearbyPlayer), false);
   assert.equal(captive.canInteract(nearbyPlayer), false);
 });
+
+
+test("Indoraptor proportions follow its upright reference and attack hitboxes remain grounded", () => {
+  const boss = new IndoraptorBoss({ id: "indo-proportions", x: 500, groundY: 430, arenaMinX: 0, arenaMaxX: 1000 });
+  assert.equal(boss.w, 136);
+  assert.equal(boss.h, 127);
+  boss.activate();
+  boss.state = "attacking";
+  boss.attackName = "claw";
+  boss.y = boss.baseY;
+  const groundedPlayer = { x: boss.x + boss.w - 2, y: 368, w: 64, h: 62 };
+  assert.equal(CollisionSystem.bossAttackHit(groundedPlayer, boss), true);
+});

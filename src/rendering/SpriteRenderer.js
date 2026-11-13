@@ -1,6 +1,6 @@
 import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.js";
 
-const SPRITE_ASSET_VERSION = "20261112-indominus-articulated-rig-1";
+const SPRITE_ASSET_VERSION = "20261112-indoraptor-articulated-rig-1";
 const VASTI_RIG_PARTS = [
   "vasti-rig-body",
   "vasti-rig-tail",
@@ -17,6 +17,10 @@ const INDOMINUS_RIG_PARTS = [
   "indominus-rig-body","indominus-rig-tail","indominus-rig-leg-back",
   "indominus-rig-leg-front","indominus-rig-forelimb","indominus-rig-jaw"
 ];
+const INDORAPTOR_RIG_PARTS = [
+  "indoraptor-rig-body","indoraptor-rig-tail","indoraptor-rig-leg-back","indoraptor-rig-leg-front",
+  "indoraptor-rig-arm-back","indoraptor-rig-arm-front","indoraptor-rig-head","indoraptor-rig-jaw"
+];
 const BASE = [
   "violeta-idle","violeta-run-a","violeta-run-b","violeta-jump","violeta-dash","violeta-duck",
   "vasti",
@@ -31,6 +35,7 @@ const SPRITES = [
   ...VASTI_RIG_PARTS,
   ...FERRUCUTUS_RIG_PARTS,
   ...INDOMINUS_RIG_PARTS,
+  ...INDORAPTOR_RIG_PARTS,
   ...["violeta","rosa","ferrucutus","hunter","indoraptor","indominus"]
     .flatMap(name => ["attack","land","impact","recover"].map(pose => name + "-" + pose))
 ];
@@ -487,10 +492,189 @@ export class SpriteRenderer {
     return result;
   }
 
+
+  drawIndoraptorRig(context, width, height, actor, elapsed, pose, alpha) {
+    // The original image faces right; mirror only when the boss turns left.
+    const direction = actor?.direction ?? 1;
+    const mirror = direction < 0;
+    const phase = phaseOf(actor, "indoraptor");
+    const gait = Math.sin(elapsed * 9.2 * Math.PI + phase);
+    const running = pose === "indoraptor-run-a" || pose === "indoraptor-run-b";
+    const defeated = pose === "indoraptor-defeated";
+    const attack = actor?.state === "telegraph" || actor?.state === "attacking" || pose === "indoraptor-attack";
+    const attackName = actor?.attackName;
+
+    // The reference is anatomical material, not the final idle pose: the rig starts in a crouched hunt.
+    let bodyTilt = 0.24;
+    let tailAngle = -0.08;
+    let backLegAngle = 0.22;
+    let frontLegAngle = -0.14;
+    let backArmAngle = -0.18;
+    let frontArmAngle = 0.2;
+    let headAngle = 0.3;
+    let jawAngle = 0;
+
+    if (running) {
+      bodyTilt = 0.2 + Math.abs(gait) * 0.035;
+      tailAngle = -0.06 + gait * 0.18;
+      backLegAngle = gait * 0.54;
+      frontLegAngle = -gait * 0.5;
+      backArmAngle = -gait * 0.27;
+      frontArmAngle = gait * 0.25;
+      headAngle = 0.22;
+      jawAngle = 0.23 + Math.max(0, gait) * 0.06;
+    }
+
+    if (attack) {
+      if (attackName === "pounce") {
+        bodyTilt = 0.48;
+        tailAngle = -0.24;
+        backLegAngle = -0.38;
+        frontLegAngle = 0.32;
+        backArmAngle = -0.62;
+        frontArmAngle = -0.46;
+        headAngle = 0.48;
+        jawAngle = 0.42;
+      } else {
+        bodyTilt = 0.35;
+        tailAngle = 0.16;
+        backLegAngle = 0.16;
+        frontLegAngle = -0.1;
+        backArmAngle = 0.62;
+        frontArmAngle = -0.18;
+        headAngle = 0.4;
+        jawAngle = 0.34;
+      }
+    }
+
+    if (pose === "indoraptor-impact") {
+      bodyTilt = -0.12;
+      tailAngle = 0.2;
+      backLegAngle = 0.12;
+      frontLegAngle = -0.08;
+      backArmAngle = 0.24;
+      frontArmAngle = -0.2;
+      headAngle = -0.2;
+      jawAngle = 0.12;
+    } else if (pose === "indoraptor-recover") {
+      bodyTilt = 0.18;
+      tailAngle = -0.04;
+      backLegAngle = 0.16;
+      frontLegAngle = -0.1;
+      backArmAngle = -0.1;
+      frontArmAngle = 0.13;
+      headAngle = 0.25;
+      jawAngle = 0;
+    } else if (pose === "indoraptor-land") {
+      bodyTilt = 0.3;
+      tailAngle = 0.12;
+      backLegAngle = 0.28;
+      frontLegAngle = -0.2;
+      backArmAngle = -0.18;
+      frontArmAngle = 0.2;
+      headAngle = 0.35;
+      jawAngle = 0.08;
+    } else if (defeated) {
+      // Final collapsed pose: torso and neck settle toward the ground.
+      bodyTilt = 1.08;
+      tailAngle = 0.42;
+      backLegAngle = -0.58;
+      frontLegAngle = 0.5;
+      backArmAngle = 0.52;
+      frontArmAngle = -0.48;
+      headAngle = 0.5;
+      jawAngle = 0;
+    }
+
+    context.save();
+    if (mirror) { context.translate(width, 0); context.scale(-1, 1); }
+
+    const hipX = width * 0.47;
+    const hipY = height * 0.62;
+    context.translate(hipX, hipY);
+    context.rotate(bodyTilt);
+    context.translate(-hipX, -hipY);
+    if (defeated) {
+      context.translate(0, height * 0.12);
+      context.scale(1.02, 0.84);
+      context.translate(0, -height * 0.12);
+    }
+
+    const drawPart = (name, pivotX, pivotY, angle) => {
+      const px = pivotX / 297 * width;
+      const py = pivotY / 277 * height;
+      context.save();
+      context.translate(px, py);
+      context.rotate(angle);
+      const drawn = this.draw(context, name, -px, -py, width, height, { alpha });
+      context.restore();
+      return drawn;
+    };
+
+    const drawn = [
+      drawPart("indoraptor-rig-tail", 108, 151, tailAngle),
+      drawPart("indoraptor-rig-leg-back", 111, 164, backLegAngle),
+      drawPart("indoraptor-rig-arm-back", 113, 135, backArmAngle),
+      drawPart("indoraptor-rig-body", 0, 0, 0),
+      drawPart("indoraptor-rig-leg-front", 151, 166, frontLegAngle),
+      drawPart("indoraptor-rig-arm-front", 158, 135, frontArmAngle),
+      drawPart("indoraptor-rig-head", 144, 108, headAngle),
+      drawPart("indoraptor-rig-jaw", 178, 57, jawAngle)
+    ].every(Boolean);
+    context.restore();
+    return drawn;
+  }
+
+  drawReferenceIndoraptor(context, x, y, width, height, actor, elapsed, alpha = 1, poseOverride = null, facing = null) {
+    const pose = poseOverride ?? selectActorPose("indoraptor", actor, elapsed);
+    const phase = phaseOf(actor, "indoraptor");
+    const gait = Math.sin(elapsed * 9.2 * Math.PI + phase);
+    let bob = 0, tilt = 0, sx = 1, sy = 1;
+    if (pose === "indoraptor-run-a" || pose === "indoraptor-run-b") {
+      bob = Math.round(Math.abs(gait) * 2);
+      tilt = gait * 0.018;
+      sx = 1 + Math.abs(gait) * 0.018;
+      sy = 1 - Math.abs(gait) * 0.02;
+    } else if (pose === "indoraptor-attack") {
+      tilt = actor?.attackName === "pounce" ? -0.025 : 0.02;
+      sx = actor?.attackName === "pounce" ? 1.035 : 1.01;
+    } else if (pose === "indoraptor-impact") {
+      tilt = -0.035; bob = 1;
+    } else if (pose === "indoraptor-recover") {
+      bob = Math.round(Math.max(0, Math.sin(elapsed * 14 + phase)) * 1.5);
+    } else if (pose === "indoraptor-defeated") {
+      tilt = 0.08; sy = 0.98; bob = 4;
+    } else {
+      const breath = Math.sin(elapsed * 1.65 + phase);
+      bob = Math.round(breath * 0.75);
+      sy = 1 + breath * 0.006;
+    }
+
+    const w = Math.max(1, Math.round(width * sx));
+    const h = Math.max(1, Math.round(height * sy));
+    const dx = Math.round(x + (width - w) / 2);
+    const dy = Math.round(y + (height - h) / 2 + bob);
+    context.save();
+    context.translate(dx + w / 2, dy + h / 2);
+    context.rotate(tilt);
+    context.translate(-w / 2, -h / 2);
+    const rigReady = typeof this.get === "function" && INDORAPTOR_RIG_PARTS.every(name => {
+      const image = this.get(name);
+      return image?.complete && image.naturalWidth > 0;
+    });
+    const fallbackPose = pose === "indoraptor-defeated" ? "indoraptor" : pose;
+    const result = rigReady
+      ? this.drawIndoraptorRig(context, w, h, actor, elapsed, pose, alpha)
+      : this.draw(context, fallbackPose, 0, 0, w, h, { alpha, facing: facing ?? (actor?.direction ?? 1) });
+    context.restore();
+    return result;
+  }
+
   drawAnimated(context, character, x, y, width, height, actor, elapsed, options = {}) {
     if (character === "vasti" && this.drawReferenceVasti(context, x, y, width, height, actor, elapsed, options.alpha ?? 1)) return true;
     if (character === "ferrucutus" && this.drawReferenceFerrucutus(context, x, y, width, height, actor, elapsed, options.alpha ?? 1)) return true;
     if (character === "indominus" && this.drawReferenceIndominus(context, x, y, width, height, actor, elapsed, options.alpha ?? 1, null, options.facing)) return true;
+    if (character === "indoraptor" && this.drawReferenceIndoraptor(context, x, y, width, height, actor, elapsed, options.alpha ?? 1, null, options.facing)) return true;
     const pose = selectActorPose(character, actor, elapsed);
     const profile = ACTOR_ANIMATION_PROFILES[character];
     const phase = phaseOf(actor, character);
