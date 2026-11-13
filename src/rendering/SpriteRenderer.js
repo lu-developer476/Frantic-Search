@@ -26,7 +26,7 @@ const REFERENCE_PRELOAD_FILES = [
   "indominus-rex-first-generation.png",
   "indominus-rex-second-generation.png",
   "indominus-rex-second-generation-variant.png",
-  "brontosaurus-excelsus-baxteri.png",
+  "brontosaurus-excelsus-basteri.png",
   "ligocristus-innocens.png",
   "stegoceratops.png",
   "venatosaurus-impavidus.png",
