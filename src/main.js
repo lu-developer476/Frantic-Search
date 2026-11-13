@@ -35,6 +35,11 @@ const spriteRenderer = new SpriteRenderer(import.meta.env.BASE_URL, () => {
   if (!running || paused) render();
 });
 const overlay = document.querySelector("#overlay");
+const startScreen = document.querySelector("#start-screen");
+const startScreenTitle = document.querySelector("#start-screen-title");
+const startScreenMessage = document.querySelector("#start-screen-message");
+const startButton = document.querySelector("#start-button");
+const overlayActionButton = document.querySelector("#overlay-action-button");
 const stateLabel = document.querySelector("#game-state");
 const distanceLabel = document.querySelector("#distance");
 const rescuesLabel = document.querySelector("#rescues");
@@ -50,6 +55,7 @@ const storyText = document.querySelector("#story-text");
 const storyProgress = document.querySelector("#story-progress");
 const storyNextButton = document.querySelector("#story-next");
 const dinoModal = document.querySelector("#dino-modal");
+let selectionReturn = "start";
 const menuToggle = document.querySelector("#menu-toggle");
 const navMenu = document.querySelector("#nav-menu");
 const soundIcon = document.querySelector("#sound-icon");
@@ -1441,9 +1447,9 @@ function start() {
   if (!desktopPlayback.matches) return;
   cancelScheduledFrame();
   audio.unlock();
+  startScreen.classList.add("hidden");
   dinoModal.classList.add("hidden");
-  overlay.querySelector("button").hidden = true;
-  dinoModal.classList.add("hidden");
+  overlayActionButton.hidden = true;
   resetPlayer();
   music.start(audio.context, currentMusicTheme());
   music.setPaused(false);
@@ -1554,15 +1560,19 @@ document.querySelectorAll(".character-card").forEach((card) => {
   });
 });
 storyNextButton?.addEventListener("click", advanceStory);
-document.querySelector("#start-button").addEventListener("click", () => {
+startButton.addEventListener("click", () => openDinoModal("start"));
+overlayActionButton.addEventListener("click", () => {
   if (paused) {
     togglePause();
     return;
   }
-  openDinoModal();
+  if (!running) openDinoModal("overlay");
 });
-function openDinoModal() {
-  if (!desktopPlayback.matches || running) return;
+
+function openDinoModal(returnTo = "start") {
+  if (!desktopPlayback.matches || running || desktopBlocked) return;
+  selectionReturn = returnTo;
+  if (returnTo === "start") startScreen.classList.add("hidden");
   selectCharacter(selected);
   dinoModal.classList.remove("hidden");
   document.querySelector(".character-card.active")?.focus();
@@ -1570,7 +1580,13 @@ function openDinoModal() {
 
 function closeDinoModal() {
   dinoModal.classList.add("hidden");
-  document.querySelector("#start-button").focus();
+  if (selectionReturn === "start") {
+    startScreen.classList.remove("hidden");
+    startButton.focus();
+  } else {
+    overlay.classList.remove("hidden");
+    overlayActionButton.focus();
+  }
 }
 
 function startFromDinoModal() {
@@ -1619,9 +1635,9 @@ function applyLanguage() {
 
   if (desktopBlocked) {
     stateLabel.textContent = ui("desktopOnly");
-    overlay.querySelector(".overlay-kicker").textContent = ui("desktopRequired");
-    overlay.querySelector("h2").innerHTML = ui("desktopOverlayTitle");
-    overlay.querySelector("p").textContent = ui("desktopMessage");
+    startScreenTitle.innerHTML = ui("desktopOverlayTitle");
+    startScreenMessage.textContent = ui("desktopMessage");
+    startButton.hidden = true;
   } else if (paused) {
     stateLabel.textContent = ui("paused");
     overlay.querySelector(".overlay-kicker").textContent = ui("operationPaused");
@@ -1640,8 +1656,8 @@ function applyLanguage() {
     overlay.querySelector("button").textContent = ui("retry");
   } else {
     stateLabel.textContent = ui("standby");
-    overlay.querySelector(".overlay-kicker").textContent = "FRANTIC SEARCH";
-    overlay.querySelector("h2").innerHTML = ui("wildWatching");
+    startScreenTitle.textContent = ui("startTitle");
+    startScreenMessage.textContent = ui("startMessage");
   }
 }
 
@@ -1698,7 +1714,7 @@ window.addEventListener("keydown", (event) => {
   if (event.code === "Enter" && event.target instanceof Element && event.target.closest("button, a, input, select, textarea, [role='button']")) return;
   if (event.code === "KeyP" && !event.repeat && !campaign.sceneOpen) togglePause();
   if (event.code === "Enter" && !event.repeat && campaign.sceneOpen) advanceStory();
-  else if (event.code === "Enter" && !running && !paused && dinoModal.classList.contains("hidden") && navMenu.classList.contains("hidden")) openDinoModal();
+  else if (event.code === "Enter" && !event.repeat && !running && !paused && !desktopBlocked && dinoModal.classList.contains("hidden") && navMenu.classList.contains("hidden")) openDinoModal("start");
 });
 
 bestLabel.textContent = String(save.get("bestDistance")).padStart(4, "0") + " m";
@@ -1714,10 +1730,7 @@ if (save.get("muted")) {
 
 function syncDesktopAccess() {
   const canPlay = desktopPlayback.matches;
-  const startButton = document.querySelector("#start-button");
-  const overlayStartButton = document.querySelector("#start-button");
   startButton.disabled = !canPlay;
-  overlayStartButton.disabled = !canPlay;
 
   if (!canPlay) {
     if (running) {
@@ -1727,14 +1740,15 @@ function syncDesktopAccess() {
       music.setPaused(true);
       storyPanel.classList.add("hidden");
     }
-    overlayStartButton.hidden = true;
     desktopBlocked = true;
     dinoModal.classList.add("hidden");
+    overlayActionButton.hidden = true;
+    overlay.classList.add("hidden");
     stateLabel.textContent = ui("desktopOnly");
-    overlay.querySelector(".overlay-kicker").textContent = ui("desktopRequired");
-    overlay.querySelector("h2").innerHTML = ui("desktopOverlayTitle");
-    overlay.querySelector("p").textContent = ui("desktopMessage");
-    overlay.classList.remove("hidden");
+    startScreenTitle.innerHTML = ui("desktopOverlayTitle");
+    startScreenMessage.textContent = ui("desktopMessage");
+    startButton.hidden = true;
+    startScreen.classList.remove("hidden");
     render();
     return;
   }
@@ -1742,15 +1756,13 @@ function syncDesktopAccess() {
   if (desktopBlocked) {
     desktopBlocked = false;
     stateLabel.textContent = ui("standby");
-    overlay.querySelector(".overlay-kicker").textContent = "FRANTIC SEARCH";
-    overlay.querySelector("h2").textContent = ui("startTitle");
-    overlay.querySelector("p").textContent = ui("startMessage");
-    overlay.querySelector("button").hidden = false;
-    overlay.querySelector("button").textContent = ui("play");
-    overlay.classList.remove("hidden");
+    startScreenTitle.textContent = ui("startTitle");
+    startScreenMessage.textContent = ui("startMessage");
+    startButton.hidden = false;
+    overlay.classList.add("hidden");
+    startScreen.classList.remove("hidden");
   }
 }
-
 desktopPlayback.addEventListener("change", syncDesktopAccess);
 
 document.addEventListener("visibilitychange", () => {
