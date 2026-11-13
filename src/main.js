@@ -1214,7 +1214,10 @@ function updateLevelTransition(delta) {
     player.x += speed * delta;
     for (const companion of autonomousCompanions) companion.actor.x += speed * delta;
     for (const ally of allies) ally.x += speed * delta;
-    if (player.x - levelTransition.cameraX > GAME.width + 130) {
+    const protagonistsOffscreen = player.x - levelTransition.cameraX > GAME.width + 130 &&
+      autonomousCompanions.every((companion) => companion.actor.x - levelTransition.cameraX > GAME.width + 130);
+    const alliesOffscreen = allies.every((ally) => ally.x + ally.w - levelTransition.cameraX > GAME.width + 100);
+    if (protagonistsOffscreen && alliesOffscreen) {
       const baseX = GAME.playerX + levelTransition.nextDistance;
       player.x = baseX - 190;
       for (const companion of autonomousCompanions) companion.actor.x = baseX - 310;
@@ -1279,7 +1282,11 @@ function update(delta) {
     for (const companion of autonomousCompanions) companion.actor.x += speed * delta;
     for (const ally of allies) ally.x += speed * delta;
     if (beta) beta.x += speed * delta;
-    if (player.x - cameraX > GAME.width + 150) {
+    const protagonistsOffscreen = player.x - cameraX > GAME.width + 150 &&
+      autonomousCompanions.every((companion) => companion.actor.x - cameraX > GAME.width + 150);
+    const rosaOffscreen = !beta || beta.x - cameraX > GAME.width + 150;
+    const alliesOffscreen = allies.every((ally) => ally.x + ally.w - cameraX > GAME.width + 100);
+    if (protagonistsOffscreen && rosaOffscreen && alliesOffscreen) {
       finalDeparture = false;
       finalDepartureDone = true;
       running = false;
