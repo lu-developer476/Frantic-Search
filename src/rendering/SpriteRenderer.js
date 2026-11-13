@@ -24,10 +24,16 @@ const REFERENCE_PRELOAD_FILES = [
   "indoraptor-first-generation.png",
   "indoraptor-second-generation.png",
   "indominus-rex-first-generation.png",
-  "indominus-rex-second-generation.png"
+  "indominus-rex-second-generation.png",
+  "indominus-rex-second-generation-variant.png",
+  "brontosaurus-excelsus-baxteri.png",
+  "ligocristus-innocens.png",
+  "stegoceratops.png",
+  "venatosaurus-impavidus.png",
+  "venatosaurus-saevidicus.png"
 ];
 
-const SPRITE_ASSET_VERSION = "20261113-indoraptor-dual-generation-eating-1";
+const SPRITE_ASSET_VERSION = "20261113-all-reference-dinosaurs-environments-2";
 const ROSA_RIG_PARTS = [
   "rosa-rig-body",
   "rosa-rig-tail",
