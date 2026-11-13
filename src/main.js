@@ -1616,7 +1616,7 @@ function render() {
   ctx.fillStyle = "#d8f36a";
   ctx.fillText(tr("FERRUCUTUS RESCUE // SUPPORT ACTIVE"), GAME.width - 314, GAME.height - 18);
   ctx.fillStyle = stegoceratopsCooldown <= 0 ? "#d8f36a" : "#e8c58a";
-  ctx.fillText("STEGOCERATOPS [C] // " + (stegoceratopsCooldown <= 0 ? "READY" : stegoceratopsCooldown.toFixed(1) + "s"), GAME.width - 250, 34);
+  ctx.fillText("STEGOCERATOPS [C] // " + (stegoceratopsCooldown <= 0 ? ui("abilityReady") : ui("cooldown") + " " + stegoceratopsCooldown.toFixed(1) + "s"), GAME.width - 250, 34);
   drawBossHud();
 
   // All actors and scenery were drawn directly at native game resolution.
