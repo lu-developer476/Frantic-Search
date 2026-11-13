@@ -6,7 +6,7 @@ export class Beta {
     this.h = 48;
     this.groundY = groundY;
     this.state = "confined";
-    this.followDistance = 112;
+    this.followDistance = 208;
     this.animation = 0;
     this.facing = -1;
   }
