@@ -1,8 +1,8 @@
 const OPENING = [
-  { speaker: "MISSION CONTROL", text: "Convoy sighted on the coastal highway. The poachers are moving a young raptor toward an unregistered research site." },
-  { speaker: "MISSION CONTROL", text: "The signal matches Rosa. Your objective is to locate the containment wing, disable its security locks and extract her alive." },
-  { speaker: "VIOLETA", text: "That is my daughter. We are bringing her home." },
-  { speaker: "MISSION CONTROL", text: "Violeta and Vasti, you are cleared to proceed. Keep each other alive." }
+  "A poacher convoy crosses the coastal highway, carrying a young Velociraptor toward an unregistered research facility.",
+  "An intercepted signal identifies the captive as Rosa, Violeta's daughter. The mission is to locate the containment wing, disable its security systems and bring her back alive.",
+  "Violeta and Vasti set out together, following the convoy's trail and watching over one another.",
+  "The trail leads beyond the highway, into territory controlled by armed poachers and predators held inside the same operation."
 ];
 
 export class CampaignManager {
@@ -29,6 +29,11 @@ export class CampaignManager {
 
   queueScene(id, title, lines) {
     if (this.seenScenes.has(id) || this.flags.completed) return false;
+    if (!Array.isArray(lines) || lines.length === 0 ||
+        lines.some((line) => typeof line !== "string" || !line.trim())) {
+      throw new TypeError("Narrator scenes must contain non-empty text paragraphs.");
+    }
+
     this.seenScenes.add(id);
     this.queue.push({ id, title, lines, index: 0 });
     if (!this.activeScene) this.activeScene = this.queue.shift();
@@ -57,16 +62,16 @@ export class CampaignManager {
       this.chapter = "REDWOOD FRONTIER";
       this.objective = "TRACK THE CONVOY";
       this.queueScene("redwood-arrival", "REDWOOD FRONTIER", [
-        { speaker: "MISSION CONTROL", text: "The convoy left the highway and entered the redwood corridor. Thermal readings show armed escorts ahead." },
-        { speaker: "VASTI", text: "Then we clear the path. Keep moving." }
+        "The convoy has left the highway and entered the redwood corridor. Heat signatures ahead indicate several armed escorts.",
+        "Movement among the trees reveals that the forest is not empty. Every step brings the group closer to the operation's perimeter."
       ]);
     }
     if (worldX >= 3000) {
       this.chapter = "POACHER BLACK SITE";
       this.objective = this.flags.indoraptorDefeated ? "PUSH INTO THE FACILITY" : "SURVIVE THE INDORAPTOR";
       this.queueScene("black-site-arrival", "UNREGISTERED FACILITY", [
-        { speaker: "MISSION CONTROL", text: "We found it. A clandestine research complex hidden beyond the forest. The perimeter is guarded." },
-        { speaker: "MISSION CONTROL", text: "An apex containment signal is moving inside the complex. Do not let it reach the surface." }
+        "At the edge of the forest, a clandestine research complex comes into view. Armed patrols guard every visible entrance.",
+        "An apex predator is moving inside the complex. Its containment signal confirms that the operation is holding a creature powerful enough to threaten the surrounding region."
       ]);
     }
     if (worldX >= 6000) {
@@ -77,9 +82,9 @@ export class CampaignManager {
       this.chapter = "ROSA CONTAINMENT";
       this.refreshObjective();
       this.queueScene("facility-entry", "CONTAINMENT WING", [
-        { speaker: "MISSION CONTROL", text: "You are inside the facility. The security network controls the containment doors and life-support systems." },
-        { speaker: "MISSION CONTROL", text: "Restore the auxiliary power relay first. Then release the internal security lock. Rosa's cell is deeper in the wing." },
-        { speaker: "VIOLETA", text: "I can hear her. We're close." }
+        "Inside the facility, a security network controls the containment doors and life-support systems.",
+        "Rosa's cell is deeper in the wing. The auxiliary power relay must be restored before the internal security lock can be released.",
+        "Faint sounds from the cell block confirm that Rosa is still alive. The rescue is close, but the route remains sealed."
       ]);
     }
     if (this.flags.betaFreed) {
@@ -93,16 +98,16 @@ export class CampaignManager {
       this.flags.indoraptorDefeated = true;
       this.objective = "ADVANCE TO THE BLACK SITE";
       this.queueScene("indoraptor-defeated", "THREAT NEUTRALIZED", [
-        { speaker: "MISSION CONTROL", text: "Indoraptor is down. The facility's outer security just lost its primary perimeter asset." },
-        { speaker: "VASTI", text: "No more surprises. Find the hatchling." }
+        "The Indoraptor falls. With the perimeter's primary asset neutralized, the entrance to the complex is no longer under the same threat.",
+        "Beyond the defeated guardian, the search for Rosa continues."
       ]);
     }
     if (kind === "indominus") {
       this.flags.indominusDefeated = true;
       this.objective = "ENTER THE CONTAINMENT WING";
       this.queueScene("indominus-defeated", "CONTAINMENT BREACHED", [
-        { speaker: "MISSION CONTROL", text: "Indominus Rex neutralized. Its containment systems are offline, but Rosa's cell is still sealed." },
-        { speaker: "VIOLETA", text: "That thing was guarding her. I'm coming, Rosa." }
+        "The Indominus Rex is defeated. Its containment systems fall silent, but Rosa's cell remains sealed behind the facility's security network.",
+        "With the perimeter threat removed, the path to the containment wing is finally open."
       ]);
     }
     this.refreshObjective();
@@ -114,15 +119,15 @@ export class CampaignManager {
       this.flags.powerRestored = true;
       this.objective = "RELEASE THE SECURITY LOCK";
       this.queueScene("power-restored", "AUXILIARY POWER RESTORED", [
-        { speaker: "MISSION CONTROL", text: "Auxiliary power is back online. The internal security terminal is responding." },
-        { speaker: "MISSION CONTROL", text: "One more system. Release the containment lock." }
+        "Auxiliary power returns to the facility. The internal security terminal comes back online.",
+        "Only one barrier remains: the containment lock protecting the cell block."
       ]);
     } else if (kind === "security" && this.flags.powerRestored) {
       this.flags.securityReleased = true;
       this.objective = "FIND ROSA'S CELL";
       this.queueScene("security-released", "CONTAINMENT LOCK RELEASED", [
-        { speaker: "MISSION CONTROL", text: "Security lockdown disengaged. Cell block C is now accessible." },
-        { speaker: "VIOLETA", text: "Rosa! Stay where you are. I'm right here." }
+        "The security lockdown disengages. Cell block C is now accessible.",
+        "At the end of the corridor, Rosa's enclosure stands between the family and a long-awaited reunion."
       ]);
     }
     this.refreshObjective();
@@ -142,10 +147,9 @@ export class CampaignManager {
     this.chapter = "EXTRACTION";
     this.objective = "ESCORT ROSA TO EXTRACTION";
     this.queueScene("beta-rescued", "SUBJECT ROSA SECURED", [
-      { speaker: "ROSA", text: "Mrrr...!" },
-      { speaker: "VIOLETA", text: "There you are. I promised I would find you." },
-      { speaker: "MISSION CONTROL", text: "Rosa's vital signs are stable. Extraction team is approaching the east service gate. Bring her to the marker." },
-      { speaker: "VASTI", text: "No one gets left behind. Let's go." }
+      "Rosa is freed from containment. After everything that happened, she stays close to Violeta as the rescue team approaches the east service gate.",
+      "Her vital signs are stable. The only remaining task is to escort her to the extraction marker.",
+      "Violeta, Vasti and Rosa leave the cell block together, accompanied by the Ferrucutus they rescued along the way."
     ]);
     return true;
   }
@@ -154,9 +158,9 @@ export class CampaignManager {
     if (!this.flags.betaFreed || this.flags.completed) return false;
     this.objective = "MISSION COMPLETE";
     const queued = this.queueScene("campaign-complete", "OPERATION COMPLETE", [
-      { speaker: "MISSION CONTROL", text: "Extraction confirmed. Rosa is safe and the clandestine facility has been exposed." },
-      { speaker: "VIOLETA", text: "You're home, little one. We're together again." },
-      { speaker: "VASTI", text: "This is not the end of the wild. But this time, we brought our family back." }
+      "Extraction is confirmed. Rosa is safe, and evidence from the clandestine facility can expose the operation.",
+      "After crossing the facility and its perimeter, the group can finally leave together.",
+      "The wilderness remains dangerous, but this rescue brings the family back together."
     ]);
     this.flags.completed = true;
     return queued;
