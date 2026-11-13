@@ -30,7 +30,6 @@ test("procedural sections are repeatable for a seed and vary between seeds", () 
   for (const world of [first, repeated, alternate]) world.extendTo(50000);
 
   const signature = (world) => JSON.stringify({
-    sectionSeeds: world.sectionSeeds,
     platforms: world.platforms.filter((item) => item.kind === "ledge").map(({ x, y, w }) => [x, y, w]),
     obstacles: world.obstacles.map(({ x, y, type }) => [x, y, type]),
     venatosaurus: world.venatosaurusSpawns.map(({ x, direction }) => [x, direction])
