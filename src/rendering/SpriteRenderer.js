@@ -1,6 +1,6 @@
 import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.js";
 
-const SPRITE_ASSET_VERSION = "20261113-vasti-pixel-art-2";
+const SPRITE_ASSET_VERSION = "20261113-articulated-velociraptors-1";
 const ROSA_RIG_PARTS = [
   "rosa-rig-body",
   "rosa-rig-tail",
@@ -49,7 +49,7 @@ const BASE = [
   "violeta-idle","violeta-run-a","violeta-run-b","violeta-jump","violeta-dash","violeta-duck",
   "vasti-idle","vasti-run-a","vasti-run-b","vasti-jump","vasti-duck",
   "vasti-attack","vasti-land","vasti-impact","vasti-recover","vasti-stomp","vasti-slam",
-  "rosa","rosa-run-a","rosa-run-b","rosa-duck",
+  "rosa","rosa-run-a","rosa-run-b","rosa-jump","rosa-duck",
   "ferrucutus","ferrucutus-step-a","ferrucutus-step-b","ferrucutus-duck",
   "hunter","hunter-run-a","hunter-run-b","hunter-duck",
   "indoraptor","indoraptor-run-a","indoraptor-run-b","indoraptor-duck",
@@ -140,7 +140,7 @@ export class SpriteRenderer {
 
 
   drawRosaRig(context, width, height, actor, elapsed, pose, alpha) {
-    // The juvenile reference faces right; Beta.facing changes with player-relative movement.
+    // Juvenile rig: the reference silhouette is split into independently animated joints.
     const mirror = (actor?.facing ?? 1) < 0;
     const phase = phaseOf(actor, "rosa");
     const gait = Math.sin(elapsed * 8.2 * Math.PI + phase);
@@ -165,6 +165,15 @@ export class SpriteRenderer {
       frontArmAngle = stride * 0.22;
       headAngle = -0.06;
       jawAngle = 0.06 + Math.max(0, gait) * 0.035;
+    } else if (pose === "rosa-jump") {
+      bodyAngle = -0.12;
+      tailAngle = -0.18;
+      backLegAngle = -0.34;
+      frontLegAngle = 0.33;
+      backArmAngle = -0.25;
+      frontArmAngle = 0.3;
+      headAngle = -0.13;
+      jawAngle = 0.12;
     } else if (pose === "rosa-duck") {
       bodyAngle = -0.1;
       tailAngle = 0.18;
@@ -218,15 +227,15 @@ export class SpriteRenderer {
       context.scale(-1, 1);
     }
 
-    const hipX = (128 - 88) / 84 * width;
-    const hipY = (88 - 43) / 69 * height;
+    const hipX = 62 / 100 * width;
+    const hipY = 36 / 61 * height;
     context.translate(hipX, hipY);
     context.rotate(bodyAngle);
     context.translate(-hipX, -hipY);
 
     const drawPart = (name, pivotX, pivotY, angle) => {
-      const px = (pivotX - 88) / 84 * width;
-      const py = (pivotY - 43) / 69 * height;
+      const px = pivotX / 100 * width;
+      const py = pivotY / 61 * height;
       context.save();
       context.translate(px, py);
       context.rotate(angle);
@@ -235,16 +244,15 @@ export class SpriteRenderer {
       return drawn;
     };
 
-    // Back-side pieces first, then torso, near-side limbs, head and hinged lower jaw.
     const drawn = [
-      drawPart("rosa-rig-tail", 126, 78, tailAngle),
-      drawPart("rosa-rig-leg-back", 121, 87, backLegAngle),
-      drawPart("rosa-rig-arm-back", 135, 75, backArmAngle),
-      drawPart("rosa-rig-body", 88, 43, 0),
-      drawPart("rosa-rig-leg-front", 137, 88, frontLegAngle),
-      drawPart("rosa-rig-arm-front", 145, 75, frontArmAngle),
-      drawPart("rosa-rig-head", 151, 63, headAngle),
-      drawPart("rosa-rig-jaw", 160, 66, jawAngle)
+      drawPart("rosa-rig-tail", 54, 30, tailAngle),
+      drawPart("rosa-rig-leg-back", 48, 40, backLegAngle),
+      drawPart("rosa-rig-arm-back", 76, 34, backArmAngle),
+      drawPart("rosa-rig-body", 62, 36, 0),
+      drawPart("rosa-rig-leg-front", 65, 40, frontLegAngle),
+      drawPart("rosa-rig-arm-front", 84, 34, frontArmAngle),
+      drawPart("rosa-rig-head", 80, 22, headAngle),
+      drawPart("rosa-rig-jaw", 95, 21, jawAngle)
     ].every(Boolean);
 
     context.restore();
@@ -252,7 +260,9 @@ export class SpriteRenderer {
   }
 
   drawReferenceRosa(context, x, y, width, height, actor, elapsed, alpha = 1, poseOverride = null) {
-    const pose = poseOverride ?? selectActorPose("beta", actor, elapsed);
+    const pose = poseOverride ?? (actor?.onGround === false && !actor.animationState
+      ? "rosa-jump"
+      : selectActorPose("beta", actor, elapsed));
     const phase = phaseOf(actor, "rosa");
     const gait = Math.sin(elapsed * 8.2 * Math.PI + phase);
     let bob = 0;
@@ -265,10 +275,14 @@ export class SpriteRenderer {
       tilt = -0.025;
       scaleX = 1.025;
       scaleY = 0.985;
+    } else if (pose === "rosa-jump") {
+      bob = -2;
+      tilt = -0.045;
+      scaleX = 1.035;
+      scaleY = 0.96;
     } else if (pose === "rosa-duck") {
       scaleX = 1.045;
       scaleY = 0.88;
-      bob = 0;
     } else if (pose === "rosa-attack") {
       tilt = 0.035;
       scaleX = 1.035;
@@ -285,9 +299,9 @@ export class SpriteRenderer {
       bob = Math.round(Math.sin(elapsed * 2.35 + phase) * 0.7);
     }
 
-    // Rosa was only 48x48 in the world. Enlarge its art, not its collision/companion physics.
+    // Keep the juvenile proportions; this visual scale never changes collision geometry.
     const renderWidth = Math.max(1, Math.round(width * 1.42 * scaleX));
-    const renderHeight = Math.max(1, Math.round(renderWidth * 69 / 84 * scaleY));
+    const renderHeight = Math.max(1, Math.round(renderWidth * 61 / 100 * scaleY));
     const dx = Math.round(x + (width - renderWidth) / 2);
     const dy = Math.round(y + height - renderHeight + bob + 2);
 
@@ -311,7 +325,7 @@ export class SpriteRenderer {
   }
 
   drawVioletaRig(context, width, height, actor, elapsed, pose, alpha) {
-    // The supplied adult sheet faces right. Player.facing already reflects the arrow-key intent.
+    // Adult rig with articulated tail, limbs, neck/head and hinged jaw.
     const mirror = (actor?.facing ?? 1) < 0;
     const phase = phaseOf(actor, "violeta");
     const gait = Math.sin(elapsed * 10 * Math.PI + phase);
@@ -407,15 +421,15 @@ export class SpriteRenderer {
       context.scale(-1, 1);
     }
 
-    const hipX = (128 - 88) / 80 * width;
-    const hipY = (89 - 47) / 69 * height;
+    const hipX = 61 / 100 * width;
+    const hipY = 30 / 46 * height;
     context.translate(hipX, hipY);
     context.rotate(bodyAngle);
     context.translate(-hipX, -hipY);
 
     const drawPart = (name, pivotX, pivotY, angle) => {
-      const px = (pivotX - 88) / 80 * width;
-      const py = (pivotY - 47) / 69 * height;
+      const px = pivotX / 100 * width;
+      const py = pivotY / 46 * height;
       context.save();
       context.translate(px, py);
       context.rotate(angle);
@@ -425,14 +439,14 @@ export class SpriteRenderer {
     };
 
     const drawn = [
-      drawPart("violeta-rig-tail", 131, 80, tailAngle),
-      drawPart("violeta-rig-leg-back", 119, 91, backLegAngle),
-      drawPart("violeta-rig-arm-back", 136, 78, backArmAngle),
-      drawPart("violeta-rig-body", 88, 47, 0),
-      drawPart("violeta-rig-leg-front", 135, 91, frontLegAngle),
-      drawPart("violeta-rig-arm-front", 146, 79, frontArmAngle),
-      drawPart("violeta-rig-head", 145, 68, headAngle),
-      drawPart("violeta-rig-jaw", 162, 71, jawAngle)
+      drawPart("violeta-rig-tail", 62, 22, tailAngle),
+      drawPart("violeta-rig-leg-back", 56, 31, backLegAngle),
+      drawPart("violeta-rig-arm-back", 78, 25, backArmAngle),
+      drawPart("violeta-rig-body", 61, 30, 0),
+      drawPart("violeta-rig-leg-front", 68, 31, frontLegAngle),
+      drawPart("violeta-rig-arm-front", 84, 25, frontArmAngle),
+      drawPart("violeta-rig-head", 80, 17, headAngle),
+      drawPart("violeta-rig-jaw", 96, 16, jawAngle)
     ].every(Boolean);
 
     context.restore();
@@ -463,7 +477,6 @@ export class SpriteRenderer {
     } else if (pose === "violeta-duck") {
       scaleX = 1.04;
       scaleY = 0.9;
-      bob = 0;
     } else if (pose === "violeta-impact") {
       tilt = -0.06;
       bob = 1;
@@ -477,20 +490,27 @@ export class SpriteRenderer {
       bob = Math.round(Math.sin(elapsed * 2.15 + phase) * 0.75);
     }
 
-    // The old player box made Violeta too small. Expand the sprite only; keep physics dimensions unchanged.
-    const renderWidth = Math.max(1, Math.round(width * 1.22 * scaleX));
-    const renderHeight = Math.max(1, Math.round(renderWidth * 69 / 80 * scaleY));
+    // Adult silhouette is enlarged without changing player collision dimensions.
+    const renderWidth = Math.max(1, Math.round(width * 1.42 * scaleX));
+    const renderHeight = Math.max(1, Math.round(renderWidth * 46 / 100 * scaleY));
     const dx = Math.round(x + (width - renderWidth) / 2);
     const dy = Math.round(y + height - renderHeight + bob + 4);
+
     context.save();
     context.translate(dx + renderWidth / 2, dy + renderHeight / 2);
     context.rotate(tilt);
     context.translate(-renderWidth / 2, -renderHeight / 2);
 
-    const result = this.draw(context, pose, 0, 0, renderWidth, renderHeight, {
-      alpha,
-      facing: actor?.facing ?? 1
+    const rigReady = typeof this.get === "function" && VIOLETA_RIG_PARTS.every(name => {
+      const image = this.get(name);
+      return image?.complete && image.naturalWidth > 0;
     });
+    const result = rigReady
+      ? this.drawVioletaRig(context, renderWidth, renderHeight, actor, elapsed, pose, alpha)
+      : this.draw(context, pose, 0, 0, renderWidth, renderHeight, {
+          alpha,
+          facing: actor?.facing ?? 1
+        });
     context.restore();
     return result;
   }
@@ -1088,7 +1108,7 @@ export class SpriteRenderer {
     if (player?.dashTimer > 0 && kind === "blue") pose = "violeta-dash";
     else if (player?.dashTimer > 0 && kind === "rosa") pose = "rosa-attack";
     else if (player?.duck) pose = prefix + "-duck";
-    else if (player && !player.onGround && !player.animationState) pose = kind === "rosa" ? "rosa-run-a" : prefix + "-jump";
+    else if (player && !player.onGround && !player.animationState) pose = prefix + "-jump";
     else if (player && Math.abs(player.vx) > 30 && !player.animationState) {
       const fps = Math.max(8, Math.min(13, Math.abs(player.vx) / 27));
       pose = prefix + "-run-" + (Math.floor(elapsed * fps + phaseOf(player, kind)) % 2 === 0 ? "a" : "b");
