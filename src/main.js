@@ -1218,18 +1218,18 @@ function updateLevelTransition(delta) {
       const baseX = GAME.playerX + levelTransition.nextDistance;
       player.x = baseX - 190;
       for (const companion of autonomousCompanions) companion.actor.x = baseX - 310;
-      cameraX = baseX;
+      cameraX = Math.max(0, baseX - 330);
       levelTransition.phase = "enter";
     }
     return;
   }
   const baseX = GAME.playerX + levelTransition.nextDistance;
-  player.x = Math.min(baseX + GAME.playerX, player.x + speed * delta);
-  for (const companion of autonomousCompanions) companion.actor.x = Math.min(baseX + 30, companion.actor.x + speed * delta);
+  player.x = Math.min(baseX, player.x + speed * delta);
+  for (const companion of autonomousCompanions) companion.actor.x = Math.min(baseX - 116, companion.actor.x + speed * delta);
   for (const ally of allies) ally.x += speed * delta;
-  if (player.x >= baseX + GAME.playerX && autonomousCompanions.every((companion) => companion.actor.x >= baseX + 30)) {
-    player.x = baseX + GAME.playerX;
-    for (const companion of autonomousCompanions) companion.actor.x = baseX + 30;
+  if (player.x >= baseX && autonomousCompanions.every((companion) => companion.actor.x >= baseX - 116)) {
+    player.x = baseX;
+    for (const companion of autonomousCompanions) companion.actor.x = baseX - 116;
     allies = allies.filter((ally) => ally.x + ally.w < cameraX + GAME.width + 100);
     distance = levelTransition.nextDistance;
     levelTransition = null;
