@@ -1,5 +1,45 @@
 import { GAME, LEVELS } from "../config/GameConfig.js";
 
+const FERRUCUTUS_CAGE_WIDTH = 164;
+const FERRUCUTUS_CAGE_SPACING = 184;
+
+function proceduralCagePositions(levelStart, levelEnd, levelIndex, sectionLength) {
+  const intervals = [];
+  const firstSection = Math.floor(levelStart / sectionLength);
+  const lastSection = Math.min(5, Math.floor((levelEnd - 1) / sectionLength));
+
+  for (let sectionIndex = firstSection; sectionIndex <= lastSection; sectionIndex += 1) {
+    const sectionStart = sectionIndex * sectionLength;
+    const finalArea = sectionIndex === 5;
+    const bossArena = sectionIndex === 2 || sectionIndex === 4;
+    const candidates = finalArea
+      ? [[sectionStart, sectionStart + 1900 - FERRUCUTUS_CAGE_WIDTH]]
+      : bossArena
+        ? [[sectionStart, sectionStart + 1520 - FERRUCUTUS_CAGE_WIDTH]]
+        : [
+            [sectionStart, sectionStart + 445 - FERRUCUTUS_CAGE_WIDTH],
+            [sectionStart + 497, sectionStart + 730 - FERRUCUTUS_CAGE_WIDTH],
+            [sectionStart + 900, sectionStart + 1320 - FERRUCUTUS_CAGE_WIDTH]
+          ];
+
+    for (const [intervalStart, intervalEnd] of candidates) {
+      const minX = Math.max(intervalStart, levelStart + 180);
+      const maxX = Math.min(intervalEnd, levelEnd - FERRUCUTUS_CAGE_WIDTH);
+      if (maxX >= minX) intervals.push([minX, maxX]);
+    }
+  }
+
+  const slots = [];
+  for (const [minX, maxX] of intervals) {
+    for (let x = minX; x <= maxX; x += FERRUCUTUS_CAGE_SPACING) slots.push(x);
+  }
+  const count = [3, 3, 4, 2, 2, 2][levelIndex] ?? 1;
+  return Array.from({ length: count }, (_, index) => {
+    const slotIndex = Math.min(slots.length - 1, Math.floor((index + 0.5) * slots.length / count));
+    return slots[slotIndex];
+  }).filter(Number.isFinite);
+}
+
 export class PlatformWorld {
   constructor(groundY) {
     this.groundY = groundY;
@@ -42,25 +82,18 @@ export class PlatformWorld {
       const levelEnd = levelIndex + 1 < LEVELS.length
         ? GAME.playerX + LEVELS[levelIndex + 1].distance
         : GAME.campaignEndX + GAME.playerX;
-      const levelLength = levelEnd - levelStart;
-      const captiveCount = [3, 3, 4, 2, 2, 2][levelIndex] ?? 1;
-      for (let rescueIndex = 0; rescueIndex < captiveCount; rescueIndex += 1) {
-        const seed = (levelIndex + 3) * 97 + (rescueIndex + 1) * 53;
-        const jitter = ((seed * 9301 + 49297) % 233) - 116;
-        const margin = Math.min(170, levelLength * 0.16);
-        const x = levelStart + margin +
-          ((rescueIndex + 0.5) / captiveCount) * Math.max(1, levelLength - margin * 2) + jitter;
+      const positions = proceduralCagePositions(levelStart, levelEnd, levelIndex, this.sectionLength);
+      positions.forEach((x, rescueIndex) => {
         if (x >= start && x < start + this.sectionLength) {
-          const elevation = rescueIndex % 3 === 1 ? 55 : rescueIndex % 3 === 2 ? 82 : 0;
           this.ferrucutusCageSpawns.push({
             id: "ferrucutus-cage-" + levelIndex + "-" + (rescueIndex + 1),
             x,
-            groundY: this.groundY - elevation,
+            groundY: this.groundY,
             levelIndex,
             rescueIndex
           });
         }
-      }
+      });
     }
 
     this.platforms.push(
