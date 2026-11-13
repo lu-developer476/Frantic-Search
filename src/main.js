@@ -984,7 +984,8 @@ function drawIndoraptor(boss) {
 }
 
 function drawIndominus(boss) {
-  const spriteDrawn = spriteRenderer.drawAnimated(ctx, "indominus", boss.x - 4, boss.y - 4, boss.w + 8, boss.h + 8, boss, elapsed, { alpha: boss.defeated ? 0.4 : 1, facing: boss.direction });
+  const referenceKind = boss.phase === 2 && boss.attackIndex % 2 === 0 ? "indominus-variant" : "indominus";
+  const spriteDrawn = spriteRenderer.drawAnimated(ctx, referenceKind, boss.x - 4, boss.y - 4, boss.w + 8, boss.h + 8, boss, elapsed, { alpha: boss.defeated ? 0.4 : 1, facing: boss.direction });
   if (!spriteDrawn) return;
   if (boss.state === "telegraph") {
     ctx.strokeStyle = "#ffb26b";
