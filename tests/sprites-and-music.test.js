@@ -540,7 +540,7 @@ test("Vasti articulated rig separates the original tail, legs, forelimb and lowe
   for (const name of names) {
     const svg = readFileSync(resolve("public/assets/sprites", "vasti-rig-" + name + ".svg"), "utf8");
     assert.match(svg, /data-source="embedded-original-reference"/);
-    assert.match(svg, /data-reference="vastatosaurus-rex\\.jpg"/);
+    assert.match(svg, /data-reference="vastatosaurus-rex\.jpg"/);
     assert.match(svg, /data:image\/jpeg;base64,/);
     assert.match(svg, /filter="url\(#paper-key\)"/);
     const encoded = svg.match(/data:image\/jpeg;base64,([^"]+)/)?.[1];
