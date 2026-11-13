@@ -1212,9 +1212,9 @@ function updateLevelTransition(delta) {
   if (!levelTransition) return;
   const speed = 270;
   if (levelTransition.phase === "exit") {
-    player.x += speed * delta;
-    for (const companion of autonomousCompanions) companion.actor.x += speed * delta;
-    for (const ally of allies) ally.x += speed * delta;
+    player.x += speed * delta; player.vx = speed; player.facing = 1; player.animationState = null; player.animationTimer = 0;
+    for (const companion of autonomousCompanions) { companion.actor.x += speed * delta; companion.actor.vx = speed; companion.actor.facing = 1; companion.actor.animationState = null; companion.actor.animationTimer = 0; }
+    for (const ally of allies) { ally.x += speed * delta; ally.motionSpeed = speed; ally.direction = 1; }
     const protagonistsOffscreen = player.x - levelTransition.cameraX > GAME.width + 130 &&
       autonomousCompanions.every((companion) => companion.actor.x - levelTransition.cameraX > GAME.width + 130);
     const alliesOffscreen = allies.every((ally) => ally.x + ally.w - levelTransition.cameraX > GAME.width + 100);
@@ -1228,12 +1228,12 @@ function updateLevelTransition(delta) {
     return;
   }
   const baseX = GAME.playerX + levelTransition.nextDistance;
-  player.x = Math.min(baseX, player.x + speed * delta);
-  for (const companion of autonomousCompanions) companion.actor.x = Math.min(baseX - 116, companion.actor.x + speed * delta);
-  for (const ally of allies) ally.x += speed * delta;
+  player.x = Math.min(baseX, player.x + speed * delta); player.vx = speed; player.facing = 1; player.animationState = null; player.animationTimer = 0;
+  for (const companion of autonomousCompanions) { companion.actor.x = Math.min(baseX - 116, companion.actor.x + speed * delta); companion.actor.vx = speed; companion.actor.facing = 1; companion.actor.animationState = null; companion.actor.animationTimer = 0; }
+  for (const ally of allies) { ally.x += speed * delta; ally.motionSpeed = speed; ally.direction = 1; }
   if (player.x >= baseX && autonomousCompanions.every((companion) => companion.actor.x >= baseX - 116)) {
-    player.x = baseX;
-    for (const companion of autonomousCompanions) companion.actor.x = baseX - 116;
+    player.x = baseX; player.vx = 0;
+    for (const companion of autonomousCompanions) { companion.actor.x = baseX - 116; companion.actor.vx = 0; }
     allies = allies.filter((ally) => ally.x + ally.w < cameraX + GAME.width + 100);
     distance = levelTransition.nextDistance;
     levelTransition = null;
@@ -1279,10 +1279,10 @@ function update(delta) {
 
   if (finalDeparture) {
     const speed = 265;
-    player.x += speed * delta;
-    for (const companion of autonomousCompanions) companion.actor.x += speed * delta;
-    for (const ally of allies) ally.x += speed * delta;
-    if (beta) beta.x += speed * delta;
+    player.x += speed * delta; player.vx = speed; player.facing = 1; player.animationState = null; player.animationTimer = 0;
+    for (const companion of autonomousCompanions) { companion.actor.x += speed * delta; companion.actor.vx = speed; companion.actor.facing = 1; companion.actor.animationState = null; companion.actor.animationTimer = 0; }
+    for (const ally of allies) { ally.x += speed * delta; ally.motionSpeed = speed; ally.direction = 1; }
+    if (beta) { beta.x += speed * delta; beta.motionSpeed = speed; beta.facing = 1; }
     const protagonistsOffscreen = player.x - cameraX > GAME.width + 150 &&
       autonomousCompanions.every((companion) => companion.actor.x - cameraX > GAME.width + 150);
     const rosaOffscreen = !beta || beta.x - cameraX > GAME.width + 150;
@@ -1298,11 +1298,11 @@ function update(delta) {
   }
   if (levelTransition) { updateLevelTransition(delta); return; }
   if (introSequence) {
-    player.x = Math.min(GAME.playerX, player.x + 230 * delta);
-    for (const companion of autonomousCompanions) companion.actor.x = Math.min(GAME.playerX - 116, companion.actor.x + 230 * delta);
+    player.x = Math.min(GAME.playerX, player.x + 230 * delta); player.vx = 230; player.facing = 1; player.animationState = null; player.animationTimer = 0;
+    for (const companion of autonomousCompanions) { companion.actor.x = Math.min(GAME.playerX - 116, companion.actor.x + 230 * delta); companion.actor.vx = 230; companion.actor.facing = 1; companion.actor.animationState = null; companion.actor.animationTimer = 0; }
     if (player.x >= GAME.playerX && autonomousCompanions.every((companion) => companion.actor.x >= GAME.playerX - 116)) {
-      player.x = GAME.playerX;
-      for (const companion of autonomousCompanions) companion.actor.x = GAME.playerX - 116;
+      player.x = GAME.playerX; player.vx = 0;
+      for (const companion of autonomousCompanions) { companion.actor.x = GAME.playerX - 116; companion.actor.vx = 0; }
       introSequence = false;
     }
     return;
