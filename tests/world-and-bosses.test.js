@@ -82,13 +82,13 @@ test("telegraphed boss attacks have dodgeable attack hitboxes", () => {
 });
 
 
-test("every campaign level places two or three Ferrucutus containment cages", () => {
+test("every campaign level places its capped Ferrucutus containment cages", () => {
   const world = new PlatformWorld(GAME.groundY);
   world.extendTo(50000);
   const counts = LEVELS.map((level, levelIndex) =>
     world.ferrucutusCageSpawns.filter((spawn) => spawn.levelIndex === levelIndex).length
   );
-  assert.deepEqual(counts, [3, 3, 3, 2, 2, 2]);
+  assert.deepEqual(counts, [3, 3, 4, 2, 2, 2]);
 
   for (const [levelIndex, level] of LEVELS.entries()) {
     const levelStart = GAME.playerX + level.distance;
@@ -113,7 +113,7 @@ test("every campaign level places two or three Ferrucutus containment cages", ()
       }), "containment cages must not overlap ordinary obstacles");
     }
   }
-  assert.equal(new Set(world.ferrucutusCageSpawns.map((spawn) => spawn.id)).size, 15);
+  assert.equal(new Set(world.ferrucutusCageSpawns.map((spawn) => spawn.id)).size, 16);
 });
 
 test("Ferrucutus captive can be rescued once and only within interaction range", () => {
