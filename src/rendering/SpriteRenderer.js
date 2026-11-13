@@ -1,5 +1,32 @@
 import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.js";
 
+export const REFERENCE_PNG_CHARACTERS = Object.freeze({
+  blue: { file: "adult-velociraptor-nublarensis.png", sourceFacing: 1, scale: 1.42 },
+  beta: { file: "juvenile-velociraptor-nublarensis.png", sourceFacing: 1, scale: 1.42 },
+  rosa: { file: "juvenile-velociraptor-nublarensis.png", sourceFacing: 1, scale: 1.42 },
+  vasti: { file: "vastatosaurus-rex.png", sourceFacing: -1, scale: 1.18 },
+  ferrucutus: { file: "ferrucutus-cerastes.png", sourceFacing: -1, scale: 1.08 },
+  indoraptor: { first: "indoraptor-first-generation.png", second: "indoraptor-second-generation.png", sourceFacing: 1, scale: 1.34 },
+  indominus: { first: "indominus-rex-first-generation.png", second: "indominus-rex-second-generation.png", sourceFacing: -1, scale: 1.18 },
+  "indominus-variant": { file: "indominus-rex-second-generation-variant.png", sourceFacing: -1, scale: 1.18 },
+  brontosaurus: { file: "brontosaurus-excelsus-baxteri.png", sourceFacing: 1, scale: 1.18 },
+  ligocristus: { file: "ligocristus-innocens.png", sourceFacing: -1, scale: 1.18 },
+  stegoceratops: { file: "stegoceratops.png", sourceFacing: -1, scale: 1.18 },
+  "venatosaurus-impavidus": { file: "venatosaurus-impavidus.png", sourceFacing: -1, scale: 1.18 },
+  "venatosaurus-saevidicus": { file: "venatosaurus-saevidicus.png", sourceFacing: 1, scale: 1.18 }
+});
+
+const REFERENCE_PRELOAD_FILES = [
+  "adult-velociraptor-nublarensis.png",
+  "juvenile-velociraptor-nublarensis.png",
+  "vastatosaurus-rex.png",
+  "ferrucutus-cerastes.png",
+  "indoraptor-first-generation.png",
+  "indoraptor-second-generation.png",
+  "indominus-rex-first-generation.png",
+  "indominus-rex-second-generation.png"
+];
+
 const SPRITE_ASSET_VERSION = "20261113-indoraptor-dual-generation-eating-1";
 const ROSA_RIG_PARTS = [
   "rosa-rig-body",
@@ -93,12 +120,185 @@ export class SpriteRenderer {
     this.images = new Map();
     this.failed = new Set();
     this.loaded = new Set();
+    this.referenceImages = new Map();
+    this.referenceBounds = new Map();
+    this.referenceLoaded = new Set();
+    this.referenceFailed = new Set();
     this.onAssetChange = typeof onAssetChange === "function" ? onAssetChange : null;
     this.preload();
   }
 
   preload() {
-    for (const name of SPRITES) this.get(name);
+    for (const file of REFERENCE_PRELOAD_FILES) this.getReferenceImage(file);
+  }
+
+  getReferenceConfig(character, actor = {}) {
+    const definition = REFERENCE_PNG_CHARACTERS[character];
+    if (!definition) return null;
+    if (!definition.first) return { ...definition, file: definition.file };
+    const generationValue = actor?.generation ?? actor?.phase ?? 1;
+    const secondGeneration = Number(generationValue) >= 2 ||
+      generationValue === "second" || generationValue === "second-generation";
+    return {
+      ...definition,
+      file: secondGeneration ? definition.second : definition.first,
+      generation: secondGeneration ? 2 : 1
+    };
+  }
+
+  measureOpaqueBounds(image) {
+    const width = image.naturalWidth;
+    const height = image.naturalHeight;
+    const fallback = { x: 0, y: 0, width, height };
+    try {
+      const canvas = typeof OffscreenCanvas === "function"
+        ? new OffscreenCanvas(width, height)
+        : document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+      if (!context) return fallback;
+      context.drawImage(image, 0, 0);
+      const pixels = context.getImageData(0, 0, width, height).data;
+      let minX = width, minY = height, maxX = -1, maxY = -1;
+      for (let y = 0; y < height; y += 1) {
+        for (let x = 0; x < width; x += 1) {
+          if (pixels[(y * width + x) * 4 + 3] > 16) {
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+      if (maxX < minX || maxY < minY) return fallback;
+      const padding = 3;
+      minX = Math.max(0, minX - padding);
+      minY = Math.max(0, minY - padding);
+      maxX = Math.min(width - 1, maxX + padding);
+      maxY = Math.min(height - 1, maxY + padding);
+      return { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+    } catch {
+      // A full-image draw is still valid when browser canvas inspection is unavailable.
+      return fallback;
+    }
+  }
+
+  getReferenceImage(file) {
+    if (this.referenceImages.has(file) || this.referenceFailed.has(file)) {
+      return this.referenceImages.get(file) ?? null;
+    }
+    const image = new Image();
+    image.decoding = "async";
+    image.onload = () => {
+      if (image.naturalWidth > 0) {
+        this.referenceLoaded.add(file);
+        this.referenceBounds.set(file, this.measureOpaqueBounds(image));
+      } else {
+        this.referenceFailed.add(file);
+      }
+      if (typeof image.decode === "function") image.decode().catch(() => {});
+      this.onAssetChange?.(file, this.readiness());
+    };
+    image.onerror = () => {
+      this.referenceFailed.add(file);
+      this.referenceImages.delete(file);
+      this.onAssetChange?.(file, this.readiness());
+    };
+    this.referenceImages.set(file, image);
+    image.src = this.baseUrl + "references/" + file + "?v=" + SPRITE_ASSET_VERSION;
+    return image;
+  }
+
+  drawReferencePng(context, character, x, y, width, height, actor, elapsed, options = {}, poseOverride = null) {
+    const definition = this.getReferenceConfig(character, actor);
+    if (!definition?.file) return false;
+    const image = this.getReferenceImage(definition.file);
+    const bounds = this.referenceBounds.get(definition.file);
+    if (!image?.complete || image.naturalWidth === 0 || !bounds) return false;
+
+    const pose = poseOverride ?? selectActorPose(character, actor, elapsed);
+    const phase = phaseOf(actor, character);
+    const pace = character === "vasti" ? 5.4 : character === "indominus" ? 4.4 : 8.5;
+    const gait = Math.sin(elapsed * pace * Math.PI + phase);
+    let bob = Math.sin(elapsed * 2.1 + phase) * 0.75;
+    let rotation = 0;
+    let scaleX = 1;
+    let scaleY = 1;
+
+    if (pose.includes("run") || pose.includes("step")) {
+      bob = Math.abs(gait) * (character === "vasti" ? 1.2 : 1.7);
+      rotation = gait * 0.018;
+      scaleX = 1 + Math.abs(gait) * 0.018;
+      scaleY = 1 - Math.abs(gait) * 0.022;
+    } else if (pose.includes("jump")) {
+      bob = -2;
+      rotation = -0.055;
+      scaleX = 1.025;
+      scaleY = 0.97;
+    } else if (pose.includes("duck")) {
+      scaleX = 1.045;
+      scaleY = 0.86;
+      bob = 2;
+    } else if (pose.includes("stomp")) {
+      scaleX = 1.045;
+      scaleY = 0.9;
+      bob = 2;
+    } else if (pose.includes("slam")) {
+      rotation = 0.045;
+      scaleX = 1.055;
+      scaleY = 0.88;
+      bob = 3;
+    } else if (pose.includes("attack") || actor?.state === "telegraph" || actor?.state === "attacking") {
+      rotation = actor?.attackName === "charge" ? -0.052 : -0.028;
+      scaleX = 1.04;
+      scaleY = 0.97;
+      bob = -1;
+      if (actor?.attackName === "pounce") {
+        rotation = -0.16;
+        bob = -3;
+      }
+    } else if (pose.includes("eat")) {
+      rotation = Math.sin(elapsed * 13 + phase) * 0.035;
+      bob = Math.sin(elapsed * 13 + phase) * 1.2;
+    } else if (pose.includes("impact")) {
+      rotation = 0.065;
+      scaleX = 0.94;
+      scaleY = 1.045;
+      bob = 1;
+    } else if (pose.includes("land")) {
+      scaleX = 1.045;
+      scaleY = 0.89;
+      bob = 3;
+    } else if (pose.includes("recover")) {
+      bob = Math.max(0, Math.sin(elapsed * 13 + phase)) * 1.25;
+    }
+
+    if (actor?.defeated || actor?.state === "defeated") {
+      rotation = 0.16;
+      scaleY = Math.min(scaleY, 0.9);
+    }
+
+    const drawWidth = Math.max(1, Math.round(width * definition.scale * scaleX));
+    const drawHeight = Math.max(1, Math.round(drawWidth * bounds.height / bounds.width * scaleY));
+    const drawCenterX = x + width / 2;
+    const drawCenterY = y + height - drawHeight / 2 + bob;
+    const facing = options.facing ?? actor?.facing ?? actor?.direction ?? 1;
+    const flip = Math.sign(facing || 1) !== (definition.sourceFacing ?? 1);
+
+    context.save();
+    context.globalAlpha *= options.alpha ?? 1;
+    context.imageSmoothingEnabled = false;
+    context.translate(drawCenterX, drawCenterY);
+    context.rotate(rotation * Math.sign(facing || 1));
+    context.scale((flip ? -1 : 1) * scaleX, scaleY);
+    context.drawImage(
+      image,
+      bounds.x, bounds.y, bounds.width, bounds.height,
+      -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight
+    );
+    context.restore();
+    return true;
   }
 
   get(name) {
@@ -1163,6 +1363,7 @@ export class SpriteRenderer {
   }
 
   drawAnimated(context, character, x, y, width, height, actor, elapsed, options = {}) {
+    if (this.drawReferencePng(context, character, x, y, width, height, actor ?? {}, elapsed, options)) return true;
     if (character === "beta" && this.drawReferenceRosa(context, x, y, width, height, actor, elapsed, options.alpha ?? 1)) return true;
     if (character === "vasti" && this.drawVasti(context, x, y, width, height, actor, elapsed, options.alpha ?? 1)) return true;
     if (character === "ferrucutus" && this.drawReferenceFerrucutus(context, x, y, width, height, actor, elapsed, options.alpha ?? 1)) return true;
@@ -1205,6 +1406,10 @@ export class SpriteRenderer {
     const crouching = player?.duck === true && pose === prefix + "-duck";
     const naturalHeight = crouching ? (player?.normalHeight ?? height) : height;
     const drawY = crouching ? y + height - naturalHeight : y;
+    if (this.drawReferencePng(context, character, x, drawY, width, naturalHeight, player ?? {}, elapsed, {
+      alpha,
+      facing: player?.facing ?? 1
+    }, pose)) return true;
     if (kind === "blue" && this.drawReferenceVioleta(context, x, drawY, width, naturalHeight, player ?? {}, elapsed, alpha, pose)) return true;
     if (kind === "rosa" && this.drawReferenceRosa(context, x, drawY, width, naturalHeight, player ?? {}, elapsed, alpha, pose)) return true;
     if (kind !== "blue" && kind !== "rosa" && this.drawVasti(context, x, y, width, height, player ?? {}, elapsed, alpha, pose)) return true;
@@ -1212,6 +1417,10 @@ export class SpriteRenderer {
   }
 
   readiness() {
-    return { ready: this.loaded.size, total: SPRITES.length, failed: this.failed.size };
+    return {
+      ready: this.referenceLoaded.size + this.loaded.size,
+      total: Object.keys(REFERENCE_PNG_CHARACTERS).length + SPRITES.length,
+      failed: this.referenceFailed.size + this.failed.size
+    };
   }
 }
