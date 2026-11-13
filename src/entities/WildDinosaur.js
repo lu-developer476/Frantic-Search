@@ -35,6 +35,10 @@ export class WildDinosaur {
       .sort((a, b) => a.distance - b.distance);
     const target = candidates[0] ?? null;
 
+    if (this.state === "stunned") {
+      if (this.stateTimer <= 0) this.state = "patrol";
+      return null;
+    }
     if (this.state === "windup") {
       if (target) this.direction = target.target.x >= this.x ? 1 : -1;
       if (this.stateTimer <= 0) {
