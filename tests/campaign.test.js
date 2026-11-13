@@ -51,7 +51,7 @@ test("Beta cannot be freed until Indominus, power and security are complete", ()
   assert.equal(campaign.canFreeBeta(), true);
   assert.equal(campaign.freeBeta(), true);
   assert.equal(campaign.flags.betaFreed, true);
-  assert.equal(campaign.objective, "ESCORT BETA TO EXTRACTION");
+  assert.equal(campaign.objective, "ESCORT ROSA TO EXTRACTION");
 });
 
 test("complete narrative can only be queued after Beta is rescued", () => {
