@@ -1215,13 +1215,16 @@ function updateLevelTransition(delta) {
     player.x += speed * delta; player.vx = speed; player.facing = 1; player.animationState = null; player.animationTimer = 0;
     for (const companion of autonomousCompanions) { companion.actor.x += speed * delta; companion.actor.vx = speed; companion.actor.facing = 1; companion.actor.animationState = null; companion.actor.animationTimer = 0; }
     for (const ally of allies) { ally.x += speed * delta; ally.motionSpeed = speed; ally.direction = 1; }
+    if (beta?.state === "following") { beta.x += speed * delta; beta.motionSpeed = speed; beta.facing = 1; }
     const protagonistsOffscreen = player.x - levelTransition.cameraX > GAME.width + 130 &&
       autonomousCompanions.every((companion) => companion.actor.x - levelTransition.cameraX > GAME.width + 130);
     const alliesOffscreen = allies.every((ally) => ally.x + ally.w - levelTransition.cameraX > GAME.width + 100);
-    if (protagonistsOffscreen && alliesOffscreen) {
+    const rosaOffscreen = !beta || beta.state !== "following" || beta.x - levelTransition.cameraX > GAME.width + 130;
+    if (protagonistsOffscreen && alliesOffscreen && rosaOffscreen) {
       const baseX = GAME.playerX + levelTransition.nextDistance;
       player.x = baseX - 190;
       for (const companion of autonomousCompanions) companion.actor.x = baseX - 310;
+      if (beta?.state === "following") { beta.x = baseX - beta.followDistance - 142; beta.y = player.y + player.h - beta.h; }
       cameraX = Math.max(0, baseX - 330);
       levelTransition.phase = "enter";
     }
@@ -1231,9 +1234,11 @@ function updateLevelTransition(delta) {
   player.x = Math.min(baseX, player.x + speed * delta); player.vx = speed; player.facing = 1; player.animationState = null; player.animationTimer = 0;
   for (const companion of autonomousCompanions) { companion.actor.x = Math.min(baseX - 116, companion.actor.x + speed * delta); companion.actor.vx = speed; companion.actor.facing = 1; companion.actor.animationState = null; companion.actor.animationTimer = 0; }
   for (const ally of allies) { ally.x += speed * delta; ally.motionSpeed = speed; ally.direction = 1; }
+  if (beta?.state === "following") { beta.x = Math.min(baseX - beta.followDistance, beta.x + speed * delta); beta.motionSpeed = speed; beta.facing = 1; }
   if (player.x >= baseX && autonomousCompanions.every((companion) => companion.actor.x >= baseX - 116)) {
     player.x = baseX; player.vx = 0;
     for (const companion of autonomousCompanions) { companion.actor.x = baseX - 116; companion.actor.vx = 0; }
+    if (beta?.state === "following") { beta.x = baseX - beta.followDistance; beta.motionSpeed = 0; }
     allies = allies.filter((ally) => ally.x + ally.w < cameraX + GAME.width + 100);
     distance = levelTransition.nextDistance;
     levelTransition = null;
@@ -1357,6 +1362,7 @@ function update(delta) {
     player.x = GAME.playerX + nextDistance;
     distance = nextDistance;
     cameraX = Math.max(0, player.x - 330);
+    if (beta?.state === "following") beta.x = player.x - beta.followDistance;
     levelTransition = { phase: "exit", fromIndex: lastLevelIndex, nextIndex: currentLevelIndex, nextDistance, cameraX };
     lastLevelIndex = currentLevelIndex;
     return;
