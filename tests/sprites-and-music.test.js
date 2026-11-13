@@ -29,7 +29,7 @@ test("every production actor sprite is present and resolves its intended source"
     assert.match(svg, /viewBox=/);
     assert.doesNotMatch(svg, /linearGradient|radialGradient/);
     assert.match(svg, /xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
-    const sheetBased = /^(?:violeta|rosa)(?:-|$)/.test(name);
+    const sheetBased = /^(?:violeta|rosa)(?:-|$)/.test(name) && !["violeta-eat","rosa-eat"].includes(name);
     if (sheetBased) {
       assert.match(svg, /href="\.\.\/\.\.\/references\/velociraptor-sprite-sheet\.png"/);
       assert.match(svg, /mask-type="luminance"/);
@@ -368,6 +368,8 @@ test("every character has a dedicated crouch sprite with its correct source trea
     if (actor === "violeta" || actor === "rosa") {
       assert.match(svg, /mask-type="luminance"/);
       assert.match(svg, /data-source="velociraptor-sprite-sheet.png"/);
+    } else if (actor === "indoraptor") {
+      assert.match(svg, /href="\.\.\/\.\.\/references\/indoraptor-first-generation\.png"/);
     } else {
       assert.match(svg, /shape-rendering="crispEdges"/);
       assert.match(svg, actor === "hunter" ? /viewBox="0 0 240 168"/ : /viewBox="0 0 128 128"/);
@@ -444,7 +446,10 @@ test("all non-hunter dinosaur frames resolve valid source assets", () => {
     if (filename === "rosa.svg") {
       assert.match(svg, /href="\.\.\/\.\.\/references\/juvenile-velociraptor-sprite-sheet\.png"/);
       assert.match(svg, /data-source="juvenile-velociraptor-sprite-sheet\.png"/);
-    } else if (/^(?:violeta|rosa)(?:-|\.)/.test(filename)) {
+    } else if (filename.startsWith("indoraptor")) {
+      assert.match(svg, /href="\.\.\/\.\.\/references\/indoraptor-(?:first|second)-generation\.png"/);
+      assert.match(svg, /data-render-style="pixel-art"/);
+    } else if (/^(?:violeta|rosa)(?:-|\.)/.test(filename) && !["violeta-eat.svg","rosa-eat.svg"].includes(filename)) {
       assert.match(svg, /href="\.\.\/\.\.\/references\/velociraptor-sprite-sheet\.png"/);
       assert.match(svg, /data-source="velociraptor-sprite-sheet\.png"/);
     } else {
