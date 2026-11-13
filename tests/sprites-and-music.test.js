@@ -853,3 +853,27 @@ test("the unselected playable dinosaur is the only autonomous companion",()=>{
  assert.match(ai,/actor.character === "blue"/);
  assert.match(ai,/actor.character === "vasti"/);
 });
+
+
+test("character selection previews use the same idle artwork as the game renderer", () => {
+  const html = readFileSync(resolve("index.html"), "utf8");
+  const renderer = readFileSync(resolve("src/rendering/SpriteRenderer.js"), "utf8");
+  const violetaCard = html.match(/data-character="blue"[\s\S]*?data-run-b-src="([^"]+)"/)?.[0] ?? "";
+  const vastiCard = html.match(/data-character="vasti"[\s\S]*?data-run-b-src="([^"]+)"/)?.[0] ?? "";
+  assert.match(violetaCard, /assets\/sprites\/violeta-idle\.svg/);
+  assert.match(vastiCard, /assets\/sprites\/vasti\.svg/);
+  assert.match(renderer, /this\.draw\(context, pose, 0, 0, renderWidth, renderHeight/);
+  assert.doesNotMatch(vastiCard, /vasti-idle\.svg/);
+});
+
+test("startup screen is separate from pause and the character picker has no redundant heading copy", () => {
+  const html = readFileSync(resolve("index.html"), "utf8");
+  const translations = readFileSync(resolve("src/i18n.js"), "utf8");
+  const main = readFileSync(resolve("src/main.js"), "utf8");
+  assert.match(html, /data-i18n="startTitle"/);
+  assert.match(html, /data-i18n="startMessage"/);
+  assert.doesNotMatch(html, /ELEGÍ TU DINOSAURIO|Seleccioná el dinosaurio con el que querés comenzar la operación\./);
+  assert.doesNotMatch(translations, /selectDinosaur(?:Help)?:/);
+  assert.match(main, /ui\("pauseTitle"\)/);
+  assert.match(main, /ui\("startTitle"\)/);
+});
