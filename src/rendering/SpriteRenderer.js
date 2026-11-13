@@ -1,6 +1,16 @@
 import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.js";
 
-const SPRITE_ASSET_VERSION = "20261112-violeta-articulated-rig-1";
+const SPRITE_ASSET_VERSION = "20261112-rosa-articulated-rig-1";
+const ROSA_RIG_PARTS = [
+  "rosa-rig-body",
+  "rosa-rig-tail",
+  "rosa-rig-leg-back",
+  "rosa-rig-leg-front",
+  "rosa-rig-arm-back",
+  "rosa-rig-arm-front",
+  "rosa-rig-head",
+  "rosa-rig-jaw"
+];
 const VIOLETA_RIG_PARTS = [
   "violeta-rig-body",
   "violeta-rig-tail",
@@ -42,6 +52,7 @@ const BASE = [
 ];
 const SPRITES = [
   ...BASE,
+  ...ROSA_RIG_PARTS,
   ...VIOLETA_RIG_PARTS,
   ...VASTI_RIG_PARTS,
   ...FERRUCUTUS_RIG_PARTS,
@@ -121,6 +132,178 @@ export class SpriteRenderer {
     return true;
   }
 
+
+
+  drawRosaRig(context, width, height, actor, elapsed, pose, alpha) {
+    // The juvenile reference faces right; Beta.facing changes with player-relative movement.
+    const mirror = (actor?.facing ?? 1) < 0;
+    const phase = phaseOf(actor, "rosa");
+    const gait = Math.sin(elapsed * 8.2 * Math.PI + phase);
+    const stride = pose === "rosa-run-a" ? 1 : pose === "rosa-run-b" ? -1 : Math.sign(gait || 1);
+    const idle = Math.sin(elapsed * 2.35 + phase);
+
+    let bodyAngle = idle * 0.015;
+    let tailAngle = idle * 0.07;
+    let backLegAngle = idle * 0.02;
+    let frontLegAngle = -idle * 0.02;
+    let backArmAngle = idle * 0.025;
+    let frontArmAngle = -idle * 0.025;
+    let headAngle = idle * 0.02;
+    let jawAngle = 0;
+
+    if (pose === "rosa-run-a" || pose === "rosa-run-b") {
+      bodyAngle = -0.035;
+      tailAngle = gait * 0.16;
+      backLegAngle = stride * 0.43 + gait * 0.05;
+      frontLegAngle = -stride * 0.4 - gait * 0.05;
+      backArmAngle = -stride * 0.2;
+      frontArmAngle = stride * 0.22;
+      headAngle = -0.06;
+      jawAngle = 0.06 + Math.max(0, gait) * 0.035;
+    } else if (pose === "rosa-duck") {
+      bodyAngle = -0.1;
+      tailAngle = 0.18;
+      backLegAngle = 0.34;
+      frontLegAngle = 0.27;
+      backArmAngle = 0.18;
+      frontArmAngle = 0.26;
+      headAngle = -0.2;
+      jawAngle = 0;
+    } else if (pose === "rosa-attack") {
+      bodyAngle = 0.095;
+      tailAngle = 0.06;
+      backLegAngle = -0.14;
+      frontLegAngle = 0.19;
+      backArmAngle = 0.38;
+      frontArmAngle = -0.28;
+      headAngle = 0.2;
+      jawAngle = 0.3;
+    } else if (pose === "rosa-impact") {
+      bodyAngle = -0.13;
+      tailAngle = -0.16;
+      backLegAngle = 0.2;
+      frontLegAngle = -0.14;
+      backArmAngle = -0.2;
+      frontArmAngle = 0.2;
+      headAngle = -0.15;
+      jawAngle = 0.18;
+    } else if (pose === "rosa-land") {
+      bodyAngle = 0.05;
+      tailAngle = 0.12;
+      backLegAngle = 0.3;
+      frontLegAngle = -0.22;
+      backArmAngle = 0.15;
+      frontArmAngle = 0.2;
+      headAngle = 0.1;
+      jawAngle = 0.05;
+    } else if (pose === "rosa-recover") {
+      bodyAngle = idle * 0.02;
+      tailAngle = idle * 0.07;
+      backLegAngle = idle * 0.025;
+      frontLegAngle = -idle * 0.025;
+      backArmAngle = -idle * 0.02;
+      frontArmAngle = idle * 0.02;
+      headAngle = idle * 0.025;
+      jawAngle = 0;
+    }
+
+    context.save();
+    if (mirror) {
+      context.translate(width, 0);
+      context.scale(-1, 1);
+    }
+
+    const hipX = (128 - 88) / 84 * width;
+    const hipY = (88 - 43) / 69 * height;
+    context.translate(hipX, hipY);
+    context.rotate(bodyAngle);
+    context.translate(-hipX, -hipY);
+
+    const drawPart = (name, pivotX, pivotY, angle) => {
+      const px = (pivotX - 88) / 84 * width;
+      const py = (pivotY - 43) / 69 * height;
+      context.save();
+      context.translate(px, py);
+      context.rotate(angle);
+      const drawn = this.draw(context, name, -px, -py, width, height, { alpha });
+      context.restore();
+      return drawn;
+    };
+
+    // Back-side pieces first, then torso, near-side limbs, head and hinged lower jaw.
+    const drawn = [
+      drawPart("rosa-rig-tail", 126, 78, tailAngle),
+      drawPart("rosa-rig-leg-back", 121, 87, backLegAngle),
+      drawPart("rosa-rig-arm-back", 135, 75, backArmAngle),
+      drawPart("rosa-rig-body", 88, 43, 0),
+      drawPart("rosa-rig-leg-front", 137, 88, frontLegAngle),
+      drawPart("rosa-rig-arm-front", 145, 75, frontArmAngle),
+      drawPart("rosa-rig-head", 151, 63, headAngle),
+      drawPart("rosa-rig-jaw", 160, 66, jawAngle)
+    ].every(Boolean);
+
+    context.restore();
+    return drawn;
+  }
+
+  drawReferenceRosa(context, x, y, width, height, actor, elapsed, alpha = 1, poseOverride = null) {
+    const pose = poseOverride ?? selectActorPose("beta", actor, elapsed);
+    const phase = phaseOf(actor, "rosa");
+    const gait = Math.sin(elapsed * 8.2 * Math.PI + phase);
+    let bob = 0;
+    let tilt = 0;
+    let scaleX = 1;
+    let scaleY = 1;
+
+    if (pose === "rosa-run-a" || pose === "rosa-run-b") {
+      bob = Math.round(Math.abs(gait) * 1.5);
+      tilt = -0.025;
+      scaleX = 1.025;
+      scaleY = 0.985;
+    } else if (pose === "rosa-duck") {
+      scaleX = 1.045;
+      scaleY = 0.88;
+      bob = 0;
+    } else if (pose === "rosa-attack") {
+      tilt = 0.035;
+      scaleX = 1.035;
+    } else if (pose === "rosa-impact") {
+      tilt = -0.055;
+      bob = 1;
+    } else if (pose === "rosa-land") {
+      scaleX = 1.04;
+      scaleY = 0.91;
+      bob = 2;
+    } else if (pose === "rosa-recover") {
+      bob = Math.round(Math.max(0, Math.sin(elapsed * 15 + phase)) * 1.2);
+    } else {
+      bob = Math.round(Math.sin(elapsed * 2.35 + phase) * 0.7);
+    }
+
+    // Rosa was only 48x48 in the world. Enlarge its art, not its collision/companion physics.
+    const renderWidth = Math.max(1, Math.round(width * 1.42 * scaleX));
+    const renderHeight = Math.max(1, Math.round(renderWidth * 69 / 84 * scaleY));
+    const dx = Math.round(x + (width - renderWidth) / 2);
+    const dy = Math.round(y + height - renderHeight + bob + 2);
+
+    context.save();
+    context.translate(dx + renderWidth / 2, dy + renderHeight / 2);
+    context.rotate(tilt);
+    context.translate(-renderWidth / 2, -renderHeight / 2);
+
+    const rigReady = typeof this.get === "function" && ROSA_RIG_PARTS.every(name => {
+      const image = this.get(name);
+      return image?.complete && image.naturalWidth > 0;
+    });
+    const result = rigReady
+      ? this.drawRosaRig(context, renderWidth, renderHeight, actor, elapsed, pose, alpha)
+      : this.draw(context, pose, 0, 0, renderWidth, renderHeight, {
+          alpha,
+          facing: actor?.facing ?? 1
+        });
+    context.restore();
+    return result;
+  }
 
   drawVioletaRig(context, width, height, actor, elapsed, pose, alpha) {
     // The supplied adult sheet faces right. Player.facing already reflects the arrow-key intent.
@@ -874,6 +1057,7 @@ export class SpriteRenderer {
   }
 
   drawAnimated(context, character, x, y, width, height, actor, elapsed, options = {}) {
+    if (character === "beta" && this.drawReferenceRosa(context, x, y, width, height, actor, elapsed, options.alpha ?? 1)) return true;
     if (character === "vasti" && this.drawReferenceVasti(context, x, y, width, height, actor, elapsed, options.alpha ?? 1)) return true;
     if (character === "ferrucutus" && this.drawReferenceFerrucutus(context, x, y, width, height, actor, elapsed, options.alpha ?? 1)) return true;
     if (character === "indominus" && this.drawReferenceIndominus(context, x, y, width, height, actor, elapsed, options.alpha ?? 1, null, options.facing)) return true;

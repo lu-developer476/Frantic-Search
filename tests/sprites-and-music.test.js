@@ -58,7 +58,7 @@ test("remaining non-hunter creature assets use crisp, self-contained pixel artwo
 test("creature sprites preserve species, age, source sheet and lineage metadata", () => {
   const required = {
     "violeta-idle": [/data-character="Violeta"/, /data-species="Velociraptor"/, /data-age="adult"/, /data-palette="purple-mauve"/, /data-source="velociraptor-sprite-sheet.png"/, /data-frame="adult-idle-2"/],
-    "rosa": [/data-character="Rosa"/, /data-species="Velociraptor"/, /data-age="juvenile"/, /data-lineage="Violeta"/, /data-palette="purple-mauve"/, /data-source="velociraptor-sprite-sheet.png"/, /data-frame="juvenile-idle-2"/],
+    "rosa": [/data-character="Rosa"/, /data-species="Velociraptor"/, /data-age="juvenile"/, /data-lineage="Violeta"/, /data-palette="purple-mauve"/, /data-source="juvenile-velociraptor-sprite-sheet.png"/, /data-sheet-size="1024x337"/, /data-frame="juvenile-idle-2"/],
     "vasti-idle": [/data-character="Vasti"/, /data-species="Vastatosaurus rex"/, /data-origin="King Kong 2005"/, /three-fingered forelimbs/, /data-hand-digits="3"/, /data-colors="olive-green brown beige"/],
     "ferrucutus": [/data-character="Ferrucutus Cerastes"/, /data-origin="King Kong 2005"/, /paired nasal horns/],
     "indoraptor": [/data-character="Indoraptor"/, /data-origin="Jurassic World Fallen Kingdom"/, /gold dorsal stripe/],
@@ -89,7 +89,8 @@ test("Rosa uses juvenile frames from the same source sheet and lineage", () => {
   assert.match(svg, /data-age="juvenile"/);
   assert.match(svg, /data-lineage="Violeta"/);
   assert.match(svg, /data-palette="purple-mauve"/);
-  assert.match(svg, /data-source="velociraptor-sprite-sheet.png"/);
+  assert.match(svg, /data-source="juvenile-velociraptor-sprite-sheet.png"/);
+  assert.match(svg, /data-sheet-size="1024x337"/);
   assert.match(svg, /data-frame="juvenile-idle-2"/);
   assert.match(svg, /mask-type="luminance"/);
 });
@@ -144,7 +145,7 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
   globalThis.Image = FakeImage;
   try {
     const renderer = new SpriteRenderer("/assets/");
-    assert.match(renderer.get("violeta-idle").src, /violeta-idle\.svg\?v=20261112-violeta-articulated-rig-1$/);
+    assert.match(renderer.get("violeta-idle").src, /violeta-idle\.svg\?v=20261112-rosa-articulated-rig-1$/);
   } finally {
     if (previousImage === undefined) delete globalThis.Image;
     else globalThis.Image = previousImage;
@@ -228,7 +229,7 @@ test("sprite renderer uses base paths and draws cached images without reloading"
   try {
     const renderer = new SpriteRenderer("/Avoid/");
     const image = renderer.get("violeta-idle");
-    assert.equal(image.src, "/Avoid/assets/sprites/violeta-idle.svg?v=20261112-violeta-articulated-rig-1");
+    assert.equal(image.src, "/Avoid/assets/sprites/violeta-idle.svg?v=20261112-rosa-articulated-rig-1");
     assert.equal(renderer.get("violeta-idle"), image);
     image.complete = true;
     image.naturalWidth = 240;
@@ -419,16 +420,19 @@ test("character selection dialog stays inside the game viewport without scrollin
 
 test("all non-hunter dinosaur frames resolve valid source assets", () => {
   const directory = resolve("public/assets/sprites");
-  const dinosaurs = readdirSync(directory).filter(name => name.endsWith(".svg") && !name.startsWith("hunter"));
+  const dinosaurs = readdirSync(directory).filter(name => name.endsWith(".svg") && !name.startsWith("hunter") && !name.includes("-rig-"));
   assert.equal(dinosaurs.length, 53);
   for (const filename of dinosaurs) {
     const svg = readFileSync(resolve(directory, filename), "utf8");
     assert.match(svg, /^(?:<\?xml[^>]+>\s*)?<svg\b/);
     assert.match(svg, /xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
     assert.doesNotMatch(svg, /linearGradient|radialGradient/);
-    if (/^(?:violeta|rosa)(?:-|\.)/.test(filename)) {
+    if (filename === "rosa.svg") {
+      assert.match(svg, /href="\.\.\/\.\.\/references\/juvenile-velociraptor-sprite-sheet\.png"/);
+      assert.match(svg, /data-source="juvenile-velociraptor-sprite-sheet\.png"/);
+    } else if (/^(?:violeta|rosa)(?:-|\.)/.test(filename)) {
       assert.match(svg, /href="\.\.\/\.\.\/references\/velociraptor-sprite-sheet\.png"/);
-      assert.match(svg, /data-source="velociraptor-sprite-sheet.png"/);
+      assert.match(svg, /data-source="velociraptor-sprite-sheet\.png"/);
     } else {
       assert.doesNotMatch(svg, /href=/i);
       assert.match(svg, /data-render-style="pixel-art"/);
@@ -441,7 +445,7 @@ test("dinosaur resting poses declare their source-based or pixel-art rendering m
   for (const filename of ["violeta-idle.svg","rosa.svg","vasti-idle.svg","ferrucutus.svg","indoraptor.svg","indominus.svg"]) {
     const svg = readFileSync(resolve("public/assets/sprites", filename), "utf8");
     if (filename === "violeta-idle.svg" || filename === "rosa.svg") {
-      assert.match(svg, /data-source="velociraptor-sprite-sheet.png"/);
+      assert.match(svg, filename === "rosa.svg" ? /data-source="juvenile-velociraptor-sprite-sheet.png"/ : /data-source="velociraptor-sprite-sheet.png"/);
       assert.match(svg, /mask-type="luminance"/);
     } else {
       assert.match(svg, /data-pixel-grid="4px"/);
@@ -764,4 +768,66 @@ test("Violeta articulates its limbs for running, jumping, dashing and crouching"
   assert.match(source, /backLegAngle = stride \* 0\.42/);
   assert.match(source, /frontLegAngle = -stride \* 0\.4/);
   assert.match(source, /jawAngle = 0\.34/);
+});
+
+
+test("Rosa has an articulated juvenile rig sourced from the dedicated 1024x337 reference sheet", () => {
+  const rendererSource = readFileSync(resolve("src/rendering/SpriteRenderer.js"), "utf8");
+  assert.match(rendererSource, /drawRosaRig\(/);
+  assert.match(rendererSource, /drawReferenceRosa\(/);
+  assert.match(rendererSource, /character === "beta" && this\.drawReferenceRosa/);
+
+  const names = ["body", "tail", "leg-back", "leg-front", "arm-back", "arm-front", "head", "jaw"];
+  for (const name of names) {
+    const svg = readFileSync(resolve("public/assets/sprites", "rosa-rig-" + name + ".svg"), "utf8");
+    assert.match(svg, /data-character="Rosa"/);
+    assert.match(svg, /data-age="juvenile"/);
+    assert.match(svg, /data-lineage="Violeta"/);
+    assert.match(svg, /data-source="juvenile-velociraptor-sprite-sheet\.png"/);
+    assert.match(svg, /data-sheet-size="1024x337"/);
+    assert.match(svg, /href="\.\.\/\.\.\/references\/juvenile-velociraptor-sprite-sheet\.png"/);
+    assert.match(svg, /mask-type="luminance"/);
+  }
+});
+
+test("Rosa is visibly enlarged without changing the 48px companion physics box", () => {
+  const renderer = Object.create(SpriteRenderer.prototype);
+  const drawn = [];
+  const scales = [];
+  renderer.get = () => ({ complete: true, naturalWidth: 128 });
+  renderer.draw = (_context, name, x, y, width, height) => {
+    drawn.push({ name, x, y, width, height });
+    return true;
+  };
+  const context = {
+    save() {}, restore() {}, translate() {},
+    rotate() {}, scale(x, y) { scales.push([x, y]); }
+  };
+  const rosa = { id: "rosa-test", state: "confined", facing: -1, motionSpeed: 0, x: 200, y: 300, w: 48, h: 48 };
+  renderer.drawAnimated(context, "beta", rosa.x, rosa.y, rosa.w, rosa.h, rosa, 0.3, { facing: rosa.facing });
+  assert.equal(drawn.length, 8);
+  assert.ok(drawn.every(part => part.name.startsWith("rosa-rig-")));
+  assert.ok(drawn.every(part => part.width > 48));
+  assert.ok(scales.some(([x, y]) => x === -1 && y === 1), "Rosa's left-facing direction mirrors all rig parts");
+
+  drawn.length = 0;
+  scales.length = 0;
+  rosa.facing = 1;
+  rosa.state = "following";
+  rosa.motionSpeed = 150;
+  renderer.drawAnimated(context, "beta", rosa.x, rosa.y, rosa.w, rosa.h, rosa, 0.8, { facing: rosa.facing });
+  assert.equal(drawn.length, 8);
+  assert.ok(drawn.some(part => part.width >= 68), "the juvenile sprite is visibly larger than its physics box");
+});
+
+test("Rosa articulates the tail, limbs, head and jaw across follower states", () => {
+  const source = readFileSync(resolve("src/rendering/SpriteRenderer.js"), "utf8");
+  for (const pose of ["rosa-run-a","rosa-run-b","rosa-duck","rosa-attack","rosa-impact","rosa-land","rosa-recover"]) {
+    assert.match(source, new RegExp('pose === "' + pose + '"'));
+  }
+  assert.match(source, /backLegAngle = stride \* 0\.43/);
+  assert.match(source, /frontLegAngle = -stride \* 0\.4/);
+  assert.match(source, /jawAngle = 0\.3/);
+  assert.equal(selectActorPose("beta", { state: "following", motionSpeed: 150 }).startsWith("rosa-run-"), true);
+  assert.equal(selectActorPose("beta", { animationState: "attack" }), "rosa-attack");
 });
