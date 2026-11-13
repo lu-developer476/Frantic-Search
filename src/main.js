@@ -40,7 +40,6 @@ const distanceLabel = document.querySelector("#distance");
 const rescuesLabel = document.querySelector("#rescues");
 const bestLabel = document.querySelector("#best");
 const abilityLabel = document.querySelector("#ability-status");
-const healthLabel = document.querySelector("#health-status");
 const campaignObjectiveLabel = document.querySelector("#campaign-objective");
 const campaignChapterLabel = document.querySelector("#campaign-chapter");
 const interactionHintLabel = document.querySelector("#interaction-hint");
@@ -1270,9 +1269,6 @@ function update(delta) {
     abilityLabel.textContent = ready ? ui("abilityReady") : ui("cooldown") + " " + player.abilityCooldown.toFixed(1) + "s";
     abilityLabel.classList.toggle("ready", ready);
   }
-  if (healthLabel) {
-    healthLabel.textContent = ui("integrity") + " " + String(player.health).padStart(2, "0") + "/03";
-  }
   if (beta?.state === "following" && extractionX && player.x >= extractionX && beta.x >= extractionX - 220) {
     finishCampaign();
   }
@@ -1455,13 +1451,13 @@ function start() {
   overlay.classList.add("hidden");
   running = true;
   paused = false;
+  document.body.classList.remove("game-paused");
   elapsed = 0;
   accumulator = 0;
   distance = 0;
   rescues = 0;
   stateLabel.textContent = ui("inProgress");
   rescuesLabel.textContent = "00";
-  if (healthLabel) healthLabel.textContent = ui("integrity") + " 03/03";
   campaign.begin();
   updateCampaignHud();
   renderStoryPanel();
@@ -1496,6 +1492,7 @@ function endGame() {
 function togglePause() {
   if (!desktopPlayback.matches || !running) return;
   paused = !paused;
+  document.body.classList.toggle("game-paused", paused);
   if (paused) cancelScheduledFrame();
   music.setPaused(paused);
   stateLabel.textContent = paused ? ui("paused") : ui("inProgress");
@@ -1532,6 +1529,29 @@ function selectCharacter(value) {
 
 document.querySelectorAll(".character-card").forEach((card) => {
   card.addEventListener("click", () => selectCharacter(card.dataset.character));
+
+  const preview = card.querySelector(".character-art img");
+  if (!preview) return;
+  const idleSource = preview.dataset.idleSrc || preview.src;
+  const runFrames = [preview.dataset.runASrc, preview.dataset.runBSrc].filter(Boolean);
+  if (runFrames.length !== 2) return;
+
+  let frame = 0;
+  let animationTimer = null;
+  card.addEventListener("mouseenter", () => {
+    if (animationTimer !== null) return;
+    frame = 0;
+    preview.src = runFrames[frame];
+    animationTimer = window.setInterval(() => {
+      frame = (frame + 1) % runFrames.length;
+      preview.src = runFrames[frame];
+    }, 140);
+  });
+  card.addEventListener("mouseleave", () => {
+    if (animationTimer !== null) window.clearInterval(animationTimer);
+    animationTimer = null;
+    preview.src = idleSource;
+  });
 });
 storyNextButton?.addEventListener("click", advanceStory);
 document.querySelector("#start-button").addEventListener("click", () => {
@@ -1595,7 +1615,6 @@ function applyLanguage() {
   });
   soundLabel.textContent = audio.enabled ? ui("sound") : ui("silence");
   menuToggle.setAttribute("aria-label", ui(navMenu.classList.contains("hidden") ? "openMenu" : "closeMenu"));
-  if (healthLabel) healthLabel.textContent = ui("integrity") + " " + String(player.health).padStart(2, "0") + "/03";
   if (abilityLabel) abilityLabel.textContent = player.abilityCooldown <= 0 ? ui("abilityReady") : ui("cooldown") + " " + player.abilityCooldown.toFixed(1) + "s";
 
   if (desktopBlocked) {
@@ -1623,7 +1642,6 @@ function applyLanguage() {
     stateLabel.textContent = ui("standby");
     overlay.querySelector(".overlay-kicker").textContent = "FRANTIC SEARCH";
     overlay.querySelector("h2").innerHTML = ui("wildWatching");
-    overlay.querySelector("p").textContent = ui("startMessage");
   }
 }
 
@@ -1726,7 +1744,6 @@ function syncDesktopAccess() {
     stateLabel.textContent = ui("standby");
     overlay.querySelector(".overlay-kicker").textContent = "FRANTIC SEARCH";
     overlay.querySelector("h2").innerHTML = ui("wildWatching");
-    overlay.querySelector("p").textContent = ui("startMessage");
     overlay.classList.remove("hidden");
   }
 }
