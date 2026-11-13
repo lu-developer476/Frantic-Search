@@ -715,9 +715,9 @@ test("Indoraptor articulated rig draws all eight parts and distinguishes pounce 
 
 test("Violeta uses an articulated rig sourced from the adult velociraptor sprite sheet", () => {
   const rendererSource = readFileSync(resolve("src/rendering/SpriteRenderer.js"), "utf8");
-  assert.match(rendererSource, /drawVioletaRig\(/);
   assert.match(rendererSource, /drawReferenceVioleta\(/);
   assert.match(rendererSource, /kind === "blue" && this\.drawReferenceVioleta/);
+  assert.match(rendererSource, /const result = this\.draw\(context, pose, 0, 0, renderWidth, renderHeight/);
 
   const names = ["body", "tail", "leg-back", "leg-front", "arm-back", "arm-front", "head", "jaw"];
   for (const name of names) {
@@ -747,8 +747,8 @@ test("Violeta rig is visible at an enlarged scale and faces both arrow-key direc
 
   const player = { facing: 1, onGround: true, vx: 0, animationState: null, duck: false };
   renderer.drawDinosaur(context, "blue", 100, 200, 64, 62, player, 0.4, 1);
-  assert.equal(drawn.length, 8);
-  assert.ok(drawn.every(part => part.name.startsWith("violeta-rig-")));
+  assert.equal(drawn.length, 1);
+  assert.equal(drawn[0].name, "violeta-idle");
   assert.ok(drawn[0].width >= 78, "rendered sprite is wider than its 64px physics body");
   assert.equal(scales.some(([x]) => x < 0), false, "right arrow direction keeps the source facing right");
 
@@ -756,8 +756,9 @@ test("Violeta rig is visible at an enlarged scale and faces both arrow-key direc
   scales.length = 0;
   player.facing = -1;
   renderer.drawDinosaur(context, "blue", 100, 200, 64, 62, player, 0.4, 1);
-  assert.equal(drawn.length, 8);
-  assert.ok(scales.some(([x, y]) => x === -1 && y === 1), "left arrow direction mirrors the complete rig");
+  assert.equal(drawn.length, 1);
+  assert.equal(drawn[0].name, "violeta-idle");
+  assert.ok(scales.some(([x, y]) => x === -1 && y === 1), "left arrow direction mirrors the visible sprite");
 });
 
 test("Violeta articulates its limbs for running, jumping, dashing and crouching", () => {
