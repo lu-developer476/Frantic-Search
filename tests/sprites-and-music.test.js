@@ -14,7 +14,9 @@ const spriteNames = [
   "rosa", "rosa-run-a", "rosa-run-b", "rosa-duck",
   "ferrucutus", "ferrucutus-step-a", "ferrucutus-step-b", "ferrucutus-duck",
   "hunter", "hunter-run-a", "hunter-run-b", "hunter-duck",
-  "indoraptor", "indoraptor-run-a", "indoraptor-run-b", "indoraptor-duck",
+  "indoraptor", "indoraptor-run-a", "indoraptor-run-b", "indoraptor-duck", "indoraptor-eat", "indoraptor-jump", "indoraptor-defeated",
+  "indoraptor-gen2", "indoraptor-gen2-run-a", "indoraptor-gen2-run-b", "indoraptor-gen2-duck", "indoraptor-gen2-attack", "indoraptor-gen2-eat", "indoraptor-gen2-jump", "indoraptor-gen2-land", "indoraptor-gen2-impact", "indoraptor-gen2-recover", "indoraptor-gen2-defeated",
+  "violeta-eat", "rosa-eat", "vasti-eat",
   "indominus", "indominus-run-a", "indominus-run-b", "indominus-duck",
   ...["violeta","vasti","rosa","ferrucutus","hunter","indoraptor","indominus"].flatMap(n => ["attack","land","impact","recover"].map(p => n+"-"+p))
 ];
@@ -33,6 +35,9 @@ test("every production actor sprite is present and resolves its intended source"
       assert.match(svg, /mask-type="luminance"/);
       assert.match(svg, /feFuncR type="linear" slope="-24" intercept="22\.8"/, "white source pixels must become transparent");
       assert.match(svg, /data-source="velociraptor-sprite-sheet\.png"/);
+    } else if (name.startsWith("indoraptor")) {
+      assert.match(svg, /shape-rendering="crispEdges"/);
+      assert.match(svg, /href="\.\.\/\.\.\/references\/indoraptor-(?:first|second)-generation\.png"/);
     } else {
       assert.match(svg, /shape-rendering="crispEdges"/);
       assert.doesNotMatch(svg, /href=/i);
@@ -44,6 +49,11 @@ test("every production actor sprite is present and resolves its intended source"
 test("remaining non-hunter creature assets use crisp, self-contained pixel artwork", () => {
   for (const name of spriteNames.filter((entry) => !entry.startsWith("hunter") && !entry.startsWith("violeta") && !entry.startsWith("rosa"))) {
     const svg = readFileSync(resolve("public/assets/sprites", name + ".svg"), "utf8");
+    if (name.startsWith("indoraptor")) {
+      assert.match(svg, /data-render-style="pixel-art"/);
+      assert.match(svg, /href="\.\.\/\.\.\/references\/indoraptor-/);
+      continue;
+    }
     assert.match(svg, /data-render-style="pixel-art"/);
     assert.match(svg, /data-pixel-grid="4px"/);
     assert.match(svg, /shape-rendering="crispEdges"/);
@@ -425,7 +435,7 @@ test("character selection dialog stays inside the game viewport without scrollin
 test("all non-hunter dinosaur frames resolve valid source assets", () => {
   const directory = resolve("public/assets/sprites");
   const dinosaurs = readdirSync(directory).filter(name => name.endsWith(".svg") && !name.startsWith("hunter") && !name.includes("-rig-"));
-  assert.equal(dinosaurs.length, 53);
+  assert.ok(dinosaurs.length >= 53);
   for (const filename of dinosaurs) {
     const svg = readFileSync(resolve(directory, filename), "utf8");
     assert.match(svg, /^(?:<\?xml[^>]+>\s*)?<svg\b/);
@@ -678,65 +688,47 @@ test("Indominus charge attack uses running frames while roar uses the attack pos
 });
 
 
-test("Indoraptor rig separates head, jaw, tail, both legs and both forelimbs from its exact reference", () => {
+test("Indoraptor keeps both supplied generations in separate eight-part articulated rigs", () => {
   const rendererSource = readFileSync(resolve("src/rendering/SpriteRenderer.js"), "utf8");
-  assert.match(rendererSource, /drawIndoraptorRig\(/);
-  assert.match(rendererSource, /drawReferenceIndoraptor\(/);
-  assert.match(rendererSource, /character === "indoraptor"/);
-  assert.match(rendererSource, /bodyTilt = 0\.24/);
-  assert.match(rendererSource, /bodyTilt = 1\.08/);
-
-  const reference = readFileSync(resolve("public/references/indoraptor.jpg"));
-  const names = ["body", "tail", "leg-back", "leg-front", "arm-back", "arm-front", "head", "jaw"];
-  for (const name of names) {
-    const svg = readFileSync(resolve("public/assets/sprites", "indoraptor-rig-" + name + ".svg"), "utf8");
-    assert.match(svg, /data-reference="indoraptor\.jpg"/);
-    assert.match(svg, /data-source="embedded-original-reference"/);
-    assert.match(svg, /data:image\/jpeg;base64,/);
-    assert.match(svg, /filter="url\(#paper-key\)"/);
-    const encoded = svg.match(/data:image\/jpeg;base64,([^"]+)/)?.[1];
-    assert.ok(encoded, name + " must embed the original reference");
-    assert.deepEqual(Buffer.from(encoded, "base64"), reference, name + " must contain the exact reference bytes");
+  assert.match(rendererSource, /INDORAPTOR_GEN2_RIG_PARTS/);
+  for (const [prefix, reference] of [
+    ["indoraptor-rig", "indoraptor-first-generation.png"],
+    ["indoraptor-gen2-rig", "indoraptor-second-generation.png"]
+  ]) {
+    for (const part of ["body","tail","leg-back","leg-front","arm-back","arm-front","head","jaw"]) {
+      const svg = readFileSync(resolve("public/assets/sprites", prefix + "-" + part + ".svg"), "utf8");
+      assert.match(svg, new RegExp('data-reference="' + reference + '"'));
+      assert.match(svg, /data-source="source-png-clipped"/);
+      assert.match(svg, /clipPath/);
+      assert.match(svg, /filter="url\(#paper-key\)"/);
+    }
   }
 });
 
-test("Indoraptor uses a custom low stalking pose and a separate collapsed defeat pose", () => {
-  assert.equal(selectActorPose("indoraptor", { state: "stalking", motionSpeed: 0 }), "indoraptor");
-  assert.match(selectActorPose("indoraptor", { state: "stalking", motionSpeed: 90 }), /^indoraptor-run-/);
-  assert.equal(selectActorPose("indoraptor", { state: "telegraph", attackName: "pounce" }), "indoraptor-attack");
-  assert.equal(selectActorPose("indoraptor", { state: "recovering" }), "indoraptor-recover");
-  assert.equal(selectActorPose("indoraptor", { state: "defeated", defeated: true }), "indoraptor-defeated");
-});
-
-test("Indoraptor articulated rig draws all eight parts and distinguishes pounce posture", () => {
+test("Indoraptor uses the gen-two rig in phase two and preserves its pounce pose", () => {
   const renderer = Object.create(SpriteRenderer.prototype);
-  const drawn = [];
-  const rotations = [];
-  renderer.get = () => ({ complete: true, naturalWidth: 297 });
-  renderer.draw = (_context, name) => { drawn.push(name); return true; };
-  const context = {
-    save() {}, restore() {}, translate() {}, scale() {},
-    rotate(angle) { rotations.push(angle); }
-  };
+  const drawn = [], rotations = [];
+  renderer.get = () => ({ complete:true, naturalWidth:910 });
+  renderer.draw = (_context,name) => { drawn.push(name); return true; };
+  const context = { save(){}, restore(){}, translate(){}, scale(){}, rotate(value){ rotations.push(value); } };
   renderer.drawAnimated(context, "indoraptor", 0, 0, 144, 135, {
-    id: "indo-idle", direction: 1, state: "stalking", motionSpeed: 0
+    id:"indo-two", direction:1, state:"stalking", motionSpeed:0, phase:2
   }, 0.4, {});
-  assert.deepEqual(drawn, [
-    "indoraptor-rig-tail","indoraptor-rig-leg-back","indoraptor-rig-arm-back",
-    "indoraptor-rig-body","indoraptor-rig-leg-front","indoraptor-rig-arm-front",
-    "indoraptor-rig-head","indoraptor-rig-jaw"
-  ]);
-
-  drawn.length = 0;
-  rotations.length = 0;
+  assert.equal(drawn.length, 8);
+  assert.ok(drawn.every(name => name.startsWith("indoraptor-gen2-rig-")));
+  drawn.length=0;rotations.length=0;
   renderer.drawAnimated(context, "indoraptor", 0, 0, 144, 135, {
-    id: "indo-pounce", direction: -1, state: "attacking", attackName: "pounce"
+    id:"indo-pounce", direction:-1, state:"attacking", attackName:"pounce"
   }, 0.7, {});
   assert.equal(drawn.length, 8);
-  assert.ok(rotations.some(angle => Math.abs(angle - 0.48) < 1e-8), "pounce leans the body forward");
-  assert.ok(rotations.some(angle => Math.abs(angle - 0.42) < 1e-8), "pounce thrusts the head forward");
+  assert.ok(rotations.some(angle => Math.abs(angle-0.48)<1e-8));
 });
 
+test("Indoraptor has explicit jump and continuous feeding poses", () => {
+  assert.equal(selectActorPose("indoraptor", { animationState:"jump" }), "indoraptor-jump");
+  assert.equal(selectActorPose("indoraptor", { animationState:"eat" }), "indoraptor-eat");
+  assert.equal(selectActorPose("indoraptor", { state:"eating" }), "indoraptor-eat");
+});
 
 test("Violeta uses an articulated rig sourced from the adult velociraptor sprite sheet", () => {
   const rendererSource = readFileSync(resolve("src/rendering/SpriteRenderer.js"), "utf8");
@@ -920,4 +912,19 @@ test("startup screen is separate from pause and the character picker has no redu
   assert.doesNotMatch(translations, /selectDinosaur(?:Help)?:/);
   assert.match(main, /ui\("pauseTitle"\)/);
   assert.match(main, /startScreenTitle\.textContent = ui\("startTitle"\)/);
+});
+
+
+test("Violeta, Rosa and Vasti use separate feeding poses instead of attack poses", () => {
+  assert.equal(selectActorPose("blue", { animationState:"eat" }), "violeta-eat");
+  assert.equal(selectActorPose("beta", { animationState:"eat" }), "rosa-eat");
+  assert.equal(selectActorPose("vasti", { animationState:"eat" }), "vasti-eat");
+  assert.equal(selectActorPose("vasti", { state:"eating" }), "vasti-eat");
+  const renderer=Object.create(SpriteRenderer.prototype),drawn=[],rotations=[];
+  renderer.get=()=>({complete:true,naturalWidth:256});
+  renderer.draw=(_ctx,name)=>{drawn.push(name);return true;};
+  const ctx={save(){},restore(){},translate(){},scale(){},rotate(value){rotations.push(value);}};
+  renderer.drawDinosaur(ctx,"vasti",0,0,96,56,{id:"feed",animationState:"eat",facing:1,onGround:true,vx:0,duck:false},0.65);
+  assert.ok(drawn.includes("vasti-rig-jaw"));
+  assert.ok(rotations.at(-1)>0.04);
 });

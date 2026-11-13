@@ -1,6 +1,6 @@
 import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.js";
 
-const SPRITE_ASSET_VERSION = "20261113-vasti-articulated-reference-1";
+const SPRITE_ASSET_VERSION = "20261113-indoraptor-dual-generation-eating-1";
 const ROSA_RIG_PARTS = [
   "rosa-rig-body",
   "rosa-rig-tail",
@@ -33,7 +33,7 @@ const VASTI_RIG_PARTS = [
 ];
 const VASTI_POSE_SPRITES = new Set([
   "vasti-idle","vasti-run-a","vasti-run-b","vasti-jump","vasti-duck",
-  "vasti-attack","vasti-land","vasti-impact","vasti-recover","vasti-stomp","vasti-slam"
+  "vasti-attack","vasti-eat","vasti-land","vasti-impact","vasti-recover","vasti-stomp","vasti-slam"
 ]);
 const FERRUCUTUS_RIG_PARTS = [
   "ferrucutus-rig-body","ferrucutus-rig-tail","ferrucutus-rig-leg-back",
@@ -47,6 +47,10 @@ const INDORAPTOR_RIG_PARTS = [
   "indoraptor-rig-body","indoraptor-rig-tail","indoraptor-rig-leg-back","indoraptor-rig-leg-front",
   "indoraptor-rig-arm-back","indoraptor-rig-arm-front","indoraptor-rig-head","indoraptor-rig-jaw"
 ];
+const INDORAPTOR_GEN2_RIG_PARTS = [
+  "indoraptor-gen2-rig-body","indoraptor-gen2-rig-tail","indoraptor-gen2-rig-leg-back","indoraptor-gen2-rig-leg-front",
+  "indoraptor-gen2-rig-arm-back","indoraptor-gen2-rig-arm-front","indoraptor-gen2-rig-head","indoraptor-gen2-rig-jaw"
+];
 const BASE = [
   "violeta-idle","violeta-run-a","violeta-run-b","violeta-jump","violeta-dash","violeta-duck",
   "vasti-idle","vasti-run-a","vasti-run-b","vasti-jump","vasti-duck",
@@ -54,7 +58,9 @@ const BASE = [
   "rosa","rosa-run-a","rosa-run-b","rosa-jump","rosa-duck",
   "ferrucutus","ferrucutus-step-a","ferrucutus-step-b","ferrucutus-duck",
   "hunter","hunter-run-a","hunter-run-b","hunter-duck",
-  "indoraptor","indoraptor-run-a","indoraptor-run-b","indoraptor-duck",
+  "indoraptor","indoraptor-run-a","indoraptor-run-b","indoraptor-duck","indoraptor-eat","indoraptor-jump","indoraptor-defeated",
+  "indoraptor-gen2","indoraptor-gen2-run-a","indoraptor-gen2-run-b","indoraptor-gen2-duck","indoraptor-gen2-eat","indoraptor-gen2-jump","indoraptor-gen2-defeated",
+  "violeta-eat","rosa-eat","vasti-eat",
   "indominus","indominus-run-a","indominus-run-b","indominus-duck"
 ];
 const SPRITES = [
@@ -65,8 +71,10 @@ const SPRITES = [
   ...FERRUCUTUS_RIG_PARTS,
   ...INDOMINUS_RIG_PARTS,
   ...INDORAPTOR_RIG_PARTS,
+  ...INDORAPTOR_GEN2_RIG_PARTS,
   ...["violeta","rosa","ferrucutus","hunter","indoraptor","indominus"]
-    .flatMap(name => ["attack","land","impact","recover"].map(pose => name + "-" + pose))
+    .flatMap(name => ["attack","land","impact","recover"].map(pose => name + "-" + pose)),
+  ...["indoraptor-gen2"].flatMap(name => ["attack","land","impact","recover"].map(pose => name + "-" + pose))
 ];
 
 function phaseOf(actor, fallback) {
@@ -185,6 +193,16 @@ export class SpriteRenderer {
       frontArmAngle = 0.26;
       headAngle = -0.2;
       jawAngle = 0;
+    } else if (pose === "rosa-eat") {
+      const bite = 0.5 + 0.5 * Math.sin(elapsed * 8.2 + phase);
+      bodyAngle = -0.025;
+      tailAngle = 0.08;
+      backLegAngle = 0.035;
+      frontLegAngle = -0.035;
+      backArmAngle = 0.12;
+      frontArmAngle = 0.16;
+      headAngle = -0.16 - bite * 0.055;
+      jawAngle = 0.055 + bite * 0.37;
     } else if (pose === "rosa-attack") {
       bodyAngle = 0.095;
       tailAngle = 0.06;
@@ -379,6 +397,16 @@ export class SpriteRenderer {
       frontArmAngle = 0.28;
       headAngle = -0.22;
       jawAngle = 0;
+    } else if (pose === "violeta-eat") {
+      const bite = 0.5 + 0.5 * Math.sin(elapsed * 8.8 + phase);
+      bodyAngle = -0.025;
+      tailAngle = 0.075;
+      backLegAngle = 0.02;
+      frontLegAngle = -0.02;
+      backArmAngle = 0.1;
+      frontArmAngle = 0.14;
+      headAngle = -0.14 - bite * 0.05;
+      jawAngle = 0.055 + bite * 0.38;
     } else if (pose === "violeta-attack") {
       bodyAngle = 0.08;
       tailAngle = 0.08;
@@ -566,6 +594,16 @@ export class SpriteRenderer {
       forelegAngle = 0.25;
       headAngle = 0.12;
       jawAngle = 0;
+    } else if (pose === "vasti-eat") {
+      const bite = 0.5 + 0.5 * Math.sin(elapsed * 6.8 + phase);
+      bodyAngle = -0.018;
+      tailAngle = -0.025 + idle * 0.025;
+      backLegAngle = 0.015;
+      frontLegAngle = -0.015;
+      rearForelegAngle = 0.04;
+      forelegAngle = -0.025;
+      headAngle = -0.16 - bite * 0.07;
+      jawAngle = 0.04 + bite * 0.4;
     } else if (pose === "vasti-attack") {
       // Bite / feeding action: head drives forward and the lower jaw opens on the follow-through.
       bodyAngle = -0.035;
@@ -688,6 +726,8 @@ export class SpriteRenderer {
       offsetY = 3;
     } else if (pose === "vasti-attack") {
       tilt = -0.018;
+    } else if (pose === "vasti-eat") {
+      tilt = -0.012;
     } else if (pose === "vasti-impact") {
       tilt = -0.035;
       offsetY = 1;
@@ -943,24 +983,27 @@ export class SpriteRenderer {
 
 
   drawIndoraptorRig(context, width, height, actor, elapsed, pose, alpha) {
-    // The original image faces right; mirror only when the boss turns left.
+    const generationValue = actor?.generation ?? actor?.phase ?? 1;
+    const generationTwo = generationValue === 2 || generationValue === "2" ||
+      generationValue === "second" || generationValue === "second-generation";
+    const prefix = generationTwo ? "indoraptor-gen2-rig" : "indoraptor-rig";
     const direction = actor?.direction ?? 1;
     const mirror = direction < 0;
     const phase = phaseOf(actor, "indoraptor");
     const gait = Math.sin(elapsed * 9.2 * Math.PI + phase);
     const running = pose === "indoraptor-run-a" || pose === "indoraptor-run-b";
     const defeated = pose === "indoraptor-defeated";
+    const eating = pose === "indoraptor-eat";
     const attack = actor?.state === "telegraph" || actor?.state === "attacking" || pose === "indoraptor-attack";
     const attackName = actor?.attackName;
 
-    // The reference is anatomical material, not the final idle pose: the rig starts in a crouched hunt.
     let bodyTilt = 0.24;
-    let tailAngle = -0.08;
+    let tailAngle = -0.08 + Math.sin(elapsed * 7.1 + phase) * 0.012;
     let backLegAngle = 0.22;
     let frontLegAngle = -0.14;
-    let backArmAngle = -0.18;
-    let frontArmAngle = 0.2;
-    let headAngle = 0.3;
+    let backArmAngle = -0.18 + Math.sin(elapsed * 10.5 + phase) * 0.018;
+    let frontArmAngle = 0.2 - Math.sin(elapsed * 11.3 + phase) * 0.02;
+    let headAngle = 0.3 + Math.sin(elapsed * 8.2 + phase) * 0.018;
     let jawAngle = 0;
 
     if (running) {
@@ -973,8 +1016,26 @@ export class SpriteRenderer {
       headAngle = 0.22;
       jawAngle = 0.23 + Math.max(0, gait) * 0.06;
     }
-
-    if (attack) {
+    if (pose === "indoraptor-jump") {
+      bodyTilt = -0.12;
+      tailAngle = -0.28;
+      backLegAngle = -0.4;
+      frontLegAngle = 0.34;
+      backArmAngle = -0.42;
+      frontArmAngle = 0.38;
+      headAngle = -0.08;
+      jawAngle = 0.28;
+    } else if (eating) {
+      const bite = 0.5 + 0.5 * Math.sin(elapsed * 10.4 + phase);
+      bodyTilt = 0.14 + bite * 0.025;
+      tailAngle = -0.035 + Math.sin(elapsed * 3.4 + phase) * 0.035;
+      backLegAngle = 0.08;
+      frontLegAngle = -0.06;
+      backArmAngle = -0.04;
+      frontArmAngle = 0.12;
+      headAngle = 0.5 + bite * 0.13;
+      jawAngle = 0.08 + bite * 0.48;
+    } else if (attack) {
       if (attackName === "pounce") {
         bodyTilt = 0.48;
         tailAngle = -0.24;
@@ -997,34 +1058,15 @@ export class SpriteRenderer {
     }
 
     if (pose === "indoraptor-impact") {
-      bodyTilt = -0.12;
-      tailAngle = 0.2;
-      backLegAngle = 0.12;
-      frontLegAngle = -0.08;
-      backArmAngle = 0.24;
-      frontArmAngle = -0.2;
-      headAngle = -0.2;
-      jawAngle = 0.12;
+      bodyTilt = -0.12; tailAngle = 0.2; backLegAngle = 0.12; frontLegAngle = -0.08;
+      backArmAngle = 0.24; frontArmAngle = -0.2; headAngle = -0.2; jawAngle = 0.12;
     } else if (pose === "indoraptor-recover") {
-      bodyTilt = 0.18;
-      tailAngle = -0.04;
-      backLegAngle = 0.16;
-      frontLegAngle = -0.1;
-      backArmAngle = -0.1;
-      frontArmAngle = 0.13;
-      headAngle = 0.25;
-      jawAngle = 0;
+      bodyTilt = 0.18; tailAngle = -0.04; backLegAngle = 0.16; frontLegAngle = -0.1;
+      backArmAngle = -0.1; frontArmAngle = 0.13; headAngle = 0.25; jawAngle = 0;
     } else if (pose === "indoraptor-land") {
-      bodyTilt = 0.3;
-      tailAngle = 0.12;
-      backLegAngle = 0.28;
-      frontLegAngle = -0.2;
-      backArmAngle = -0.18;
-      frontArmAngle = 0.2;
-      headAngle = 0.35;
-      jawAngle = 0.08;
+      bodyTilt = 0.3; tailAngle = 0.12; backLegAngle = 0.28; frontLegAngle = -0.2;
+      backArmAngle = -0.18; frontArmAngle = 0.2; headAngle = 0.35; jawAngle = 0.08;
     } else if (defeated) {
-      // Final collapsed pose: torso and neck settle toward the ground.
       bodyTilt = 1.08;
       tailAngle = 0.42;
       backLegAngle = -0.58;
@@ -1037,9 +1079,8 @@ export class SpriteRenderer {
 
     context.save();
     if (mirror) { context.translate(width, 0); context.scale(-1, 1); }
-
-    const hipX = width * 0.47;
-    const hipY = height * 0.62;
+    const hipX = width * 0.57;
+    const hipY = height * 0.57;
     context.translate(hipX, hipY);
     context.rotate(bodyTilt);
     context.translate(-hipX, -hipY);
@@ -1048,27 +1089,25 @@ export class SpriteRenderer {
       context.scale(1.02, 0.84);
       context.translate(0, -height * 0.12);
     }
-
-    const drawPart = (name, pivotX, pivotY, angle) => {
-      const px = pivotX / 297 * width;
-      const py = pivotY / 277 * height;
+    const drawPart = (part, pivotX, pivotY, angle) => {
+      const px = pivotX / 910 * width;
+      const py = pivotY / 400 * height;
       context.save();
       context.translate(px, py);
       context.rotate(angle);
-      const drawn = this.draw(context, name, -px, -py, width, height, { alpha });
+      const drawn = this.draw(context, prefix + "-" + part, -px, -py, width, height, { alpha });
       context.restore();
       return drawn;
     };
-
     const drawn = [
-      drawPart("indoraptor-rig-tail", 108, 151, tailAngle),
-      drawPart("indoraptor-rig-leg-back", 111, 164, backLegAngle),
-      drawPart("indoraptor-rig-arm-back", 113, 135, backArmAngle),
-      drawPart("indoraptor-rig-body", 0, 0, 0),
-      drawPart("indoraptor-rig-leg-front", 151, 166, frontLegAngle),
-      drawPart("indoraptor-rig-arm-front", 158, 135, frontArmAngle),
-      drawPart("indoraptor-rig-head", 144, 108, headAngle),
-      drawPart("indoraptor-rig-jaw", 178, 57, jawAngle)
+      drawPart("tail", 390, 155, tailAngle),
+      drawPart("leg-back", 455, 235, backLegAngle),
+      drawPart("arm-back", 615, 165, backArmAngle),
+      drawPart("body", 0, 0, 0),
+      drawPart("leg-front", 620, 238, frontLegAngle),
+      drawPart("arm-front", 700, 176, frontArmAngle),
+      drawPart("head", 720, 108, headAngle),
+      drawPart("jaw", 850, 102, jawAngle)
     ].every(Boolean);
     context.restore();
     return drawn;
@@ -1077,43 +1116,47 @@ export class SpriteRenderer {
   drawReferenceIndoraptor(context, x, y, width, height, actor, elapsed, alpha = 1, poseOverride = null, facing = null) {
     const pose = poseOverride ?? selectActorPose("indoraptor", actor, elapsed);
     const phase = phaseOf(actor, "indoraptor");
+    const generationValue = actor?.generation ?? actor?.phase ?? 1;
+    const generationTwo = generationValue === 2 || generationValue === "2" ||
+      generationValue === "second" || generationValue === "second-generation";
+    const generation = generationTwo ? 2 : 1;
     const gait = Math.sin(elapsed * 9.2 * Math.PI + phase);
-    let bob = 0, tilt = 0, sx = 1, sy = 1;
+    let bob = 0, tilt = 0, sx = 1;
     if (pose === "indoraptor-run-a" || pose === "indoraptor-run-b") {
       bob = Math.round(Math.abs(gait) * 2);
       tilt = gait * 0.018;
       sx = 1 + Math.abs(gait) * 0.018;
-      sy = 1 - Math.abs(gait) * 0.02;
-    } else if (pose === "indoraptor-attack") {
-      tilt = actor?.attackName === "pounce" ? -0.025 : 0.02;
-      sx = actor?.attackName === "pounce" ? 1.035 : 1.01;
+    } else if (pose === "indoraptor-attack" || pose === "indoraptor-eat") {
+      tilt = pose === "indoraptor-eat" ? 0.012 : actor?.attackName === "pounce" ? -0.025 : 0.02;
+      sx = pose === "indoraptor-eat" ? 1.01 : actor?.attackName === "pounce" ? 1.035 : 1.01;
+    } else if (pose === "indoraptor-jump") {
+      tilt = -0.06; bob = -7; sx = 1.025;
     } else if (pose === "indoraptor-impact") {
       tilt = -0.035; bob = 1;
     } else if (pose === "indoraptor-recover") {
       bob = Math.round(Math.max(0, Math.sin(elapsed * 14 + phase)) * 1.5);
     } else if (pose === "indoraptor-defeated") {
-      tilt = 0.08; sy = 0.98; bob = 4;
+      tilt = 0.08; bob = 4;
     } else {
       const breath = Math.sin(elapsed * 1.65 + phase);
       bob = Math.round(breath * 0.75);
-      sy = 1 + breath * 0.006;
     }
-
-    const w = Math.max(1, Math.round(width * sx));
-    const h = Math.max(1, Math.round(height * sy));
+    const w = Math.max(1, Math.round(width * 1.78 * sx));
+    const h = Math.max(1, Math.round(w * 400 / 910));
     const dx = Math.round(x + (width - w) / 2);
-    const dy = Math.round(y + (height - h) / 2 + bob);
+    const dy = Math.round(y + height - h + bob);
     context.save();
     context.translate(dx + w / 2, dy + h / 2);
     context.rotate(tilt);
     context.translate(-w / 2, -h / 2);
-    const rigReady = typeof this.get === "function" && INDORAPTOR_RIG_PARTS.every(name => {
+    const rigParts = generation === 2 ? INDORAPTOR_GEN2_RIG_PARTS : INDORAPTOR_RIG_PARTS;
+    const rigReady = rigParts.every(name => {
       const image = this.get(name);
       return image?.complete && image.naturalWidth > 0;
     });
-    const fallbackPose = pose === "indoraptor-defeated" ? "indoraptor" : pose;
+    const fallbackPose = generation === 2 ? pose.replace(/^indoraptor/, "indoraptor-gen2") : pose;
     const result = rigReady
-      ? this.drawIndoraptorRig(context, w, h, actor, elapsed, pose, alpha)
+      ? this.drawIndoraptorRig(context, w, h, { ...actor, direction: actor?.direction ?? facing ?? 1, generation }, elapsed, pose, alpha)
       : this.draw(context, fallbackPose, 0, 0, w, h, { alpha, facing: facing ?? (actor?.direction ?? 1) });
     context.restore();
     return result;

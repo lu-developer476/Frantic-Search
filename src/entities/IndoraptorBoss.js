@@ -22,6 +22,11 @@ export class IndoraptorBoss extends BossEnemy {
     this.pounceOriginY = this.baseY;
   }
 
+  get generation() {
+    // The visual skin follows the existing health-based combat phase.
+    return this.phase;
+  }
+
   chooseAttack() {
     return this.attackIndex % 2 === 0 ? "pounce" : "claw";
   }
