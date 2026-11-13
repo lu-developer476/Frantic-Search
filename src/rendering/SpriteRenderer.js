@@ -279,10 +279,10 @@ export class SpriteRenderer {
       scaleY = Math.min(scaleY, 0.9);
     }
 
-    const drawWidth = Math.max(1, Math.round(width * definition.scale * scaleX));
-    const drawHeight = Math.max(1, Math.round(drawWidth * bounds.height / bounds.width * scaleY));
+    const drawWidth = Math.max(1, Math.round(width * definition.scale));
+    const drawHeight = Math.max(1, Math.round(drawWidth * bounds.height / bounds.width));
     const drawCenterX = x + width / 2;
-    const drawCenterY = y + height - drawHeight / 2 + bob;
+    const drawCenterY = y + height + bob - drawHeight * scaleY / 2;
     const facing = options.facing ?? actor?.facing ?? actor?.direction ?? 1;
     const flip = Math.sign(facing || 1) !== (definition.sourceFacing ?? 1);
 
