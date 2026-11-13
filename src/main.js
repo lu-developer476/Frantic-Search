@@ -1175,6 +1175,23 @@ function update(delta) {
     } else if (event?.type === "companion-boss-strike" && !event.boss.defeated) {
       damageBoss(event.boss, 1, "companion");
       burst(event.boss.x + event.boss.w / 2, event.boss.y + event.boss.h * 0.65, "#8ed8c0", 9);
+    } else if (event?.type === "companion-shockwave") {
+      let hit = false;
+      for (const hunter of hunters) {
+        if (hunter.defeated) continue;
+        const dx = Math.abs(hunter.x + hunter.w / 2 - event.x);
+        const dy = Math.abs(hunter.y + hunter.h - event.y);
+        if (dx <= event.radius && dy <= 112) {
+          damageHunter(hunter, 1, "companion-stomp");
+          hit = true;
+        }
+      }
+      if (activeBoss && !activeBoss.defeated && activeBoss.isVulnerable &&
+          Math.abs(activeBoss.x + activeBoss.w / 2 - event.x) <= event.radius + activeBoss.w * 0.35) {
+        damageBoss(activeBoss, 1, "companion-stomp");
+        hit = true;
+      }
+      if (hit) burst(event.x, event.y, "#8ed8c0", 16);
     }
   }
 

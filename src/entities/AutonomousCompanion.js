@@ -66,9 +66,15 @@ export class AutonomousCompanion {
       actor.animationTimer = 0.24;
       this.attackCooldown = target.kind === "boss" ? 2.1 : 1.55;
       strike = target;
-      if (this.abilityCooldown <= 0 && target.distance > 58 && (actor.character === "blue" || actor.character === "rosa")) {
+      const canUseMobilityAbility = (actor.character === "blue" || actor.character === "rosa") &&
+        target.distance > 58 && target.distance < 175;
+      const canUseHeavyAbility = actor.character === "vasti" &&
+        actor.onGround && target.distance > 58 && target.distance < 145;
+      if (this.abilityCooldown <= 0 && (canUseMobilityAbility || canUseHeavyAbility)) {
+        // Each companion uses its own character ability: Violeta/Rosa dash,
+        // Vasti ground-stomp (or an aerial slam if a later AI decision triggers it).
         this.input.actions.add("ability");
-        this.abilityCooldown = 2.8;
+        this.abilityCooldown = actor.character === "vasti" ? 3.2 : 2.8;
       }
     }
 
@@ -82,6 +88,17 @@ export class AutonomousCompanion {
       actor.onGround = true;
     }
     actor.motionSpeed = actor.vx;
+
+    // Consume the companion's own stomp/landing shockwave independently of the
+    // player's ability state. This also catches a Vasti slam when it lands.
+    if (actor.consumeShockwave?.()) {
+      return {
+        type: "companion-shockwave",
+        x: actor.x + actor.w / 2,
+        y: actor.y + actor.h,
+        radius: 190
+      };
+    }
 
     if (!strike) return null;
     const hitDistance = Math.abs(strike.target.x + strike.target.w / 2 - (actor.x + actor.w / 2));
