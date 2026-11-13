@@ -24,6 +24,8 @@ Narrator interludes pause the simulation so the player can read the story and ev
 - **Beige** applies a warm, sepia-toned treatment; **Gray** applies a cool, monochrome treatment directly to the game scene. The selected language and environmental mode are saved locally.
 - The game renders directly to its 960×540 logical Canvas; pixel-art sprites retain nearest-neighbour sampling and share the scene's coordinate system.
 - The original campaign, physics, boss encounters, rescue and escort systems remain intact beneath the new arcade presentation.
+- Story passages are displayed one paragraph at a time. The narrator overlay suspends gameplay until the player advances with Enter or the Continue control; all text is localized in Spanish and English.
+
 
 ## Characters and encounters
 
