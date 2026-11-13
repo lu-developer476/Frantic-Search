@@ -4,6 +4,7 @@ const BINDINGS = {
   jump: ["Space", "ArrowUp", "KeyW"],
   duck: ["ArrowDown", "KeyS"],
   ability: ["KeyX"],
+  special: ["KeyC"],
   interact: ["KeyE", "KeyF"]
 };
 
