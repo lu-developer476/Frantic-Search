@@ -1336,8 +1336,8 @@ function update(delta) {
     }
   }
 
-  if (beta?.state === "confined" && extractionX && player.x + player.w > extractionX - 18) {
-    player.x = extractionX - player.w - 18;
+  if (beta?.state === "confined" && player.x + player.w > beta.x + 10) {
+    player.x = beta.x - player.w + 10;
     player.vx = Math.min(0, player.vx);
   }
 
