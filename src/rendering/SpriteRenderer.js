@@ -1,6 +1,16 @@
 import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.js";
 
-const SPRITE_ASSET_VERSION = "20261112-indoraptor-articulated-rig-1";
+const SPRITE_ASSET_VERSION = "20261112-violeta-articulated-rig-1";
+const VIOLETA_RIG_PARTS = [
+  "violeta-rig-body",
+  "violeta-rig-tail",
+  "violeta-rig-leg-back",
+  "violeta-rig-leg-front",
+  "violeta-rig-arm-back",
+  "violeta-rig-arm-front",
+  "violeta-rig-head",
+  "violeta-rig-jaw"
+];
 const VASTI_RIG_PARTS = [
   "vasti-rig-body",
   "vasti-rig-tail",
@@ -32,6 +42,7 @@ const BASE = [
 ];
 const SPRITES = [
   ...BASE,
+  ...VIOLETA_RIG_PARTS,
   ...VASTI_RIG_PARTS,
   ...FERRUCUTUS_RIG_PARTS,
   ...INDOMINUS_RIG_PARTS,
@@ -108,6 +119,198 @@ export class SpriteRenderer {
     }
     context.restore();
     return true;
+  }
+
+
+  drawVioletaRig(context, width, height, actor, elapsed, pose, alpha) {
+    // The supplied adult sheet faces right. Player.facing already reflects the arrow-key intent.
+    const mirror = (actor?.facing ?? 1) < 0;
+    const phase = phaseOf(actor, "violeta");
+    const gait = Math.sin(elapsed * 10 * Math.PI + phase);
+    const stride = pose === "violeta-run-a" ? 1 : pose === "violeta-run-b" ? -1 : Math.sign(gait || 1);
+    const idle = Math.sin(elapsed * 2.15 + phase);
+
+    let bodyAngle = idle * 0.012;
+    let tailAngle = idle * 0.055;
+    let backLegAngle = idle * 0.018;
+    let frontLegAngle = -idle * 0.018;
+    let backArmAngle = idle * 0.02;
+    let frontArmAngle = -idle * 0.02;
+    let headAngle = idle * 0.018;
+    let jawAngle = 0;
+
+    if (pose === "violeta-run-a" || pose === "violeta-run-b") {
+      bodyAngle = -0.035;
+      tailAngle = gait * 0.14;
+      backLegAngle = stride * 0.42 + gait * 0.06;
+      frontLegAngle = -stride * 0.4 - gait * 0.06;
+      backArmAngle = -stride * 0.18;
+      frontArmAngle = stride * 0.2;
+      headAngle = -0.055;
+      jawAngle = 0.07 + Math.max(0, gait) * 0.04;
+    } else if (pose === "violeta-jump") {
+      bodyAngle = -0.105;
+      tailAngle = -0.18;
+      backLegAngle = -0.32;
+      frontLegAngle = 0.34;
+      backArmAngle = -0.25;
+      frontArmAngle = 0.31;
+      headAngle = -0.12;
+      jawAngle = 0.1;
+    } else if (pose === "violeta-dash") {
+      bodyAngle = 0.16;
+      tailAngle = -0.2;
+      backLegAngle = -0.25;
+      frontLegAngle = 0.38;
+      backArmAngle = -0.34;
+      frontArmAngle = -0.24;
+      headAngle = 0.17;
+      jawAngle = 0.2;
+    } else if (pose === "violeta-duck") {
+      bodyAngle = -0.1;
+      tailAngle = 0.17;
+      backLegAngle = 0.36;
+      frontLegAngle = 0.28;
+      backArmAngle = 0.2;
+      frontArmAngle = 0.28;
+      headAngle = -0.22;
+      jawAngle = 0;
+    } else if (pose === "violeta-attack") {
+      bodyAngle = 0.08;
+      tailAngle = 0.08;
+      backLegAngle = -0.12;
+      frontLegAngle = 0.16;
+      backArmAngle = 0.42;
+      frontArmAngle = -0.22;
+      headAngle = 0.22;
+      jawAngle = 0.34;
+    } else if (pose === "violeta-impact") {
+      bodyAngle = -0.12;
+      tailAngle = -0.17;
+      backLegAngle = 0.2;
+      frontLegAngle = -0.13;
+      backArmAngle = -0.24;
+      frontArmAngle = 0.2;
+      headAngle = -0.14;
+      jawAngle = 0.24;
+    } else if (pose === "violeta-land") {
+      bodyAngle = 0.045;
+      tailAngle = 0.12;
+      backLegAngle = 0.34;
+      frontLegAngle = -0.23;
+      backArmAngle = 0.16;
+      frontArmAngle = 0.2;
+      headAngle = 0.12;
+      jawAngle = 0.07;
+    } else if (pose === "violeta-recover") {
+      bodyAngle = idle * 0.018;
+      tailAngle = idle * 0.065;
+      backLegAngle = idle * 0.025;
+      frontLegAngle = -idle * 0.025;
+      backArmAngle = -idle * 0.018;
+      frontArmAngle = idle * 0.018;
+      headAngle = idle * 0.02;
+      jawAngle = 0;
+    }
+
+    context.save();
+    if (mirror) {
+      context.translate(width, 0);
+      context.scale(-1, 1);
+    }
+
+    const hipX = (128 - 88) / 80 * width;
+    const hipY = (89 - 47) / 69 * height;
+    context.translate(hipX, hipY);
+    context.rotate(bodyAngle);
+    context.translate(-hipX, -hipY);
+
+    const drawPart = (name, pivotX, pivotY, angle) => {
+      const px = (pivotX - 88) / 80 * width;
+      const py = (pivotY - 47) / 69 * height;
+      context.save();
+      context.translate(px, py);
+      context.rotate(angle);
+      const drawn = this.draw(context, name, -px, -py, width, height, { alpha });
+      context.restore();
+      return drawn;
+    };
+
+    const drawn = [
+      drawPart("violeta-rig-tail", 131, 80, tailAngle),
+      drawPart("violeta-rig-leg-back", 119, 91, backLegAngle),
+      drawPart("violeta-rig-arm-back", 136, 78, backArmAngle),
+      drawPart("violeta-rig-body", 88, 47, 0),
+      drawPart("violeta-rig-leg-front", 135, 91, frontLegAngle),
+      drawPart("violeta-rig-arm-front", 146, 79, frontArmAngle),
+      drawPart("violeta-rig-head", 145, 68, headAngle),
+      drawPart("violeta-rig-jaw", 162, 71, jawAngle)
+    ].every(Boolean);
+
+    context.restore();
+    return drawn;
+  }
+
+  drawReferenceVioleta(context, x, y, width, height, actor, elapsed, alpha = 1, poseOverride = null) {
+    const pose = poseOverride ?? selectActorPose("blue", actor, elapsed);
+    const phase = phaseOf(actor, "violeta");
+    const gait = Math.sin(elapsed * 10 * Math.PI + phase);
+    let bob = 0;
+    let tilt = 0;
+    let scaleX = 1;
+    let scaleY = 1;
+
+    if (pose === "violeta-run-a" || pose === "violeta-run-b") {
+      bob = Math.round(Math.abs(gait) * 1.7);
+      tilt = -0.025;
+      scaleX = 1.025;
+      scaleY = 0.985;
+    } else if (pose === "violeta-jump") {
+      tilt = -0.045;
+      bob = -1;
+    } else if (pose === "violeta-dash") {
+      tilt = 0.045;
+      scaleX = 1.055;
+      scaleY = 0.95;
+    } else if (pose === "violeta-duck") {
+      scaleX = 1.04;
+      scaleY = 0.9;
+      bob = 0;
+    } else if (pose === "violeta-impact") {
+      tilt = -0.06;
+      bob = 1;
+    } else if (pose === "violeta-land") {
+      scaleX = 1.055;
+      scaleY = 0.9;
+      bob = 3;
+    } else if (pose === "violeta-recover") {
+      bob = Math.round(Math.max(0, Math.sin(elapsed * 16 + phase)) * 1.25);
+    } else {
+      bob = Math.round(Math.sin(elapsed * 2.15 + phase) * 0.75);
+    }
+
+    // The old player box made Violeta too small. Expand the sprite only; keep physics dimensions unchanged.
+    const renderWidth = Math.max(1, Math.round(width * 1.22 * scaleX));
+    const renderHeight = Math.max(1, Math.round(renderWidth * 69 / 80 * scaleY));
+    const dx = Math.round(x + (width - renderWidth) / 2);
+    const dy = Math.round(y + height - renderHeight + bob + 4);
+    context.save();
+    context.translate(dx + renderWidth / 2, dy + renderHeight / 2);
+    context.rotate(tilt);
+    context.translate(-renderWidth / 2, -renderHeight / 2);
+
+    const rigReady = typeof this.get === "function" && VIOLETA_RIG_PARTS.every(name => {
+      const image = this.get(name);
+      return image?.complete && image.naturalWidth > 0;
+    });
+    const result = rigReady
+      ? this.drawVioletaRig(context, renderWidth, renderHeight, actor, elapsed, pose, alpha)
+      : this.draw(context, pose, 0, 0, renderWidth, renderHeight, {
+          alpha,
+          facing: actor?.facing ?? 1
+        });
+    context.restore();
+    return result;
   }
 
   drawVastiRig(context, width, height, actor, elapsed, pose, alpha) {
@@ -708,10 +911,11 @@ export class SpriteRenderer {
       pose = prefix + "-idle";
     }
 
-    if (kind !== "blue" && this.drawReferenceVasti(context, x, y, width, height, player ?? {}, elapsed, alpha, pose)) return true;
     const crouching = player?.duck === true && pose === prefix + "-duck";
     const naturalHeight = crouching ? (player?.normalHeight ?? height) : height;
     const drawY = crouching ? y + height - naturalHeight : y;
+    if (kind === "blue" && this.drawReferenceVioleta(context, x, drawY, width, naturalHeight, player ?? {}, elapsed, alpha, pose)) return true;
+    if (kind !== "blue" && this.drawReferenceVasti(context, x, y, width, height, player ?? {}, elapsed, alpha, pose)) return true;
     return this.draw(context, pose, x, drawY, width, naturalHeight, { alpha, facing: player?.facing ?? 1 });
   }
 

@@ -144,7 +144,7 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
   globalThis.Image = FakeImage;
   try {
     const renderer = new SpriteRenderer("/assets/");
-    assert.match(renderer.get("violeta-idle").src, /violeta-idle\.svg\?v=20261112-indoraptor-articulated-rig-1$/);
+    assert.match(renderer.get("violeta-idle").src, /violeta-idle\.svg\?v=20261112-violeta-articulated-rig-1$/);
   } finally {
     if (previousImage === undefined) delete globalThis.Image;
     else globalThis.Image = previousImage;
@@ -228,7 +228,7 @@ test("sprite renderer uses base paths and draws cached images without reloading"
   try {
     const renderer = new SpriteRenderer("/Avoid/");
     const image = renderer.get("violeta-idle");
-    assert.equal(image.src, "/Avoid/assets/sprites/violeta-idle.svg?v=20261112-indoraptor-articulated-rig-1");
+    assert.equal(image.src, "/Avoid/assets/sprites/violeta-idle.svg?v=20261112-violeta-articulated-rig-1");
     assert.equal(renderer.get("violeta-idle"), image);
     image.complete = true;
     image.naturalWidth = 240;
@@ -365,15 +365,16 @@ test("player sprites keep dash priority and anchor the crouch pose to the ground
  const renderer=Object.create(SpriteRenderer.prototype);
  const draws=[];
  renderer.draw=(_context,name,x,y,width,height,options)=>{draws.push({name,x,y,width,height,options});return true;};
- renderer.drawDinosaur({},"blue",100,200,64,42,{dashTimer:.1,duck:false,animationState:"attack",onGround:true,vx:340,normalHeight:62,facing:1},1);
+ const context={save(){},restore(){},translate(){},rotate(){},scale(){}};
+ renderer.drawDinosaur(context,"blue",100,200,64,42,{dashTimer:.1,duck:false,animationState:"attack",onGround:true,vx:340,normalHeight:62,facing:1},1);
  assert.equal(draws[0].name,"violeta-dash");
  draws.length=0;
- renderer.drawDinosaur({},"blue",100,200,64,42,{dashTimer:0,duck:true,animationState:null,onGround:true,vx:0,normalHeight:62,facing:1},1);
+ renderer.drawDinosaur(context,"blue",100,200,64,42,{dashTimer:0,duck:true,animationState:null,onGround:true,vx:0,normalHeight:62,facing:1},1);
  assert.equal(draws[0].name,"violeta-duck");
- assert.equal(draws[0].y,180);
- assert.equal(draws[0].height,62);
+ assert.ok(draws[0].width > 64,"the crouching sprite stays visually larger than its physics box");
+ assert.ok(draws[0].height < 62,"the crouch posture is vertically compressed");
  draws.length=0;
- renderer.drawDinosaur({},"blue",100,200,64,62,{dashTimer:0,duck:false,animationState:null,onGround:true,vx:120,normalHeight:62,facing:1},.5);
+ renderer.drawDinosaur(context,"blue",100,200,64,62,{dashTimer:0,duck:false,animationState:null,onGround:true,vx:120,normalHeight:62,facing:1},.5);
  assert.match(draws[0].name,/^violeta-run-/);
 });
 
@@ -705,4 +706,62 @@ test("Indoraptor articulated rig draws all eight parts and distinguishes pounce 
   assert.equal(drawn.length, 8);
   assert.ok(rotations.some(angle => Math.abs(angle - 0.48) < 1e-8), "pounce leans the body forward");
   assert.ok(rotations.some(angle => Math.abs(angle - 0.42) < 1e-8), "pounce thrusts the head forward");
+});
+
+
+test("Violeta uses an articulated rig sourced from the adult velociraptor sprite sheet", () => {
+  const rendererSource = readFileSync(resolve("src/rendering/SpriteRenderer.js"), "utf8");
+  assert.match(rendererSource, /drawVioletaRig\(/);
+  assert.match(rendererSource, /drawReferenceVioleta\(/);
+  assert.match(rendererSource, /kind === "blue" && this\.drawReferenceVioleta/);
+
+  const names = ["body", "tail", "leg-back", "leg-front", "arm-back", "arm-front", "head", "jaw"];
+  for (const name of names) {
+    const svg = readFileSync(resolve("public/assets/sprites", "violeta-rig-" + name + ".svg"), "utf8");
+    assert.match(svg, /data-character="Violeta"/);
+    assert.match(svg, /data-age="adult"/);
+    assert.match(svg, /data-source="adult-velociraptor-sprite-sheet\.png"/);
+    assert.match(svg, /href="\.\.\/\.\.\/references\/adult-velociraptor-sprite-sheet\.png"/);
+    assert.match(svg, /width="1024" height="342"/);
+    assert.match(svg, /mask-type="luminance"/);
+  }
+});
+
+test("Violeta rig is visible at an enlarged scale and faces both arrow-key directions", () => {
+  const renderer = Object.create(SpriteRenderer.prototype);
+  const drawn = [];
+  const scales = [];
+  renderer.get = () => ({ complete: true, naturalWidth: 128 });
+  renderer.draw = (_context, name, x, y, width, height) => {
+    drawn.push({ name, x, y, width, height });
+    return true;
+  };
+  const context = {
+    save() {}, restore() {}, translate() {},
+    rotate() {}, scale(x, y) { scales.push([x, y]); }
+  };
+
+  const player = { facing: 1, onGround: true, vx: 0, animationState: null, duck: false };
+  renderer.drawDinosaur(context, "blue", 100, 200, 64, 62, player, 0.4, 1);
+  assert.equal(drawn.length, 8);
+  assert.ok(drawn.every(part => part.name.startsWith("violeta-rig-")));
+  assert.ok(drawn[0].width >= 78, "rendered sprite is wider than its 64px physics body");
+  assert.equal(scales.some(([x]) => x < 0), false, "right arrow direction keeps the source facing right");
+
+  drawn.length = 0;
+  scales.length = 0;
+  player.facing = -1;
+  renderer.drawDinosaur(context, "blue", 100, 200, 64, 62, player, 0.4, 1);
+  assert.equal(drawn.length, 8);
+  assert.ok(scales.some(([x, y]) => x === -1 && y === 1), "left arrow direction mirrors the complete rig");
+});
+
+test("Violeta articulates its limbs for running, jumping, dashing and crouching", () => {
+  const source = readFileSync(resolve("src/rendering/SpriteRenderer.js"), "utf8");
+  for (const pose of ["violeta-run-a", "violeta-run-b", "violeta-jump", "violeta-dash", "violeta-duck", "violeta-attack", "violeta-impact", "violeta-land", "violeta-recover"]) {
+    assert.match(source, new RegExp('pose === "' + pose + '"'));
+  }
+  assert.match(source, /backLegAngle = stride \* 0\.42/);
+  assert.match(source, /frontLegAngle = -stride \* 0\.4/);
+  assert.match(source, /jawAngle = 0\.34/);
 });
