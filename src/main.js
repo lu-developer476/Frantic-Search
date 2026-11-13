@@ -1637,6 +1637,7 @@ function applyLanguage() {
     stateLabel.textContent = ui("desktopOnly");
     startScreenTitle.innerHTML = ui("desktopOverlayTitle");
     startScreenMessage.textContent = ui("desktopMessage");
+    startScreenMessage.hidden = false;
     startButton.hidden = true;
   } else if (paused) {
     stateLabel.textContent = ui("paused");
@@ -1657,7 +1658,8 @@ function applyLanguage() {
   } else {
     stateLabel.textContent = ui("standby");
     startScreenTitle.textContent = ui("startTitle");
-    startScreenMessage.textContent = ui("startMessage");
+    startScreenMessage.textContent = "";
+    startScreenMessage.hidden = true;
   }
 }
 
@@ -1749,6 +1751,7 @@ function syncDesktopAccess() {
     stateLabel.textContent = ui("desktopOnly");
     startScreenTitle.innerHTML = ui("desktopOverlayTitle");
     startScreenMessage.textContent = ui("desktopMessage");
+    startScreenMessage.hidden = false;
     startButton.hidden = true;
     startScreen.classList.remove("hidden");
     render();
@@ -1759,7 +1762,8 @@ function syncDesktopAccess() {
     desktopBlocked = false;
     stateLabel.textContent = ui("standby");
     startScreenTitle.textContent = ui("startTitle");
-    startScreenMessage.textContent = ui("startMessage");
+    startScreenMessage.textContent = "";
+    startScreenMessage.hidden = true;
     startButton.hidden = false;
     overlay.classList.add("hidden");
     startScreen.classList.remove("hidden");
