@@ -145,7 +145,7 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
   globalThis.Image = FakeImage;
   try {
     const renderer = new SpriteRenderer("/assets/");
-    assert.match(renderer.get("violeta-idle").src, /violeta-idle\.svg\?v=20261113-vasti-pixel-art-2$/);
+    assert.match(renderer.get("violeta-idle").src, /violeta-idle\.svg\?v=20261113-vasti-articulated-reference-1$/);
   } finally {
     if (previousImage === undefined) delete globalThis.Image;
     else globalThis.Image = previousImage;
@@ -233,7 +233,7 @@ test("sprite renderer uses base paths and draws cached images without reloading"
   try {
     const renderer = new SpriteRenderer("/Avoid/");
     const image = renderer.get("violeta-idle");
-    assert.equal(image.src, "/Avoid/assets/sprites/violeta-idle.svg?v=20261113-vasti-pixel-art-2");
+    assert.equal(image.src, "/Avoid/assets/sprites/violeta-idle.svg?v=20261113-vasti-articulated-reference-1");
     assert.equal(renderer.get("violeta-idle"), image);
     image.complete = true;
     image.naturalWidth = 240;
@@ -530,19 +530,40 @@ test("Vasti articulated rig separates the original tail, legs, forelimb and lowe
   assert.match(rendererSource, /drawPart\("vasti-rig-tail"/);
   assert.match(rendererSource, /drawPart\("vasti-rig-leg-back"/);
   assert.match(rendererSource, /drawPart\("vasti-rig-leg-front"/);
+  assert.match(rendererSource, /drawPart\("vasti-rig-foreleg-back"/);
   assert.match(rendererSource, /drawPart\("vasti-rig-foreleg"/);
+  assert.match(rendererSource, /drawPart\("vasti-rig-head"/);
   assert.match(rendererSource, /drawPart\("vasti-rig-jaw"/);
 
   const reference = readFileSync(resolve("public/references/vastatosaurus-rex.jpg"));
-  const names = ["body", "tail", "leg-back", "leg-front", "foreleg", "jaw"];
+  const names = ["body", "tail", "leg-back", "leg-front", "foreleg-back", "foreleg", "head", "jaw"];
   for (const name of names) {
     const svg = readFileSync(resolve("public/assets/sprites", "vasti-rig-" + name + ".svg"), "utf8");
     assert.match(svg, /data-source="embedded-original-reference"/);
+    assert.match(svg, /data-reference="vastatosaurus-rex\\.jpg"/);
     assert.match(svg, /data:image\/jpeg;base64,/);
     assert.match(svg, /filter="url\(#paper-key\)"/);
     const encoded = svg.match(/data:image\/jpeg;base64,([^"]+)/)?.[1];
     assert.ok(encoded, name + " must embed the reference image");
     assert.deepEqual(Buffer.from(encoded, "base64"), reference, name + " must use the exact original image");
+  }
+});
+
+
+test("Vasti's rig and pose set use the reference JPG plus idle, walk and bite motion guides only", () => {
+  const rendererSource = readFileSync(resolve("src/rendering/SpriteRenderer.js"), "utf8");
+  const directory = resolve("public/assets/sprites");
+  assert.match(rendererSource, /"vasti-rig-foreleg-back"/);
+  assert.match(rendererSource, /"vasti-rig-head"/);
+  assert.match(rendererSource, /elapsed \* 5\.4 \* Math\.PI/);
+  assert.match(rendererSource, /no jump GIF is used/);
+  const poses = ["idle","run-a","run-b","jump","duck","attack","land","impact","recover","stomp","slam"];
+  for (const pose of poses) {
+    const svg = readFileSync(resolve(directory, "vasti-" + pose + ".svg"), "utf8");
+    assert.match(svg, /data-reference="vastatosaurus-rex\.jpg"/);
+    assert.match(svg, /data-motion-reference=/);
+    if (pose === "jump") assert.match(svg, /jump pose from still JPG only/);
+    else assert.doesNotMatch(svg, /velociraptor-jump\.gif/);
   }
 });
 
@@ -866,7 +887,7 @@ test("Vasti character selection uses the new idle and run pixel sprites", () => 
   const main = readFileSync(resolve("src/main.js"), "utf8");
   const directory = resolve("public/assets/sprites");
   const vastiCard = html.match(/data-character="vasti"[\s\S]*?data-run-b-src="([^"]+)"/)?.[0] ?? "";
-  assert.match(vastiCard, /src="[^"]*assets\/sprites\/vasti-idle\.svg\?v=20261113-vasti-pixel-art-2"/);
+  assert.match(vastiCard, /src="[^"]*assets\/sprites\/vasti-idle\.svg\?v=20261113-vasti-articulated-reference-1"/);
   assert.match(vastiCard, /data-idle-src="[^"]*assets\/sprites\/vasti-idle\.svg/);
   assert.match(vastiCard, /data-run-a-src="[^"]*assets\/sprites\/vasti-run-a\.svg/);
   assert.match(vastiCard, /data-run-b-src="[^"]*assets\/sprites\/vasti-run-b\.svg/);

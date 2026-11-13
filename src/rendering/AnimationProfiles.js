@@ -1,6 +1,6 @@
 export const ACTOR_ANIMATION_PROFILES = Object.freeze({
  blue:{base:"violeta-idle",duck:"violeta-duck",states:{attack:"violeta-attack",landing:"violeta-land",impact:"violeta-impact",recovery:"violeta-recover"},frames:["violeta-run-a","violeta-run-b"],fps:10},
- vasti:{base:"vasti-idle",duck:"vasti-duck",states:{attack:"vasti-attack",stomp:"vasti-stomp",slam:"vasti-slam",landing:"vasti-land",impact:"vasti-impact",recovery:"vasti-recover"},frames:["vasti-run-a","vasti-run-b"],fps:9.2},
+ vasti:{base:"vasti-idle",duck:"vasti-duck",states:{attack:"vasti-attack",stomp:"vasti-stomp",slam:"vasti-slam",landing:"vasti-land",impact:"vasti-impact",recovery:"vasti-recover"},moving:["running","following","extracted","patrol","pursuit","charging"],frames:["vasti-run-a","vasti-run-b"],fps:5.4},
  beta:{base:"rosa",duck:"rosa-duck",states:{attack:"rosa-attack",landing:"rosa-land",impact:"rosa-impact",recovery:"rosa-recover"},moving:["following","extracted"],frames:["rosa-run-a","rosa-run-b"],fps:8.2},
  rosa:{base:"rosa",duck:"rosa-duck",states:{attack:"rosa-attack",landing:"rosa-land",impact:"rosa-impact",recovery:"rosa-recover"},moving:["following","extracted","running"],frames:["rosa-run-a","rosa-run-b"],fps:8.2},
  ferrucutus:{base:"ferrucutus",duck:"ferrucutus-duck",crouching:["brace","bridge","holding-bridge"],states:{attack:"ferrucutus-attack",landing:"ferrucutus-land",impact:"ferrucutus-impact",recovery:"ferrucutus-recover"},moving:["scout","brace","bridge","holding-bridge","charge"],frames:["ferrucutus-step-a","ferrucutus-step-b"],fps:5.4},

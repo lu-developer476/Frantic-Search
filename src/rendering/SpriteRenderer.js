@@ -1,6 +1,6 @@
 import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.js";
 
-const SPRITE_ASSET_VERSION = "20261113-articulated-velociraptors-1";
+const SPRITE_ASSET_VERSION = "20261113-vasti-articulated-reference-1";
 const ROSA_RIG_PARTS = [
   "rosa-rig-body",
   "rosa-rig-tail",
@@ -26,7 +26,9 @@ const VASTI_RIG_PARTS = [
   "vasti-rig-tail",
   "vasti-rig-leg-back",
   "vasti-rig-leg-front",
+  "vasti-rig-foreleg-back",
   "vasti-rig-foreleg",
+  "vasti-rig-head",
   "vasti-rig-jaw"
 ];
 const VASTI_POSE_SPRITES = new Set([
@@ -516,70 +518,109 @@ export class SpriteRenderer {
   }
 
   drawVastiRig(context, width, height, actor, elapsed, pose, alpha) {
-    // The reference artwork points left. Player.facing uses +1 for right and -1 for left,
-    // so mirror the complete rig only when the player is aiming/moving to the right.
+    // Vasti faces left in the original JPG. Mirror the complete rig for right-facing movement.
+    // Idle / gait / bite timing is adapted from the supplied idle, walk and eat GIFs.
+    // The jump pose is composed from the still JPG only; no jump GIF is used.
     const actorFacing = actor?.facing ?? 1;
     const mirror = actorFacing > 0;
     const phase = phaseOf(actor, "vasti");
-    const gait = Math.sin(elapsed * 9.2 * Math.PI + phase);
-    const idle = Math.sin(elapsed * 1.8 + phase);
+    const gait = Math.sin(elapsed * 5.4 * Math.PI + phase);
+    const idle = Math.sin(elapsed * 1.45 + phase);
+    const stride = pose === "vasti-run-a" ? 1 : pose === "vasti-run-b" ? -1 : Math.sign(gait || 1);
 
-    let tailAngle = idle * 0.035;
-    let backLegAngle = Math.sin(elapsed * 2.5 + phase) * 0.018;
-    let frontLegAngle = -backLegAngle;
-    let forelegAngle = Math.sin(elapsed * 2.8 + phase) * 0.025;
-    let jawAngle = Math.max(0, Math.sin(elapsed * 2.3 + phase)) * 0.025;
+    let bodyAngle = idle * 0.009;
+    let tailAngle = idle * 0.045;
+    let backLegAngle = idle * 0.012;
+    let frontLegAngle = -idle * 0.012;
+    let rearForelegAngle = idle * 0.018;
+    let forelegAngle = -idle * 0.018;
+    let headAngle = idle * 0.012;
+    let jawAngle = Math.max(0, idle) * 0.018;
 
     if (pose === "vasti-run-a" || pose === "vasti-run-b") {
-      tailAngle = gait * 0.115;
-      backLegAngle = gait * 0.34;
-      frontLegAngle = -gait * 0.31;
-      forelegAngle = -gait * 0.19;
-      jawAngle = 0.025 + Math.max(0, gait) * 0.045;
+      // Heavy, low centre of gravity: the hind legs alternate while the tail counterbalances.
+      bodyAngle = -0.018 - Math.abs(gait) * 0.012;
+      tailAngle = -0.025 + gait * 0.105;
+      backLegAngle = stride * 0.36 + gait * 0.045;
+      frontLegAngle = -stride * 0.33 - gait * 0.04;
+      rearForelegAngle = -stride * 0.12;
+      forelegAngle = stride * 0.15;
+      headAngle = 0.015 - gait * 0.018;
+      jawAngle = 0.018 + Math.max(0, gait) * 0.025;
     } else if (pose === "vasti-jump") {
-      tailAngle = -0.12;
-      backLegAngle = -0.28;
-      frontLegAngle = 0.25;
-      forelegAngle = -0.18;
-      jawAngle = 0.055;
+      // A compact, balanced hop from the still reference; no velociraptor jump animation is reused.
+      bodyAngle = -0.055;
+      tailAngle = -0.16;
+      backLegAngle = -0.29;
+      frontLegAngle = 0.26;
+      rearForelegAngle = -0.2;
+      forelegAngle = -0.14;
+      headAngle = -0.025;
+      jawAngle = 0.045;
     } else if (pose === "vasti-duck") {
-      tailAngle = 0.105;
-      backLegAngle = 0.12;
-      frontLegAngle = 0.06;
-      forelegAngle = 0.24;
+      bodyAngle = 0.055;
+      tailAngle = 0.12;
+      backLegAngle = 0.15;
+      frontLegAngle = 0.08;
+      rearForelegAngle = 0.2;
+      forelegAngle = 0.25;
+      headAngle = 0.12;
       jawAngle = 0;
     } else if (pose === "vasti-attack") {
-      tailAngle = 0.045;
-      forelegAngle = -0.15;
-      jawAngle = 0.36;
+      // Bite / feeding action: head drives forward and the lower jaw opens on the follow-through.
+      bodyAngle = -0.035;
+      tailAngle = -0.055;
+      backLegAngle = -0.035;
+      frontLegAngle = 0.045;
+      rearForelegAngle = -0.12;
+      forelegAngle = -0.16;
+      headAngle = -0.19;
+      jawAngle = 0.42;
     } else if (pose === "vasti-stomp") {
-      tailAngle = -0.08;
-      backLegAngle = 0.19;
-      frontLegAngle = -0.13;
-      forelegAngle = 0.12;
-      jawAngle = 0.08;
+      bodyAngle = 0.055;
+      tailAngle = -0.095;
+      backLegAngle = 0.22;
+      frontLegAngle = -0.14;
+      rearForelegAngle = 0.13;
+      forelegAngle = 0.1;
+      headAngle = 0.075;
+      jawAngle = 0.07;
     } else if (pose === "vasti-slam") {
-      tailAngle = 0.16;
-      backLegAngle = -0.24;
-      frontLegAngle = 0.21;
+      bodyAngle = -0.105;
+      tailAngle = 0.19;
+      backLegAngle = -0.3;
+      frontLegAngle = 0.24;
+      rearForelegAngle = -0.23;
       forelegAngle = -0.2;
-      jawAngle = 0.24;
+      headAngle = 0.14;
+      jawAngle = 0.22;
     } else if (pose === "vasti-impact") {
-      tailAngle = -0.13;
-      backLegAngle = 0.08;
-      frontLegAngle = -0.08;
-      forelegAngle = 0.2;
+      bodyAngle = -0.065;
+      tailAngle = -0.15;
+      backLegAngle = 0.12;
+      frontLegAngle = -0.1;
+      rearForelegAngle = 0.19;
+      forelegAngle = 0.22;
+      headAngle = -0.1;
       jawAngle = 0.25;
     } else if (pose === "vasti-land") {
-      tailAngle = 0.08;
-      backLegAngle = 0.17;
-      frontLegAngle = -0.16;
+      bodyAngle = 0.04;
+      tailAngle = 0.09;
+      backLegAngle = 0.19;
+      frontLegAngle = -0.17;
+      rearForelegAngle = 0.13;
       forelegAngle = 0.11;
+      headAngle = 0.08;
       jawAngle = 0.06;
     } else if (pose === "vasti-recover") {
-      tailAngle = idle * 0.065;
-      forelegAngle = -idle * 0.045;
-      jawAngle = 0.035;
+      bodyAngle = idle * 0.012;
+      tailAngle = idle * 0.06;
+      backLegAngle = idle * 0.018;
+      frontLegAngle = -idle * 0.018;
+      rearForelegAngle = -idle * 0.022;
+      forelegAngle = idle * 0.022;
+      headAngle = idle * 0.018;
+      jawAngle = 0.018 + Math.max(0, idle) * 0.015;
     }
 
     context.save();
@@ -589,8 +630,8 @@ export class SpriteRenderer {
     }
 
     const drawPart = (name, pivotX, pivotY, angle) => {
-      const px = (pivotX - 32) / 460 * width;
-      const py = (pivotY - 60) / 235 * height;
+      const px = pivotX / 256 * width;
+      const py = pivotY / 120 * height;
       context.save();
       context.translate(px, py);
       context.rotate(angle);
@@ -599,14 +640,16 @@ export class SpriteRenderer {
       return drawn;
     };
 
-    // Rear layers first, torso second, then the near-side limbs and lower jaw.
+    // Far-side appendages sit behind the torso; near-side joints, head and jaw are drawn last.
     const drawn = [
-      drawPart("vasti-rig-tail", 276, 137, tailAngle),
-      drawPart("vasti-rig-leg-back", 232, 166, backLegAngle),
-      drawPart("vasti-rig-body", 32, 60, 0),
-      drawPart("vasti-rig-leg-front", 194, 164, frontLegAngle),
-      drawPart("vasti-rig-foreleg", 142, 137, forelegAngle),
-      drawPart("vasti-rig-jaw", 104, 107, jawAngle)
+      drawPart("vasti-rig-tail", 139, 43, tailAngle),
+      drawPart("vasti-rig-leg-back", 91, 74, backLegAngle),
+      drawPart("vasti-rig-foreleg-back", 58, 54, rearForelegAngle),
+      drawPart("vasti-rig-body", 0, 0, bodyAngle),
+      drawPart("vasti-rig-leg-front", 112, 76, frontLegAngle),
+      drawPart("vasti-rig-foreleg", 67, 55, forelegAngle),
+      drawPart("vasti-rig-head", 38, 24, headAngle),
+      drawPart("vasti-rig-jaw", 12, 31, jawAngle)
     ].every(Boolean);
 
     context.restore();
@@ -614,7 +657,8 @@ export class SpriteRenderer {
   }
 
   drawVasti(context, x, y, width, height, actor, elapsed, alpha = 1, poseOverride = null) {
-    // The articulated rig is primary; dedicated pixel-art poses are the fallback while it loads.
+    // The source image is a long, low theropod. Preserve its aspect ratio and anchor it to the
+    // existing player box; visual enlargement never changes physics or collision dimensions.
     const pose = poseOverride ?? selectActorPose("vasti", actor, elapsed);
     const phase = phaseOf(actor, "vasti");
     const fallbackPose = VASTI_POSE_SPRITES.has(pose) ? pose : "vasti-idle";
@@ -625,47 +669,47 @@ export class SpriteRenderer {
     let tilt = 0;
 
     if (pose === "vasti-run-a" || pose === "vasti-run-b") {
-      const gait = Math.sin(elapsed * 9.2 * Math.PI + phase);
-      bob = Math.round(Math.abs(gait) * 2);
-      tilt = gait * 0.035;
-      sx = 1 + Math.abs(gait) * 0.035;
-      sy = 1 - Math.abs(gait) * 0.045;
+      const gait = Math.sin(elapsed * 5.4 * Math.PI + phase);
+      bob = Math.round(Math.abs(gait) * 1.2);
+      tilt = gait * 0.018;
+      sx = 1 + Math.abs(gait) * 0.018;
+      sy = 1 - Math.abs(gait) * 0.022;
     } else if (pose === "vasti-jump") {
-      offsetY = -2;
+      offsetY = -3;
       tilt = -0.035;
     } else if (pose === "vasti-stomp") {
-      sy = 0.94;
-      sx = 1.04;
+      sy = 0.93;
+      sx = 1.035;
       offsetY = 2;
     } else if (pose === "vasti-slam") {
       tilt = 0.04;
-      sx = 1.06;
+      sx = 1.055;
       sy = 0.9;
       offsetY = 3;
     } else if (pose === "vasti-attack") {
-      tilt = 0.025;
+      tilt = -0.018;
     } else if (pose === "vasti-impact") {
       tilt = -0.035;
       offsetY = 1;
     } else if (pose === "vasti-land") {
-      sx = 1.04;
+      sx = 1.035;
       sy = 0.92;
       offsetY = 3;
     } else if (pose === "vasti-recover") {
-      bob = Math.round(Math.max(0, Math.sin(elapsed * 18 + phase)) * 1.5);
+      bob = Math.round(Math.max(0, Math.sin(elapsed * 13 + phase)) * 1);
     } else if (pose === "vasti-idle") {
-      const breath = Math.sin(elapsed * 2.3 + phase);
-      bob = Math.round(breath * 1.25);
-      sy = 1 + breath * 0.012;
+      const breath = Math.sin(elapsed * 1.8 + phase);
+      bob = Math.round(breath * 0.65);
+      sy = 1 + breath * 0.008;
     } else if (pose === "vasti-duck") {
-      sy = 0.82;
-      offsetY = 6;
+      sy = 0.88;
+      offsetY = 3;
     }
 
-    const w = Math.max(1, Math.round(width * sx));
-    const h = Math.max(1, Math.round(height * sy));
+    const w = Math.max(1, Math.round(width * 1.18 * sx));
+    const h = Math.max(1, Math.round(w * 120 / 256 * sy));
     const dx = Math.round(x + (width - w) / 2);
-    const dy = Math.round(y + (height - h) / 2 + bob + offsetY);
+    const dy = Math.round(y + height - h + bob + offsetY);
     context.save();
     context.translate(dx + w / 2, dy + h / 2);
     context.rotate(tilt);
@@ -685,7 +729,6 @@ export class SpriteRenderer {
     context.restore();
     return result;
   }
-
 
   drawFerrucutusRig(context, width, height, actor, elapsed, pose, alpha) {
     // The source artwork faces left. Rescued Ferrucutus use +1 when moving right.
@@ -1110,7 +1153,7 @@ export class SpriteRenderer {
     else if (player?.duck) pose = prefix + "-duck";
     else if (player && !player.onGround && !player.animationState) pose = prefix + "-jump";
     else if (player && Math.abs(player.vx) > 30 && !player.animationState) {
-      const fps = Math.max(8, Math.min(13, Math.abs(player.vx) / 27));
+      const fps = kind === "vasti" ? 5.4 : Math.max(8, Math.min(13, Math.abs(player.vx) / 27));
       pose = prefix + "-run-" + (Math.floor(elapsed * fps + phaseOf(player, kind)) % 2 === 0 ? "a" : "b");
     } else if (!player?.animationState) {
       pose = prefix + "-idle";
