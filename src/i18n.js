@@ -16,11 +16,11 @@ const UI = {
     desktopRequired: "SE REQUIERE UNA COMPUTADORA",
     desktopMessage: "Este videojuego está diseñado para jugarse en una computadora con teclado y mouse.",
     standby: "EN ESPERA",
-    play: "INICIAR"
+    play: "INICIAR",
     startTitle: "FRANTIC SEARCH",
     controls: "A / D MOVER · ESPACIO / ↑ SALTAR · ↓ AGACHARSE · X HABILIDAD · E INTERACTUAR · P PAUSAR",
     raptor: "Velociraptor nublarensis",
-    titan: "Vastatosaurus Rex"
+    titan: "Vastatosaurus Rex",
     blueAbility: "VELOCIDAD · DOBLE SALTO · EMBESTIDA",
     rosaAbility: "RAPTOR JUVENIL · AGILIDAD · SALTO DOBLE · EMBESTIDA",
     vastiAbility: "FUERZA · PISOTÓN DE IMPACTO",
@@ -73,11 +73,11 @@ const UI = {
     desktopRequired: "DESKTOP REQUIRED",
     desktopMessage: "This game is designed to be played on a computer with a keyboard and mouse.",
     standby: "STANDBY",
-    play: "START"
+    play: "START",
     startTitle: "FRANTIC SEARCH",
     controls: "A / D MOVE · SPACE / ↑ JUMP · ↓ DUCK · X ABILITY · E INTERACT · P PAUSE",
     raptor: "Velociraptor nublarensis",
-    titan: "Vastatosaurus Rex"
+    titan: "Vastatosaurus Rex",
     blueAbility: "SPEED · DOUBLE JUMP · DASH",
     rosaAbility: "JUVENILE RAPTOR · AGILITY · DOUBLE JUMP · POUNCE",
     vastiAbility: "POWER · GROUND SLAM",
