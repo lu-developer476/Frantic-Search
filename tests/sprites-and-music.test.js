@@ -102,8 +102,8 @@ test("reference images are loaded from the Vite base path and cached", () => {
     const first = renderer.getReferenceImage("adult-velociraptor-nublarensis.png");
     const second = renderer.getReferenceImage("adult-velociraptor-nublarensis.png");
     assert.equal(first, second);
-    assert.equal(first.src, "/game/references/adult-velociraptor-nublarensis.png?v=20261113-indoraptor-dual-generation-eating-1");
-    assert.equal(renderer.referenceImages.size, 8);
+    assert.equal(first.src, "/game/references/adult-velociraptor-nublarensis.png?v=20261113-all-reference-dinosaurs-environments-3");
+    assert.equal(renderer.referenceImages.size, 18);
   } finally {
     if (previousImage === undefined) delete globalThis.Image;
     else globalThis.Image = previousImage;
