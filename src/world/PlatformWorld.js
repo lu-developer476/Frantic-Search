@@ -16,6 +16,9 @@ export class PlatformWorld {
     this.platforms = [];
     this.obstacles = [];
     this.hunterSpawns = [];
+    this.venatosaurusSpawns = [];
+    this.foodSpawns = [];
+    this.brontosaurusSpawns = [];
     this.allySpawns = []; // Kept empty for compatibility; Ferrucutus now spawn as captives.
     this.ferrucutusCageSpawns = [];
     this.bossSpawns = [];
@@ -44,10 +47,20 @@ export class PlatformWorld {
     const isFinalArea = index === 5;
 
     for (let levelIndex = 0; levelIndex < LEVELS.length; levelIndex += 1) {
-      const layout = FERRUCUTUS_CAGE_LAYOUT[levelIndex] ?? [];
-      layout.forEach(({ offset, elevation = 0 }, rescueIndex) => {
-        const x = GAME.playerX + LEVELS[levelIndex].distance + offset;
+      const levelStart = GAME.playerX + LEVELS[levelIndex].distance;
+      const levelEnd = levelIndex + 1 < LEVELS.length
+        ? GAME.playerX + LEVELS[levelIndex + 1].distance
+        : GAME.campaignEndX + GAME.playerX;
+      const levelLength = levelEnd - levelStart;
+      const captiveCount = [3, 3, 4, 2, 2, 2][levelIndex] ?? 1;
+      for (let rescueIndex = 0; rescueIndex < captiveCount; rescueIndex += 1) {
+        const seed = (levelIndex + 3) * 97 + (rescueIndex + 1) * 53;
+        const jitter = ((seed * 9301 + 49297) % 233) - 116;
+        const margin = Math.min(170, levelLength * 0.16);
+        const x = levelStart + margin +
+          ((rescueIndex + 0.5) / captiveCount) * Math.max(1, levelLength - margin * 2) + jitter;
         if (x >= start && x < start + this.sectionLength) {
+          const elevation = rescueIndex % 3 === 1 ? 55 : rescueIndex % 3 === 2 ? 82 : 0;
           this.ferrucutusCageSpawns.push({
             id: "ferrucutus-cage-" + levelIndex + "-" + (rescueIndex + 1),
             x,
@@ -56,8 +69,9 @@ export class PlatformWorld {
             rescueIndex
           });
         }
-      });
+      }
     }
+
     this.platforms.push(
       { x: start, y: this.groundY, w: isFinalArea ? 1900 : 730, h: floorHeight, kind: "ground" },
       ...(!isFinalArea && isBossArena ? [{ x: start + 730, y: this.groundY, w: 170, h: floorHeight, kind: "ground" }] : []),
@@ -80,6 +94,41 @@ export class PlatformWorld {
         y: this.groundY - item.h,
         passed: false
       });
+    }
+
+    if (!isFinalArea) {
+      const patrolStart = start + 120;
+      const patrolEnd = start + this.sectionLength - 90;
+      const venatoCount = index === 2 || index === 4 ? 1 : 2;
+      for (let i = 0; i < venatoCount; i += 1) {
+        const x = start + 360 + i * 650 + ((index * 71 + i * 43) % 95);
+        this.venatosaurusSpawns.push({
+          id: "venatosaurus-" + index + "-" + i,
+          kind: i % 2 === 0 ? "venatosaurus-impavidus" : "venatosaurus-saevidicus",
+          x,
+          patrolStart,
+          patrolEnd,
+          direction: i % 2 === 0 ? 1 : -1
+        });
+      }
+      const foodCount = index < 2 ? 2 : 1;
+      for (let i = 0; i < foodCount; i += 1) {
+        const x = start + 690 + i * 510 + ((index * 37 + i * 29) % 110);
+        this.foodSpawns.push({
+          id: "ligocristus-" + index + "-" + i,
+          kind: "ligocristus",
+          x,
+          groundY: this.groundY
+        });
+      }
+      if (index === 0 || index === 1) {
+        this.brontosaurusSpawns.push({
+          id: "brontosaurus-" + index,
+          x: start + 980,
+          groundY: this.groundY,
+          kind: "brontosaurus"
+        });
+      }
     }
 
     if (!isBossArena && !isFinalArea) {
@@ -202,6 +251,9 @@ export class PlatformWorld {
       obstacle.x + obstacle.w >= cutoff
     );
     this.hunterSpawns = this.hunterSpawns.filter((spawn) => spawn.x >= cutoff);
+    this.venatosaurusSpawns = this.venatosaurusSpawns.filter((spawn) => spawn.x + 112 >= cutoff);
+    this.foodSpawns = this.foodSpawns.filter((spawn) => spawn.x + 120 >= cutoff);
+    this.brontosaurusSpawns = this.brontosaurusSpawns.filter((spawn) => spawn.x + 300 >= cutoff);
     this.allySpawns = this.allySpawns.filter((spawn) => spawn.x >= cutoff);
     this.ferrucutusCageSpawns = this.ferrucutusCageSpawns.filter((spawn) => spawn.x >= cutoff);
     this.bossSpawns = this.bossSpawns.filter((spawn) => spawn.x >= cutoff);
