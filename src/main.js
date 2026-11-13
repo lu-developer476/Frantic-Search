@@ -36,7 +36,6 @@ const spriteRenderer = new SpriteRenderer(import.meta.env.BASE_URL, () => {
 });
 const overlay = document.querySelector("#overlay");
 const startScreen = document.querySelector("#start-screen");
-const startScreenTitle = document.querySelector("#start-screen-title");
 const startScreenMessage = document.querySelector("#start-screen-message");
 const startButton = document.querySelector("#start-button");
 const overlayActionButton = document.querySelector("#overlay-action-button");
@@ -1635,7 +1634,6 @@ function applyLanguage() {
 
   if (desktopBlocked) {
     stateLabel.textContent = ui("desktopOnly");
-    startScreenTitle.innerHTML = ui("desktopOverlayTitle");
     startScreenMessage.textContent = ui("desktopMessage");
     startScreenMessage.hidden = false;
     startButton.hidden = true;
@@ -1657,7 +1655,6 @@ function applyLanguage() {
     overlay.querySelector("button").textContent = ui("retry");
   } else {
     stateLabel.textContent = ui("standby");
-    startScreenTitle.textContent = ui("startTitle");
     startScreenMessage.textContent = "";
     startScreenMessage.hidden = true;
   }
@@ -1749,7 +1746,6 @@ function syncDesktopAccess() {
     overlayActionButton.hidden = true;
     overlay.classList.add("hidden");
     stateLabel.textContent = ui("desktopOnly");
-    startScreenTitle.innerHTML = ui("desktopOverlayTitle");
     startScreenMessage.textContent = ui("desktopMessage");
     startScreenMessage.hidden = false;
     startButton.hidden = true;
@@ -1761,7 +1757,6 @@ function syncDesktopAccess() {
   if (desktopBlocked) {
     desktopBlocked = false;
     stateLabel.textContent = ui("standby");
-    startScreenTitle.textContent = ui("startTitle");
     startScreenMessage.textContent = "";
     startScreenMessage.hidden = true;
     startButton.hidden = false;

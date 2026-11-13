@@ -889,8 +889,12 @@ test("startup screen is separate from pause and the character picker has no redu
   assert.match(main, /startButton\.addEventListener\("click", \(\) => openDinoModal\("start"\)\)/);
   assert.match(main, /overlayActionButton\.addEventListener/);
   assert.match(main, /openDinoModal\(overlay\.classList\.contains\("hidden"\) \? "start" : "overlay"\)/);
-  assert.match(html, /data-i18n="startTitle"/);
-  assert.match(html, /data-i18n="startMessage"/);
+  assert.match(html, /data-i18n-aria="startScreen"/);
+  assert.doesNotMatch(html, /id="start-screen-title"|data-i18n="startTitle"|data-i18n="startMessage"/);
+  assert.match(translations, /startScreen: "PANTALLA DE INICIO"/);
+  assert.match(translations, /startScreen: "START SCREEN"/);
+  assert.match(main, /startScreenMessage\.textContent = ui\("desktopMessage"\)/);
+  assert.doesNotMatch(main, /startScreenTitle|ui\("startTitle"\)/);
   assert.doesNotMatch(html, /ELEGÍ TU DINOSAURIO|Seleccioná el dinosaurio con el que querés comenzar la operación\./);
   assert.doesNotMatch(translations, /selectDinosaur(?:Help)?:/);
   assert.match(main, /ui\("pauseTitle"\)/);
