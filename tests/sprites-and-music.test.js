@@ -145,7 +145,7 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
   globalThis.Image = FakeImage;
   try {
     const renderer = new SpriteRenderer("/assets/");
-    assert.match(renderer.get("violeta-idle").src, /violeta-idle\.svg\?v=20261112-rosa-articulated-rig-1$/);
+    assert.match(renderer.get("violeta-idle").src, /violeta-idle\.svg\?v=20261113-vasti-pixel-art-2$/);
   } finally {
     if (previousImage === undefined) delete globalThis.Image;
     else globalThis.Image = previousImage;
@@ -153,19 +153,23 @@ test("sprite renderer versions asset URLs to bypass stale cached SVG files", () 
 });
 
 
-test("Vasti renders the original reference artwork from a dedicated SVG on the game canvas",()=>{
+test("Vasti uses the new articulated rig and pixel-pose fallback without the legacy composite SVG",()=>{
  const rendererSource=readFileSync(resolve("src/rendering/SpriteRenderer.js"),"utf8");
- assert.match(rendererSource,/drawReferenceVasti\(/);
- assert.match(rendererSource,/public\/references\/vastatosaurus-rex\.jpg/);
- assert.match(rendererSource,/this\.draw\(context, "vasti"/);
- const svg=readFileSync(resolve("public/assets/sprites/vasti.svg"),"utf8");
- assert.match(svg,/<svg\b/);
- assert.match(svg,/data-reference="vastatosaurus-rex.jpg"/);
- assert.match(svg,/data-source="embedded-original-reference"/);
- assert.match(svg,/data:image\/jpeg;base64,/);
- assert.match(svg,/filter="url\(#paper-key\)"/);
- const reference=readFileSync(resolve("public/references/vastatosaurus-rex.jpg"));
- assert.ok(reference.length>1000,"the in-game source reference image must be present");
+ const directory=resolve("public/assets/sprites");
+ assert.match(rendererSource,/const VASTI_RIG_PARTS =/);
+ assert.match(rendererSource,/const VASTI_POSE_SPRITES = new Set/);
+ assert.match(rendererSource,/VASTI_POSE_SPRITES\.has\(pose\) \? pose : "vasti-idle"/);
+ assert.match(rendererSource,/this\.draw\(context, fallbackPose/);
+ assert.doesNotMatch(rendererSource,/drawReferenceVasti|public\/references\/vastatosaurus-rex\.jpg/);
+ assert.doesNotMatch(rendererSource,/this\.draw\(context, "vasti"/);
+ assert.ok(!readdirSync(directory).includes("vasti.svg"),"the legacy composite Vasti SVG must be removed");
+ for (const pose of ["idle","run-a","run-b","jump","duck","attack","land","impact","recover","stomp","slam"]) {
+  const svg=readFileSync(resolve(directory,"vasti-"+pose+".svg"),"utf8");
+  assert.match(svg,/data-character="Vasti"/);
+  assert.match(svg,/data-species="Vastatosaurus rex"/);
+  assert.match(svg,/data-render-style="pixel-art"/);
+  assert.match(svg,/data-pixel-grid="4px"/);
+ }
 });
 
 test("game rendering uses the native canvas instead of a low-resolution blur buffer", () => {
@@ -229,7 +233,7 @@ test("sprite renderer uses base paths and draws cached images without reloading"
   try {
     const renderer = new SpriteRenderer("/Avoid/");
     const image = renderer.get("violeta-idle");
-    assert.equal(image.src, "/Avoid/assets/sprites/violeta-idle.svg?v=20261112-rosa-articulated-rig-1");
+    assert.equal(image.src, "/Avoid/assets/sprites/violeta-idle.svg?v=20261113-vasti-pixel-art-2");
     assert.equal(renderer.get("violeta-idle"), image);
     image.complete = true;
     image.naturalWidth = 240;
@@ -421,7 +425,7 @@ test("character selection dialog stays inside the game viewport without scrollin
 test("all non-hunter dinosaur frames resolve valid source assets", () => {
   const directory = resolve("public/assets/sprites");
   const dinosaurs = readdirSync(directory).filter(name => name.endsWith(".svg") && !name.startsWith("hunter") && !name.includes("-rig-"));
-  assert.equal(dinosaurs.length, 53);
+  assert.equal(dinosaurs.length, 52);
   for (const filename of dinosaurs) {
     const svg = readFileSync(resolve(directory, filename), "utf8");
     assert.match(svg, /^(?:<\?xml[^>]+>\s*)?<svg\b/);
@@ -855,15 +859,23 @@ test("the unselected playable dinosaur is the only autonomous companion",()=>{
 });
 
 
-test("character selection previews use the same idle artwork as the game renderer", () => {
+test("Vasti character selection uses the new idle and run pixel sprites", () => {
   const html = readFileSync(resolve("index.html"), "utf8");
   const renderer = readFileSync(resolve("src/rendering/SpriteRenderer.js"), "utf8");
-  const violetaCard = html.match(/data-character="blue"[\s\S]*?data-run-b-src="([^"]+)"/)?.[0] ?? "";
+  const profiles = readFileSync(resolve("src/rendering/AnimationProfiles.js"), "utf8");
+  const main = readFileSync(resolve("src/main.js"), "utf8");
+  const directory = resolve("public/assets/sprites");
   const vastiCard = html.match(/data-character="vasti"[\s\S]*?data-run-b-src="([^"]+)"/)?.[0] ?? "";
-  assert.match(violetaCard, /assets\/sprites\/violeta-idle\.svg/);
-  assert.match(vastiCard, /assets\/sprites\/vasti\.svg/);
-  assert.match(renderer, /this\.draw\(context, pose, 0, 0, renderWidth, renderHeight/);
-  assert.doesNotMatch(vastiCard, /vasti-idle\.svg/);
+  assert.match(vastiCard, /src="[^"]*assets\/sprites\/vasti-idle\.svg\?v=20261113-vasti-pixel-art-2"/);
+  assert.match(vastiCard, /data-idle-src="[^"]*assets\/sprites\/vasti-idle\.svg/);
+  assert.match(vastiCard, /data-run-a-src="[^"]*assets\/sprites\/vasti-run-a\.svg/);
+  assert.match(vastiCard, /data-run-b-src="[^"]*assets\/sprites\/vasti-run-b\.svg/);
+  assert.doesNotMatch(vastiCard, /assets\/sprites\/vasti\.svg/);
+  assert.match(profiles, /vasti:\{base:"vasti-idle"/);
+  assert.match(main, /preview\.src = runFrames\[frame\]/);
+  assert.match(main, /preview\.src = idleSource/);
+  assert.match(renderer, /const VASTI_POSE_SPRITES = new Set/);
+  assert.ok(!readdirSync(directory).includes("vasti.svg"));
 });
 
 test("startup screen is separate from pause and the character picker has no redundant heading copy", () => {

@@ -1,6 +1,6 @@
 import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.js";
 
-const SPRITE_ASSET_VERSION = "20261112-rosa-articulated-rig-1";
+const SPRITE_ASSET_VERSION = "20261113-vasti-pixel-art-2";
 const ROSA_RIG_PARTS = [
   "rosa-rig-body",
   "rosa-rig-tail",
@@ -29,6 +29,10 @@ const VASTI_RIG_PARTS = [
   "vasti-rig-foreleg",
   "vasti-rig-jaw"
 ];
+const VASTI_POSE_SPRITES = new Set([
+  "vasti-idle","vasti-run-a","vasti-run-b","vasti-jump","vasti-duck",
+  "vasti-attack","vasti-land","vasti-impact","vasti-recover","vasti-stomp","vasti-slam"
+]);
 const FERRUCUTUS_RIG_PARTS = [
   "ferrucutus-rig-body","ferrucutus-rig-tail","ferrucutus-rig-leg-back",
   "ferrucutus-rig-leg-front","ferrucutus-rig-foreleg","ferrucutus-rig-jaw"
@@ -43,7 +47,8 @@ const INDORAPTOR_RIG_PARTS = [
 ];
 const BASE = [
   "violeta-idle","violeta-run-a","violeta-run-b","violeta-jump","violeta-dash","violeta-duck",
-  "vasti",
+  "vasti-idle","vasti-run-a","vasti-run-b","vasti-jump","vasti-duck",
+  "vasti-attack","vasti-land","vasti-impact","vasti-recover","vasti-stomp","vasti-slam",
   "rosa","rosa-run-a","rosa-run-b","rosa-duck",
   "ferrucutus","ferrucutus-step-a","ferrucutus-step-b","ferrucutus-duck",
   "hunter","hunter-run-a","hunter-run-b","hunter-duck",
@@ -588,10 +593,11 @@ export class SpriteRenderer {
     return drawn;
   }
 
-  drawReferenceVasti(context, x, y, width, height, actor, elapsed, alpha = 1, poseOverride = null) {
-    // These six masked layers all contain the exact source image in public/references/vastatosaurus-rex.jpg.
+  drawVasti(context, x, y, width, height, actor, elapsed, alpha = 1, poseOverride = null) {
+    // The articulated rig is primary; dedicated pixel-art poses are the fallback while it loads.
     const pose = poseOverride ?? selectActorPose("vasti", actor, elapsed);
     const phase = phaseOf(actor, "vasti");
+    const fallbackPose = VASTI_POSE_SPRITES.has(pose) ? pose : "vasti-idle";
     let bob = 0;
     let offsetY = 0;
     let sx = 1;
@@ -654,7 +660,7 @@ export class SpriteRenderer {
       result = this.drawVastiRig(context, w, h, actor, elapsed, pose, alpha);
     } else {
       const sourceFacing = (actor?.facing ?? 1) > 0 ? -1 : 1;
-      result = this.draw(context, "vasti", 0, 0, w, h, { alpha, facing: sourceFacing });
+      result = this.draw(context, fallbackPose, 0, 0, w, h, { alpha, facing: sourceFacing });
     }
     context.restore();
     return result;
@@ -1052,7 +1058,7 @@ export class SpriteRenderer {
 
   drawAnimated(context, character, x, y, width, height, actor, elapsed, options = {}) {
     if (character === "beta" && this.drawReferenceRosa(context, x, y, width, height, actor, elapsed, options.alpha ?? 1)) return true;
-    if (character === "vasti" && this.drawReferenceVasti(context, x, y, width, height, actor, elapsed, options.alpha ?? 1)) return true;
+    if (character === "vasti" && this.drawVasti(context, x, y, width, height, actor, elapsed, options.alpha ?? 1)) return true;
     if (character === "ferrucutus" && this.drawReferenceFerrucutus(context, x, y, width, height, actor, elapsed, options.alpha ?? 1)) return true;
     if (character === "indominus" && this.drawReferenceIndominus(context, x, y, width, height, actor, elapsed, options.alpha ?? 1, null, options.facing)) return true;
     if (character === "indoraptor" && this.drawReferenceIndoraptor(context, x, y, width, height, actor, elapsed, options.alpha ?? 1, null, options.facing)) return true;
@@ -1095,7 +1101,7 @@ export class SpriteRenderer {
     const drawY = crouching ? y + height - naturalHeight : y;
     if (kind === "blue" && this.drawReferenceVioleta(context, x, drawY, width, naturalHeight, player ?? {}, elapsed, alpha, pose)) return true;
     if (kind === "rosa" && this.drawReferenceRosa(context, x, drawY, width, naturalHeight, player ?? {}, elapsed, alpha, pose)) return true;
-    if (kind !== "blue" && kind !== "rosa" && this.drawReferenceVasti(context, x, y, width, height, player ?? {}, elapsed, alpha, pose)) return true;
+    if (kind !== "blue" && kind !== "rosa" && this.drawVasti(context, x, y, width, height, player ?? {}, elapsed, alpha, pose)) return true;
     return this.draw(context, pose, x, drawY, width, naturalHeight, { alpha, facing: player?.facing ?? 1 });
   }
 
