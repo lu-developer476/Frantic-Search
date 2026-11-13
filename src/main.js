@@ -1391,7 +1391,10 @@ function update(delta) {
       else if (event.target?.takeHit?.()) { audio.hit(); burst(event.target.x + event.target.w / 2, event.target.y + event.target.h / 2, "#ed8e55", 10); }
     }
     tryEatFood(enemy);
-    if (player.dashTimer > 0 && !enemy.defeated && CollisionSystem.bodyHit(player, enemy)) damageVenatosaurus(enemy, 1);
+    if (player.dashTimer > 0 && !enemy.defeated && !dashHitIds.has(enemy.id) && CollisionSystem.bodyHit(player, enemy)) {
+      damageVenatosaurus(enemy, 1);
+      dashHitIds.add(enemy.id);
+    }
   }
 
   for (const companion of autonomousCompanions) {
@@ -1516,6 +1519,11 @@ function render() {
   drawBackground();
   ctx.save();
   ctx.translate(-Math.round(cameraX), 0);
+  for (const animal of wildlife) {
+    if (animal.x + animal.w >= cameraX - 120 && animal.x <= cameraX + GAME.width + 120) {
+      spriteRenderer.drawAnimated(ctx, "brontosaurus", animal.x, animal.y, animal.w, animal.h, animal, elapsed, { alpha: 0.9, facing: animal.facing });
+    }
+  }
   for (const platform of world.visiblePlatforms(cameraX, GAME.width)) drawPlatform(platform);
   for (const prop of world.facilityProps) {
     if (prop.x + prop.w >= cameraX - 50 && prop.x <= cameraX + GAME.width + 50) drawFacilityProp(prop);
@@ -1526,11 +1534,6 @@ function render() {
   for (const obstacle of world.visibleObstacles(cameraX, GAME.width)) drawObstacle(obstacle);
   for (const captive of ferrucutusCaptives) {
     if (captive.x + captive.w >= cameraX - 70 && captive.x <= cameraX + GAME.width + 70) drawFerrucutusCage(captive);
-  }
-  for (const animal of wildlife) {
-    if (animal.x + animal.w >= cameraX - 120 && animal.x <= cameraX + GAME.width + 120) {
-      spriteRenderer.drawAnimated(ctx, "brontosaurus", animal.x, animal.y, animal.w, animal.h, animal, elapsed, { alpha: 0.9, facing: animal.facing });
-    }
   }
   for (const food of foodSources) {
     if (food.consumed || food.x + food.w < cameraX - 80 || food.x > cameraX + GAME.width + 80) continue;
