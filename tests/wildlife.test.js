@@ -57,6 +57,28 @@ test("Venatosaurus attacks nearby protagonists and can be defeated", () => {
 });
 
 
+test("Venatosaurus uses a jumping forward charge after its windup", () => {
+  const enemy = new WildDinosaur({
+    id: "venatosaurus-charge",
+    kind: "venatosaurus-impavidus",
+    x: 100,
+    groundY: 430,
+    patrolStart: 0,
+    patrolEnd: 700
+  });
+  const target = { x: 180, y: 338, w: 64, h: 62, health: 3, defeated: false };
+  enemy.state = "windup";
+  enemy.stateTimer = 0.01;
+  enemy.jumpCooldown = 0;
+  const event = enemy.update(0.02, [{ target, kind: "protagonist" }]);
+  assert.equal(event?.type, "attack");
+  assert.equal(enemy.state, "attack");
+  assert.equal(enemy.onGround, false);
+  const before = enemy.x;
+  enemy.update(0.1, [{ target, kind: "protagonist" }]);
+  assert.ok(enemy.x > before + 25);
+});
+
 test("Ligocristus movement and reference sprite share the same left/right orientation", () => {
   assert.equal(REFERENCE_PNG_CHARACTERS.ligocristus.sourceFacing, -1);
 
