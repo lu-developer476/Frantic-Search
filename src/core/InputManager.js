@@ -2,7 +2,6 @@ const BINDINGS = {
   left: ["ArrowLeft", "KeyA"],
   right: ["ArrowRight", "KeyD"],
   jump: ["Space", "ArrowUp", "KeyW"],
-  duck: ["ArrowDown", "KeyS"],
   ability: ["KeyX"],
   special: ["KeyC"],
   interact: ["KeyE", "KeyF"]
@@ -17,7 +16,7 @@ export class InputManager {
     this.downHandler = (event) => {
       const action = this.actionFor(event.code);
       if (!action) return;
-      if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.code)) event.preventDefault();
+      if (["Space", "ArrowUp", "ArrowLeft", "ArrowRight"].includes(event.code)) event.preventDefault();
       if (!event.repeat) this.pressed.add(action);
       this.keys.add(event.code);
     };

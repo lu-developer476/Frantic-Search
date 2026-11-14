@@ -46,7 +46,7 @@ Narrator interludes pause the simulation so the player can read the story and ev
 - Every canonical reference PNG is preloaded and registered. Brontosaurus appears as ambient wildlife in the coastal and redwood chapters; Ligocristus is a food source; both Venatosaurus variants are active enemies; Stegoceratops is the special allied charge.
 - The four legacy Velociraptor GIFs are also cached as motion references; the canonical PNG character art remains the rendered source so the in-game designs stay visually consistent with the updated environments.
 - The campaign spans seven sections with individually configured lengths from 5,000 to 7,800 world units (48,400 units of generated terrain in total). Chapter boundaries, boss arenas, rescue points, wildlife, hazards, facility objectives and extraction are positioned against each section's actual length. Five Ferrucutus cages and two captive-carrying poacher encounters remain spaced across the first five sections; ordinary guards add combat encounters without adding rescue objectives.
-- Single-image characters still react to game states: idle breathing, running bounce, jump lean, crouch, attack wind-up, recoil, landing, recovery, feeding motion and defeat poses. These are lightweight Canvas transforms; they do not pretend to articulate separate limbs when the source is a single complete PNG.
+- Single-image characters still react to game states: idle breathing, running bounce, jump lean, attack wind-up, recoil, landing, recovery, feeding motion and defeat poses. These are lightweight Canvas transforms; they do not pretend to articulate separate limbs when the source is a single complete PNG.
 - Every campaign start introduces Violeta and Vasti together from the left before control is handed to the selected protagonist. At chapter boundaries they leave to the right and enter the next chapter from the left; the final extraction includes Rosa.
 - Press **C** to summon Stegoceratops. It charges across the full screen, defeats ordinary enemies and deals one point of damage to bosses. Cooldown: 30 seconds.
 - Existing gameplay actions remain active: Violeta's dash and double jump, Vasti's stomp and aerial slam, Ferrucutus' bridge and ally attacks, Rosa's companion behaviour, and both bosses' attack patterns.
@@ -71,7 +71,6 @@ Narrator interludes pause the simulation so the player can read the story and ev
 |---|---|---|
 | Move | A / D or ← / → | ← / → |
 | Jump | Space / W / ↑ | ↑ |
-| Duck | S / ↓ | — |
 | Character ability | X | X |
 | Stegoceratops special ally | C | — |
 | Interact with terminal / Rosa | E or F | E |

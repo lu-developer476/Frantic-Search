@@ -3,7 +3,7 @@ import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.j
 export const DINOSAUR_REFERENCE_SCALES = Object.freeze({
   violeta: 1.6,
   rosa: 1.56,
-  vastatosaurusRex: 1.45,
+  vastatosaurusRex: 1.6,
   ligocristusInnocens: 0.9,
   venatosaurusImpavidus: 0.94
 });
@@ -1416,7 +1416,6 @@ export class SpriteRenderer {
     let pose = selectActorPose(character, player, elapsed);
     if (player?.dashTimer > 0 && kind === "blue") pose = "violeta-dash";
     else if (player?.dashTimer > 0 && kind === "rosa") pose = "rosa-attack";
-    else if (player?.duck) pose = prefix + "-duck";
     else if (player && !player.onGround && !player.animationState) pose = prefix + "-jump";
     else if (player && Math.abs(player.vx) > 30 && !player.animationState) {
       const fps = kind === "vasti" ? 5.4 : Math.max(8, Math.min(13, Math.abs(player.vx) / 27));
@@ -1425,9 +1424,8 @@ export class SpriteRenderer {
       pose = prefix + "-idle";
     }
 
-    const crouching = player?.duck === true && pose === prefix + "-duck";
-    const naturalHeight = crouching ? (player?.normalHeight ?? height) : height;
-    const drawY = crouching ? y + height - naturalHeight : y;
+    const naturalHeight = height;
+    const drawY = y;
     if (this.drawReferencePng(context, character, x, drawY, width, naturalHeight, player ?? {}, elapsed, {
       alpha,
       facing: player?.facing ?? 1

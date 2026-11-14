@@ -9,7 +9,7 @@ export class CollisionSystem {
   }
 
   static obstacleHit(player, obstacle) {
-    const horizontalInset = player.duck ? 8 : 12;
+    const horizontalInset = 12;
     return (
       player.x + horizontalInset < obstacle.x + obstacle.w - 6 &&
       player.x + player.w - horizontalInset > obstacle.x + 6 &&

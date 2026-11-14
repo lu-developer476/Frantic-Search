@@ -964,3 +964,7 @@ body.game-paused .brand,body.game-paused .navbar-separator{display:none!importan
   .panel-head .panel-health{flex-basis:112px;min-width:92px}
   .panel-health-meter{height:7px}
 }
+
+
+/* Brand link replaces the former operation subtitle in the navbar. */
+.navbar-identity .brand em{font-style:italic}

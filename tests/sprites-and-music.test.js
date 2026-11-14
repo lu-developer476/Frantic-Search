@@ -4,8 +4,9 @@ import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { AdaptiveMusic } from "../src/audio/AdaptiveMusic.js";
 import { DINOSAUR_REFERENCE_SCALES, REFERENCE_PNG_CHARACTERS, SpriteRenderer } from "../src/rendering/SpriteRenderer.js";
-import { selectActorPose } from "../src/rendering/AnimationProfiles.js";
+import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "../src/rendering/AnimationProfiles.js";
 import { Player } from "../src/entities/Player.js";
+import { Beta } from "../src/entities/Beta.js";
 import { AutonomousCompanion } from "../src/entities/AutonomousCompanion.js";
 
 class FakeNode {
@@ -95,7 +96,8 @@ test("the requested dinosaur silhouettes use consistent, species-specific visual
   assert.ok(48 * DINOSAUR_REFERENCE_SCALES.rosa > 76 * DINOSAUR_REFERENCE_SCALES.ligocristusInnocens);
   assert.ok(48 * DINOSAUR_REFERENCE_SCALES.rosa < 64 * DINOSAUR_REFERENCE_SCALES.violeta);
   assert.ok(DINOSAUR_REFERENCE_SCALES.violeta > 1.42);
-  assert.ok(DINOSAUR_REFERENCE_SCALES.vastatosaurusRex > 1.18);
+  assert.ok(DINOSAUR_REFERENCE_SCALES.vastatosaurusRex > DINOSAUR_REFERENCE_SCALES.rosa);
+  assert.ok(DINOSAUR_REFERENCE_SCALES.vastatosaurusRex > 1.45);
   assert.ok(DINOSAUR_REFERENCE_SCALES.ligocristusInnocens < 1.18);
   assert.ok(DINOSAUR_REFERENCE_SCALES.venatosaurusImpavidus < REFERENCE_PNG_CHARACTERS["venatosaurus-saevidicus"].scale);
 });
@@ -204,6 +206,49 @@ test("Violeta keeps her double jump and dash, while Vasti keeps stomp and aerial
   assert.equal(airborneVasti.useAbility(), true);
   assert.equal(airborneVasti.animationState, "slam");
   assert.equal(airborneVasti.isSlamming, true);
+});
+
+test("Violeta and Vasti cannot crouch even when the input reports duck", () => {
+  const crouchInput = {
+    isDown: (action) => action === "duck",
+    consume: () => false
+  };
+
+  for (const character of ["blue", "vasti"]) {
+    const player = new Player(character, 100, 430);
+    const standingHeight = player.h;
+    player.update(1 / 60, crouchInput);
+    assert.equal(player.h, standingHeight);
+    assert.equal(player.y, 430 - standingHeight);
+  }
+
+  assert.equal(ACTOR_ANIMATION_PROFILES.blue.duck, undefined);
+  assert.equal(ACTOR_ANIMATION_PROFILES.vasti.duck, undefined);
+});
+
+test("Rosa's escort lunge breaks crates but does not destroy rocks", () => {
+  const rosa = new Beta({ x: 100, groundY: 430 });
+  assert.equal(rosa.rescue(), true);
+  const crate = { id: "crate-test", type: "crate", x: 168, y: 378, w: 52, h: 52 };
+  const rock = { id: "rock-test", type: "rock", x: 300, y: 372, w: 56, h: 58 };
+  const world = { obstacles: [crate, rock] };
+  const player = { x: 500, y: 368, w: 64, h: 62 };
+
+  let event = null;
+  for (let frame = 0; frame < 30 && world.obstacles.includes(crate); frame += 1) {
+    event = rosa.update(1 / 60, player, world) ?? event;
+  }
+
+  assert.equal(world.obstacles.includes(crate), false);
+  assert.equal(world.obstacles.includes(rock), true);
+  assert.equal(event?.type, "rosa-crate-break");
+  assert.ok(rosa.dashCooldown > 0);
+});
+
+test("the header shows only the italicized, bold Frantic Search link", () => {
+  const html = readFileSync(resolve("index.html"), "utf8");
+  assert.match(html, /<a class="brand"[^>]*><strong><em>FRANTIC SEARCH<\/em><\/strong><\/a>/);
+  assert.doesNotMatch(html, /OPERATION:.*LOST HATCHLING/);
 });
 
 test("player and autonomous companion expose independent health values", () => {

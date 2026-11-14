@@ -1521,7 +1521,13 @@ function update(delta) {
   wildlife = wildlife.filter((animal) => animal.x + animal.w >= cameraX - 500);
   ferrucutusCaptives = ferrucutusCaptives.filter((captive) => captive.x + captive.w >= cameraX - 900);
   hunters = hunters.filter((hunter) => hunter.x + hunter.w >= cameraX - 1100);
-  beta?.update(delta, player);
+  const rosaEvent = beta?.update(delta, player, world);
+  if (rosaEvent?.type === "rosa-crate-break") {
+    audio.collect();
+    for (const crate of rosaEvent.obstacles) {
+      burst(crate.x + crate.w / 2, crate.y + crate.h / 2, "#d6a45f", 14);
+    }
+  }
   bosses = bosses.filter((boss) => boss.x + boss.w >= cameraX - 850 || boss === activeBoss);
   pruneEncounterBookkeeping();
   if (player.dashTimer <= 0) dashHitIds.clear();
