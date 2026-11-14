@@ -8,7 +8,6 @@ import { WildDinosaur } from "../src/entities/WildDinosaur.js";
 import { HunterEnemy } from "../src/entities/HunterEnemy.js";
 import { PhysicsSystem } from "../src/systems/PhysicsSystem.js";
 import { PlatformWorld } from "../src/world/PlatformWorld.js";
-import { HunterEnemy } from "../src/entities/HunterEnemy.js";
 import { CollisionSystem } from "../src/systems/CollisionSystem.js";
 
 test("player health changes on impact and does not keep decreasing afterward", () => {
