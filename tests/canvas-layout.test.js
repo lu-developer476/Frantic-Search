@@ -97,3 +97,20 @@ test("dash and Stegoceratops readiness labels share one horizontal HUD row", asy
   assert.match(rules, /\.hud-status-stack \.ability-readout,[\s\S]*?white-space:nowrap/s);
   assert.match(rules, /\.hud-status-stack \.stegoceratops-readout\s*\{[^}]*white-space:nowrap/s);
 });
+
+
+test("the control legend is updated in Spanish and English", async () => {
+  const i18n = await readFile(new URL("../src/i18n.js", import.meta.url), "utf8");
+  assert.match(i18n, /controls: "WAD O FLECHAS: MOVER ◦ BARRA ESPACIADORA: SALTO ◦ X: EMBESTIDA ◦ E: INTERACCIÓN ◦ P: PAUSA"/);
+  assert.match(i18n, /controls: "WASD OR ARROW KEYS: MOVE ◦ SPACEBAR: JUMP ◦ X: DASH ◦ E: INTERACT ◦ P: PAUSE"/);
+  assert.doesNotMatch(i18n, /C STEGOCERATOPS/);
+});
+
+test("the bottom HUD strip uses compact vertical spacing to preserve canvas visibility", async () => {
+  const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+  const rules = css.slice(css.lastIndexOf("/* Compact the lower control strip"));
+  assert.match(rules, /\.canvas-wrap \.hud-strip>div\.hud-summary\s*\{[^}]*padding:clamp\(4px,\.42vw,6px\)/s);
+  assert.match(rules, /\.canvas-wrap \.hud-summary \.hud-controls\s*\{[^}]*white-space:nowrap/s);
+  assert.match(rules, /@media\(max-width:900px\)[\s\S]*?padding:5px 10px/);
+  assert.match(rules, /@media\(max-height:720px\)[\s\S]*?padding:4px 10px/);
+});
