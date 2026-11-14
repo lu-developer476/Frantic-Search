@@ -72,3 +72,28 @@ test("chapter and objective share one line and the mission kicker is removed", a
   assert.match(rules, /\.panel-head \.mission-brief-header small,[\s\S]*?white-space:nowrap/s);
   assert.match(rules, /\.panel-head \.mission-brief-header strong\s*\{/);
 });
+
+
+test("mission kicker is absent and chapter plus objective are a single horizontal line", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+  const header = html.slice(html.indexOf('<div class="panel-head">'), html.indexOf('<div class="canvas-wrap">'));
+  const rules = css.slice(css.lastIndexOf("/* Keep the mission name"));
+  assert.doesNotMatch(header, /INFORME DE MISIÓN|MISSION BRIEF|mission-brief-kicker|aria-label="Informe de misión"/);
+  assert.match(header, /id="campaign-chapter"/);
+  assert.match(header, /id="campaign-objective"/);
+  assert.match(rules, /\.panel-head \.mission-brief-header\s*\{[^}]*display:flex[^}]*flex-direction:row[^}]*flex-wrap:nowrap/s);
+});
+
+test("dash and Stegoceratops readiness labels share one horizontal HUD row", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+  const start = html.indexOf('<div class="hud-status-stack">');
+  const end = html.indexOf("</div>", start);
+  const stack = html.slice(start, end);
+  const rules = css.slice(css.lastIndexOf("/* Dash and allied Stegoceratops"));
+  assert.ok(stack.indexOf('id="ability-status"') < stack.indexOf('id="stegoceratops-status"'));
+  assert.match(rules, /\.canvas-wrap \.hud-status-stack\s*\{[^}]*display:flex[^}]*flex-direction:row[^}]*flex-wrap:nowrap/s);
+  assert.match(rules, /\.hud-status-stack \.ability-readout,[\s\S]*?white-space:nowrap/s);
+  assert.match(rules, /\.hud-status-stack \.stegoceratops-readout\s*\{[^}]*white-space:nowrap/s);
+});
