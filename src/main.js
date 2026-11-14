@@ -49,6 +49,7 @@ const bestLabel = document.querySelector("#best");
 const playerHealthMeter = document.querySelector("#player-health-meter");
 const playerHealthFill = document.querySelector("#player-health-fill");
 const abilityLabel = document.querySelector("#ability-status");
+const controlsLabel = document.querySelector(".hud-controls");
 const stegoceratopsStatusLabel = document.querySelector("#stegoceratops-status");
 const campaignObjectiveLabel = document.querySelector("#campaign-objective");
 const campaignChapterLabel = document.querySelector("#campaign-chapter");
@@ -808,11 +809,19 @@ function updateStegoceratopsHud() {
 }
 
 function updatePlayerAbilityHud() {
-  if (!abilityLabel) return;
-  const ready = player.abilityCooldown <= 0;
-  const readyText = selected === "vasti" ? ui("stompReady") : ui("dashReady");
-  abilityLabel.textContent = ready ? readyText : ui("cooldown") + " " + player.abilityCooldown.toFixed(1) + "s";
-  abilityLabel.classList.toggle("ready", ready);
+  if (abilityLabel) {
+    const ready = player.abilityCooldown <= 0;
+    const readyText = selected === "vasti" ? ui("stompReady") : ui("dashReady");
+    abilityLabel.textContent = ready ? readyText : ui("cooldown") + " " + player.abilityCooldown.toFixed(1) + "s";
+    abilityLabel.classList.toggle("ready", ready);
+  }
+  if (controlsLabel) {
+    const base = ui("controls");
+    const action = selected === "vasti"
+      ? (locale === "es" ? "X: PISOTÓN" : "X: STOMP")
+      : (locale === "es" ? "X: EMBESTIR" : "X: DASH");
+    controlsLabel.textContent = base.replace(locale === "es" ? "X: EMBESTIR" : "X: DASH", action);
+  }
 }
 
 function updatePlayerHealthHud() {
