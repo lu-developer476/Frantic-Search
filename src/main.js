@@ -555,7 +555,8 @@ function drawReferenceHealthBar(actor, width = 36) {
   const spriteTop = actor.y + actor.h - spriteHeight;
   const sourceFacing = definition?.sourceFacing ?? 1;
   const facing = Math.sign(actor.direction ?? actor.facing ?? sourceFacing) || sourceFacing;
-  const headOffset = facing === sourceFacing ? 0.82 : 0.18;
+  // Health bars follow the actor's actual facing direction, not the source PNG's unflipped orientation.
+  const headOffset = facing > 0 ? 0.82 : 0.18;
   const headCenterX = spriteLeft + spriteWidth * headOffset;
   const barWidth = Math.min(width, Math.max(26, Math.round(spriteWidth * 0.34)));
   drawWorldHealthBar(
