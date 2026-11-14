@@ -2233,3 +2233,197 @@ html.site-mode-gray .story-card .story-actions span{
 .canvas-wrap .hud-strip .hud-summary .hud-controls{
   font-weight:400 !important;
 }
+
+
+/* Character picker hierarchy: artwork cards first, white identity/ability copy beneath. */
+.dino-dialog{
+  grid-template-rows:minmax(0,1fr) auto auto;
+}
+.dino-dialog .character-picker{
+  height:100%;
+  min-height:0;
+}
+.dino-dialog .character-card{
+  display:grid;
+  grid-template-rows:minmax(0,1fr);
+  align-items:center;
+  justify-items:center;
+  min-height:0;
+}
+.dino-dialog .character-info-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  align-items:start;
+  gap:clamp(10px,1.8vw,22px);
+  width:100%;
+  padding:clamp(8px,1.2vh,12px) 4px 0;
+  border:0;
+  background:transparent;
+  text-align:center;
+}
+.dino-dialog .character-info{
+  display:grid;
+  justify-items:center;
+  align-content:start;
+  gap:3px;
+  min-width:0;
+  color:#fff !important;
+  text-shadow:0 2px 5px #0008;
+}
+.dino-dialog .character-info .character-number,
+.dino-dialog .character-info strong,
+.dino-dialog .character-info small{
+  display:block;
+  margin:0;
+  color:#fff !important;
+}
+.dino-dialog .character-info .character-number{
+  font-family:"Courier New",monospace;
+  font-size:clamp(8px,.72vw,10px);
+  font-weight:700;
+  line-height:1.35;
+}
+.dino-dialog .character-info strong{
+  font-family:"Courier New",monospace;
+  font-size:clamp(17px,1.7vw,23px);
+  font-weight:900;
+  letter-spacing:.08em;
+  line-height:1.15;
+}
+.dino-dialog .character-info small{
+  font-family:"Courier New",monospace;
+  font-size:clamp(7px,.66vw,9px);
+  font-weight:700;
+  line-height:1.4;
+  letter-spacing:.035em;
+}
+.dino-dialog .dialog-actions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  align-items:stretch;
+  gap:12px;
+  width:100%;
+  margin-top:clamp(8px,1.2vh,14px);
+  padding-top:clamp(8px,1.2vh,14px);
+}
+.dino-dialog .dialog-actions button{
+  width:100%;
+  min-width:0;
+  justify-content:center;
+}
+
+/* The confirmation step is a separate modal; PLAY is only available here. */
+.canvas-wrap .character-confirmation{
+  position:absolute;
+  inset:0 0 clamp(38px,5vh,52px) 0;
+  z-index:16;
+  display:grid;
+  place-items:center;
+  padding:clamp(14px,3vw,34px);
+  box-sizing:border-box;
+  background:rgba(5,11,10,.88);
+  backdrop-filter:blur(8px);
+}
+.character-confirmation.hidden{
+  display:none !important;
+}
+.character-confirmation-card{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:clamp(12px,2vh,20px);
+  width:min(560px,100%);
+  height:auto;
+  max-height:calc(100% - 12px);
+  min-height:0;
+  padding:clamp(20px,3vw,34px);
+  overflow:auto;
+  text-align:center;
+}
+.character-confirmation-card .dialog-kicker{
+  margin:0;
+}
+.character-confirmation-card h2{
+  margin:0;
+  color:#fff !important;
+  font-size:clamp(26px,3.6vw,42px);
+  line-height:1.08;
+  text-align:center;
+}
+.character-confirmation-card .dialog-description{
+  max-width:42ch;
+  margin:0;
+  color:#fff !important;
+  font-family:"Courier New",monospace;
+  font-size:clamp(11px,.95vw,13px);
+  line-height:1.55;
+  text-align:center;
+}
+.character-confirmation-choice{
+  display:grid;
+  justify-items:center;
+  gap:5px;
+  width:100%;
+  padding:12px 8px;
+  color:#fff !important;
+  font-family:"Courier New",monospace;
+  text-shadow:0 2px 5px #0009;
+}
+.character-confirmation-choice .character-number,
+.character-confirmation-choice strong,
+.character-confirmation-choice span,
+.character-confirmation-choice small{
+  margin:0;
+  color:#fff !important;
+}
+.character-confirmation-choice .character-number{
+  font-size:10px;
+  font-weight:700;
+}
+.character-confirmation-choice strong{
+  font-size:clamp(22px,2.6vw,30px);
+  font-weight:900;
+  letter-spacing:.1em;
+}
+.character-confirmation-choice span:not(.character-number){
+  font-size:clamp(10px,.9vw,12px);
+  font-weight:700;
+}
+.character-confirmation-choice small{
+  font-size:clamp(8px,.75vw,10px);
+  font-weight:700;
+  line-height:1.45;
+}
+.character-confirmation-card .dialog-actions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  width:100%;
+  margin:0;
+  padding:0;
+  border:0;
+}
+.character-confirmation-card .dialog-actions button{
+  width:100%;
+  min-width:0;
+  justify-content:center;
+}
+@media(max-height:620px) and (min-width:1024px){
+  .dino-dialog .character-info-grid{padding-top:5px;gap:8px}
+  .dino-dialog .character-info{gap:1px}
+  .dino-dialog .dialog-actions{margin-top:6px;padding-top:6px}
+  .character-confirmation-card{gap:10px;padding:16px 22px}
+  .character-confirmation-choice{padding:6px}
+}
+@media(max-width:560px){
+  .dino-dialog .character-info-grid{gap:6px;padding:6px 0 0}
+  .dino-dialog .character-info small{font-size:7px;line-height:1.25}
+  .dino-dialog .character-info .character-number{font-size:7px}
+  .dino-dialog .character-info strong{font-size:17px}
+  .dino-dialog .dialog-actions{gap:8px;margin-top:8px;padding-top:8px}
+  .dino-dialog .dialog-actions button{padding:8px 7px;font-size:8px}
+  .character-confirmation-card{gap:12px;padding:18px 14px}
+  .character-confirmation-card .dialog-actions{gap:8px}
+  .character-confirmation-card .dialog-actions button{padding:9px 8px;font-size:9px}
+}
