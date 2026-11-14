@@ -116,21 +116,46 @@
             </section>
             <section id="dino-modal" class="dino-modal hidden" role="dialog" aria-modal="true" aria-label="Selección de personaje">
               <div class="dino-dialog">
-                <div class="character-picker" aria-label="Elegir personaje">
-                  <button class="character-card active" data-character="blue" type="button" aria-pressed="true">
+                <div class="character-picker" aria-label="Elegir personaje" data-i18n-aria="chooseCharacter">
+                  <button class="character-card active" data-character="blue" type="button" aria-label="Seleccionar a Violeta" data-i18n-aria="selectVioleta" aria-pressed="true">
                     <span class="character-art blue-art"><img src="%BASE_URL%references/adult-velociraptor-nublarensis.png" data-idle-src="%BASE_URL%references/adult-velociraptor-nublarensis.png" data-run-a-src="%BASE_URL%references/adult-velociraptor-nublarensis.png" data-run-b-src="%BASE_URL%references/adult-velociraptor-nublarensis.png" alt="" /></span>
-                    <span class="character-number">01 / <span data-i18n="raptor">Velociraptor nublarensis</span></span>
-                    <strong>VIOLETA</strong><small data-i18n="blueAbility">VELOCIDAD · DOBLE SALTO · EMBESTIDA</small>
                   </button>
-                  <button class="character-card" data-character="vasti" type="button" aria-pressed="false">
+                  <button class="character-card" data-character="vasti" type="button" aria-label="Seleccionar a Vasti" data-i18n-aria="selectVasti" aria-pressed="false">
                     <span class="character-art vasti-art"><img src="%BASE_URL%references/vastatosaurus-rex.png" data-idle-src="%BASE_URL%references/vastatosaurus-rex.png" data-run-a-src="%BASE_URL%references/vastatosaurus-rex.png" data-run-b-src="%BASE_URL%references/vastatosaurus-rex.png" alt="" /></span>
-                    <span class="character-number">02 / <span data-i18n="titan">Vastatosaurus Rex</span></span>
-                    <strong>VASTI</strong><small data-i18n="vastiAbility">FUERZA · PISOTÓN DE IMPACTO</small>
                   </button>
+                </div>
+                <div class="character-info-grid" aria-label="Información de los personajes">
+                  <div class="character-info">
+                    <span class="character-number">01 / <span data-i18n="raptor">Velociraptor nublarensis</span></span>
+                    <strong>VIOLETA</strong>
+                    <small data-i18n="blueAbility">VELOCIDAD · DOBLE SALTO · EMBESTIDA</small>
+                  </div>
+                  <div class="character-info">
+                    <span class="character-number">02 / <span data-i18n="titan">Vastatosaurus Rex</span></span>
+                    <strong>VASTI</strong>
+                    <small data-i18n="vastiAbility">FUERZA · PISOTÓN DE IMPACTO</small>
+                  </div>
                 </div>
                 <div class="dialog-actions">
                   <button id="cancel-character" class="dialog-back" type="button" data-i18n="back">VOLVER</button>
-                  <button id="confirm-character" class="dialog-confirm" type="button"><span data-i18n="confirmPlay">CONFIRMAR Y JUGAR</span></button>
+                  <button id="confirm-character" class="dialog-confirm" type="button"><span data-i18n="confirmPlay">CONFIRMAR</span></button>
+                </div>
+              </div>
+            </section>
+            <section id="character-confirmation" class="character-confirmation hidden" role="dialog" aria-modal="true" aria-labelledby="character-confirmation-title" aria-describedby="character-confirmation-message">
+              <div class="dino-dialog character-confirmation-card">
+                <span class="dialog-kicker" data-i18n="characterConfirmKicker">CONFIRMACIÓN DE PERSONAJE</span>
+                <h2 id="character-confirmation-title" data-i18n="characterConfirmTitle">¿JUGAR CON ESTE PERSONAJE?</h2>
+                <p id="character-confirmation-message" class="dialog-description" data-i18n="characterConfirmMessage">Vas a iniciar la operación con el siguiente personaje:</p>
+                <div class="character-confirmation-choice" aria-live="polite">
+                  <span id="character-confirmation-number" class="character-number"></span>
+                  <strong id="character-confirmation-name"></strong>
+                  <span id="character-confirmation-species"></span>
+                  <small id="character-confirmation-ability"></small>
+                </div>
+                <div class="dialog-actions">
+                  <button id="back-character-confirmation" class="dialog-back" type="button" data-i18n="back">VOLVER</button>
+                  <button id="play-character" class="dialog-confirm" type="button"><span data-i18n="playSelected">JUGAR</span></button>
                 </div>
               </div>
             </section>
