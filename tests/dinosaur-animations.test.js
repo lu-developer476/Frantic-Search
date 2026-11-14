@@ -2,7 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { IndoraptorBoss } from "../src/entities/IndoraptorBoss.js";
 import { IndominusRexBoss } from "../src/entities/IndominusRexBoss.js";
-import { REFERENCE_PNG_CHARACTERS } from "../src/rendering/SpriteRenderer.js";
+import { DINOSAUR_REFERENCE_SCALES, REFERENCE_PNG_CHARACTERS } from "../src/rendering/SpriteRenderer.js";
+import { ENEMY_FADE_DURATION, beginEnemyFade, advanceEnemyFade, getEnemyOpacity, isEnemyFadeComplete } from "../src/systems/EnemyFadeSystem.js";
 import { selectActorPose } from "../src/rendering/AnimationProfiles.js";
 
 test("feeding, jumping and combat actions resolve to their own poses", () => {
@@ -13,6 +14,25 @@ test("feeding, jumping and combat actions resolve to their own poses", () => {
   assert.equal(selectActorPose("indoraptor", { animationState: "jump" }), "indoraptor-jump");
   assert.equal(selectActorPose("indoraptor", { state: "eating" }), "indoraptor-eat");
   assert.equal(selectActorPose("hunter", { state: "stunned" }), "hunter-impact");
+});
+
+test("Vastatosaurus Rex is scaled as a large adult beside the raptors", () => {
+  assert.equal(DINOSAUR_REFERENCE_SCALES.vastatosaurusRex, 1.95);
+  assert.equal(REFERENCE_PNG_CHARACTERS.vasti.scale, 1.95);
+  assert.ok(DINOSAUR_REFERENCE_SCALES.vastatosaurusRex > DINOSAUR_REFERENCE_SCALES.violeta);
+  assert.ok(DINOSAUR_REFERENCE_SCALES.vastatosaurusRex > DINOSAUR_REFERENCE_SCALES.rosa);
+});
+
+test("defeated enemies fade smoothly to full transparency before cleanup", () => {
+  const enemy = { defeated: true };
+  beginEnemyFade(enemy);
+  assert.equal(getEnemyOpacity(enemy), 1);
+  advanceEnemyFade(enemy, ENEMY_FADE_DURATION / 2);
+  assert.equal(getEnemyOpacity(enemy), 0.5);
+  assert.equal(isEnemyFadeComplete(enemy), false);
+  advanceEnemyFade(enemy, ENEMY_FADE_DURATION / 2);
+  assert.equal(getEnemyOpacity(enemy), 0);
+  assert.equal(isEnemyFadeComplete(enemy), true);
 });
 
 test("Indoraptor selects its second-generation PNG at the existing phase-two threshold", () => {
