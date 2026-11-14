@@ -2035,3 +2035,27 @@ html.site-mode-gray .canvas-wrap .hud-strip{
     letter-spacing:-.045em;
   }
 }
+
+
+/* Requested selection and narrator panel refinements. */
+.canvas-wrap .dino-modal{
+  inset:0 0 clamp(38px,5vh,52px) 0;
+}
+.dino-dialog .character-card{
+  grid-template-rows:minmax(0,1fr) auto auto auto;
+}
+.dino-dialog .character-card .character-number,
+.dino-dialog .character-card small{
+  color:#ffe36b;
+}
+.story-card h2,
+.story-card .story-text,
+.story-card .story-actions span,
+html.site-mode-beige .story-card h2,
+html.site-mode-gray .story-card h2,
+html.site-mode-beige .story-card .story-text,
+html.site-mode-gray .story-card .story-text,
+html.site-mode-beige .story-card .story-actions span,
+html.site-mode-gray .story-card .story-actions span{
+  color:#ffe36b;
+}
