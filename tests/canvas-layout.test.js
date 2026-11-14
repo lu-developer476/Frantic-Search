@@ -6,9 +6,9 @@ test("operation HUD is integrated into the canvas wrapper", async () => {
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
   const canvasStart = html.indexOf('<div class="canvas-wrap">');
   const hudStart = html.indexOf('<div class="hud-strip"');
-  const canvasEnd = html.indexOf('\n          </div>\n          \n          \n        </section>', hudStart);
+  const hudAfterLastCanvasLayer = html.indexOf('</section>\n                    <div class="hud-strip"', canvasStart);
   assert.ok(canvasStart >= 0 && hudStart > canvasStart);
-  assert.ok(canvasEnd > hudStart);
+  assert.ok(hudAfterLastCanvasLayer > canvasStart && hudAfterLastCanvasLayer < hudStart);
   assert.equal(html.split('class="hud-strip"').length - 1, 1);
 });
 
