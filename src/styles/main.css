@@ -1286,10 +1286,9 @@ html.site-mode-gray .canvas-wrap .hud-strip{
   stroke-linejoin:miter;
   shape-rendering:geometricPrecision;
 }
-.menu-toggle.open .menu-icon path{
-  d:path("M5 5L19 19M19 5L5 19");
-  stroke-width:2.8;
-}
+.menu-toggle .menu-x{display:none;stroke-width:2.8}
+.menu-toggle.open .menu-lines{display:none}
+.menu-toggle.open .menu-x{display:block}
 @media(max-width:900px){
   .canvas-wrap .hud-strip>div.hud-summary{
     grid-template-columns:repeat(2,minmax(0,1fr));
