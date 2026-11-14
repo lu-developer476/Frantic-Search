@@ -75,3 +75,23 @@ test("Brontosaurus and Ligocristus reference sprites face the corrected travel d
   assert.equal(REFERENCE_PNG_CHARACTERS.brontosaurus.file, "brontosaurus-excelsus-basteri.png");
   assert.equal(REFERENCE_PNG_CHARACTERS.ligocristus.file, "ligocristus-innocens.png");
 });
+
+
+test("the HUD status combines dash and Stegoceratops readiness with the requested separator", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
+  const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+  assert.match(html, /STEGOCERATOPS \[C\] - HABILIDAD LISTA/);
+  assert.match(main, /stegoceratopsStatusLabel\.textContent = "STEGOCERATOPS \[C\] - "/);
+  assert.match(css, /\.stegoceratops-readout::before\s*\{[^}]*content:"◦"/s);
+});
+
+test("all reference PNG dinosaurs receive a crisp black silhouette outline", async () => {
+  const renderer = await readFile(new URL("../src/rendering/SpriteRenderer.js", import.meta.url), "utf8");
+  assert.match(renderer, /getOutlinedReferenceImage\(file, image, bounds, drawWidth, drawHeight\)/);
+  assert.match(renderer, /maskContext\.globalCompositeOperation = "source-in"/);
+  assert.match(renderer, /maskContext\.fillStyle = "#050706"/);
+  assert.match(renderer, /for \(let offsetY = -border; offsetY <= border; offsetY \+= 1\)/);
+  assert.match(renderer, /if \(outlinedImage\)\s*\{[^}]*context\.drawImage\(\s*outlinedImage/s);
+  assert.match(renderer, /outlinedReferenceImages\.size > 48/);
+});
