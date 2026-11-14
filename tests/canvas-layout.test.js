@@ -12,12 +12,13 @@ test("operation HUD is integrated into the canvas wrapper", async () => {
   assert.equal(html.split('class="hud-strip"').length - 1, 1);
 });
 
-test("the canvas stage keeps its native 16:9 drawing ratio and fills its container", async () => {
+test("the full canvas scales into the available viewport without losing its 16:9 ratio", async () => {
   const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
   const rules = css.slice(css.lastIndexOf("/* Full-width gameplay stage"));
-  assert.match(rules, /\.canvas-wrap\s*\{[^}]*aspect-ratio:16 \/ 9/s);
-  assert.match(rules, /\.canvas-wrap canvas#game\s*\{[^}]*width:100%[^}]*height:100%[^}]*object-fit:fill/s);
-  assert.match(rules, /\.layout\s*\{[^}]*max-width:none/s);
+  assert.match(rules, /\.layout\s*\{[^}]*height:100%[^}]*min-height:0[^}]*overflow:hidden/s);
+  assert.match(rules, /\.game-panel\s*\{[^}]*height:100%[^}]*grid-template-rows:auto minmax\(0,1fr\)/s);
+  assert.match(rules, /\.canvas-wrap\s*\{[^}]*display:flex[^}]*height:100%[^}]*aspect-ratio:auto/s);
+  assert.match(rules, /\.canvas-wrap canvas#game\s*\{[^}]*width:auto[^}]*height:100%[^}]*max-width:100%[^}]*max-height:100%[^}]*aspect-ratio:16 \/ 9[^}]*object-fit:contain/s);
 });
 
 test("no yellow strip remains at the bottom edge of the canvas", async () => {
