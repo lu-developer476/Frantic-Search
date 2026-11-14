@@ -53,7 +53,7 @@ Narrator interludes pause the simulation so the player can read the story and ev
 - PNGs are preloaded and cached. If a reference image cannot be read, the renderer falls back to the existing sprite/fallback path rather than changing physics or character behaviour.
 - Original adaptive soundtrack synthesized at runtime with Web Audio API. Themes change across the coast, forest, black site, facility, boss encounters, extraction and victory.
 - Procedural sound effects for movement, damage, rescue and boss events.
-- No remote music, image or font downloads are required at runtime.
+- No remote music or image downloads are required at runtime. Interface typography loads Barlow, Barlow Condensed and IBM Plex Mono from Google Fonts, with system fallbacks.
 
 ## Performance and accessibility
 

@@ -1,4 +1,5 @@
 import "./styles/main.css";
+import "./styles/typography.css";
 import { inject } from "@vercel/analytics";
 import { GAME, LEVELS, WORLD } from "./config/GameConfig.js";
 
