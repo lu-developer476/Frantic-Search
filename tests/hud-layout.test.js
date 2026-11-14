@@ -47,6 +47,8 @@ test("X is labelled as dash and HABILIDAD remains reserved for the Stegoceratops
   assert.match(html, /id="stegoceratops-status"[^>]*>STEGOCERATOPS \[C\] - HABILIDAD LISTA/);
   assert.match(main, /function updatePlayerAbilityHud\(\)/);
   assert.match(main, /selected === "vasti" \? ui\("stompReady"\) : ui\("dashReady"\)/);
+  assert.match(main, /X: PISOTÓN/);
+  assert.match(main, /X: STOMP/);
   assert.match(i18n, /stompReady: "PISOTÓN LISTO"/);
   assert.match(i18n, /stompReady: "STOMP READY"/);
   assert.ok(main.includes('stegoceratopsStatusLabel.textContent = "STEGOCERATOPS [C] - " +'));
