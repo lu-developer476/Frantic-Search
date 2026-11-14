@@ -3,7 +3,7 @@ import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.j
 export const DINOSAUR_REFERENCE_SCALES = Object.freeze({
   violeta: 1.6,
   rosa: 1.56,
-  vastatosaurusRex: 1.6,
+  vastatosaurusRex: 1.95,
   ligocristusInnocens: 0.9,
   venatosaurusImpavidus: 0.94
 });
