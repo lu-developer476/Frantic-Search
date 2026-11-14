@@ -43,6 +43,17 @@ const startScreen = document.querySelector("#start-screen");
 const startScreenMessage = document.querySelector("#start-screen-message");
 const startButton = document.querySelector("#start-button");
 const overlayActionButton = document.querySelector("#overlay-action-button");
+const pauseMenu = document.querySelector("#pause-menu");
+const pauseContinueButton = document.querySelector("#pause-continue");
+const pauseRestartButton = document.querySelector("#pause-restart");
+const pauseExitButton = document.querySelector("#pause-exit");
+const pauseConfirmation = document.querySelector("#pause-confirmation");
+const pauseConfirmationTitle = document.querySelector("#pause-confirmation-title");
+const pauseConfirmationMessage = document.querySelector("#pause-confirmation-message");
+const confirmPauseActionButton = document.querySelector("#confirm-pause-action");
+const cancelPauseActionButton = document.querySelector("#cancel-pause-action");
+let pendingPauseAction = null;
+let pauseActionTrigger = null;
 const stateLabel = document.querySelector("#game-state");
 const distanceLabel = document.querySelector("#distance");
 const rescuesLabel = document.querySelector("#rescues");
@@ -1859,6 +1870,11 @@ function start() {
   startScreen.classList.add("hidden");
   dinoModal.classList.add("hidden");
   overlayActionButton.hidden = true;
+  pauseMenu.classList.add("hidden");
+  pauseConfirmation.classList.add("hidden");
+  overlay.classList.remove("pause-mode");
+  pendingPauseAction = null;
+  pauseActionTrigger = null;
   resetPlayer();
   updatePlayerHealthHud();
   music.start(audio.context, currentMusicTheme());
@@ -1914,25 +1930,84 @@ function togglePause() {
   if (!desktopPlayback.matches || !running) return;
   paused = !paused;
   document.body.classList.toggle("game-paused", paused);
-  if (paused) cancelScheduledFrame();
-  music.setPaused(paused);
-  stateLabel.textContent = paused ? ui("paused") : ui("inProgress");
   if (paused) {
-    overlay.querySelector(".overlay-kicker").textContent = ui("operationPaused");
-    overlay.querySelector("h2").hidden = true;
-    overlay.querySelector("p").hidden = true;
-    overlay.querySelector("button").hidden = false;
-    overlay.querySelector("button").textContent = ui("continue");
+    cancelScheduledFrame();
+    music.setPaused(true);
+    stateLabel.textContent = ui("paused");
+    overlay.classList.add("pause-mode");
     overlay.classList.remove("hidden");
+    pauseMenu.classList.remove("hidden");
+    pauseContinueButton.focus();
   } else {
-    overlay.querySelector("h2").hidden = false;
-    overlay.querySelector("p").hidden = false;
-    overlay.querySelector("button").hidden = true;
+    closePauseConfirmation(false);
+    pauseMenu.classList.add("hidden");
+    overlay.classList.remove("pause-mode");
     overlay.classList.add("hidden");
+    music.setPaused(false);
+    stateLabel.textContent = ui("inProgress");
     accumulator = 0;
     last = performance.now();
     scheduleFrame();
   }
+}
+
+function updatePauseConfirmationCopy() {
+  if (!pendingPauseAction) return;
+  const restarting = pendingPauseAction === "restart";
+  pauseConfirmationTitle.textContent = ui(restarting ? "confirmRestartTitle" : "confirmExitTitle");
+  pauseConfirmationMessage.textContent = ui(restarting ? "confirmRestartMessage" : "confirmExitMessage");
+}
+
+function requestPauseAction(action, triggerButton) {
+  if (!paused || !["restart", "exit"].includes(action)) return;
+  pendingPauseAction = action;
+  pauseActionTrigger = triggerButton || null;
+  updatePauseConfirmationCopy();
+  pauseConfirmation.classList.remove("hidden");
+  confirmPauseActionButton.focus();
+}
+
+function closePauseConfirmation(restoreFocus = true) {
+  pauseConfirmation.classList.add("hidden");
+  pendingPauseAction = null;
+  if (restoreFocus && pauseActionTrigger?.isConnected) pauseActionTrigger.focus();
+  pauseActionTrigger = null;
+}
+
+function returnToMainMenu() {
+  running = false;
+  paused = false;
+  cancelScheduledFrame();
+  music.stop();
+  document.body.classList.remove("game-paused");
+  pauseMenu.classList.add("hidden");
+  pauseConfirmation.classList.add("hidden");
+  overlay.classList.remove("pause-mode");
+  overlay.classList.add("hidden");
+  dinoModal.classList.add("hidden");
+  storyPanel.classList.add("hidden");
+  startScreenMessage.textContent = "";
+  startScreenMessage.hidden = true;
+  startButton.hidden = false;
+  startButton.disabled = !desktopPlayback.matches;
+  startScreen.classList.remove("hidden");
+  stateLabel.textContent = ui("standby");
+  pendingPauseAction = null;
+  pauseActionTrigger = null;
+  setMenuOpen(false);
+  render();
+  startButton.focus();
+}
+
+function confirmPendingPauseAction() {
+  const action = pendingPauseAction;
+  if (!action || !paused) return;
+  closePauseConfirmation(false);
+  if (action === "restart") {
+    start();
+    return;
+  }
+  if (action === "exit") returnToMainMenu();
 }
 
 function selectCharacter(value) {
@@ -1978,6 +2053,14 @@ document.querySelectorAll(".character-card").forEach((card) => {
   });
 });
 storyNextButton?.addEventListener("click", advanceStory);
+pauseContinueButton.addEventListener("click", () => togglePause());
+pauseRestartButton.addEventListener("click", () => requestPauseAction("restart", pauseRestartButton));
+pauseExitButton.addEventListener("click", () => requestPauseAction("exit", pauseExitButton));
+confirmPauseActionButton.addEventListener("click", confirmPendingPauseAction);
+cancelPauseActionButton.addEventListener("click", () => closePauseConfirmation());
+pauseConfirmation.addEventListener("click", (event) => {
+  if (event.target === pauseConfirmation) closePauseConfirmation();
+});
 startButton.addEventListener("click", () => openDinoModal("start"));
 overlayActionButton.addEventListener("click", () => {
   if (paused) {
@@ -2059,10 +2142,7 @@ function applyLanguage() {
     startButton.hidden = true;
   } else if (paused) {
     stateLabel.textContent = ui("paused");
-    overlay.querySelector(".overlay-kicker").textContent = ui("operationPaused");
-    overlay.querySelector("h2").hidden = true;
-    overlay.querySelector("p").hidden = true;
-    overlay.querySelector("button").textContent = ui("continue");
+    updatePauseConfirmationCopy();
   } else if (running) {
     stateLabel.textContent = ui("inProgress");
   } else if (campaign.flags.completed) {
@@ -2126,12 +2206,13 @@ document.querySelector("#sound-toggle").addEventListener("click", () => {
 window.addEventListener("keydown", (event) => {
   if (!desktopPlayback.matches) return;
   if (event.code === "Escape" && !event.repeat) {
-    if (!dinoModal.classList.contains("hidden")) closeDinoModal();
+    if (!pauseConfirmation.classList.contains("hidden")) closePauseConfirmation();
+    else if (!dinoModal.classList.contains("hidden")) closeDinoModal();
     else if (!navMenu.classList.contains("hidden")) setMenuOpen(false);
     return;
   }
   if (event.code === "Enter" && event.target instanceof Element && event.target.closest("button, a, input, select, textarea, [role='button']")) return;
-  if (event.code === "KeyP" && !event.repeat && !campaign.sceneOpen) togglePause();
+  if (event.code === "KeyP" && !event.repeat && !campaign.sceneOpen && pauseConfirmation.classList.contains("hidden")) togglePause();
   if (event.code === "Enter" && !event.repeat && campaign.sceneOpen) advanceStory();
   else if (event.code === "Enter" && !event.repeat && !running && !paused && !desktopBlocked && dinoModal.classList.contains("hidden") && navMenu.classList.contains("hidden")) {
     openDinoModal(overlay.classList.contains("hidden") ? "start" : "overlay");
