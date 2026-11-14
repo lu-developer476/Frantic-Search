@@ -67,3 +67,11 @@ test("boss attack states remain distinct from idle and feeding states", () => {
   assert.equal(selectActorPose("indoraptor", { state: "recovering" }), "indoraptor-recover");
   assert.equal(selectActorPose("indoraptor", { state: "defeated", defeated: true }), "indoraptor-defeated");
 });
+
+
+test("Brontosaurus and Ligocristus reference sprites face the corrected travel direction", () => {
+  assert.equal(REFERENCE_PNG_CHARACTERS.brontosaurus.sourceFacing, -1);
+  assert.equal(REFERENCE_PNG_CHARACTERS.ligocristus.sourceFacing, 1);
+  assert.equal(REFERENCE_PNG_CHARACTERS.brontosaurus.file, "brontosaurus-excelsus-basteri.png");
+  assert.equal(REFERENCE_PNG_CHARACTERS.ligocristus.file, "ligocristus-innocens.png");
+});
