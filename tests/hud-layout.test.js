@@ -44,8 +44,21 @@ test("X is labelled as dash and HABILIDAD remains reserved for the Stegoceratops
   assert.match(i18n, /abilityReady: "HABILIDAD LISTA"/);
   assert.match(i18n, /abilityReady: "ABILITY READY"/);
   assert.match(html, /id="ability-status"[^>]*data-i18n="dashReady">EMBESTIDA LISTA/);
-  assert.ok(html.includes('id="stegoceratops-status" class="stegoceratops-readout">STEGOCERATOPS [C] // HABILIDAD LISTA'));
+  assert.match(html, /id="stegoceratops-status"[^>]*>STEGOCERATOPS \[C\] - HABILIDAD LISTA/);
   assert.match(main, /abilityLabel\.textContent = ready \? ui\("dashReady"\)/);
-  assert.ok(main.includes('stegoceratopsStatusLabel.textContent = "STEGOCERATOPS [C] //" +'));
+  assert.ok(main.includes('stegoceratopsStatusLabel.textContent = "STEGOCERATOPS [C] - " +'));
   assert.match(main, /stegoceratopsStatusLabel\.textContent[\s\S]*?ui\("abilityReady"\)/);
+});
+
+
+test("nearby interactive targets share the explicit E prompt", async () => {
+  const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
+  const i18n = await readFile(new URL("../src/i18n.js", import.meta.url), "utf8");
+
+  assert.match(main, /const canInteract = Boolean\(nearbyConsole \|\| nearBeta \|\| nearFerrucutus\)/);
+  assert.match(main, /interactionHintLabel\.textContent = canInteract[\s\S]*?ui\("interact"\)/);
+  assert.match(main, /ctx\.fillText\(ui\("interact"\), terminal\.x/);
+  assert.match(i18n, /interact: "E: INTERACTUAR"/);
+  assert.match(i18n, /interact: "E: INTERACT"/);
+  assert.doesNotMatch(main, /"E \/\/ " \+ ui\("freeFerrucutus"\)/);
 });

@@ -86,12 +86,16 @@ test("the HUD status combines dash and Stegoceratops readiness with the requeste
   assert.match(css, /\.stegoceratops-readout::before\s*\{[^}]*content:"◦"/s);
 });
 
-test("all reference PNG dinosaurs receive a crisp black silhouette outline", async () => {
+test("all reference PNG dinosaurs receive a complete two-pixel black silhouette outline", async () => {
   const renderer = await readFile(new URL("../src/rendering/SpriteRenderer.js", import.meta.url), "utf8");
   assert.match(renderer, /getOutlinedReferenceImage\(file, image, bounds, drawWidth, drawHeight\)/);
+  assert.match(renderer, /const border = 2/);
+  assert.match(renderer, /outline-" \+ border/);
   assert.match(renderer, /maskContext\.globalCompositeOperation = "source-in"/);
   assert.match(renderer, /maskContext\.fillStyle = "#050706"/);
   assert.match(renderer, /for \(let offsetY = -border; offsetY <= border; offsetY \+= 1\)/);
+  assert.match(renderer, /for \(let offsetX = -border; offsetX <= border; offsetX \+= 1\)/);
+  assert.match(renderer, /outlineContext\.drawImage\(mask, offsetX, offsetY\)/);
   assert.match(renderer, /if \(outlinedImage\)\s*\{[^}]*context\.drawImage\(\s*outlinedImage/s);
   assert.match(renderer, /outlinedReferenceImages\.size > 48/);
 });

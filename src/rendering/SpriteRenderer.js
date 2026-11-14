@@ -232,12 +232,12 @@ export class SpriteRenderer {
 
   getOutlinedReferenceImage(file, image, bounds, drawWidth, drawHeight) {
     if (!(this.outlinedReferenceImages instanceof Map)) this.outlinedReferenceImages = new Map();
-    const key = file + ":" + drawWidth + "x" + drawHeight;
+    const border = 2;
+    const key = file + ":" + drawWidth + "x" + drawHeight + ":outline-" + border;
     if (this.outlinedReferenceImages.has(key)) return this.outlinedReferenceImages.get(key);
 
-    // Build a one-pixel, pixel-art silhouette around the complete opaque sprite.
-    // The original artwork is composited last, so existing interior details remain untouched.
-    const border = 1;
+    // Expand the complete opaque silhouette by two pixels in every direction.
+    // The original artwork is composited last, preserving all interior details.
     const canvasWidth = drawWidth + border * 2;
     const canvasHeight = drawHeight + border * 2;
 

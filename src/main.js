@@ -1612,10 +1612,9 @@ function update(delta) {
     const nearbyConsole = facilityConsoles.find((terminal) => terminal.canInteract(player));
     const nearBeta = beta && beta.state === "confined" && Math.abs(player.x - beta.x) < 112;
     const nearFerrucutus = ferrucutusCaptives.some((captive) => captive.canInteract(player));
-    interactionHintLabel.textContent = nearbyConsole
-      ? "E // " + (nearbyConsole.kind === "power" ? ui("activatePower") : ui("openSecurity"))
-      : nearBeta ? "E // " + ui("beta")
-      : nearFerrucutus ? "E // " + ui("freeFerrucutus")
+    const canInteract = Boolean(nearbyConsole || nearBeta || nearFerrucutus);
+    interactionHintLabel.textContent = canInteract
+      ? ui("interact")
       : beta?.state === "following" ? "ROSA // " + ui("escorting") : "";
   }
 }
@@ -1698,7 +1697,7 @@ function render() {
     if (terminal.canInteract(player)) {
       ctx.fillStyle = "#d8f36a";
       ctx.font = "10px monospace";
-      ctx.fillText(tr("E // INTERACT"), terminal.x - 18, terminal.y - 24);
+      ctx.fillText(ui("interact"), terminal.x - 18, terminal.y - 24);
     }
   }
   ctx.restore();
