@@ -30,3 +30,21 @@ test("operation footer, game frame and hamburger menu use flat, shadow-free styl
   assert.match(flatRules, /grid-template-rows:auto minmax\(0,1fr\) auto/);
   assert.match(flatRules, /html\.site-mode-beige \.game-panel,[\s\S]*?box-shadow:none/);
 });
+
+
+test("X is labelled as dash and HABILIDAD remains reserved for the Stegoceratops call", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const i18n = await readFile(new URL("../src/i18n.js", import.meta.url), "utf8");
+  const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
+
+  assert.match(i18n, /X EMBESTIDA/);
+  assert.match(i18n, /X DASH/);
+  assert.match(i18n, /dashReady: "EMBESTIDA LISTA"/);
+  assert.match(i18n, /dashReady: "DASH READY"/);
+  assert.match(i18n, /abilityReady: "HABILIDAD LISTA"/);
+  assert.match(i18n, /abilityReady: "ABILITY READY"/);
+  assert.match(html, /id="ability-status"[^>]*data-i18n="dashReady">EMBESTIDA LISTA/);
+  assert.match(html, /id="stegoceratops-status"[^>]*STEGOCERATOPS \\[C\\] \/\/ HABILIDAD LISTA/);
+  assert.match(main, /abilityLabel\.textContent = ready \? ui\("dashReady"\)/);
+  assert.match(main, /stegoceratopsStatusLabel\.textContent = "STEGOCERATOPS \\[C\\] \/\/"[\s\S]*?ui\("abilityReady"\)/);
+});
