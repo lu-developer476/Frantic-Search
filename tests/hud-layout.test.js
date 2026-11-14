@@ -76,3 +76,12 @@ test("lower HUD uses the full strip width and wraps complete labels without over
   assert.match(hudRules, /\.canvas-wrap \.hud-strip \.hud-summary \.hud-controls\s*\{[^}]*white-space:normal/s);
   assert.match(hudRules, /\.canvas-wrap \.hud-strip \.hud-summary \.hud-controls\s*\{[^}]*overflow:visible/s);
 });
+
+
+test("control copy matches the separate interaction indicator and does not duplicate E", async () => {
+  const i18n = await readFile(new URL("../src/i18n.js", import.meta.url), "utf8");
+  assert.match(i18n, /controls: "WAD O FLECHAS: MOVER ◦ BARRA ESPACIADORA: SALTAR ◦ X: EMBESTIR ◦ P: PAUSAR"/);
+  assert.match(i18n, /controls: "WASD OR ARROW KEYS: MOVE ◦ SPACEBAR: JUMP ◦ X: DASH ◦ P: PAUSE"/);
+  assert.match(i18n, /interact: "E: INTERACTUAR"/);
+  assert.match(i18n, /interact: "E: INTERACT"/);
+});
