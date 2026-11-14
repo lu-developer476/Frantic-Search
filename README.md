@@ -31,7 +31,7 @@ Narrator interludes pause the simulation so the player can read the story and ev
 
 - **Violeta:** adult female Velociraptor with white hide, purple back, magenta dorsal stripe and golden-ochre eyes; fast movement, double jump and evasive dash.
 - **Vasti:** Vastatosaurus rex from *King Kong* (2005), redesigned from `public/references/vastatosaurus-rex.jpg`: low, long-bodied profile, broad blunt skull, long tapering tail, short three-fingered forelimbs, powerful hind legs and muted olive-grey/brown hide with a sand-coloured underside; heavy movement, ground shockwave and aerial ground-slam.
-- **Rosa:** Violeta's juvenile Velociraptor offspring, sharing Violeta's white, purple and magenta family pattern; she becomes an escort companion after the facility systems are restored.
+- **Rosa:** Violeta's juvenile Velociraptor offspring, sharing Violeta's white, purple and magenta family pattern; she becomes an escort companion after the facility systems are restored and lunges through crates that block her route.
 - **Ferrucutus Cerastes:** *King Kong* (2005) ceratopsian with a heavy quadrupedal body, spiked oval frill and paired nasal horns; ally that helps bridge selected gaps and attacks enemies during exposed windows.
 - **Poachers:** state-driven patrol, investigation, pursuit and melee attack AI; defeated poachers become edible food sources.
 - **Venatosaurus:** both reference variants spawn as frequent territorial enemies. They hunt the protagonists and fight other Venatosaurus.
