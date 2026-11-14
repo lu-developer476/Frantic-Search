@@ -31,6 +31,7 @@ test("no yellow strip remains at the bottom edge of the canvas", async () => {
 test("hamburger close icon is rendered as a vector instead of transformed blurry bars", async () => {
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
   const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
-  assert.match(html, /class="menu-icon"/);
-  assert.match(css, /\.menu-toggle\.open \.menu-icon path/);
+  assert.match(html, /<svg class="menu-icon"/);
+  assert.match(html, /<path class="menu-x"/);
+  assert.match(css, /\.menu-toggle\.open \.menu-x\s*\{[^}]*display:block/s);
 });
