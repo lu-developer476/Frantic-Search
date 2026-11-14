@@ -967,6 +967,8 @@ body.game-paused .brand,body.game-paused .navbar-separator{display:none!importan
   grid-template-rows:auto minmax(0,1fr) auto;
   box-shadow:none;
 }
+html.site-mode-beige .game-panel,
+html.site-mode-gray .game-panel{box-shadow:none}
 .canvas-wrap{border-bottom:0}
 .hud-strip{
   position:relative;
@@ -1008,7 +1010,7 @@ body.game-paused .brand,body.game-paused .navbar-separator{display:none!importan
   display:block;
   margin:0;
   color:#9bd6d5;
-  font-size:clamp(8px,.7vw,10px);
+  font-size:clamp(9px,.8vw,11px);
   line-height:1.3;
   letter-spacing:.08em;
   white-space:nowrap;
@@ -1018,7 +1020,7 @@ body.game-paused .brand,body.game-paused .navbar-separator{display:none!importan
   max-width:none;
   margin:0;
   color:#ffe36b;
-  font-size:clamp(9px,.82vw,12px);
+  font-size:clamp(10px,.9vw,13px);
   line-height:1.3;
   letter-spacing:.035em;
   white-space:normal;
@@ -1038,7 +1040,7 @@ body.game-paused .brand,body.game-paused .navbar-separator{display:none!importan
   min-width:0;
   margin:0;
   font-family:"Courier New",monospace;
-  font-size:clamp(8px,.72vw,10px);
+  font-size:clamp(9px,.8vw,11px);
   font-weight:900;
   line-height:1.35;
   letter-spacing:.045em;
@@ -1064,7 +1066,7 @@ body.game-paused .brand,body.game-paused .navbar-separator{display:none!importan
   border-top:1px solid #52717d;
   color:#e2e8d9;
   font-family:"Courier New",monospace;
-  font-size:clamp(8px,.72vw,10px);
+  font-size:clamp(9px,.8vw,11px);
   font-weight:700;
   letter-spacing:.025em;
   line-height:1.4;
@@ -1096,12 +1098,12 @@ html.site-mode-gray .nav-menu{backdrop-filter:none}
     padding:8px 12px 7px;
   }
   .hud-summary .objective{grid-template-columns:1fr;gap:3px}
-  .hud-summary .objective small{font-size:8px}
-  .hud-summary .objective b{font-size:10px}
+  .hud-summary .objective small{font-size:9px}
+  .hud-summary .objective b{font-size:11px}
   .hud-summary .ability-readout,
   .hud-summary .stegoceratops-readout,
-  .hud-summary .interaction-readout{font-size:8px}
-  .hud-controls{font-size:8px}
+  .hud-summary .interaction-readout{font-size:9px}
+  .hud-controls{font-size:9px}
 }
 @media(max-height:720px) and (min-width:1024px) and (hover:hover) and (pointer:fine){
   .hud-strip>div.hud-summary{padding-top:8px;padding-bottom:7px}
