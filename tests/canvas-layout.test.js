@@ -16,7 +16,7 @@ test("the mission brief shares the top panel bar with distance, rescues, record,
   assert.match(header, /id="best"/);
   assert.match(header, /id="player-health-meter"/);
   assert.match(header, /id="game-state"/);
-  assert.match(header, /data-i18n="missionBrief"/);
+  assert.doesNotMatch(header, /INFORME DE MISIÓN|MISSION BRIEF|missionBrief/);
   assert.match(header, /id="campaign-chapter"/);
   assert.match(header, /id="campaign-objective"/);
   assert.equal(html.split('id="campaign-chapter"').length - 1, 1);
@@ -54,4 +54,21 @@ test("the mission brief is styled inside the top metrics bar, not over the canva
   assert.match(rules, /\.panel-head\s*\{[^}]*grid-template-columns:[^}]*minmax\(220px,1\.25fr\)/s);
   assert.match(rules, /\.panel-head \.mission-brief-header\s*\{[^}]*border-left:2px solid/s);
   assert.match(rules, /\.canvas-wrap \.mission-banner\{display:none !important\}/);
+});
+
+
+test("chapter and objective share one line and the mission kicker is removed", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+  const headerStart = html.indexOf('<div class="panel-head">');
+  const canvasStart = html.indexOf('<div class="canvas-wrap">');
+  const header = html.slice(headerStart, canvasStart);
+  const rules = css.slice(css.lastIndexOf("/* Keep the live chapter and objective"));
+
+  assert.doesNotMatch(header, /INFORME DE MISIÓN|MISSION BRIEF|mission-brief-kicker/);
+  assert.match(header, /id="campaign-chapter"/);
+  assert.match(header, /id="campaign-objective"/);
+  assert.match(rules, /\.panel-head \.mission-brief-header\s*\{[^}]*display:flex[^}]*flex-wrap:nowrap[^}]*align-items:baseline/s);
+  assert.match(rules, /\.panel-head \.mission-brief-header small,[\s\S]*?white-space:nowrap/s);
+  assert.match(rules, /\.panel-head \.mission-brief-header strong\s*\{/);
 });
