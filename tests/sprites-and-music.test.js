@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { AdaptiveMusic } from "../src/audio/AdaptiveMusic.js";
-import { REFERENCE_PNG_CHARACTERS, SpriteRenderer } from "../src/rendering/SpriteRenderer.js";
+import { DINOSAUR_REFERENCE_SCALES, REFERENCE_PNG_CHARACTERS, SpriteRenderer } from "../src/rendering/SpriteRenderer.js";
 import { selectActorPose } from "../src/rendering/AnimationProfiles.js";
 import { Player } from "../src/entities/Player.js";
 
@@ -81,6 +81,18 @@ test("active characters resolve their intended reference images", () => {
   assert.equal(REFERENCE_PNG_CHARACTERS.ferrucutus.file, "ferrucutus-cerastes.png");
   assert.equal(REFERENCE_PNG_CHARACTERS.indoraptor.first, "indoraptor-first-generation.png");
   assert.equal(REFERENCE_PNG_CHARACTERS.indominus.first, "indominus-rex-first-generation.png");
+});
+
+test("the requested dinosaur silhouettes use consistent, species-specific visual scales", () => {
+  assert.equal(REFERENCE_PNG_CHARACTERS.blue.scale, DINOSAUR_REFERENCE_SCALES.violeta);
+  assert.equal(REFERENCE_PNG_CHARACTERS.vasti.scale, DINOSAUR_REFERENCE_SCALES.vastatosaurusRex);
+  assert.equal(REFERENCE_PNG_CHARACTERS.ligocristus.scale, DINOSAUR_REFERENCE_SCALES.ligocristusInnocens);
+  assert.equal(REFERENCE_PNG_CHARACTERS["venatosaurus-impavidus"].scale, DINOSAUR_REFERENCE_SCALES.venatosaurusImpavidus);
+
+  assert.ok(DINOSAUR_REFERENCE_SCALES.violeta > 1.42);
+  assert.ok(DINOSAUR_REFERENCE_SCALES.vastatosaurusRex > 1.18);
+  assert.ok(DINOSAUR_REFERENCE_SCALES.ligocristusInnocens < 1.18);
+  assert.ok(DINOSAUR_REFERENCE_SCALES.venatosaurusImpavidus < REFERENCE_PNG_CHARACTERS["venatosaurus-saevidicus"].scale);
 });
 
 test("phase-aware reference selection switches both bosses to their second-generation PNG", () => {

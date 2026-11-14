@@ -1,18 +1,25 @@
 import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.js";
 
+export const DINOSAUR_REFERENCE_SCALES = Object.freeze({
+  violeta: 1.6,
+  vastatosaurusRex: 1.45,
+  ligocristusInnocens: 0.9,
+  venatosaurusImpavidus: 0.94
+});
+
 export const REFERENCE_PNG_CHARACTERS = Object.freeze({
-  blue: { file: "adult-velociraptor-nublarensis.png", sourceFacing: 1, scale: 1.42 },
+  blue: { file: "adult-velociraptor-nublarensis.png", sourceFacing: 1, scale: DINOSAUR_REFERENCE_SCALES.violeta },
   beta: { file: "juvenile-velociraptor-nublarensis.png", sourceFacing: 1, scale: 1.42 },
   rosa: { file: "juvenile-velociraptor-nublarensis.png", sourceFacing: 1, scale: 1.42 },
-  vasti: { file: "vastatosaurus-rex.png", sourceFacing: -1, scale: 1.18 },
+  vasti: { file: "vastatosaurus-rex.png", sourceFacing: -1, scale: DINOSAUR_REFERENCE_SCALES.vastatosaurusRex },
   ferrucutus: { file: "ferrucutus-cerastes.png", sourceFacing: -1, scale: 1.08 },
   indoraptor: { first: "indoraptor-first-generation.png", second: "indoraptor-second-generation.png", sourceFacing: 1, scale: 1.34 },
   indominus: { first: "indominus-rex-first-generation.png", second: "indominus-rex-second-generation.png", sourceFacing: -1, scale: 1.18 },
   "indominus-variant": { file: "indominus-rex-second-generation-variant.png", sourceFacing: -1, scale: 1.18 },
   brontosaurus: { file: "brontosaurus-excelsus-basteri.png", sourceFacing: 1, scale: 1.18 },
-  ligocristus: { file: "ligocristus-innocens.png", sourceFacing: -1, scale: 1.18 },
+  ligocristus: { file: "ligocristus-innocens.png", sourceFacing: -1, scale: DINOSAUR_REFERENCE_SCALES.ligocristusInnocens },
   stegoceratops: { file: "stegoceratops.png", sourceFacing: -1, scale: 1.18 },
-  "venatosaurus-impavidus": { file: "venatosaurus-impavidus.png", sourceFacing: -1, scale: 1.18 },
+  "venatosaurus-impavidus": { file: "venatosaurus-impavidus.png", sourceFacing: -1, scale: DINOSAUR_REFERENCE_SCALES.venatosaurusImpavidus },
   "venatosaurus-saevidicus": { file: "venatosaurus-saevidicus.png", sourceFacing: 1, scale: 1.18 }
 });
 
@@ -735,7 +742,7 @@ export class SpriteRenderer {
     }
 
     // Adult silhouette is enlarged without changing player collision dimensions.
-    const renderWidth = Math.max(1, Math.round(width * 1.42 * scaleX));
+    const renderWidth = Math.max(1, Math.round(width * DINOSAUR_REFERENCE_SCALES.violeta * scaleX));
     const renderHeight = Math.max(1, Math.round(renderWidth * 46 / 100 * scaleY));
     const dx = Math.round(x + (width - renderWidth) / 2);
     const dy = Math.round(y + height - renderHeight + bob + 4);
@@ -960,7 +967,7 @@ export class SpriteRenderer {
       offsetY = 3;
     }
 
-    const w = Math.max(1, Math.round(width * 1.18 * sx));
+    const w = Math.max(1, Math.round(width * DINOSAUR_REFERENCE_SCALES.vastatosaurusRex * sx));
     const h = Math.max(1, Math.round(w * 120 / 256 * sy));
     const dx = Math.round(x + (width - w) / 2);
     const dy = Math.round(y + height - h + bob + offsetY);
