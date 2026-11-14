@@ -48,6 +48,7 @@ const bestLabel = document.querySelector("#best");
 const playerHealthMeter = document.querySelector("#player-health-meter");
 const playerHealthFill = document.querySelector("#player-health-fill");
 const abilityLabel = document.querySelector("#ability-status");
+const stegoceratopsStatusLabel = document.querySelector("#stegoceratops-status");
 const campaignObjectiveLabel = document.querySelector("#campaign-objective");
 const campaignChapterLabel = document.querySelector("#campaign-chapter");
 const interactionHintLabel = document.querySelector("#interaction-hint");
@@ -784,6 +785,14 @@ function syncFacility() {
   );
   beta = new Beta({ x: world.facilitySpawns.beta, groundY: GAME.groundY });
   extractionX = world.facilitySpawns.extraction;
+}
+
+function updateStegoceratopsHud() {
+  if (!stegoceratopsStatusLabel) return;
+  const ready = stegoceratopsCooldown <= 0;
+  stegoceratopsStatusLabel.textContent = "STEGOCERATOPS [C] // " +
+    (ready ? ui("abilityReady") : ui("cooldown") + " " + stegoceratopsCooldown.toFixed(1) + "s");
+  stegoceratopsStatusLabel.classList.toggle("ready", ready);
 }
 
 function updatePlayerHealthHud() {
@@ -1565,6 +1574,7 @@ function update(delta) {
     abilityLabel.textContent = ready ? ui("abilityReady") : ui("cooldown") + " " + player.abilityCooldown.toFixed(1) + "s";
     abilityLabel.classList.toggle("ready", ready);
   }
+  updateStegoceratopsHud();
   if (beta?.state === "following" && extractionX && player.x >= extractionX && beta.x >= extractionX - 220) {
     finishCampaign();
   }
@@ -1663,9 +1673,6 @@ function render() {
   }
   ctx.restore();
 
-  ctx.fillStyle = "#eaf0d9";
-  ctx.font = "11px monospace";
-  ctx.fillText(tr(level().name), 24, 34);
   ctx.fillStyle = "#d8f36a";
   ctx.fillRect(24, 47, Math.min(220, distance / 12), 3);
   ctx.fillStyle = "#d2a27d";
@@ -1673,8 +1680,6 @@ function render() {
   ctx.fillText(tr(selected === "blue" ? "VIOLETA // DOUBLE JUMP + DASH" : selected === "rosa" ? "ROSA // JUVENILE RAPTOR" : "VASTI // HEAVY STOMP"), 24, GAME.height - 18);
   ctx.fillStyle = "#d8f36a";
   ctx.fillText(tr("FERRUCUTUS RESCUE // SUPPORT ACTIVE"), GAME.width - 314, GAME.height - 18);
-  ctx.fillStyle = stegoceratopsCooldown <= 0 ? "#d8f36a" : "#e8c58a";
-  ctx.fillText("STEGOCERATOPS [C] // " + (stegoceratopsCooldown <= 0 ? ui("abilityReady") : ui("cooldown") + " " + stegoceratopsCooldown.toFixed(1) + "s"), GAME.width - 250, 34);
   drawBossHud();
 
   // All actors and scenery were drawn directly at native game resolution.
@@ -1974,6 +1979,7 @@ function applyLanguage() {
   soundLabel.textContent = audio.enabled ? ui("sound") : ui("silence");
   menuToggle.setAttribute("aria-label", ui(navMenu.classList.contains("hidden") ? "openMenu" : "closeMenu"));
   if (abilityLabel) abilityLabel.textContent = player.abilityCooldown <= 0 ? ui("abilityReady") : ui("cooldown") + " " + player.abilityCooldown.toFixed(1) + "s";
+  updateStegoceratopsHud();
 
   if (desktopBlocked) {
     stateLabel.textContent = ui("desktopOnly");
