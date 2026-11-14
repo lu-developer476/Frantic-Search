@@ -1830,3 +1830,13 @@ html.site-mode-gray .canvas-wrap .hud-strip{
   }
   .story-card{padding:16px}
 }
+
+
+/* Match the requested single-line dash / Stegoceratops status wording. */
+.canvas-wrap .hud-status-stack{gap:0}
+.canvas-wrap .hud-status-stack .stegoceratops-readout::before{
+  content:"◦";
+  display:inline-block;
+  margin:0 .55em;
+  color:#b9c9bf;
+}
