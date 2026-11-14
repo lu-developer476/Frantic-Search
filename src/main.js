@@ -57,7 +57,6 @@ const campaignChapterLabel = document.querySelector("#campaign-chapter");
 const interactionHintLabel = document.querySelector("#interaction-hint");
 const storyPanel = document.querySelector("#story-panel");
 const storyTitle = document.querySelector("#story-title");
-const storyNarrator = document.querySelector("#story-narrator");
 const storyText = document.querySelector("#story-text");
 const storyProgress = document.querySelector("#story-progress");
 const storyNextButton = document.querySelector("#story-next");
@@ -868,7 +867,6 @@ function renderStoryPanel({ syncAudio = true } = {}) {
   const line = campaign.currentLine;
   if (!scene || !line || !storyPanel) return;
   storyTitle.textContent = tr(scene.title);
-  storyNarrator.textContent = ui("narrator");
   storyText.textContent = tr(line);
   storyProgress.textContent = (scene.index + 1) + " / " + scene.lines.length;
   storyNextButton.textContent = scene.index + 1 >= scene.lines.length ? ui("continue") : ui("next");
