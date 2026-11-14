@@ -1388,6 +1388,8 @@ html.site-mode-gray .canvas-wrap .hud-strip{
 .panel-head .panel-metric small{font-size:clamp(7px,.58vw,9px)}
 .panel-head .panel-metric b{font-size:clamp(9px,.8vw,12px)}
 .panel-head .mission-brief-header{
+  grid-column:2;
+  grid-row:1;
   display:grid;
   gap:3px;
   min-width:0;
@@ -1424,6 +1426,8 @@ html.site-mode-gray .canvas-wrap .hud-strip{
   overflow-wrap:anywhere;
 }
 .panel-head .panel-health{
+  grid-column:3;
+  grid-row:1;
   display:flex;
   flex:0 1 auto;
   align-items:center;
@@ -1434,7 +1438,7 @@ html.site-mode-gray .canvas-wrap .hud-strip{
   margin:0;
 }
 .panel-head .panel-health-meter{min-width:30px}
-.panel-head #game-state{margin:0;white-space:nowrap;font-size:clamp(7px,.62vw,9px)}
+.panel-head #game-state{grid-column:4;grid-row:1;margin:0;white-space:nowrap;font-size:clamp(7px,.62vw,9px)}
 @media(max-width:1280px){
   .panel-head{
     grid-template-columns:minmax(220px,1fr) minmax(190px,1fr) minmax(96px,.5fr) auto;
