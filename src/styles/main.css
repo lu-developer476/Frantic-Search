@@ -1944,3 +1944,94 @@ html.site-mode-gray .canvas-wrap .hud-strip{
     margin-inline:6px;
   }
 }
+
+
+/* Single-line lower HUD: status and every control share one full-width row. */
+.canvas-wrap .hud-strip{
+  left:0;
+  right:0;
+  width:100%;
+  max-width:none;
+  overflow:hidden;
+}
+.canvas-wrap .hud-strip>.hud-summary{
+  display:flex;
+  flex-flow:row nowrap;
+  align-items:center;
+  justify-content:flex-start;
+  gap:clamp(5px,.65vw,10px);
+  width:100%;
+  min-width:0;
+  padding:clamp(5px,.55vw,8px) clamp(8px,.9vw,14px);
+  white-space:nowrap;
+}
+.canvas-wrap .hud-strip .hud-status-stack{
+  display:inline-flex;
+  flex:0 0 auto;
+  flex-flow:row nowrap;
+  align-items:center;
+  gap:clamp(5px,.55vw,9px);
+  width:auto;
+  min-width:0;
+  white-space:nowrap;
+}
+.canvas-wrap .hud-strip .hud-status-stack .ability-readout,
+.canvas-wrap .hud-strip .hud-status-stack .stegoceratops-readout{
+  display:inline;
+  flex:0 0 auto;
+  width:auto;
+  max-width:none;
+  margin:0;
+  padding:0;
+  font-family:"Arial Narrow","Roboto Condensed",Arial,sans-serif;
+  font-size:clamp(6px,.68vw,10px);
+  font-weight:800;
+  line-height:1;
+  letter-spacing:-.025em;
+  white-space:nowrap;
+}
+.canvas-wrap .hud-strip .hud-status-stack .stegoceratops-readout::before{
+  content:"|";
+  display:inline;
+  margin-right:clamp(5px,.55vw,9px);
+  color:#b9c9bf;
+}
+.canvas-wrap .hud-strip .hud-status-stack .interaction-readout{
+  display:none !important;
+}
+.canvas-wrap .hud-strip .hud-summary .hud-controls{
+  display:block;
+  flex:1 1 auto;
+  width:auto;
+  min-width:0;
+  max-width:none;
+  margin:0;
+  padding:0;
+  border:0;
+  font-family:"Arial Narrow","Roboto Condensed",Arial,sans-serif;
+  font-size:clamp(6px,.68vw,10px);
+  font-weight:800;
+  line-height:1;
+  letter-spacing:-.025em;
+  text-align:right;
+  white-space:nowrap;
+  overflow:visible;
+  text-overflow:clip;
+}
+@media(max-width:900px){
+  .canvas-wrap .hud-strip>.hud-summary{
+    flex-wrap:nowrap;
+    gap:4px;
+    padding:5px 6px;
+  }
+  .canvas-wrap .hud-strip .hud-status-stack{
+    flex-wrap:nowrap;
+    gap:4px;
+  }
+  .canvas-wrap .hud-strip .hud-status-stack .ability-readout,
+  .canvas-wrap .hud-strip .hud-status-stack .stegoceratops-readout,
+  .canvas-wrap .hud-strip .hud-summary .hud-controls{
+    font-size:clamp(5px,.72vw,7px);
+    letter-spacing:-.045em;
+  }
+}
