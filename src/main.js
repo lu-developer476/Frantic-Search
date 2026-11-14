@@ -1,6 +1,6 @@
 import "./styles/main.css";
 import { inject } from "@vercel/analytics";
-import { GAME, LEVELS } from "./config/GameConfig.js";
+import { GAME, LEVELS, WORLD } from "./config/GameConfig.js";
 
 inject();
 import { AudioManager } from "./audio/AudioManager.js";
@@ -1341,7 +1341,7 @@ function update(delta) {
     player.vx = Math.min(0, player.vx);
   }
 
-  world.extendTo(player.x + 2800);
+  world.extendTo(player.x + WORLD.sectionLength + 1200);
   world.pruneBehind(player.x);
   syncEncounters();
   syncBossEncounter();

@@ -22,35 +22,47 @@ function shuffle(items, random) {
 
 const PLATFORM_LAYOUTS = [
   [
-    { offset: 215, y: 365, w: 165 }, { offset: 535, y: 342, w: 175 },
-    { offset: 885, y: 378, w: 190 }, { offset: 1250, y: 350, w: 185 },
-    { offset: 1690, y: 365, w: 175 }
+    { offset: 220, y: 365, w: 170 }, { offset: 620, y: 342, w: 175 },
+    { offset: 1020, y: 378, w: 190 }, { offset: 1420, y: 350, w: 185 },
+    { offset: 1820, y: 365, w: 175 }, { offset: 2220, y: 342, w: 190 },
+    { offset: 2620, y: 378, w: 180 }
   ],
   [
-    { offset: 250, y: 380, w: 190 }, { offset: 570, y: 350, w: 155 },
-    { offset: 930, y: 365, w: 190 }, { offset: 1315, y: 340, w: 165 },
-    { offset: 1750, y: 375, w: 190 }
+    { offset: 260, y: 380, w: 190 }, { offset: 660, y: 350, w: 155 },
+    { offset: 1060, y: 365, w: 190 }, { offset: 1460, y: 340, w: 165 },
+    { offset: 1860, y: 375, w: 190 }, { offset: 2260, y: 350, w: 175 },
+    { offset: 2660, y: 370, w: 185 }
   ],
   [
-    { offset: 190, y: 350, w: 175 }, { offset: 505, y: 375, w: 185 },
-    { offset: 865, y: 345, w: 170 }, { offset: 1260, y: 375, w: 205 },
-    { offset: 1710, y: 345, w: 180 }
+    { offset: 190, y: 350, w: 175 }, { offset: 590, y: 375, w: 185 },
+    { offset: 990, y: 345, w: 170 }, { offset: 1390, y: 375, w: 205 },
+    { offset: 1790, y: 345, w: 180 }, { offset: 2190, y: 370, w: 190 },
+    { offset: 2590, y: 350, w: 185 }
   ],
   [
-    { offset: 275, y: 370, w: 170 }, { offset: 560, y: 340, w: 190 },
-    { offset: 920, y: 380, w: 165 }, { offset: 1320, y: 355, w: 185 },
-    { offset: 1765, y: 365, w: 175 }
+    { offset: 275, y: 370, w: 170 }, { offset: 675, y: 340, w: 190 },
+    { offset: 1075, y: 380, w: 165 }, { offset: 1475, y: 355, w: 185 },
+    { offset: 1875, y: 365, w: 175 }, { offset: 2275, y: 345, w: 190 },
+    { offset: 2675, y: 375, w: 175 }
   ]
 ];
 
 const FERRUCUTUS_CAGE_WIDTH = 164;
-const CAPTIVE_OFFSETS_BY_SECTION = [[520], [1400], [520], [520], [520], [], []];
+const CAPTIVE_OFFSETS_BY_SECTION = [[1450], [1720], [1120], [1420], [2700], [], []];
 const CHAPTER_BY_SECTION = [0, 1, 2, 2, 3, 4, 5];
 const VENATOSAURUS_OFFSETS_BY_SECTION = [
-  [950, 1550], [950, 1830], [900], [950, 1550], [900], [], [950]
+  [600, 2200], [1200, 2700], [500], [700, 2200], [950], [], [1250]
 ];
-const FOOD_OFFSETS_BY_SECTION = [[1300], [1200], [1850], [1300], [1850], [], []];
-const HUNTER_OFFSETS_BY_SECTION = [2000, 500, null, 2000, null, null, null];
+const FOOD_OFFSETS_BY_SECTION = [[1850], [2250], [2500], [1750], [2500], [], [1900]];
+const HUNTER_SPAWNS_BY_SECTION = [
+  [{ offset: 2800, carriesCaptive: true }],
+  [{ offset: 650, carriesCaptive: true }],
+  [],
+  [{ offset: 2800, carriesCaptive: true }],
+  [],
+  [{ offset: 2650, carriesCaptive: false }],
+  []
+];
 
 function proceduralCagePositions(sectionStart, sectionEnd, sectionIndex) {
   return (CAPTIVE_OFFSETS_BY_SECTION[sectionIndex] ?? [])
@@ -77,7 +89,7 @@ export class PlatformWorld {
     this.facilityProps = [];
     this.generatedSections = 0;
     this.bridgeSequence = 0;
-    this.extendTo(2800);
+    this.extendTo(this.sectionLength + 1200);
   }
 
   extendTo(worldX) {
@@ -127,10 +139,20 @@ export class PlatformWorld {
       ...generatedLedges
     );
 
+    const chapterEnvironment = LEVELS[levelIndex].environment;
+    const reservedCharacterPositions = [
+      ...(CAPTIVE_OFFSETS_BY_SECTION[index] ?? []),
+      ...(VENATOSAURUS_OFFSETS_BY_SECTION[index] ?? []),
+      ...(FOOD_OFFSETS_BY_SECTION[index] ?? []),
+      ...(HUNTER_SPAWNS_BY_SECTION[index] ?? []).map((spawn) => spawn.offset)
+    ].map((offset) => start + offset);
+
     if (!isBossArena && !isFacilityArea && !isFinalArea) {
-      const occupiedCages = this.ferrucutusCageSpawns.filter((cage) => cage.x >= start && cage.x < start + this.sectionLength);
-      const candidateOffsets = shuffle([350, 1040, 1450, 1880], random);
-      const targetObstacleCount = 2 + Math.floor(random() * 2);
+      const occupiedCages = this.ferrucutusCageSpawns.filter((cage) =>
+        cage.x >= start && cage.x < start + this.sectionLength
+      );
+      const candidateOffsets = shuffle([350, 1000, 1550, 2000, 2500, 2900], random);
+      const targetObstacleCount = 3 + Math.floor(random() * 2);
       let placedObstacles = 0;
       for (const offset of candidateOffsets) {
         if (placedObstacles >= targetObstacleCount) break;
@@ -138,53 +160,67 @@ export class PlatformWorld {
         const obstacleType = random() < 0.5 ? "crate" : "rock";
         const width = obstacleType === "crate" ? 52 : 56;
         const height = obstacleType === "crate" ? 52 : 58;
+        const obstacleCenter = obstacleX + width / 2;
         const overlapsCage = occupiedCages.some((cage) =>
           obstacleX < cage.x + FERRUCUTUS_CAGE_WIDTH + 24 && obstacleX + width > cage.x - 24
         );
-        if (overlapsCage) continue;
-        this.obstacles.push({ x: obstacleX, y: this.groundY - height, w: width, h: height, type: obstacleType, passed: false });
+        const crowdsCharacter = reservedCharacterPositions.some((position) =>
+          Math.abs(obstacleCenter - position) < 180
+        );
+        if (overlapsCage || crowdsCharacter) continue;
+        this.obstacles.push({
+          x: obstacleX, y: this.groundY - height, w: width, h: height,
+          type: obstacleType, passed: false
+        });
         placedObstacles += 1;
       }
     }
 
-    const patrolStart = start + 120;
-    const patrolEnd = start + this.sectionLength - 40;
-    const chapterEnvironment = LEVELS[levelIndex].environment;
+    const patrolRadius = 360;
     (VENATOSAURUS_OFFSETS_BY_SECTION[index] ?? []).forEach((offset, spawnIndex) => {
       const x = start + offset + Math.round((random() - 0.5) * 50);
       this.venatosaurusSpawns.push({
         id: "venatosaurus-" + index + "-" + spawnIndex,
         kind: chapterEnvironment === "wild" ? "venatosaurus-impavidus" : "venatosaurus-saevidicus",
-        x, patrolStart, patrolEnd, direction: random() < 0.5 ? -1 : 1
+        x,
+        patrolStart: Math.max(start + 120, x - patrolRadius),
+        patrolEnd: Math.min(start + this.sectionLength - 40, x + patrolRadius),
+        direction: random() < 0.5 ? -1 : 1
       });
     });
+
     (FOOD_OFFSETS_BY_SECTION[index] ?? []).forEach((offset, spawnIndex) => {
       const x = start + offset + Math.round((random() - 0.5) * 60);
-      this.foodSpawns.push({ id: "ligocristus-" + index + "-" + spawnIndex, kind: "ligocristus", x, groundY: this.groundY });
+      this.foodSpawns.push({
+        id: "ligocristus-" + index + "-" + spawnIndex,
+        kind: "ligocristus", x, groundY: this.groundY
+      });
     });
+
     if (index === 0 || index === 1) {
       this.brontosaurusSpawns.push({
         id: "brontosaurus-" + index,
-        x: start + (index === 0 ? 1780 : 1250) + Math.round((random() - 0.5) * 90),
+        x: start + (index === 0 ? 1050 : 2050) + Math.round((random() - 0.5) * 90),
         groundY: this.groundY, kind: "brontosaurus"
       });
     }
-    const hunterOffset = HUNTER_OFFSETS_BY_SECTION[index];
-    if (Number.isFinite(hunterOffset)) {
-      const hunterX = start + hunterOffset + Math.round((random() - 0.5) * 30);
+
+    (HUNTER_SPAWNS_BY_SECTION[index] ?? []).forEach((spawn, spawnIndex) => {
+      const hunterX = start + spawn.offset + Math.round((random() - 0.5) * 30);
       this.hunterSpawns.push({
-        id: "hunter-" + index, x: hunterX,
+        id: "hunter-" + index + "-" + spawnIndex,
+        x: hunterX,
         patrolStart: Math.max(start + 120, hunterX - 240),
         patrolEnd: Math.min(start + this.sectionLength - 40, hunterX + 240),
-        carriesCaptive: true
+        carriesCaptive: spawn.carriesCaptive
       });
-    }
+    });
 
     if (index === 2) {
       this.bossSpawns.push({
         id: "indoraptor-encounter",
         kind: "indoraptor",
-        x: start + 1450
+        x: start + Math.round(this.sectionLength * 0.68)
       });
     }
 
@@ -192,39 +228,42 @@ export class PlatformWorld {
       this.bossSpawns.push({
         id: "indominus-encounter",
         kind: "indominus",
-        x: start + 1450
+        x: start + Math.round(this.sectionLength * 0.68)
       });
     }
 
     if (isFacilityArea) {
       this.facilitySpawns = {
         consoles: [
-          { id: "aux-power", kind: "power", x: start + 420 },
-          { id: "security-lock", kind: "security", x: start + 980 }
+          { id: "aux-power", kind: "power", x: start + 550 },
+          { id: "security-lock", kind: "security", x: start + 1450 }
         ],
-        beta: start + 1740,
+        beta: start + 2300,
         extraction: start + WORLD.sectionLength * 2 - 300
       };
       this.facilityProps.push(
-        { x: start + 55, y: 220, w: 230, h: 210, kind: "facility-building" },
-        { x: start + 360, y: 180, w: 390, h: 250, kind: "facility-building" },
-        { x: start + 850, y: 230, w: 270, h: 200, kind: "containment-wing" },
-        { x: start + 1320, y: 245, w: 300, h: 185, kind: "facility-building" },
-        { x: start + 150, y: 90, w: 28, h: 340, kind: "facility-lamp" },
-        { x: start + 760, y: 80, w: 28, h: 350, kind: "facility-lamp" },
-        { x: start + 1450, y: 80, w: 28, h: 350, kind: "facility-lamp" }
+        { x: start + 45, y: 220, w: 270, h: 210, kind: "facility-building" },
+        { x: start + 420, y: 180, w: 410, h: 250, kind: "facility-building" },
+        { x: start + 970, y: 230, w: 340, h: 200, kind: "containment-wing" },
+        { x: start + 1470, y: 245, w: 330, h: 185, kind: "facility-building" },
+        { x: start + 2020, y: 220, w: 360, h: 210, kind: "facility-building" },
+        { x: start + 170, y: 90, w: 28, h: 340, kind: "facility-lamp" },
+        { x: start + 880, y: 80, w: 28, h: 350, kind: "facility-lamp" },
+        { x: start + 1600, y: 80, w: 28, h: 350, kind: "facility-lamp" },
+        { x: start + 2440, y: 80, w: 28, h: 350, kind: "facility-lamp" }
       );
     }
     if (isFinalArea) {
       this.facilityProps.push(
-        { x: start + 80, y: 220, w: 230, h: 210, kind: "facility-building" },
-        { x: start + 470, y: 180, w: 350, h: 250, kind: "facility-building" },
-        { x: start + 1030, y: 230, w: 280, h: 200, kind: "facility-building" },
-        { x: start + 1480, y: 245, w: 270, h: 185, kind: "facility-building" },
+        { x: start + 70, y: 220, w: 330, h: 210, kind: "facility-building" },
+        { x: start + 560, y: 180, w: 390, h: 250, kind: "facility-building" },
+        { x: start + 1180, y: 230, w: 330, h: 200, kind: "facility-building" },
+        { x: start + 1860, y: 245, w: 420, h: 185, kind: "facility-building" },
         { x: start + 140, y: 290, w: this.sectionLength - 320, h: 14, kind: "security-fence" },
         { x: start + 180, y: 90, w: 28, h: 340, kind: "facility-lamp" },
-        { x: start + 850, y: 80, w: 28, h: 350, kind: "facility-lamp" },
-        { x: start + 1580, y: 80, w: 28, h: 350, kind: "facility-lamp" }
+        { x: start + 950, y: 80, w: 28, h: 350, kind: "facility-lamp" },
+        { x: start + 1780, y: 80, w: 28, h: 350, kind: "facility-lamp" },
+        { x: start + 2680, y: 80, w: 28, h: 350, kind: "facility-lamp" }
       );
     }
   }

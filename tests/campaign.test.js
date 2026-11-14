@@ -16,19 +16,19 @@ function drainScenes(campaign) {
 function progressToFacility(campaign) {
   campaign.begin();
   drainScenes(campaign);
-  campaign.updateLocation(2100);
+  campaign.updateLocation(3000);
   drainScenes(campaign);
-  campaign.updateLocation(4200);
+  campaign.updateLocation(6000);
   drainScenes(campaign);
   campaign.onBossDefeated("indoraptor");
   drainScenes(campaign);
-  campaign.updateLocation(6300);
+  campaign.updateLocation(9000);
   drainScenes(campaign);
-  campaign.updateLocation(8400);
+  campaign.updateLocation(12000);
   drainScenes(campaign);
   campaign.onBossDefeated("indominus");
   drainScenes(campaign);
-  campaign.updateLocation(10500);
+  campaign.updateLocation(15000);
   drainScenes(campaign);
 }
 
@@ -80,13 +80,13 @@ test("opening and chapter narration is queued in order and can be advanced", () 
   assert.ok(campaign.activeScene.lines.every((line) => typeof line === "string" && line.length > 0));
   assert.equal(typeof campaign.currentLine, "string");
   drainScenes(campaign);
-  campaign.updateLocation(2100);
+  campaign.updateLocation(3000);
   assert.equal(campaign.activeScene.id, "redwood-arrival");
   drainScenes(campaign);
-  campaign.updateLocation(4200);
+  campaign.updateLocation(6000);
   assert.equal(campaign.activeScene.id, "black-site-arrival");
   drainScenes(campaign);
-  campaign.updateLocation(6300);
+  campaign.updateLocation(9000);
   assert.equal(campaign.activeScene.id, "black-site-interior");
 });
 
@@ -143,11 +143,11 @@ test("the full rescue and epilogue progression is completable", () => {
 test("the extraction chapter begins only after Rosa is freed and the route is reached", () => {
   const campaign = new CampaignManager();
   campaign.flags.betaFreed = true;
-  campaign.updateLocation(12150);
+  campaign.updateLocation(17250);
   assert.equal(campaign.chapter, "ROSA CONTAINMENT");
   assert.equal(campaign.objective, "ESCORT ROSA TO EXTRACTION");
   drainScenes(campaign);
-  campaign.updateLocation(12240);
+  campaign.updateLocation(17300);
   assert.equal(campaign.chapter, "EXTRACTION ZONE");
   assert.equal(campaign.activeScene?.id, "extraction-arrival");
 });

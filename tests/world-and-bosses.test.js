@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { PlatformWorld } from "../src/world/PlatformWorld.js";
-import { GAME, LEVELS } from "../src/config/GameConfig.js";
+import { GAME, LEVELS, WORLD } from "../src/config/GameConfig.js";
 import { FerrucutusCaptive } from "../src/entities/FerrucutusCaptive.js";
 import { IndoraptorBoss } from "../src/entities/IndoraptorBoss.js";
 import { IndominusRexBoss } from "../src/entities/IndominusRexBoss.js";
@@ -15,11 +15,11 @@ test("campaign world stops after the finite extraction area", () => {
   assert.equal(world.bossSpawns[0].kind, "indoraptor");
   assert.equal(world.bossSpawns[1].kind, "indominus");
   assert.ok(world.facilitySpawns);
-  assert.equal(world.facilitySpawns.extraction, 14400);
+  assert.equal(world.facilitySpawns.extraction, 20700);
   const finalFloor = world.platforms.find((platform) =>
-    platform.kind === "ground" && platform.x === 12600
+    platform.kind === "ground" && platform.x === 18000
   );
-  assert.equal(finalFloor.w, 2100);
+  assert.equal(finalFloor.w, 3000);
 });
 
 
@@ -52,8 +52,8 @@ test("procedural hazards never overlap Ferrucutus containment cages", () => {
 
 test("boss arenas have continuous floor and no normal hunter spawns", () => {
   const world = new PlatformWorld(430);
-  world.extendTo(9000);
-  for (const start of [4200, 8400]) {
+  world.extendTo(15000);
+  for (const start of [6000, 12000]) {
     const grounds = world.platforms
       .filter((platform) => platform.kind === "ground" && platform.x >= start && platform.x < start + 1500)
       .sort((a, b) => a.x - b.x);
@@ -61,7 +61,7 @@ test("boss arenas have continuous floor and no normal hunter spawns", () => {
       assert.equal(grounds[i - 1].x + grounds[i - 1].w, grounds[i].x);
     }
   }
-  assert.equal(world.hunterSpawns.some((spawn) => spawn.id === "hunter-2" || spawn.id === "hunter-4"), false);
+  assert.equal(world.hunterSpawns.some((spawn) => spawn.id.startsWith("hunter-2-") || spawn.id.startsWith("hunter-4-")), false);
 });
 
 test("Indoraptor only takes damage during exposed recovery", () => {
@@ -143,9 +143,11 @@ test("every campaign level places its capped Ferrucutus containment cages", () =
     }
   }
   assert.equal(new Set(world.ferrucutusCageSpawns.map((spawn) => spawn.id)).size, 5);
+  assert.deepEqual(LEVELS.map((level) => level.distance), [0, 2855, 5855, 11855, 14855, 17155]);
+  assert.equal(WORLD.sectionLength, 3000);
   const cagePositions = world.ferrucutusCageSpawns.map((spawn) => spawn.x).sort((a, b) => a - b);
   for (let index = 1; index < cagePositions.length; index += 1) {
-    assert.ok(cagePositions[index] - cagePositions[index - 1] >= 1000,
+    assert.ok(cagePositions[index] - cagePositions[index - 1] >= 2000,
       "rescue encounters must be separated by at least 1000 world units");
   }
 });

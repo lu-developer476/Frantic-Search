@@ -1,3 +1,8 @@
+export const WORLD = {
+  sectionLength: 3000,
+  sectionCount: 7
+};
+
 export const GAME = {
   width: 960,
   height: 540,
@@ -6,12 +11,7 @@ export const GAME = {
   playerX: 145,
   fixedStep: 1 / 60,
   maxFrameDelta: 0.1,
-  campaignEndX: 14400
-};
-
-export const WORLD = {
-  sectionLength: 2100,
-  sectionCount: 7
+  campaignEndX: WORLD.sectionLength * WORLD.sectionCount - 300
 };
 
 export const LEVELS = [
@@ -30,7 +30,7 @@ export const LEVELS = [
   {
     name: "REDWOOD FRONTIER",
     subtitle: "Something is moving between the trees.",
-    distance: 1955,
+    distance: WORLD.sectionLength - GAME.playerX,
     sky: "#78c8d0", ground: "#865638", environment: "forest",
     sun: "#ffdb78", sunShade: "#dfa95e", cloud: "#e9f1d8", cloudShadow: "#94b8ac",
     mountain: "#82aeb3", snow: "#e2edd8", ridge: "#476f75",
@@ -42,7 +42,7 @@ export const LEVELS = [
   {
     name: "POACHER BLACK SITE",
     subtitle: "An illegal research complex hides beyond the forest.",
-    distance: 4055,
+    distance: WORLD.sectionLength * 2 - GAME.playerX,
     sky: "#d18a69", ground: "#6e4a38", environment: "industrial",
     sun: "#ffd47a", sunShade: "#e5a260", cloud: "#f0c39a", cloudShadow: "#a97967",
     mountain: "#9a786d", snow: "#eac7a5", ridge: "#60535a",
@@ -54,7 +54,7 @@ export const LEVELS = [
   {
     name: "CONTAINMENT PERIMETER",
     subtitle: "The Indominus is guarding the inner wing.",
-    distance: 8255,
+    distance: WORLD.sectionLength * 4 - GAME.playerX,
     sky: "#bb8167", ground: "#625044", environment: "industrial",
     sun: "#f6cb78", sunShade: "#dca56c", cloud: "#e8c6a6", cloudShadow: "#9b7469",
     mountain: "#8d7978", snow: "#e9d4b2", ridge: "#514e56",
@@ -66,7 +66,7 @@ export const LEVELS = [
   {
     name: "ROSA CONTAINMENT",
     subtitle: "Restore the facility systems and reach the cell block.",
-    distance: 10355,
+    distance: WORLD.sectionLength * 5 - GAME.playerX,
     sky: "#799ba7", ground: "#695346", environment: "facility",
     sun: "#f6d58a", sunShade: "#d9ad78", cloud: "#dae9dc", cloudShadow: "#8aa6a5",
     mountain: "#788f96", snow: "#e3e8d7", ridge: "#4b6269",
@@ -78,7 +78,7 @@ export const LEVELS = [
   {
     name: "EXTRACTION ZONE",
     subtitle: "Get Rosa out. Bring everyone home.",
-    distance: 12095,
+    distance: WORLD.sectionLength * 5 + 2300 - GAME.playerX,
     sky: "#f0a66f",
     ground: "#795039",
     environment: "facility",
