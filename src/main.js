@@ -1600,7 +1600,7 @@ function update(delta) {
   updatePlayerHealthHud();
   if (abilityLabel) {
     const ready = player.abilityCooldown <= 0;
-    abilityLabel.textContent = ready ? ui("abilityReady") : ui("cooldown") + " " + player.abilityCooldown.toFixed(1) + "s";
+    abilityLabel.textContent = ready ? ui("dashReady") : ui("cooldown") + " " + player.abilityCooldown.toFixed(1) + "s";
     abilityLabel.classList.toggle("ready", ready);
   }
   updateStegoceratopsHud();
@@ -2007,7 +2007,7 @@ function applyLanguage() {
   });
   soundLabel.textContent = audio.enabled ? ui("sound") : ui("silence");
   menuToggle.setAttribute("aria-label", ui(navMenu.classList.contains("hidden") ? "openMenu" : "closeMenu"));
-  if (abilityLabel) abilityLabel.textContent = player.abilityCooldown <= 0 ? ui("abilityReady") : ui("cooldown") + " " + player.abilityCooldown.toFixed(1) + "s";
+  if (abilityLabel) abilityLabel.textContent = player.abilityCooldown <= 0 ? ui("dashReady") : ui("cooldown") + " " + player.abilityCooldown.toFixed(1) + "s";
   updateStegoceratopsHud();
 
   if (desktopBlocked) {
