@@ -72,6 +72,14 @@ const storyText = document.querySelector("#story-text");
 const storyProgress = document.querySelector("#story-progress");
 const storyNextButton = document.querySelector("#story-next");
 const dinoModal = document.querySelector("#dino-modal");
+const characterConfirmation = document.querySelector("#character-confirmation");
+const confirmationNumber = document.querySelector("#character-confirmation-number");
+const confirmationName = document.querySelector("#character-confirmation-name");
+const confirmationSpecies = document.querySelector("#character-confirmation-species");
+const confirmationAbility = document.querySelector("#character-confirmation-ability");
+const confirmCharacterButton = document.querySelector("#confirm-character");
+const playCharacterButton = document.querySelector("#play-character");
+const backCharacterConfirmationButton = document.querySelector("#back-character-confirmation");
 let selectionReturn = "start";
 const menuToggle = document.querySelector("#menu-toggle");
 const navMenu = document.querySelector("#nav-menu");
@@ -2010,6 +2018,14 @@ function confirmPendingPauseAction() {
   if (action === "exit") returnToMainMenu();
 }
 
+function updateCharacterConfirmationCopy() {
+  const isVasti = selected === "vasti";
+  confirmationNumber.textContent = isVasti ? "02" : "01";
+  confirmationName.textContent = isVasti ? "VASTI" : "VIOLETA";
+  confirmationSpecies.textContent = ui(isVasti ? "titan" : "raptor");
+  confirmationAbility.textContent = ui(isVasti ? "vastiAbility" : "blueAbility");
+}
+
 function selectCharacter(value) {
   if (value !== "blue" && value !== "vasti") return;
   selected = value;
@@ -2019,6 +2035,7 @@ function selectCharacter(value) {
     card.classList.toggle("active", active);
     card.setAttribute("aria-pressed", String(active));
   });
+  updateCharacterConfirmationCopy();
   if (!running) {
     player = new Player(selected, GAME.playerX, GAME.groundY);
     updatePlayerAbilityHud();
@@ -2073,6 +2090,7 @@ overlayActionButton.addEventListener("click", () => {
 function openDinoModal(returnTo = "start") {
   if (!desktopPlayback.matches || running || desktopBlocked) return;
   selectionReturn = returnTo;
+  characterConfirmation.classList.add("hidden");
   if (returnTo === "start") startScreen.classList.add("hidden");
   selectCharacter(selected);
   dinoModal.classList.remove("hidden");
@@ -2081,6 +2099,7 @@ function openDinoModal(returnTo = "start") {
 
 function closeDinoModal() {
   dinoModal.classList.add("hidden");
+  characterConfirmation.classList.add("hidden");
   if (selectionReturn === "start") {
     startScreen.classList.remove("hidden");
     startButton.focus();
@@ -2090,8 +2109,23 @@ function closeDinoModal() {
   }
 }
 
-function startFromDinoModal() {
+function openCharacterConfirmation() {
   if (dinoModal.classList.contains("hidden") || !desktopPlayback.matches) return;
+  updateCharacterConfirmationCopy();
+  dinoModal.classList.add("hidden");
+  characterConfirmation.classList.remove("hidden");
+  playCharacterButton.focus();
+}
+
+function returnToCharacterSelection() {
+  characterConfirmation.classList.add("hidden");
+  dinoModal.classList.remove("hidden");
+  confirmCharacterButton.focus();
+}
+
+function startFromDinoModal() {
+  if (dinoModal.classList.contains("hidden") || characterConfirmation.classList.contains("hidden") || !desktopPlayback.matches) return;
+  characterConfirmation.classList.add("hidden");
   dinoModal.classList.add("hidden");
   start();
 }
@@ -2134,6 +2168,7 @@ function applyLanguage() {
   menuToggle.setAttribute("aria-label", ui(navMenu.classList.contains("hidden") ? "openMenu" : "closeMenu"));
   updatePlayerAbilityHud();
   updateStegoceratopsHud();
+  updateCharacterConfirmationCopy();
 
   if (desktopBlocked) {
     stateLabel.textContent = ui("desktopOnly");
@@ -2177,8 +2212,13 @@ function setEnvironmentMode(mode) {
 dinoModal.addEventListener("click", (event) => {
   if (event.target === dinoModal) closeDinoModal();
 });
+characterConfirmation.addEventListener("click", (event) => {
+  if (event.target === characterConfirmation) returnToCharacterSelection();
+});
 document.querySelector("#cancel-character").addEventListener("click", closeDinoModal);
-document.querySelector("#confirm-character").addEventListener("click", startFromDinoModal);
+confirmCharacterButton.addEventListener("click", openCharacterConfirmation);
+backCharacterConfirmationButton.addEventListener("click", returnToCharacterSelection);
+playCharacterButton.addEventListener("click", startFromDinoModal);
 menuToggle.addEventListener("click", () => setMenuOpen(navMenu.classList.contains("hidden")));
 document.querySelectorAll("[data-language]").forEach((button) => {
   button.addEventListener("click", () => setLanguage(button.dataset.language));
@@ -2207,6 +2247,7 @@ window.addEventListener("keydown", (event) => {
   if (!desktopPlayback.matches) return;
   if (event.code === "Escape" && !event.repeat) {
     if (!pauseConfirmation.classList.contains("hidden")) closePauseConfirmation();
+    else if (!characterConfirmation.classList.contains("hidden")) returnToCharacterSelection();
     else if (!dinoModal.classList.contains("hidden")) closeDinoModal();
     else if (!navMenu.classList.contains("hidden")) setMenuOpen(false);
     return;
