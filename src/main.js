@@ -802,7 +802,7 @@ function syncFacility() {
 function updateStegoceratopsHud() {
   if (!stegoceratopsStatusLabel) return;
   const ready = stegoceratopsCooldown <= 0;
-  stegoceratopsStatusLabel.textContent = "STEGOCERATOPS [C] // " +
+  stegoceratopsStatusLabel.textContent = "STEGOCERATOPS [C] - " +
     (ready ? ui("abilityReady") : ui("cooldown") + " " + stegoceratopsCooldown.toFixed(1) + "s");
   stegoceratopsStatusLabel.classList.toggle("ready", ready);
 }
