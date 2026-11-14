@@ -44,6 +44,9 @@ const stateLabel = document.querySelector("#game-state");
 const distanceLabel = document.querySelector("#distance");
 const rescuesLabel = document.querySelector("#rescues");
 const bestLabel = document.querySelector("#best");
+const playerHealthMeter = document.querySelector("#player-health-meter");
+const playerHealthFill = document.querySelector("#player-health-fill");
+const playerHealthValue = document.querySelector("#player-health-value");
 const abilityLabel = document.querySelector("#ability-status");
 const campaignObjectiveLabel = document.querySelector("#campaign-objective");
 const campaignChapterLabel = document.querySelector("#campaign-chapter");
@@ -416,9 +419,6 @@ function drawBeta(entity) {
     ctx.strokeStyle = "#9bb5ac";
     ctx.lineWidth = 3;
     ctx.strokeRect(x - 12, y - 12, entity.w + 24, entity.h + 15);
-    ctx.fillStyle = "#ed8e55";
-    ctx.font = "9px monospace";
-    ctx.fillText(tr("CONTAINMENT // ROSA"), x - 24, y - 22);
   }
   spriteRenderer.drawAnimated(ctx, "beta", x, y, entity.w, entity.h, entity, entity.animation, { facing: entity.facing });
   ctx.restore();
@@ -524,6 +524,40 @@ function burst(x, y, color = "#d8f36a", count = 12) {
   if (particles.length > 280) particles.splice(0, particles.length - 280);
 }
 
+
+function drawWorldHealthBar(x, y, width, health, maxHealth = 3) {
+  const barWidth = Math.max(1, Math.round(width));
+  const ratio = maxHealth > 0 ? Math.max(0, Math.min(1, health / maxHealth)) : 0;
+  ctx.save();
+  ctx.fillStyle = "#101916";
+  ctx.fillRect(Math.round(x), Math.round(y), barWidth, 4);
+  ctx.fillStyle = "#4cdb70";
+  ctx.fillRect(Math.round(x) + 1, Math.round(y) + 1, Math.round(Math.max(0, barWidth - 2) * ratio), 2);
+  ctx.restore();
+}
+
+function drawReferenceHealthBar(actor, width = 36) {
+  const definition = spriteRenderer.getReferenceConfig(actor.character, actor);
+  const bounds = definition?.file ? spriteRenderer.referenceBounds.get(definition.file) : null;
+  const spriteWidth = Math.max(1, Math.round(actor.w * (definition?.scale ?? 1)));
+  const spriteHeight = bounds?.width > 0
+    ? Math.max(1, Math.round(spriteWidth * bounds.height / bounds.width))
+    : Math.max(1, Math.round(actor.h * 0.65));
+  const spriteLeft = actor.x + actor.w / 2 - spriteWidth / 2;
+  const spriteTop = actor.y + actor.h - spriteHeight;
+  const sourceFacing = definition?.sourceFacing ?? 1;
+  const facing = Math.sign(actor.direction ?? actor.facing ?? sourceFacing) || sourceFacing;
+  const headOffset = facing === sourceFacing ? 0.82 : 0.18;
+  const headCenterX = spriteLeft + spriteWidth * headOffset;
+  const barWidth = Math.min(width, Math.max(26, Math.round(spriteWidth * 0.34)));
+  drawWorldHealthBar(
+    headCenterX - barWidth / 2,
+    spriteTop - 5,
+    barWidth,
+    actor.health ?? 0,
+    actor.maxHealth ?? 3
+  );
+}
 
 function drawFerrucutus(ally) {
   const x = ally.x;
@@ -632,9 +666,6 @@ function drawFerrucutusCage(captive) {
   ctx.fillRect(x + w - 23, y + 47, 8, 5);
   ctx.fillStyle = "#d8f36a";
   ctx.fillRect(x + w - 21, y + 58, 4, 4);
-  ctx.fillStyle = "#e8c58a";
-  ctx.font = "8px monospace";
-  ctx.fillText(tr("FERRUCUTUS // CONFINED"), x + 9, y - 7);
   ctx.restore();
 }
 
@@ -688,17 +719,10 @@ function drawHunter(hunter) {
     ctx.fillStyle = "#d8f36a";
     ctx.font = "16px monospace";
     ctx.fillText("✳", x + 12, y - 3);
-  } else if (defeated) {
-    ctx.fillStyle = "#d8f36a";
-    ctx.font = "9px monospace";
-    ctx.fillText(tr("CAPTIVE FREE"), x - 14, y - 8);
   }
 
   if (!defeated) {
-    ctx.fillStyle = "#17201a";
-    ctx.fillRect(x + 5, y - 18, 30, 4);
-    ctx.fillStyle = hunter.health > 1 ? "#d8f36a" : "#ed8e55";
-    ctx.fillRect(x + 5, y - 18, 30 * hunter.health / 2, 4);
+    drawWorldHealthBar(x + 4, y - 7, 30, hunter.health, hunter.maxHealth);
   }
 
   const attack = hunter.attackBox;
@@ -736,7 +760,7 @@ function syncEncounters() {
   for (const spawn of world.foodSpawns) {
     if (seenFoodSpawns.has(spawn.id)) continue;
     seenFoodSpawns.add(spawn.id);
-    foodSources.push({ ...spawn, y: GAME.groundY - 82, w: 112, h: 82, consumed: false });
+    foodSources.push({ ...spawn, y: GAME.groundY - 82, w: 112, h: 82, spriteW: 76, spriteH: 54, consumed: false });
   }
 
   for (const spawn of world.brontosaurusSpawns) {
@@ -753,6 +777,18 @@ function syncFacility() {
   );
   beta = new Beta({ x: world.facilitySpawns.beta, groundY: GAME.groundY });
   extractionX = world.facilitySpawns.extraction;
+}
+
+function updatePlayerHealthHud() {
+  if (!playerHealthMeter || !playerHealthFill || !playerHealthValue) return;
+  const maxHealth = Math.max(1, player.maxHealth ?? 3);
+  const health = Math.max(0, Math.min(maxHealth, player.health ?? 0));
+  const ratio = health / maxHealth;
+  playerHealthFill.style.width = (ratio * 100) + "%";
+  playerHealthMeter.setAttribute("aria-valuemax", String(maxHealth));
+  playerHealthMeter.setAttribute("aria-valuenow", String(health));
+  playerHealthMeter.setAttribute("aria-valuetext", health + "/" + maxHealth);
+  playerHealthValue.textContent = health + "/" + maxHealth;
 }
 
 function tryEatFood(actor, radius = 150) {
@@ -1090,7 +1126,7 @@ function drawBossHud() {
     );
     ctx.fillStyle = "#35403a";
     ctx.fillRect(barX, barY, barWidth, 9);
-    ctx.fillStyle = activeBoss.phase === 2 ? "#ff805f" : "#d8f36a";
+    ctx.fillStyle = "#4cdb70";
     ctx.fillRect(barX, barY, barWidth * (activeBoss.health / activeBoss.maxHealth), 9);
     ctx.fillStyle = "#b9c4b8";
     ctx.font = "9px monospace";
@@ -1509,6 +1545,7 @@ function update(delta) {
   distanceLabel.textContent = Math.floor(distance).toString().padStart(4, "0") + " m";
   rescuesLabel.textContent = String(rescues).padStart(2, "0");
   bestLabel.textContent = Math.floor(best()).toString().padStart(4, "0") + " m";
+  updatePlayerHealthHud();
   if (abilityLabel) {
     const ready = player.abilityCooldown <= 0;
     abilityLabel.textContent = ready ? ui("abilityReady") : ui("cooldown") + " " + player.abilityCooldown.toFixed(1) + "s";
@@ -1552,7 +1589,14 @@ function render() {
   for (const food of foodSources) {
     if (food.consumed || food.x + food.w < cameraX - 80 || food.x > cameraX + GAME.width + 80) continue;
     if (food.kind === "ligocristus") {
-      spriteRenderer.drawAnimated(ctx, "ligocristus", food.x, food.y, food.w, food.h, food, elapsed, { facing: -1 });
+      const spriteW = food.spriteW ?? food.w;
+      const spriteH = food.spriteH ?? food.h;
+      spriteRenderer.drawAnimated(
+        ctx, "ligocristus",
+        food.x + (food.w - spriteW) / 2,
+        food.y + food.h - spriteH,
+        spriteW, spriteH, food, elapsed, { facing: -1 }
+      );
     } else {
       ctx.fillStyle = food.kind === "hunter" ? "#6b6250" : "#485b45";
       ctx.fillRect(food.x, food.y + 12, food.w, food.h - 12);
@@ -1563,10 +1607,7 @@ function render() {
   for (const enemy of venatosauruses) {
     if (enemy.x + enemy.w >= cameraX - 90 && enemy.x <= cameraX + GAME.width + 90) {
       spriteRenderer.drawAnimated(ctx, enemy.kind, enemy.x, enemy.y, enemy.w, enemy.h, enemy, elapsed, { facing: enemy.direction });
-      if (!enemy.defeated) {
-        ctx.fillStyle = "#17201a"; ctx.fillRect(enemy.x + 16, enemy.y - 12, 76, 4);
-        ctx.fillStyle = "#ed8e55"; ctx.fillRect(enemy.x + 16, enemy.y - 12, 76 * enemy.health / enemy.maxHealth, 4);
-      }
+      if (!enemy.defeated) drawReferenceHealthBar(enemy);
     }
   }
   for (const hunter of hunters) {
@@ -1591,6 +1632,7 @@ function render() {
     const actor = companion.actor;
     if (actor.x + actor.w < cameraX - 90 || actor.x > cameraX + GAME.width + 90) continue;
     drawDino(actor.x, actor.y, actor.w, actor.h, "#75a99b", actor.character, elapsed + companion.slot * 0.21, 0.96, actor.facing, actor);
+    drawReferenceHealthBar(actor);
   }
   const blink = player.invulnerable > 0 && Math.floor(elapsed * 18) % 2 === 0;
   drawDino(player.x, player.y, player.w, player.h, "#75a99b", selected, elapsed, blink ? 0.35 : 1, player.facing, player);
@@ -1732,6 +1774,7 @@ function start() {
   dinoModal.classList.add("hidden");
   overlayActionButton.hidden = true;
   resetPlayer();
+  updatePlayerHealthHud();
   music.start(audio.context, currentMusicTheme());
   music.setPaused(false);
   music.setEnabled(audio.enabled);
