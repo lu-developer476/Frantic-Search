@@ -34,8 +34,8 @@ Narrator interludes pause the simulation so the player can read the story and ev
 - **Rosa:** Violeta's juvenile Velociraptor offspring, sharing Violeta's white, purple and magenta family pattern; she becomes an escort companion after the facility systems are restored and lunges through crates that block her route.
 - **Ferrucutus Cerastes:** *King Kong* (2005) ceratopsian with a heavy quadrupedal body, spiked oval frill and paired nasal horns; ally that helps bridge selected gaps and attacks enemies during exposed windows.
 - **Poachers:** state-driven patrol, investigation, pursuit and melee attack AI; defeated poachers become edible food sources.
-- **Venatosaurus:** both reference variants spawn as frequent territorial enemies. They hunt the protagonists and fight other Venatosaurus.
-- **Ligocristus Innocens:** procedural edible prey. Protagonists, companions and enemy dinosaurs can consume it or defeated poachers to restore health.
+- **Venatosaurus:** both reference variants spawn as frequent territorial enemies. They jump while patrolling and pursuing, and use a fast pouncing charge against nearby targets. They hunt the protagonists, attack other Venatosaurus and can hunt Ligocristus.
+- **Ligocristus Innocens:** procedural prey with its own health. Violeta can defeat it with her dash, while Vasti can crush it with his stomp. Defeated Ligocristus fade out as translucent carcasses that the player, autonomous companions and Venatosaurus can consume to restore health. Defeated poachers and Venatosaurus remain edible as well.
 - **Indoraptor:** *Jurassic World: Fallen Kingdom* hybrid with a lean black body, gold dorsal stripe and elongated clawed forelimbs. Its eight-part rig supports both supplied generations: black-and-gold first generation and ivory-and-turquoise second generation, which appears at the existing phase-two health threshold. Pounce, claw, jump and feeding poses are supported.
 - **Indominus Rex:** *Jurassic World* hybrid, with a massive pale body, elongated skull and prominent dorsal osteoderms; sonic roar, charge and tail sweep with two phases.
 
