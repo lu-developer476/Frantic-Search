@@ -1133,7 +1133,7 @@ html.site-mode-gray .nav-menu{backdrop-filter:none}
 .game-panel{
   display:grid;
   width:100%;
-  max-width:1920px;
+  max-width:none;
   height:auto;
   min-width:0;
   min-height:0;
