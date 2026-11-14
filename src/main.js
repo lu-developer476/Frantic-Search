@@ -17,6 +17,7 @@ import { IndoraptorBoss } from "./entities/IndoraptorBoss.js";
 import { IndominusRexBoss } from "./entities/IndominusRexBoss.js";
 import { PhysicsSystem } from "./systems/PhysicsSystem.js";
 import { CollisionSystem } from "./systems/CollisionSystem.js";
+import { beginEnemyFade, advanceEnemyFade, getEnemyOpacity, isEnemyFadeComplete } from "./systems/EnemyFadeSystem.js";
 import { PlatformWorld } from "./world/PlatformWorld.js";
 import { CampaignManager } from "./campaign/CampaignManager.js";
 import { Beta } from "./entities/Beta.js";
@@ -130,6 +131,12 @@ const currentMusicTheme = () => campaign.flags.completed ? "victory" : activeBos
 const best = () => Math.max(save.get("bestDistance"), Math.floor(distance));
 const ui = (key) => uiText(key, locale);
 const tr = (value) => translateText(value, locale);
+
+function advanceEnemyFades(delta) {
+  for (const enemy of [...hunters, ...venatosauruses, ...bosses]) {
+    advanceEnemyFade(enemy, delta);
+  }
+}
 
 function drawDino(x, y, width, height, color, kind, phase = 0, alpha = 1, facing = 1, actor = null) {
   if (spriteRenderer.drawDinosaur(ctx, kind, x, y, width, height, actor, phase, alpha)) return;
@@ -674,9 +681,10 @@ function drawHunter(hunter) {
   const y = hunter.y;
   const alert = hunter.state === "investigate" || hunter.state === "windup" || hunter.state === "attack";
   const defeated = hunter.defeated;
+  const alpha = getEnemyOpacity(hunter);
 
   const spriteDrawn = spriteRenderer.drawAnimated(ctx, "hunter", x - 6, y - 5, hunter.w + 12, hunter.h + 8, hunter, elapsed, {
-    alpha: defeated ? 0.48 : 1,
+    alpha,
     facing: hunter.direction
   });
   if (!spriteDrawn) {
@@ -684,7 +692,7 @@ function drawHunter(hunter) {
     // with a crisp native-Canvas fallback while dinosaur PNGs load independently.
     const stride = Math.sin(elapsed * 10 + hunter.x * 0.045);
     ctx.save();
-    ctx.globalAlpha *= defeated ? 0.48 : 1;
+    ctx.globalAlpha *= alpha;
     ctx.translate(hunter.direction < 0 ? x + hunter.w : x, y);
     if (hunter.direction < 0) ctx.scale(-1, 1);
     ctx.fillStyle = "#202a29";
@@ -956,6 +964,7 @@ function pruneEncounterBookkeeping() {
 function registerHunterResult(hunter, result) {
   if (!result || !result.hit) return;
   if (result.defeated) {
+    beginEnemyFade(hunter);
     foodSources.push({ id: "food-" + hunter.id, kind: hunter instanceof WildDinosaur ? "venatosaurus" : "hunter", x: hunter.x + 2, y: hunter.y + hunter.h - 22, w: 54, h: 22, consumed: false });
     if (result.rescued) {
       rescues += 1;
@@ -987,6 +996,7 @@ function damageVenatosaurus(enemy, amount = 1) {
   audio.hit();
   burst(enemy.x + enemy.w / 2, enemy.y + enemy.h * 0.55, result.defeated ? "#9bd48a" : "#e8a77d", result.defeated ? 22 : 10);
   if (result.defeated) {
+    beginEnemyFade(enemy);
     foodSources.push({ id: "food-" + enemy.id, kind: "venatosaurus", x: enemy.x + 10, y: enemy.y + enemy.h - 24, w: 54, h: 22, consumed: false });
   }
 }
@@ -1001,7 +1011,7 @@ function damagePlayer() {
 
 
 function drawIndoraptor(boss) {
-  const spriteDrawn = spriteRenderer.drawAnimated(ctx, "indoraptor", boss.x - 4, boss.y - 4, boss.w + 8, boss.h + 8, boss, elapsed, { alpha: boss.defeated ? 0.4 : 1, facing: boss.direction });
+  const spriteDrawn = spriteRenderer.drawAnimated(ctx, "indoraptor", boss.x - 4, boss.y - 4, boss.w + 8, boss.h + 8, boss, elapsed, { alpha: getEnemyOpacity(boss), facing: boss.direction });
   if (!spriteDrawn) return;
   if (boss.state === "telegraph") {
     ctx.strokeStyle = "#ff806c";
@@ -1022,7 +1032,7 @@ function drawIndoraptor(boss) {
 
 function drawIndominus(boss) {
   const referenceKind = boss.phase === 2 && boss.attackIndex % 2 === 0 ? "indominus-variant" : "indominus";
-  const spriteDrawn = spriteRenderer.drawAnimated(ctx, referenceKind, boss.x - 4, boss.y - 4, boss.w + 8, boss.h + 8, boss, elapsed, { alpha: boss.defeated ? 0.4 : 1, facing: boss.direction });
+  const spriteDrawn = spriteRenderer.drawAnimated(ctx, referenceKind, boss.x - 4, boss.y - 4, boss.w + 8, boss.h + 8, boss, elapsed, { alpha: getEnemyOpacity(boss), facing: boss.direction });
   if (!spriteDrawn) return;
   if (boss.state === "telegraph") {
     ctx.strokeStyle = "#ffb26b";
@@ -1206,6 +1216,7 @@ function damageBoss(boss, amount, source) {
   }
 
   if (result.defeated) {
+    beginEnemyFade(boss);
     bossCueTitle = boss.kind === "indoraptor" ? "INDORAPTOR DEFEATED" : "INDOMINUS DEFEATED";
     bossCueTimer = 2.4;
     audio.bossDefeat();
@@ -1515,12 +1526,13 @@ function update(delta) {
     }
   }
 
+  advanceEnemyFades(delta);
   allies = allies.filter((ally) => !ally.departed);
   foodSources = foodSources.filter((food) => !food.consumed && food.x + food.w >= cameraX - 1100);
-  venatosauruses = venatosauruses.filter((enemy) => enemy.x + enemy.w >= cameraX - 1100);
+  venatosauruses = venatosauruses.filter((enemy) => enemy.x + enemy.w >= cameraX - 1100 && !isEnemyFadeComplete(enemy));
   wildlife = wildlife.filter((animal) => animal.x + animal.w >= cameraX - 500);
   ferrucutusCaptives = ferrucutusCaptives.filter((captive) => captive.x + captive.w >= cameraX - 900);
-  hunters = hunters.filter((hunter) => hunter.x + hunter.w >= cameraX - 1100);
+  hunters = hunters.filter((hunter) => hunter.x + hunter.w >= cameraX - 1100 && !isEnemyFadeComplete(hunter));
   const rosaEvent = beta?.update(delta, player, world);
   if (rosaEvent?.type === "rosa-crate-break") {
     audio.collect();
@@ -1528,7 +1540,7 @@ function update(delta) {
       burst(crate.x + crate.w / 2, crate.y + crate.h / 2, "#d6a45f", 14);
     }
   }
-  bosses = bosses.filter((boss) => boss.x + boss.w >= cameraX - 850 || boss === activeBoss);
+  bosses = bosses.filter((boss) => (boss.x + boss.w >= cameraX - 850 || boss === activeBoss) && !isEnemyFadeComplete(boss));
   pruneEncounterBookkeeping();
   if (player.dashTimer <= 0) dashHitIds.clear();
   handleAbilityImpact();
@@ -1612,7 +1624,7 @@ function render() {
   }
   for (const enemy of venatosauruses) {
     if (enemy.x + enemy.w >= cameraX - 90 && enemy.x <= cameraX + GAME.width + 90) {
-      spriteRenderer.drawAnimated(ctx, enemy.kind, enemy.x, enemy.y, enemy.w, enemy.h, enemy, elapsed, { facing: enemy.direction });
+      spriteRenderer.drawAnimated(ctx, enemy.kind, enemy.x, enemy.y, enemy.w, enemy.h, enemy, elapsed, { facing: enemy.direction, alpha: getEnemyOpacity(enemy) });
       if (!enemy.defeated) drawReferenceHealthBar(enemy);
     }
   }
@@ -1692,6 +1704,8 @@ function handleFrameError(error) {
   music.setPaused(true);
   stateLabel.textContent = locale === "es" ? "ERROR DE EJECUCIÓN" : "RUNTIME ERROR";
   overlay.querySelector(".overlay-kicker").textContent = "FRANTIC SEARCH // RUNTIME";
+  overlay.querySelector("h2").hidden = false;
+  overlay.querySelector("p").hidden = false;
   overlay.querySelector("h2").textContent = locale === "es" ? "SIMULACIÓN DETENIDA." : "SIMULATION STOPPED.";
   overlay.querySelector("p").textContent = locale === "es"
     ? "Se produjo un error durante la actualización o el dibujo. Abrí la consola para ver el detalle y volvé a iniciar la operación."
@@ -1814,6 +1828,8 @@ function endGame() {
   });
   bestLabel.textContent = String(save.get("bestDistance")).padStart(4, "0") + " m";
   stateLabel.textContent = ui("signalLost");
+  overlay.querySelector("h2").hidden = false;
+  overlay.querySelector("p").hidden = false;
   overlay.querySelector(".overlay-kicker").textContent = ui("missionInterrupted");
   overlay.querySelector("h2").innerHTML = locale === "es" ? "LA NATURALEZA<br><em>CONTRAATACA.</em>" : "THE WILD<br><em>STRIKES BACK.</em>";
   overlay.querySelector("p").textContent = ui("defeatMessage").replace("{distance}", String(Math.floor(distance))).replace("{rescues}", String(rescues));
@@ -1832,12 +1848,14 @@ function togglePause() {
   stateLabel.textContent = paused ? ui("paused") : ui("inProgress");
   if (paused) {
     overlay.querySelector(".overlay-kicker").textContent = ui("operationPaused");
-    overlay.querySelector("h2").innerHTML = ui("pauseTitle");
-    overlay.querySelector("p").textContent = ui("pausedMessage");
+    overlay.querySelector("h2").hidden = true;
+    overlay.querySelector("p").hidden = true;
     overlay.querySelector("button").hidden = false;
     overlay.querySelector("button").textContent = ui("continue");
     overlay.classList.remove("hidden");
   } else {
+    overlay.querySelector("h2").hidden = false;
+    overlay.querySelector("p").hidden = false;
     overlay.querySelector("button").hidden = true;
     overlay.classList.add("hidden");
     accumulator = 0;
@@ -1969,8 +1987,8 @@ function applyLanguage() {
   } else if (paused) {
     stateLabel.textContent = ui("paused");
     overlay.querySelector(".overlay-kicker").textContent = ui("operationPaused");
-    overlay.querySelector("h2").innerHTML = ui("pauseTitle");
-    overlay.querySelector("p").textContent = ui("pausedMessage");
+    overlay.querySelector("h2").hidden = true;
+    overlay.querySelector("p").hidden = true;
     overlay.querySelector("button").textContent = ui("continue");
   } else if (running) {
     stateLabel.textContent = ui("inProgress");
