@@ -20,10 +20,14 @@ export class LigocristusPrey {
     this.state = "grazing";
     this.stateTimer = 1.15 + (String(id).length % 5) * 0.12;
     this.consumed = false;
+    this.defeated = false;
+    this.health = 2;
+    this.maxHealth = 2;
+    this.defeatFadeRemaining = null;
   }
 
   update(delta, threats = []) {
-    if (this.consumed || delta <= 0) return;
+    if (this.consumed || this.defeated || delta <= 0) return;
     this.updateJump(delta);
     this.stateTimer = Math.max(0, this.stateTimer - delta);
     const ownCenter = this.x + this.w / 2;
@@ -83,8 +87,26 @@ export class LigocristusPrey {
     }
   }
 
+  takeDamage(amount = 1) {
+    if (this.defeated || this.consumed || amount <= 0) {
+      return { hit: false, defeated: this.defeated };
+    }
+    this.health = Math.max(0, this.health - amount);
+    if (this.health === 0) {
+      this.defeated = true;
+      this.state = "defeated";
+      this.motionSpeed = 0;
+      this.vy = 0;
+      this.defeatFadeRemaining = 0.9;
+      return { hit: true, defeated: true };
+    }
+    this.state = "stunned";
+    this.stateTimer = 0.3;
+    return { hit: true, defeated: false };
+  }
+
   consume() {
-    if (this.consumed) return false;
+    if (this.consumed || !this.defeated) return false;
     this.consumed = true;
     this.state = "consumed";
     this.motionSpeed = 0;
