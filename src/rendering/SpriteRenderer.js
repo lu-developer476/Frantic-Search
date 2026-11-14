@@ -141,6 +141,7 @@ export class SpriteRenderer {
     this.loaded = new Set();
     this.referenceImages = new Map();
     this.referenceBounds = new Map();
+    this.outlinedReferenceImages = new Map();
     this.referenceLoaded = new Set();
     this.referenceFailed = new Set();
     this.onAssetChange = typeof onAssetChange === "function" ? onAssetChange : null;
@@ -229,6 +230,71 @@ export class SpriteRenderer {
     return image;
   }
 
+  getOutlinedReferenceImage(file, image, bounds, drawWidth, drawHeight) {
+    if (!(this.outlinedReferenceImages instanceof Map)) this.outlinedReferenceImages = new Map();
+    const key = file + ":" + drawWidth + "x" + drawHeight;
+    if (this.outlinedReferenceImages.has(key)) return this.outlinedReferenceImages.get(key);
+
+    // Build a one-pixel, pixel-art silhouette around the complete opaque sprite.
+    // The original artwork is composited last, so existing interior details remain untouched.
+    const border = 1;
+    const canvasWidth = drawWidth + border * 2;
+    const canvasHeight = drawHeight + border * 2;
+
+    try {
+      const createSurface = () => {
+        const surface = typeof OffscreenCanvas === "function"
+          ? new OffscreenCanvas(canvasWidth, canvasHeight)
+          : document.createElement("canvas");
+        surface.width = canvasWidth;
+        surface.height = canvasHeight;
+        return surface;
+      };
+
+      const mask = createSurface();
+      const maskContext = mask.getContext("2d");
+      if (!maskContext) return null;
+      maskContext.imageSmoothingEnabled = false;
+      maskContext.drawImage(
+        image,
+        bounds.x, bounds.y, bounds.width, bounds.height,
+        border, border, drawWidth, drawHeight
+      );
+      maskContext.globalCompositeOperation = "source-in";
+      maskContext.fillStyle = "#050706";
+      maskContext.fillRect(0, 0, canvasWidth, canvasHeight);
+
+      const outlined = createSurface();
+      const outlineContext = outlined.getContext("2d");
+      if (!outlineContext) return null;
+      outlineContext.imageSmoothingEnabled = false;
+
+      // Expand the alpha silhouette in all eight directions plus its centre.
+      for (let offsetY = -border; offsetY <= border; offsetY += 1) {
+        for (let offsetX = -border; offsetX <= border; offsetX += 1) {
+          outlineContext.drawImage(mask, offsetX, offsetY);
+        }
+      }
+
+      // Keep the source sprite crisp and centred over its generated contour.
+      outlineContext.drawImage(
+        image,
+        bounds.x, bounds.y, bounds.width, bounds.height,
+        border, border, drawWidth, drawHeight
+      );
+
+      this.outlinedReferenceImages.set(key, outlined);
+      if (this.outlinedReferenceImages.size > 48) {
+        const oldestKey = this.outlinedReferenceImages.keys().next().value;
+        if (oldestKey !== key) this.outlinedReferenceImages.delete(oldestKey);
+      }
+      return outlined;
+    } catch {
+      // Browsers without an available offscreen 2D surface still render the source PNG.
+      return null;
+    }
+  }
+
   drawReferencePng(context, character, x, y, width, height, actor, elapsed, options = {}, poseOverride = null) {
     // Tests and lightweight renderers may intentionally use this prototype without
     // running the browser constructor; in that case preserve the legacy fallback.
@@ -303,6 +369,9 @@ export class SpriteRenderer {
 
     const drawWidth = Math.max(1, Math.round(width * definition.scale));
     const drawHeight = Math.max(1, Math.round(drawWidth * bounds.height / bounds.width));
+    const outlinedImage = this.getOutlinedReferenceImage(definition.file, image, bounds, drawWidth, drawHeight);
+    const renderedWidth = outlinedImage?.width ?? drawWidth;
+    const renderedHeight = outlinedImage?.height ?? drawHeight;
     const drawCenterX = x + width / 2;
     const drawCenterY = y + height + bob - drawHeight * scaleY / 2;
     const facing = options.facing ?? actor?.facing ?? actor?.direction ?? 1;
@@ -314,11 +383,18 @@ export class SpriteRenderer {
     context.translate(drawCenterX, drawCenterY);
     context.rotate(rotation * Math.sign(facing || 1));
     context.scale((flip ? -1 : 1) * scaleX, scaleY);
-    context.drawImage(
-      image,
-      bounds.x, bounds.y, bounds.width, bounds.height,
-      -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight
-    );
+    if (outlinedImage) {
+      context.drawImage(
+        outlinedImage,
+        -renderedWidth / 2, -renderedHeight / 2, renderedWidth, renderedHeight
+      );
+    } else {
+      context.drawImage(
+        image,
+        bounds.x, bounds.y, bounds.width, bounds.height,
+        -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight
+      );
+    }
     context.restore();
     return true;
   }
