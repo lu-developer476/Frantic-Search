@@ -80,6 +80,32 @@ test("enemy actors are defeated by unsupported ground gaps", () => {
   }
 });
 
+test("Vasti's character ability is a ground stomp and an airborne slam", () => {
+  const player = new Player("vasti", 100, 430);
+  assert.equal(player.useAbility(), true);
+  assert.equal(player.consumeAbilityEvent(), "stomp");
+  assert.equal(player.consumeShockwave(), true);
+
+  player.abilityCooldown = 0;
+  player.onGround = false;
+  assert.equal(player.useAbility(), true);
+  assert.equal(player.consumeAbilityEvent(), "slam");
+  assert.equal(player.isSlamming, true);
+});
+
+test("defeated Ligocristus become fading carcasses that can be consumed", () => {
+  const prey = new LigocristusPrey({ id: "ligocristus-carcass", x: 100, groundY: 430 });
+  assert.equal(prey.consume(), false);
+  assert.equal(prey.takeDamage(1).defeated, false);
+  const result = prey.takeDamage(1);
+  assert.equal(result.defeated, true);
+  assert.equal(prey.defeated, true);
+  assert.equal(prey.health, 0);
+  assert.equal(prey.defeatFadeRemaining, 0.9);
+  assert.equal(prey.consume(), true);
+  assert.equal(prey.consumed, true);
+});
+
 test("Ligocristus forage and flee when threatened", () => {
   const prey = new LigocristusPrey({ id: "ligocristus-motion", x: 100, groundY: 430, patrolStart: 50, patrolEnd: 360 });
   const initialX = prey.x;
