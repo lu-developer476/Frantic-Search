@@ -1647,11 +1647,6 @@ function render() {
       ctx.fillText(tr("E // INTERACT"), terminal.x - 18, terminal.y - 24);
     }
   }
-  if (beta && beta.state === "confined" && Math.abs(player.x - beta.x) < 112) {
-    ctx.fillStyle = "#d8f36a";
-    ctx.font = "10px monospace";
-    ctx.fillText(tr(campaign.canFreeBeta() ? "E // FREE ROSA" : "CELL LOCKED"), beta.x - 12, beta.y - 30);
-  }
   ctx.restore();
 
   ctx.fillStyle = "#eaf0d9";
