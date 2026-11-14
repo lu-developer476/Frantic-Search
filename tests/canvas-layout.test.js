@@ -133,3 +133,22 @@ test("all top and bottom bar labels use one shared responsive font size and safe
   assert.match(rules, /\.canvas-wrap \.hud-summary \.hud-controls\s*\{[^}]*overflow-wrap:anywhere/s);
   assert.match(rules, /\.canvas-wrap \.hud-summary \.interaction-readout\s*\{[^}]*overflow-wrap:anywhere/s);
 });
+
+
+test("reference health bars follow the visible head side for left- and right-facing actors", async () => {
+  const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
+  const renderer = await readFile(new URL("../src/rendering/SpriteRenderer.js", import.meta.url), "utf8");
+  assert.match(main, /const headOffset = facing > 0 \? 0\.82 : 0\.18/);
+  assert.match(renderer, /vasti: \{ file: "vastatosaurus-rex\.png", sourceFacing: -1/);
+});
+
+test("character selection and narrator panels share readable, edge-safe typography", async () => {
+  const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+  const rules = css.slice(css.lastIndexOf("/* Remove the mission accent"));
+  assert.match(rules, /\.panel-head \.mission-brief-header\s*\{[^}]*padding-left:0[^}]*border-left:0/s);
+  assert.match(rules, /\.dino-dialog \.character-number,[\s\S]*?font-size:var\(--operation-hud-font-size\)/);
+  assert.match(rules, /\.story-kicker,[\s\S]*?font-size:var\(--operation-hud-font-size\)/);
+  assert.match(rules, /\.story-text\s*\{[^}]*overflow-wrap:anywhere/s);
+  assert.match(rules, /\.story-card\s*\{[^}]*max-height:100%[^}]*overflow-y:auto[^}]*padding:clamp/s);
+  assert.match(rules, /\.dino-dialog \.character-card\s*\{[^}]*padding:clamp/s);
+});
