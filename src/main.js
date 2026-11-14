@@ -134,7 +134,7 @@ const ui = (key) => uiText(key, locale);
 const tr = (value) => translateText(value, locale);
 
 function advanceEnemyFades(delta) {
-  for (const enemy of [...hunters, ...venatosauruses, ...bosses]) {
+  for (const enemy of [...hunters, ...venatosauruses, ...bosses, ...foodSources.filter((food) => food.defeated)]) {
     advanceEnemyFade(enemy, delta);
   }
 }
@@ -807,6 +807,14 @@ function updateStegoceratopsHud() {
   stegoceratopsStatusLabel.classList.toggle("ready", ready);
 }
 
+function updatePlayerAbilityHud() {
+  if (!abilityLabel) return;
+  const ready = player.abilityCooldown <= 0;
+  const readyText = selected === "vasti" ? ui("stompReady") : ui("dashReady");
+  abilityLabel.textContent = ready ? readyText : ui("cooldown") + " " + player.abilityCooldown.toFixed(1) + "s";
+  abilityLabel.classList.toggle("ready", ready);
+}
+
 function updatePlayerHealthHud() {
   if (!playerHealthMeter || !playerHealthFill) return;
   const maxHealth = Math.max(1, player.maxHealth ?? 3);
@@ -821,7 +829,7 @@ function tryEatFood(actor, radius = 150) {
   if (!actor || actor.health >= (actor.maxHealth ?? 3)) return false;
   const actorCenter = actor.x + actor.w / 2;
   const source = foodSources
-    .filter((item) => !item.consumed && Math.abs(item.x + item.w / 2 - actorCenter) <= radius &&
+    .filter((item) => !item.consumed && (item.kind !== "ligocristus" || item.defeated) && Math.abs(item.x + item.w / 2 - actorCenter) <= radius &&
       Math.abs((item.y + item.h) - (actor.y + actor.h)) < 125)
     .sort((a, b) => Math.abs(a.x - actor.x) - Math.abs(b.x - actor.x))[0];
   if (!source) return false;
@@ -1013,6 +1021,15 @@ function damageHunter(hunter, amount, source) {
   if (source === "blue-dash" && result.hit) {
     dashHitIds.add(hunter.id);
   }
+}
+
+function damageLigocristus(prey, amount = 1) {
+  if (!prey || prey.defeated || prey.consumed) return;
+  const result = prey.takeDamage(amount);
+  if (!result.hit) return;
+  audio.hit();
+  burst(prey.x + prey.w / 2, prey.y + prey.h * 0.55, result.defeated ? "#9bd48a" : "#e8a77d", result.defeated ? 18 : 8);
+  if (result.defeated) beginEnemyFade(prey);
 }
 
 function damageVenatosaurus(enemy, amount = 1) {
@@ -1265,6 +1282,10 @@ function handleAbilityImpact() {
   for (const enemy of venatosauruses) {
     if (!enemy.defeated && Math.abs(enemy.x + enemy.w / 2 - (player.x + player.w / 2)) < radius) damageVenatosaurus(enemy, 2);
   }
+  for (const prey of foodSources) {
+    if (prey.kind === "ligocristus" && !prey.defeated &&
+        Math.abs(prey.x + prey.w / 2 - (player.x + player.w / 2)) < radius) damageLigocristus(prey, 2);
+  }
   if (activeBoss && Math.abs(activeBoss.x + activeBoss.w / 2 - (player.x + player.w / 2)) < radius + Math.max(80, activeBoss.w * 0.45)) {
     damageBoss(activeBoss, 2, "vasti-shockwave");
   }
@@ -1470,19 +1491,31 @@ function update(delta) {
     const targets = [
       { target: player, kind: "protagonist" },
       ...autonomousCompanions.map((companion) => ({ target: companion.actor, kind: "protagonist" })),
-      ...venatosauruses.filter((other) => other !== enemy && !other.defeated).map((other) => ({ target: other, kind: "venatosaurus" }))
+      ...venatosauruses.filter((other) => other !== enemy && !other.defeated).map((other) => ({ target: other, kind: "venatosaurus" })),
+      ...foodSources.filter((prey) => prey.kind === "ligocristus" && !prey.defeated && !prey.consumed).map((prey) => ({ target: prey, kind: "ligocristus" }))
     ];
     const event = enemy.update(delta, targets);
     if (resolveEnemyPitfall(enemy)) continue;
     if (event?.type === "attack") {
       if (event.target === player) { damagePlayer(); if (player.health <= 0) return; }
       else if (venatosauruses.includes(event.target)) damageVenatosaurus(event.target, 1);
+      else if (foodSources.includes(event.target) && event.target.kind === "ligocristus") damageLigocristus(event.target, 1);
       else if (event.target?.takeHit?.()) { audio.hit(); burst(event.target.x + event.target.w / 2, event.target.y + event.target.h / 2, "#ed8e55", 10); }
     }
     if (!enemy.defeated) tryEatFood(enemy);
     if (player.dashTimer > 0 && !enemy.defeated && !dashHitIds.has(enemy.id) && CollisionSystem.bodyHit(player, enemy)) {
       damageVenatosaurus(enemy, 1);
       dashHitIds.add(enemy.id);
+    }
+  }
+
+  if (player.dashTimer > 0) {
+    for (const prey of foodSources) {
+      if (prey.kind !== "ligocristus" || prey.defeated || prey.consumed || dashHitIds.has(prey.id)) continue;
+      if (CollisionSystem.bodyHit(player, prey)) {
+        damageLigocristus(prey, 1);
+        dashHitIds.add(prey.id);
+      }
     }
   }
 
@@ -1563,7 +1596,8 @@ function update(delta) {
 
   advanceEnemyFades(delta);
   allies = allies.filter((ally) => !ally.departed);
-  foodSources = foodSources.filter((food) => !food.consumed && food.x + food.w >= cameraX - 1100);
+  foodSources = foodSources.filter((food) => !food.consumed && food.x + food.w >= cameraX - 1100 &&
+    !(food.defeated && isEnemyFadeComplete(food)));
   venatosauruses = venatosauruses.filter((enemy) => enemy.x + enemy.w >= cameraX - 1100 && !isEnemyFadeComplete(enemy));
   wildlife = wildlife.filter((animal) => animal.x + animal.w >= cameraX - 500);
   ferrucutusCaptives = ferrucutusCaptives.filter((captive) => captive.x + captive.w >= cameraX - 900);
@@ -1599,11 +1633,7 @@ function update(delta) {
   rescuesLabel.textContent = String(rescues).padStart(2, "0");
   bestLabel.textContent = Math.floor(best()).toString().padStart(4, "0") + " m";
   updatePlayerHealthHud();
-  if (abilityLabel) {
-    const ready = player.abilityCooldown <= 0;
-    abilityLabel.textContent = ready ? ui("dashReady") : ui("cooldown") + " " + player.abilityCooldown.toFixed(1) + "s";
-    abilityLabel.classList.toggle("ready", ready);
-  }
+  updatePlayerAbilityHud();
   updateStegoceratopsHud();
   if (beta?.state === "following" && extractionX && player.x >= extractionX && beta.x >= extractionX - 220) {
     finishCampaign();
@@ -1648,7 +1678,10 @@ function render() {
         ctx, "ligocristus",
         food.x + (food.w - spriteW) / 2,
         food.y + food.h - spriteH,
-        spriteW, spriteH, food, elapsed, { facing: food.direction ?? -1 }
+        spriteW, spriteH, food, elapsed, {
+          facing: food.direction ?? -1,
+          alpha: food.defeated ? getEnemyOpacity(food) : 1
+        }
       );
     } else {
       ctx.fillStyle = food.kind === "hunter" ? "#6b6250" : "#485b45";
@@ -1905,6 +1938,7 @@ function selectCharacter(value) {
   });
   if (!running) {
     player = new Player(selected, GAME.playerX, GAME.groundY);
+    updatePlayerAbilityHud();
     render();
   }
 }
@@ -2007,7 +2041,7 @@ function applyLanguage() {
   });
   soundLabel.textContent = audio.enabled ? ui("sound") : ui("silence");
   menuToggle.setAttribute("aria-label", ui(navMenu.classList.contains("hidden") ? "openMenu" : "closeMenu"));
-  if (abilityLabel) abilityLabel.textContent = player.abilityCooldown <= 0 ? ui("dashReady") : ui("cooldown") + " " + player.abilityCooldown.toFixed(1) + "s";
+  updatePlayerAbilityHud();
   updateStegoceratopsHud();
 
   if (desktopBlocked) {
