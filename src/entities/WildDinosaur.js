@@ -48,15 +48,17 @@ export class WildDinosaur {
       if (target) this.direction = target.target.x >= this.x ? 1 : -1;
       if (this.stateTimer <= 0) {
         this.state = "attack";
-        this.stateTimer = 0.3;
-        this.attackCooldown = 1.35;
+        this.stateTimer = 0.42;
+        this.attackCooldown = 1.55;
+        // Venatosaurus attacks are committed pouncing charges, not stationary bites.
+        if (this.onGround && this.jumpCooldown <= 0) this.jump();
         return target ? { type: "attack", enemy: this, target: target.target, targetKind: target.kind } : null;
       }
       return null;
     }
     if (this.state === "attack") {
-      this.x += this.direction * 115 * delta;
-      this.jump();
+      this.x += this.direction * 335 * delta;
+      if (this.onGround && this.jumpCooldown <= 0) this.jump();
       if (this.stateTimer <= 0) this.state = "pursuit";
       return null;
     }
@@ -84,9 +86,9 @@ export class WildDinosaur {
 
   jump() {
     if (!this.onGround || this.jumpCooldown > 0) return false;
-    this.vy = -390;
+    this.vy = -430;
     this.onGround = false;
-    this.jumpCooldown = 1.7;
+    this.jumpCooldown = 1.35;
     return true;
   }
 
