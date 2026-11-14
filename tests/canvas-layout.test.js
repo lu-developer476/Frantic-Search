@@ -2,29 +2,26 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-test("the mission brief is placed above the canvas while the status HUD stays below", async () => {
+test("the mission brief shares the top panel bar with distance, rescues, record, health and game state", async () => {
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const headerStart = html.indexOf('<div class="panel-head">');
   const canvasStart = html.indexOf('<div class="canvas-wrap">');
-  const bannerStart = html.indexOf('<section class="mission-banner"');
-  const hudStart = html.indexOf('<div class="hud-strip"');
-  const panelEnd = html.indexOf("\\n        </section>", hudStart);
+  const missionStart = html.indexOf('<section class="mission-brief-header"');
+  const header = html.slice(headerStart, canvasStart);
 
-  assert.ok(canvasStart >= 0);
-  assert.ok(bannerStart > canvasStart);
-  assert.ok(hudStart > bannerStart);
-  assert.ok(panelEnd > hudStart);
-  const banner = html.slice(bannerStart, html.indexOf("</section>", bannerStart));
-  const hud = html.slice(hudStart, panelEnd);
-
-  assert.match(banner, /data-i18n="missionBrief"/);
-  assert.match(banner, /id="campaign-chapter"/);
-  assert.match(banner, /id="campaign-objective"/);
-  assert.doesNotMatch(hud, /campaign-chapter|campaign-objective/);
-  assert.match(hud, /id="ability-status"/);
-  assert.match(hud, /id="stegoceratops-status"/);
-  assert.match(hud, /id="interaction-hint"/);
+  assert.ok(headerStart >= 0);
+  assert.ok(missionStart > headerStart && missionStart < canvasStart);
+  assert.match(header, /id="distance"/);
+  assert.match(header, /id="rescues"/);
+  assert.match(header, /id="best"/);
+  assert.match(header, /id="player-health-meter"/);
+  assert.match(header, /id="game-state"/);
+  assert.match(header, /data-i18n="missionBrief"/);
+  assert.match(header, /id="campaign-chapter"/);
+  assert.match(header, /id="campaign-objective"/);
   assert.equal(html.split('id="campaign-chapter"').length - 1, 1);
   assert.equal(html.split('id="campaign-objective"').length - 1, 1);
+  assert.doesNotMatch(html.slice(canvasStart), /mission-banner|campaign-chapter|campaign-objective/);
 });
 
 test("the full canvas scales into the available viewport without losing its 16:9 ratio", async () => {
@@ -51,11 +48,10 @@ test("hamburger close icon is rendered as a vector instead of transformed blurry
   assert.match(css, /\.menu-toggle\.open \.menu-x\s*\{[^}]*display:block/s);
 });
 
-
-test("the upper mission brief is styled as a compact upper-right canvas overlay", async () => {
+test("the mission brief is styled inside the top metrics bar, not over the canvas", async () => {
   const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
-  const rules = css.slice(css.lastIndexOf("/* Full-width gameplay stage"));
-  assert.match(rules, /\.canvas-wrap \.mission-banner\s*\{[^}]*position:absolute[^}]*top:[^}]*right:[^}]*width:24%/s);
-  assert.match(rules, /\.canvas-wrap \.mission-banner strong\s*\{/);
-  assert.match(rules, /\.canvas-wrap \.hud-strip\s*\{[^}]*inset:auto 0 0/s);
+  const rules = css.slice(css.lastIndexOf("/* Mission title and objective"));
+  assert.match(rules, /\.panel-head\s*\{[^}]*grid-template-columns:[^}]*minmax\(220px,1\.25fr\)/s);
+  assert.match(rules, /\.panel-head \.mission-brief-header\s*\{[^}]*border-left:2px solid/s);
+  assert.match(rules, /\.canvas-wrap \.mission-banner\{display:none !important\}/);
 });
