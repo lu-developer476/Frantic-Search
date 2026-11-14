@@ -948,14 +948,6 @@ body.game-paused .brand,body.game-paused .navbar-separator{display:none!importan
   box-shadow:0 0 8px #4cdb7070;
   transition:width .12s linear;
 }
-.panel-health-value{
-  flex:0 0 auto;
-  color:#bcebc5;
-  font-family:"Courier New",monospace;
-  font-size:clamp(8px,.7vw,10px);
-  font-weight:900;
-  white-space:nowrap;
-}
 .panel-head #game-state{margin-left:0}
 @media(max-width:1200px) and (min-width:1024px){
   .panel-head .panel-health{flex-basis:120px;min-width:96px;gap:6px}
