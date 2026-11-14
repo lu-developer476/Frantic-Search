@@ -83,13 +83,13 @@ test("enemy actors are defeated by unsupported ground gaps", () => {
 test("Vasti's character ability is a ground stomp and an airborne slam", () => {
   const player = new Player("vasti", 100, 430);
   assert.equal(player.useAbility(), true);
-  assert.equal(player.consumeAbilityEvent(), "stomp");
+  assert.equal(player.animationState, "stomp");
   assert.equal(player.consumeShockwave(), true);
 
   player.abilityCooldown = 0;
   player.onGround = false;
   assert.equal(player.useAbility(), true);
-  assert.equal(player.consumeAbilityEvent(), "slam");
+  assert.equal(player.animationState, "slam");
   assert.equal(player.isSlamming, true);
 });
 
