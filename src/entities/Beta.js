@@ -43,7 +43,7 @@ export class Beta {
           const liesBetween = directionToPlayer > 0
             ? obstacle.x < player.x + player.w && obstacle.x + obstacle.w > this.x
             : obstacle.x + obstacle.w > player.x && obstacle.x < this.x + this.w;
-          return liesBetween && distanceAhead >= -10 && distanceAhead <= 96;
+          return liesBetween && distanceAhead >= -this.w && distanceAhead <= 96;
         })
         .sort((a, b) => {
           const distanceA = directionToPlayer > 0
