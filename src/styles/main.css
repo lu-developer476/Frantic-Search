@@ -1119,3 +1119,201 @@ html.site-mode-gray .nav-menu{backdrop-filter:none}
   .hud-summary .interaction-readout{grid-column:1/-1;grid-row:2}
   .hud-controls{grid-column:1/-1;grid-row:3}
 }
+
+
+/* Full-width gameplay stage with the operation HUD integrated into the canvas. */
+.layout{
+  display:block;
+  width:100%;
+  max-width:none;
+  min-width:0;
+  margin:0;
+  padding:clamp(8px,1.2vw,18px) clamp(8px,1.35vw,22px);
+}
+.game-panel{
+  display:grid;
+  width:100%;
+  max-width:1920px;
+  height:auto;
+  min-width:0;
+  min-height:0;
+  margin:0 auto;
+  grid-template-rows:auto minmax(0,1fr);
+  overflow:hidden;
+  box-shadow:none;
+}
+html.site-mode-beige .game-panel,
+html.site-mode-gray .game-panel{box-shadow:none}
+.canvas-wrap{
+  position:relative;
+  display:block;
+  width:100%;
+  height:auto;
+  min-width:0;
+  min-height:0;
+  aspect-ratio:16 / 9;
+  overflow:hidden;
+  border:0;
+  border-bottom:0 !important;
+  background:#172522;
+}
+.canvas-wrap canvas#game{
+  position:absolute;
+  inset:0;
+  display:block;
+  width:100%;
+  height:100%;
+  min-width:0;
+  min-height:0;
+  max-width:none;
+  max-height:none;
+  aspect-ratio:16 / 9;
+  object-fit:fill;
+  object-position:center;
+  background:#172522;
+}
+.canvas-wrap .hud-strip{
+  position:absolute;
+  z-index:6;
+  inset:auto 0 0;
+  display:block;
+  width:100%;
+  min-width:0;
+  max-height:none;
+  min-height:0;
+  overflow:visible;
+  border:0 !important;
+  border-radius:0;
+  background:rgba(15,35,49,.94);
+  box-shadow:none;
+  backdrop-filter:none;
+}
+.canvas-wrap .hud-strip>div.hud-summary{
+  display:grid;
+  grid-template-columns:minmax(0,1.35fr) minmax(0,.9fr) minmax(0,1fr) minmax(0,1.4fr);
+  grid-template-rows:auto;
+  align-items:center;
+  gap:clamp(8px,1.2vw,18px);
+  width:100%;
+  min-width:0;
+  padding:clamp(10px,1.15vw,17px) clamp(14px,1.8vw,28px);
+  border:0;
+}
+.canvas-wrap .hud-summary .objective{
+  grid-column:auto;
+  grid-row:auto;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:4px;
+  min-width:0;
+}
+.canvas-wrap .hud-summary .objective small{
+  margin:0;
+  font-size:clamp(10px,.78vw,13px);
+  line-height:1.25;
+}
+.canvas-wrap .hud-summary .objective b{
+  max-width:none;
+  font-size:clamp(12px,.98vw,16px);
+  line-height:1.3;
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+}
+.canvas-wrap .hud-status-stack{
+  grid-column:auto;
+  grid-row:auto;
+  display:grid;
+  gap:6px;
+  min-width:0;
+}
+.canvas-wrap .hud-summary .ability-readout,
+.canvas-wrap .hud-summary .stegoceratops-readout,
+.canvas-wrap .hud-summary .interaction-readout{
+  display:block;
+  min-width:0;
+  margin:0;
+  font-size:clamp(10px,.82vw,14px);
+  line-height:1.35;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+.canvas-wrap .hud-summary .interaction-readout{
+  grid-column:auto;
+  grid-row:auto;
+  color:#ffe36b;
+}
+.canvas-wrap .hud-controls{
+  grid-column:auto;
+  grid-row:auto;
+  min-width:0;
+  margin:0;
+  padding:0;
+  border:0;
+  color:#e2e8d9;
+  font-size:clamp(10px,.78vw,13px);
+  line-height:1.45;
+  text-align:left;
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+}
+.canvas-wrap .hud-strip small,
+.canvas-wrap .hud-strip b{text-shadow:none}
+.canvas-wrap .hud-strip,
+html.site-mode-beige .canvas-wrap .hud-strip,
+html.site-mode-gray .canvas-wrap .hud-strip{
+  border:0 !important;
+  border-top:0 !important;
+  background:rgba(15,35,49,.94);
+}
+.canvas-wrap{border-bottom:0 !important}
+.canvas-wrap canvas#game{border:0 !important}
+.menu-toggle{
+  position:relative;
+  display:grid;
+  place-items:center;
+}
+.menu-toggle .menu-icon{
+  display:block;
+  width:23px;
+  height:23px;
+  overflow:visible;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:2.4;
+  stroke-linecap:square;
+  stroke-linejoin:miter;
+  shape-rendering:geometricPrecision;
+}
+.menu-toggle.open .menu-icon path{
+  d:path("M5 5L19 19M19 5L5 19");
+  stroke-width:2.8;
+}
+@media(max-width:900px){
+  .canvas-wrap .hud-strip>div.hud-summary{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    grid-template-rows:auto auto;
+    gap:8px 14px;
+    padding:9px 12px;
+  }
+  .canvas-wrap .hud-summary .objective{grid-column:1;grid-row:1}
+  .canvas-wrap .hud-status-stack{grid-column:2;grid-row:1}
+  .canvas-wrap .hud-summary .interaction-readout{grid-column:1;grid-row:2}
+  .canvas-wrap .hud-controls{grid-column:2;grid-row:2}
+}
+@media(max-width:560px){
+  .layout{padding:6px}
+  .game-panel{border-width:2px}
+  .canvas-wrap .hud-strip>div.hud-summary{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:6px 9px;
+    padding:7px 9px;
+  }
+  .canvas-wrap .hud-summary .objective small{font-size:8px}
+  .canvas-wrap .hud-summary .objective b{font-size:9px}
+  .canvas-wrap .hud-summary .ability-readout,
+  .canvas-wrap .hud-summary .stegoceratops-readout,
+  .canvas-wrap .hud-summary .interaction-readout,
+  .canvas-wrap .hud-controls{font-size:8px}
+}
