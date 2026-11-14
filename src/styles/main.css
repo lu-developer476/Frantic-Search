@@ -1465,3 +1465,32 @@ html.site-mode-gray .canvas-wrap .hud-strip{
 }
 /* The upper mission brief was moved out of the game viewport into .panel-head. */
 .canvas-wrap .mission-banner{display:none !important}
+
+
+/* Keep the live chapter and objective side by side in one header line. */
+.panel-head .mission-brief-header{
+  display:flex;
+  flex-wrap:nowrap;
+  align-items:baseline;
+  justify-content:flex-start;
+  gap:clamp(7px,.85vw,12px);
+  white-space:nowrap;
+}
+.panel-head .mission-brief-header small,
+.panel-head .mission-brief-header strong{
+  flex:0 1 auto;
+  min-width:0;
+  white-space:nowrap;
+  overflow-wrap:normal;
+}
+.panel-head .mission-brief-header small{
+  font-size:clamp(7px,.62vw,9px);
+}
+.panel-head .mission-brief-header strong{
+  font-size:clamp(10px,.9vw,13px);
+}
+@media(max-width:1120px){
+  .panel-head .mission-brief-header{flex-wrap:nowrap;gap:7px}
+  .panel-head .mission-brief-header small{font-size:7px}
+  .panel-head .mission-brief-header strong{font-size:10px}
+}
