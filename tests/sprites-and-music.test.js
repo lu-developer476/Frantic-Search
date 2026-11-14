@@ -229,7 +229,7 @@ test("Violeta and Vasti cannot crouch even when the input reports duck", () => {
 test("Rosa's escort lunge breaks crates but does not destroy rocks", () => {
   const rosa = new Beta({ x: 100, groundY: 430 });
   assert.equal(rosa.rescue(), true);
-  const crate = { id: "crate-test", type: "crate", x: 168, y: 378, w: 52, h: 52 };
+  const crate = { id: "crate-test", type: "crate", x: 128, y: 378, w: 52, h: 52 };
   const rock = { id: "rock-test", type: "rock", x: 300, y: 372, w: 56, h: 58 };
   const world = { obstacles: [crate, rock] };
   const player = { x: 500, y: 368, w: 64, h: 62 };
