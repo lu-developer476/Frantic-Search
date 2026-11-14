@@ -114,3 +114,22 @@ test("the bottom HUD strip uses compact vertical spacing to preserve canvas visi
   assert.match(rules, /@media\(max-width:900px\)[\s\S]*?padding:5px 10px/);
   assert.match(rules, /@media\(max-height:720px\)[\s\S]*?padding:4px 10px/);
 });
+
+
+test("both operation bars have zero vertical padding and centered content", async () => {
+  const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+  const rules = css.slice(css.lastIndexOf("/* Unified edge-safe typography"));
+  assert.match(rules, /\.panel-head\s*\{[^}]*align-content:center[^}]*padding-block:0/s);
+  assert.match(rules, /\.canvas-wrap \.hud-strip>div\.hud-summary\s*\{[^}]*align-content:center[^}]*padding-block:0/s);
+  assert.match(rules, /@media\(max-width:900px\)[\s\S]*?padding-block:0/);
+});
+
+test("all top and bottom bar labels use one shared responsive font size and safe wrapping", async () => {
+  const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+  const rules = css.slice(css.lastIndexOf("/* Unified edge-safe typography"));
+  assert.match(rules, /--operation-hud-font-size:clamp\(9px,\.78vw,11px\)/);
+  assert.match(rules, /\.panel-head \.panel-metric small,[\s\S]*?font-size:var\(--operation-hud-font-size\)/);
+  assert.match(rules, /\.canvas-wrap \.hud-summary \.ability-readout,[\s\S]*?font-size:var\(--operation-hud-font-size\)/);
+  assert.match(rules, /\.canvas-wrap \.hud-summary \.hud-controls\s*\{[^}]*overflow-wrap:anywhere/s);
+  assert.match(rules, /\.canvas-wrap \.hud-summary \.interaction-readout\s*\{[^}]*overflow-wrap:anywhere/s);
+});
