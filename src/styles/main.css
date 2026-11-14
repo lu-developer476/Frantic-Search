@@ -1608,3 +1608,131 @@ html.site-mode-gray .canvas-wrap .hud-strip{
     line-height:1.15;
   }
 }
+
+
+/* Unified edge-safe typography and zero vertical padding for both operation bars. */
+:root{
+  --operation-hud-font-size:clamp(9px,.78vw,11px);
+}
+.panel-head{
+  align-content:center;
+  min-height:48px;
+  padding-block:0;
+  padding-inline:clamp(10px,1.1vw,16px);
+}
+.panel-head .panel-metric small,
+.panel-head .panel-metric b,
+.panel-head .panel-health-label,
+.panel-head .mission-brief-header small,
+.panel-head .mission-brief-header strong,
+.panel-head #game-state{
+  font-size:var(--operation-hud-font-size);
+  line-height:1.2;
+  letter-spacing:.035em;
+}
+.panel-head .mission-brief-header{
+  align-items:center;
+  gap:clamp(6px,.7vw,10px);
+  min-width:0;
+}
+.panel-head .panel-metric,
+.panel-head .panel-health,
+.panel-head #game-state{
+  min-width:0;
+}
+@media(max-width:1120px){
+  .panel-head{
+    align-content:center;
+    min-height:56px;
+    padding-block:0;
+  }
+}
+@media(max-height:720px) and (min-width:1024px) and (hover:hover) and (pointer:fine){
+  .panel-head{
+    min-height:42px;
+    padding-block:0;
+  }
+}
+
+.canvas-wrap .hud-strip>div.hud-summary{
+  align-content:center;
+  align-items:center;
+  grid-template-columns:minmax(0,.9fr) minmax(0,1.6fr);
+  min-height:42px;
+  padding-block:0;
+  padding-inline:clamp(12px,1.4vw,20px);
+  gap:4px clamp(8px,1vw,14px);
+}
+.canvas-wrap .hud-summary .ability-readout,
+.canvas-wrap .hud-summary .stegoceratops-readout,
+.canvas-wrap .hud-summary .interaction-readout,
+.canvas-wrap .hud-summary .hud-controls{
+  min-width:0;
+  font-size:var(--operation-hud-font-size);
+  line-height:1.2;
+  letter-spacing:.035em;
+}
+.canvas-wrap .hud-status-stack{
+  min-width:0;
+  align-items:center;
+  gap:clamp(6px,.8vw,11px);
+}
+.canvas-wrap .hud-status-stack .ability-readout,
+.canvas-wrap .hud-status-stack .stegoceratops-readout{
+  flex-shrink:0;
+  white-space:nowrap;
+}
+.canvas-wrap .hud-summary .interaction-readout{
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+.canvas-wrap .hud-summary .hud-controls{
+  white-space:normal;
+  overflow-wrap:anywhere;
+  text-overflow:clip;
+}
+@media(max-width:900px){
+  .canvas-wrap .hud-strip>div.hud-summary{
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:auto auto;
+    align-content:center;
+    min-height:54px;
+    padding-block:0;
+    padding-inline:12px;
+    row-gap:4px;
+  }
+  .canvas-wrap .hud-status-stack,
+  .canvas-wrap .hud-summary .hud-controls{
+    grid-column:1;
+    grid-row:auto;
+  }
+}
+@media(max-width:560px){
+  .panel-head{
+    min-height:58px;
+    padding-block:0;
+  }
+  .panel-head .panel-metric small,
+  .panel-head .panel-metric b,
+  .panel-head .panel-health-label,
+  .panel-head .mission-brief-header small,
+  .panel-head .mission-brief-header strong,
+  .panel-head #game-state,
+  .canvas-wrap .hud-summary .ability-readout,
+  .canvas-wrap .hud-summary .stegoceratops-readout,
+  .canvas-wrap .hud-summary .interaction-readout,
+  .canvas-wrap .hud-summary .hud-controls{
+    font-size:9px;
+  }
+  .canvas-wrap .hud-strip>div.hud-summary{
+    min-height:56px;
+    padding-block:0;
+    padding-inline:9px;
+  }
+}
+@media(max-height:720px) and (min-width:1024px) and (hover:hover) and (pointer:fine){
+  .canvas-wrap .hud-strip>div.hud-summary{
+    min-height:38px;
+    padding-block:0;
+  }
+}
