@@ -62,3 +62,17 @@ test("nearby interactive targets share the explicit E prompt", async () => {
   assert.match(i18n, /interact: "E: INTERACT"/);
   assert.doesNotMatch(main, /"E \/\/ " \+ ui\("freeFerrucutus"\)/);
 });
+
+
+test("lower HUD uses the full strip width and wraps complete labels without overlap", async () => {
+  const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+  const hudRules = css.slice(css.lastIndexOf("/* Full-width lower HUD"));
+
+  assert.match(hudRules, /\.canvas-wrap \.hud-strip\s*\{[^}]*left:0;[^}]*right:0;[^}]*width:100%/s);
+  assert.match(hudRules, /\.canvas-wrap \.hud-strip>\.hud-summary\s*\{[^}]*width:100%/s);
+  assert.match(hudRules, /\.canvas-wrap \.hud-strip \.hud-status-stack\s*\{[^}]*flex-flow:row wrap/s);
+  assert.match(hudRules, /\.canvas-wrap \.hud-strip \.hud-status-stack \.stegoceratops-readout\s*\{[^}]*flex:0 0 auto/s);
+  assert.match(hudRules, /\.canvas-wrap \.hud-strip \.hud-summary \.hud-controls\s*\{[^}]*width:100%/s);
+  assert.match(hudRules, /\.canvas-wrap \.hud-strip \.hud-summary \.hud-controls\s*\{[^}]*white-space:normal/s);
+  assert.match(hudRules, /\.canvas-wrap \.hud-strip \.hud-summary \.hud-controls\s*\{[^}]*overflow:visible/s);
+});
