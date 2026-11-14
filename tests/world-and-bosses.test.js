@@ -147,8 +147,18 @@ test("every campaign level places its capped Ferrucutus containment cages", () =
   assert.equal(WORLD.sectionLength, 3000);
   const cagePositions = world.ferrucutusCageSpawns.map((spawn) => spawn.x).sort((a, b) => a - b);
   for (let index = 1; index < cagePositions.length; index += 1) {
-    assert.ok(cagePositions[index] - cagePositions[index - 1] >= 2000,
-      "rescue encounters must be separated by at least 1000 world units");
+    assert.ok(cagePositions[index] - cagePositions[index - 1] >= 1700,
+      "Ferrucutus cage encounters must be separated by at least 1700 world units");
+  }
+
+  const rescuePositions = [
+    ...world.ferrucutusCageSpawns.map((spawn) => spawn.x),
+    ...world.hunterSpawns.filter((spawn) => spawn.carriesCaptive).map((spawn) => spawn.x)
+  ].sort((a, b) => a - b);
+  assert.equal(rescuePositions.length, 7);
+  for (let index = 1; index < rescuePositions.length; index += 1) {
+    assert.ok(rescuePositions[index] - rescuePositions[index - 1] >= 1500,
+      "all optional rescue objectives must be spaced by at least 1500 world units");
   }
 });
 

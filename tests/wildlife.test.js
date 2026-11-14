@@ -23,7 +23,8 @@ test("Venatosaurus spawns throughout the campaign and both reference variants ar
   assert.ok(world.venatosaurusSpawns.some((spawn) => spawn.kind === "venatosaurus-saevidicus"));
   assert.equal(world.foodSpawns.length, 6);
   assert.equal(world.brontosaurusSpawns.length, 2);
-  assert.equal(world.hunterSpawns.length, 4);
+  assert.equal(world.hunterSpawns.length, 3);
+  assert.equal(world.hunterSpawns.filter((spawn) => spawn.carriesCaptive).length, 2);
   assert.ok(world.hunterSpawns.some((spawn) => !spawn.carriesCaptive));
 });
 

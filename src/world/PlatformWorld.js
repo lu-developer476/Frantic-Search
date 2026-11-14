@@ -48,17 +48,17 @@ const PLATFORM_LAYOUTS = [
 ];
 
 const FERRUCUTUS_CAGE_WIDTH = 164;
-const CAPTIVE_OFFSETS_BY_SECTION = [[1450], [1720], [1120], [1420], [2700], [], []];
+const CAPTIVE_OFFSETS_BY_SECTION = [[1200], [1200], [900], [2100], [900], [], []];
 const CHAPTER_BY_SECTION = [0, 1, 2, 2, 3, 4, 5];
 const VENATOSAURUS_OFFSETS_BY_SECTION = [
   [600, 2200], [1200, 2700], [500], [700, 2200], [950], [], [1250]
 ];
 const FOOD_OFFSETS_BY_SECTION = [[1850], [2250], [2500], [1750], [2500], [], [1900]];
 const HUNTER_SPAWNS_BY_SECTION = [
-  [{ offset: 2800, carriesCaptive: true }],
-  [{ offset: 650, carriesCaptive: true }],
+  [{ offset: 2700, carriesCaptive: true }],
   [],
-  [{ offset: 2800, carriesCaptive: true }],
+  [],
+  [{ offset: 350, carriesCaptive: true }],
   [],
   [{ offset: 2650, carriesCaptive: false }],
   []
