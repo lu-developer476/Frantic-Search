@@ -78,7 +78,7 @@ export class CampaignManager {
         "An apex predator is moving inside the complex. Its containment signal confirms that the operation is holding a creature powerful enough to threaten the surrounding region."
       ]);
     }
-    if (worldX >= WORLD.sectionLength * 3) {
+    if (worldX >= WORLD.sectionStarts[3]) {
       if (this.flags.indoraptorDefeated) this.objective = "PUSH INTO THE FACILITY";
       this.queueScene("black-site-interior", "INNER RESEARCH PERIMETER", [
         "The first perimeter is behind the group. A second service corridor leads deeper into the black site, where transport records and containment systems converge.",

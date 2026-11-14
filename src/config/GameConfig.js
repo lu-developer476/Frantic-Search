@@ -1,7 +1,21 @@
-export const WORLD = {
-  sectionLength: 3000,
-  sectionCount: 7
-};
+const SECTION_LENGTHS = Object.freeze([6200, 6800, 7600, 6200, 7000, 7800, 6800]);
+const SECTION_STARTS = Object.freeze(SECTION_LENGTHS.reduce((starts, length, index) => {
+  starts.push(index === 0 ? 0 : starts[index - 1] + SECTION_LENGTHS[index - 1]);
+  return starts;
+}, []));
+const EXTRACTION_CHAPTER_RATIO = 0.78;
+const EXTRACTION_RATIO = 0.90;
+
+export const WORLD = Object.freeze({
+  minSectionLength: 5000,
+  maxSectionLength: 7800,
+  sectionLengths: SECTION_LENGTHS,
+  sectionStarts: SECTION_STARTS,
+  sectionCount: SECTION_LENGTHS.length,
+  totalLength: SECTION_LENGTHS.reduce((total, length) => total + length, 0),
+  extractionChapterStartX: SECTION_STARTS[5] + Math.round(SECTION_LENGTHS[5] * EXTRACTION_CHAPTER_RATIO),
+  extractionX: SECTION_STARTS[6] + Math.round(SECTION_LENGTHS[6] * EXTRACTION_RATIO)
+});
 
 export const GAME = {
   width: 960,
@@ -11,7 +25,7 @@ export const GAME = {
   playerX: 145,
   fixedStep: 1 / 60,
   maxFrameDelta: 0.1,
-  campaignEndX: WORLD.sectionLength * WORLD.sectionCount - 300
+  campaignEndX: WORLD.extractionX
 };
 
 export const LEVELS = [
@@ -30,7 +44,7 @@ export const LEVELS = [
   {
     name: "REDWOOD FRONTIER",
     subtitle: "Something is moving between the trees.",
-    distance: WORLD.sectionLength - GAME.playerX,
+    distance: WORLD.sectionStarts[1] - GAME.playerX,
     sky: "#78c8d0", ground: "#865638", environment: "forest",
     sun: "#ffdb78", sunShade: "#dfa95e", cloud: "#e9f1d8", cloudShadow: "#94b8ac",
     mountain: "#82aeb3", snow: "#e2edd8", ridge: "#476f75",
@@ -42,7 +56,7 @@ export const LEVELS = [
   {
     name: "POACHER BLACK SITE",
     subtitle: "An illegal research complex hides beyond the forest.",
-    distance: WORLD.sectionLength * 2 - GAME.playerX,
+    distance: WORLD.sectionStarts[2] - GAME.playerX,
     sky: "#d18a69", ground: "#6e4a38", environment: "industrial",
     sun: "#ffd47a", sunShade: "#e5a260", cloud: "#f0c39a", cloudShadow: "#a97967",
     mountain: "#9a786d", snow: "#eac7a5", ridge: "#60535a",
@@ -54,7 +68,7 @@ export const LEVELS = [
   {
     name: "CONTAINMENT PERIMETER",
     subtitle: "The Indominus is guarding the inner wing.",
-    distance: WORLD.sectionLength * 4 - GAME.playerX,
+    distance: WORLD.sectionStarts[4] - GAME.playerX,
     sky: "#bb8167", ground: "#625044", environment: "industrial",
     sun: "#f6cb78", sunShade: "#dca56c", cloud: "#e8c6a6", cloudShadow: "#9b7469",
     mountain: "#8d7978", snow: "#e9d4b2", ridge: "#514e56",
@@ -66,7 +80,7 @@ export const LEVELS = [
   {
     name: "ROSA CONTAINMENT",
     subtitle: "Restore the facility systems and reach the cell block.",
-    distance: WORLD.sectionLength * 5 - GAME.playerX,
+    distance: WORLD.sectionStarts[5] - GAME.playerX,
     sky: "#799ba7", ground: "#695346", environment: "facility",
     sun: "#f6d58a", sunShade: "#d9ad78", cloud: "#dae9dc", cloudShadow: "#8aa6a5",
     mountain: "#788f96", snow: "#e3e8d7", ridge: "#4b6269",
@@ -78,32 +92,13 @@ export const LEVELS = [
   {
     name: "EXTRACTION ZONE",
     subtitle: "Get Rosa out. Bring everyone home.",
-    distance: WORLD.sectionLength * 5 + 2300 - GAME.playerX,
-    sky: "#f0a66f",
-    ground: "#795039",
-    environment: "facility",
-    sun: "#ffe58a",
-    sunShade: "#e8b65d",
-    cloud: "#fff0d2",
-    cloudShadow: "#d69a7a",
-    mountain: "#b58b85",
-    snow: "#f0d7b4",
-    ridge: "#765d65",
-    treeTrunk: "#574333",
-    tree: "#37684d",
-    treeLight: "#5b8b59",
-    grass: "#85a34c",
-    soil: "#795039",
-    under: "#4a352a",
-    detail: "#9e9b58",
-    rock: "#b9a17b",
-    platform: "#696044",
-    platformTop: "#b7a66b",
-    platformShadow: "#3c392e",
-    building: "#3e5660",
-    buildingShadow: "#293c43",
-    buildingLight: "#8aa2a3",
-    window: "#e3d28f",
-    warning: "#ef9a62"
+    distance: WORLD.extractionChapterStartX - GAME.playerX,
+    sky: "#f0a66f", ground: "#795039",
+    sun: "#ffe58a", sunShade: "#e8b65d", cloud: "#fff0d2", cloudShadow: "#d69a7a",
+    mountain: "#b58b85", snow: "#f0d7b4", ridge: "#765d65",
+    treeTrunk: "#574333", tree: "#37684d", treeLight: "#5b8b59",
+    grass: "#85a34c", soil: "#795039", under: "#4a352a", detail: "#9e9b58",
+    rock: "#b9a17b", platform: "#696044", platformTop: "#b7a66b", platformShadow: "#3c392e",
+    building: "#3e5660", buildingShadow: "#293c43", buildingLight: "#8aa2a3", window: "#e3d28f", warning: "#ef9a62"
   }
 ];

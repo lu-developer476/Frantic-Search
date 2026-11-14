@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { PlatformWorld } from "../src/world/PlatformWorld.js";
 import { WildDinosaur } from "../src/entities/WildDinosaur.js";
+import { WORLD } from "../src/config/GameConfig.js";
 
 test("Ferrucutus captives are procedurally generated with a chapter-specific cap", () => {
   const world = new PlatformWorld(430);
@@ -18,14 +19,21 @@ test("Ferrucutus captives are procedurally generated with a chapter-specific cap
 test("Venatosaurus spawns throughout the campaign and both reference variants are used", () => {
   const world = new PlatformWorld(430);
   world.extendTo(50000);
-  assert.equal(world.venatosaurusSpawns.length, 9);
+  assert.equal(world.venatosaurusSpawns.length, 17);
   assert.ok(world.venatosaurusSpawns.some((spawn) => spawn.kind === "venatosaurus-impavidus"));
   assert.ok(world.venatosaurusSpawns.some((spawn) => spawn.kind === "venatosaurus-saevidicus"));
-  assert.equal(world.foodSpawns.length, 6);
+  assert.equal(world.foodSpawns.length, 12);
   assert.equal(world.brontosaurusSpawns.length, 2);
-  assert.equal(world.hunterSpawns.length, 3);
+  assert.equal(world.hunterSpawns.length, 10);
   assert.equal(world.hunterSpawns.filter((spawn) => spawn.carriesCaptive).length, 2);
   assert.ok(world.hunterSpawns.some((spawn) => !spawn.carriesCaptive));
+  assert.ok(world.hunterSpawns.every((spawn) => {
+    const section = Number(spawn.id.split("-")[1]);
+    const start = WORLD.sectionStarts[section];
+    const end = start + WORLD.sectionLengths[section];
+    return spawn.x >= start && spawn.x < end &&
+      spawn.patrolStart >= start && spawn.patrolEnd <= end;
+  }));
 });
 
 test("Venatosaurus attacks nearby protagonists and can be defeated", () => {

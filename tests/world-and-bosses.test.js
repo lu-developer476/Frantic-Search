@@ -15,13 +15,32 @@ test("campaign world stops after the finite extraction area", () => {
   assert.equal(world.bossSpawns[0].kind, "indoraptor");
   assert.equal(world.bossSpawns[1].kind, "indominus");
   assert.ok(world.facilitySpawns);
-  assert.equal(world.facilitySpawns.extraction, 20700);
+  assert.equal(world.facilitySpawns.extraction, WORLD.extractionX);
   const finalFloor = world.platforms.find((platform) =>
-    platform.kind === "ground" && platform.x === 18000
+    platform.kind === "ground" && platform.x === WORLD.sectionStarts[6]
   );
-  assert.equal(finalFloor.w, 3000);
+  assert.equal(finalFloor.w, WORLD.sectionLengths[6]);
 });
 
+
+test("every generated section respects the 5,000–7,800-unit length bounds", () => {
+  const world = new PlatformWorld(GAME.groundY, { seed: 20261113 });
+  world.extendTo(WORLD.totalLength + 1);
+  assert.equal(world.generatedSections, WORLD.sectionCount);
+  for (let index = 0; index < WORLD.sectionCount; index += 1) {
+    const start = WORLD.sectionStarts[index];
+    const end = start + WORLD.sectionLengths[index];
+    assert.ok(WORLD.sectionLengths[index] >= 5000 && WORLD.sectionLengths[index] <= 7800);
+    assert.ok(world.platforms.some((platform) => platform.kind === "ground" && platform.x === start));
+    assert.ok(world.platforms.some((platform) => platform.kind === "ground" && platform.x + platform.w === end));
+    const ledges = world.platforms.filter((platform) =>
+      platform.kind === "ledge" && platform.x >= start && platform.x + platform.w <= end
+    );
+    assert.equal(ledges.length, 8);
+    assert.ok(ledges[0].x - start < WORLD.sectionLengths[index] * 0.12);
+    assert.ok(end - (ledges.at(-1).x + ledges.at(-1).w) < WORLD.sectionLengths[index] * 0.12);
+  }
+});
 
 test("procedural sections are repeatable for a seed and vary between seeds", () => {
   const first = new PlatformWorld(GAME.groundY, { seed: 123456 });
@@ -52,8 +71,8 @@ test("procedural hazards never overlap Ferrucutus containment cages", () => {
 
 test("boss arenas have continuous floor and no normal hunter spawns", () => {
   const world = new PlatformWorld(430);
-  world.extendTo(15000);
-  for (const start of [6000, 12000]) {
+  world.extendTo(WORLD.totalLength + 5000);
+  for (const start of [WORLD.sectionStarts[2], WORLD.sectionStarts[4]]) {
     const grounds = world.platforms
       .filter((platform) => platform.kind === "ground" && platform.x >= start && platform.x < start + 1500)
       .sort((a, b) => a.x - b.x);
@@ -143,8 +162,20 @@ test("every campaign level places its capped Ferrucutus containment cages", () =
     }
   }
   assert.equal(new Set(world.ferrucutusCageSpawns.map((spawn) => spawn.id)).size, 5);
-  assert.deepEqual(LEVELS.map((level) => level.distance), [0, 2855, 5855, 11855, 14855, 17155]);
-  assert.equal(WORLD.sectionLength, 3000);
+  assert.deepEqual(LEVELS.map((level) => level.distance), [
+    0,
+    WORLD.sectionStarts[1] - GAME.playerX,
+    WORLD.sectionStarts[2] - GAME.playerX,
+    WORLD.sectionStarts[4] - GAME.playerX,
+    WORLD.sectionStarts[5] - GAME.playerX,
+    WORLD.extractionChapterStartX - GAME.playerX
+  ]);
+  assert.equal(WORLD.sectionLengths.length, WORLD.sectionCount);
+  assert.ok(WORLD.sectionLengths.every((length) =>
+    length >= WORLD.minSectionLength && length <= WORLD.maxSectionLength
+  ));
+  assert.equal(WORLD.totalLength, WORLD.sectionLengths.reduce((sum, length) => sum + length, 0));
+  assert.equal(GAME.campaignEndX, WORLD.extractionX);
   const cagePositions = world.ferrucutusCageSpawns.map((spawn) => spawn.x).sort((a, b) => a - b);
   for (let index = 1; index < cagePositions.length; index += 1) {
     assert.ok(cagePositions[index] - cagePositions[index - 1] >= 1700,

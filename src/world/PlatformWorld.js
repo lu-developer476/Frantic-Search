@@ -22,52 +22,60 @@ function shuffle(items, random) {
 
 const PLATFORM_LAYOUTS = [
   [
-    { offset: 220, y: 365, w: 170 }, { offset: 620, y: 342, w: 175 },
-    { offset: 1020, y: 378, w: 190 }, { offset: 1420, y: 350, w: 185 },
-    { offset: 1820, y: 365, w: 175 }, { offset: 2220, y: 342, w: 190 },
-    { offset: 2620, y: 378, w: 180 }
+    { position: 0.07, y: 365, w: 170 }, { position: 0.19, y: 342, w: 175 },
+    { position: 0.31, y: 378, w: 190 }, { position: 0.43, y: 350, w: 185 },
+    { position: 0.55, y: 365, w: 175 }, { position: 0.67, y: 342, w: 190 },
+    { position: 0.79, y: 378, w: 180 }, { position: 0.91, y: 350, w: 185 }
   ],
   [
-    { offset: 260, y: 380, w: 190 }, { offset: 660, y: 350, w: 155 },
-    { offset: 1060, y: 365, w: 190 }, { offset: 1460, y: 340, w: 165 },
-    { offset: 1860, y: 375, w: 190 }, { offset: 2260, y: 350, w: 175 },
-    { offset: 2660, y: 370, w: 185 }
+    { position: 0.08, y: 380, w: 190 }, { position: 0.20, y: 350, w: 155 },
+    { position: 0.32, y: 365, w: 190 }, { position: 0.44, y: 340, w: 165 },
+    { position: 0.56, y: 375, w: 190 }, { position: 0.68, y: 350, w: 175 },
+    { position: 0.80, y: 370, w: 185 }, { position: 0.92, y: 355, w: 180 }
   ],
   [
-    { offset: 190, y: 350, w: 175 }, { offset: 590, y: 375, w: 185 },
-    { offset: 990, y: 345, w: 170 }, { offset: 1390, y: 375, w: 205 },
-    { offset: 1790, y: 345, w: 180 }, { offset: 2190, y: 370, w: 190 },
-    { offset: 2590, y: 350, w: 185 }
+    { position: 0.07, y: 350, w: 175 }, { position: 0.19, y: 375, w: 185 },
+    { position: 0.31, y: 345, w: 170 }, { position: 0.43, y: 375, w: 205 },
+    { position: 0.55, y: 345, w: 180 }, { position: 0.67, y: 370, w: 190 },
+    { position: 0.79, y: 350, w: 185 }, { position: 0.91, y: 365, w: 175 }
   ],
   [
-    { offset: 275, y: 370, w: 170 }, { offset: 675, y: 340, w: 190 },
-    { offset: 1075, y: 380, w: 165 }, { offset: 1475, y: 355, w: 185 },
-    { offset: 1875, y: 365, w: 175 }, { offset: 2275, y: 345, w: 190 },
-    { offset: 2675, y: 375, w: 175 }
+    { position: 0.08, y: 370, w: 170 }, { position: 0.20, y: 340, w: 190 },
+    { position: 0.32, y: 380, w: 165 }, { position: 0.44, y: 355, w: 185 },
+    { position: 0.56, y: 365, w: 175 }, { position: 0.68, y: 345, w: 190 },
+    { position: 0.80, y: 375, w: 175 }, { position: 0.92, y: 355, w: 185 }
   ]
 ];
 
 const FERRUCUTUS_CAGE_WIDTH = 164;
-const CAPTIVE_OFFSETS_BY_SECTION = [[1200], [1200], [900], [2100], [900], [], []];
+const CAPTIVE_RATIOS_BY_SECTION = [[0.20], [0.52], [0.32], [0.42], [0.30], [], []];
 const CHAPTER_BY_SECTION = [0, 1, 2, 2, 3, 4, 5];
-const VENATOSAURUS_OFFSETS_BY_SECTION = [
-  [600, 2200], [1200, 2700], [500], [700, 2200], [950], [], [1250]
+const VENATOSAURUS_RATIOS_BY_SECTION = [
+  [0.12, 0.70], [0.20, 0.65, 0.90], [0.18, 0.44, 0.86],
+  [0.18, 0.50, 0.87], [0.14, 0.44, 0.84], [], [0.25, 0.62, 0.84]
 ];
-const FOOD_OFFSETS_BY_SECTION = [[1850], [2250], [2500], [1750], [2500], [], [1900]];
+const FOOD_RATIOS_BY_SECTION = [
+  [0.35, 0.84], [0.42, 0.88], [0.25, 0.78], [0.32, 0.72],
+  [0.36, 0.88], [], [0.40, 0.78]
+];
 const HUNTER_SPAWNS_BY_SECTION = [
-  [{ offset: 2700, carriesCaptive: true }],
+  [{ ratio: 0.46, carriesCaptive: true }, { ratio: 0.78, carriesCaptive: false }],
+  [{ ratio: 0.27, carriesCaptive: false }, { ratio: 0.76, carriesCaptive: false }],
   [],
+  [{ ratio: 0.22, carriesCaptive: false }, { ratio: 0.82, carriesCaptive: true }],
   [],
-  [{ offset: 350, carriesCaptive: true }],
-  [],
-  [{ offset: 2650, carriesCaptive: false }],
-  []
+  [{ ratio: 0.34, carriesCaptive: false }, { ratio: 0.72, carriesCaptive: false }],
+  [{ ratio: 0.30, carriesCaptive: false }, { ratio: 0.72, carriesCaptive: false }]
 ];
 
-function proceduralCagePositions(sectionStart, sectionEnd, sectionIndex) {
-  return (CAPTIVE_OFFSETS_BY_SECTION[sectionIndex] ?? [])
-    .map((offset) => sectionStart + offset)
-    .filter((x) => x >= sectionStart && x + FERRUCUTUS_CAGE_WIDTH <= sectionEnd);
+function positionAt(sectionStart, sectionLength, ratio) {
+  return sectionStart + Math.round(sectionLength * ratio);
+}
+
+function proceduralCagePositions(sectionStart, sectionLength, sectionIndex) {
+  return (CAPTIVE_RATIOS_BY_SECTION[sectionIndex] ?? [])
+    .map((ratio) => positionAt(sectionStart, sectionLength, ratio))
+    .filter((x) => x >= sectionStart && x + FERRUCUTUS_CAGE_WIDTH <= sectionStart + sectionLength);
 }
 
 export class PlatformWorld {
@@ -75,27 +83,27 @@ export class PlatformWorld {
     this.groundY = groundY;
     this.seed = (seed >>> 0) || 0x9e3779b9;
     this.sectionSeeds = [];
-    this.sectionLength = WORLD.sectionLength;
+    this.sectionLengths = WORLD.sectionLengths;
     this.platforms = [];
     this.obstacles = [];
     this.hunterSpawns = [];
     this.venatosaurusSpawns = [];
     this.foodSpawns = [];
     this.brontosaurusSpawns = [];
-    this.allySpawns = []; // Kept empty for compatibility; Ferrucutus now spawn as captives.
+    this.allySpawns = [];
     this.ferrucutusCageSpawns = [];
     this.bossSpawns = [];
     this.facilitySpawns = null;
     this.facilityProps = [];
     this.generatedSections = 0;
     this.bridgeSequence = 0;
-    this.extendTo(this.sectionLength + 1200);
+    this.extendTo(GAME.playerX + WORLD.maxSectionLength + 1200);
   }
 
   extendTo(worldX) {
     while (
-      this.generatedSections * this.sectionLength < worldX &&
-      this.generatedSections < WORLD.sectionCount
+      this.generatedSections < WORLD.sectionCount &&
+      WORLD.sectionStarts[this.generatedSections] <= worldX
     ) {
       this.generateSection(this.generatedSections);
       this.generatedSections += 1;
@@ -103,7 +111,10 @@ export class PlatformWorld {
   }
 
   generateSection(index) {
-    const start = index * this.sectionLength;
+    const start = WORLD.sectionStarts[index];
+    const sectionLength = WORLD.sectionLengths[index];
+    const end = start + sectionLength;
+    const at = (ratio) => positionAt(start, sectionLength, ratio);
     const floorHeight = 110;
     const sectionSeed = (this.seed ^ Math.imul(index + 1, 0x9e3779b1)) >>> 0;
     const random = seededRandom(sectionSeed);
@@ -114,8 +125,8 @@ export class PlatformWorld {
     const isFinalArea = index === 6;
     const levelIndex = CHAPTER_BY_SECTION[index] ?? LEVELS.length - 1;
 
-    const positions = proceduralCagePositions(start, start + this.sectionLength, index);
-    positions.forEach((x, rescueIndex) => {
+    const cagePositions = proceduralCagePositions(start, sectionLength, index);
+    cagePositions.forEach((x, rescueIndex) => {
       this.ferrucutusCageSpawns.push({
         id: "ferrucutus-cage-" + index + "-" + (rescueIndex + 1),
         x, groundY: this.groundY, levelIndex, rescueIndex
@@ -124,7 +135,7 @@ export class PlatformWorld {
 
     const layout = PLATFORM_LAYOUTS[Math.floor(random() * PLATFORM_LAYOUTS.length)];
     const generatedLedges = layout.map((ledge) => ({
-      x: start + ledge.offset + Math.round((random() - 0.5) * 54),
+      x: at(ledge.position) + Math.round((random() - 0.5) * Math.min(54, sectionLength * 0.012)),
       y: ledge.y + Math.round((random() - 0.5) * 10),
       w: ledge.w + Math.round((random() - 0.5) * 24),
       h: 18,
@@ -133,30 +144,28 @@ export class PlatformWorld {
 
     const continuousFloor = isFacilityArea || isFinalArea;
     this.platforms.push(
-      { x: start, y: this.groundY, w: continuousFloor ? this.sectionLength : 730, h: floorHeight, kind: "ground" },
+      { x: start, y: this.groundY, w: continuousFloor ? sectionLength : 730, h: floorHeight, kind: "ground" },
       ...(!continuousFloor && isBossArena ? [{ x: start + 730, y: this.groundY, w: 170, h: floorHeight, kind: "ground" }] : []),
-      ...(!continuousFloor ? [{ x: start + 900, y: this.groundY, w: this.sectionLength - 900, h: floorHeight, kind: "ground" }] : []),
+      ...(!continuousFloor ? [{ x: start + 900, y: this.groundY, w: sectionLength - 900, h: floorHeight, kind: "ground" }] : []),
       ...generatedLedges
     );
 
     const chapterEnvironment = LEVELS[levelIndex].environment;
     const reservedCharacterPositions = [
-      ...(CAPTIVE_OFFSETS_BY_SECTION[index] ?? []),
-      ...(VENATOSAURUS_OFFSETS_BY_SECTION[index] ?? []),
-      ...(FOOD_OFFSETS_BY_SECTION[index] ?? []),
-      ...(HUNTER_SPAWNS_BY_SECTION[index] ?? []).map((spawn) => spawn.offset)
-    ].map((offset) => start + offset);
+      ...(CAPTIVE_RATIOS_BY_SECTION[index] ?? []),
+      ...(VENATOSAURUS_RATIOS_BY_SECTION[index] ?? []),
+      ...(FOOD_RATIOS_BY_SECTION[index] ?? []),
+      ...(HUNTER_SPAWNS_BY_SECTION[index] ?? []).map((spawn) => spawn.ratio)
+    ].map(at);
 
-    if (!isBossArena && !isFacilityArea && !isFinalArea) {
-      const occupiedCages = this.ferrucutusCageSpawns.filter((cage) =>
-        cage.x >= start && cage.x < start + this.sectionLength
-      );
-      const candidateOffsets = shuffle([350, 1000, 1550, 2000, 2500, 2900], random);
-      const targetObstacleCount = 3 + Math.floor(random() * 2);
+    if (!isBossArena && !isFacilityArea) {
+      const occupiedCages = this.ferrucutusCageSpawns.filter((cage) => cage.x >= start && cage.x < end);
+      const obstacleRatios = shuffle([0.08, 0.20, 0.32, 0.44, 0.56, 0.68, 0.80, 0.92], random);
+      const targetObstacleCount = 4 + Math.floor(random() * 2);
       let placedObstacles = 0;
-      for (const offset of candidateOffsets) {
+      for (const ratio of obstacleRatios) {
         if (placedObstacles >= targetObstacleCount) break;
-        const obstacleX = start + offset + Math.round((random() - 0.5) * 26);
+        const obstacleX = at(ratio) + Math.round((random() - 0.5) * 24);
         const obstacleType = random() < 0.5 ? "crate" : "rock";
         const width = obstacleType === "crate" ? 52 : 56;
         const height = obstacleType === "crate" ? 52 : 58;
@@ -165,105 +174,91 @@ export class PlatformWorld {
           obstacleX < cage.x + FERRUCUTUS_CAGE_WIDTH + 24 && obstacleX + width > cage.x - 24
         );
         const crowdsCharacter = reservedCharacterPositions.some((position) =>
-          Math.abs(obstacleCenter - position) < 180
+          Math.abs(obstacleCenter - position) < 220
         );
         if (overlapsCage || crowdsCharacter) continue;
-        this.obstacles.push({
-          x: obstacleX, y: this.groundY - height, w: width, h: height,
-          type: obstacleType, passed: false
-        });
+        this.obstacles.push({ x: obstacleX, y: this.groundY - height, w: width, h: height, type: obstacleType, passed: false });
         placedObstacles += 1;
       }
     }
 
-    const patrolRadius = 360;
-    (VENATOSAURUS_OFFSETS_BY_SECTION[index] ?? []).forEach((offset, spawnIndex) => {
-      const x = start + offset + Math.round((random() - 0.5) * 50);
+    const patrolRadius = Math.min(520, Math.max(280, Math.round(sectionLength * 0.055)));
+    (VENATOSAURUS_RATIOS_BY_SECTION[index] ?? []).forEach((ratio, spawnIndex) => {
+      const x = at(ratio) + Math.round((random() - 0.5) * 50);
       this.venatosaurusSpawns.push({
         id: "venatosaurus-" + index + "-" + spawnIndex,
         kind: chapterEnvironment === "wild" ? "venatosaurus-impavidus" : "venatosaurus-saevidicus",
         x,
         patrolStart: Math.max(start + 120, x - patrolRadius),
-        patrolEnd: Math.min(start + this.sectionLength - 40, x + patrolRadius),
+        patrolEnd: Math.min(end - 40, x + patrolRadius),
         direction: random() < 0.5 ? -1 : 1
       });
     });
 
-    (FOOD_OFFSETS_BY_SECTION[index] ?? []).forEach((offset, spawnIndex) => {
-      const x = start + offset + Math.round((random() - 0.5) * 60);
-      this.foodSpawns.push({
-        id: "ligocristus-" + index + "-" + spawnIndex,
-        kind: "ligocristus", x, groundY: this.groundY
-      });
+    (FOOD_RATIOS_BY_SECTION[index] ?? []).forEach((ratio, spawnIndex) => {
+      const x = at(ratio) + Math.round((random() - 0.5) * 60);
+      this.foodSpawns.push({ id: "ligocristus-" + index + "-" + spawnIndex, kind: "ligocristus", x, groundY: this.groundY });
     });
 
     if (index === 0 || index === 1) {
+      const ratio = index === 0 ? 0.66 : 0.55;
       this.brontosaurusSpawns.push({
         id: "brontosaurus-" + index,
-        x: start + (index === 0 ? 1050 : 2050) + Math.round((random() - 0.5) * 90),
+        x: at(ratio) + Math.round((random() - 0.5) * 90),
         groundY: this.groundY, kind: "brontosaurus"
       });
     }
 
+    const hunterPatrolRadius = Math.min(460, Math.max(260, Math.round(sectionLength * 0.055)));
     (HUNTER_SPAWNS_BY_SECTION[index] ?? []).forEach((spawn, spawnIndex) => {
-      const hunterX = start + spawn.offset + Math.round((random() - 0.5) * 30);
+      const hunterX = at(spawn.ratio) + Math.round((random() - 0.5) * 30);
       this.hunterSpawns.push({
         id: "hunter-" + index + "-" + spawnIndex,
         x: hunterX,
-        patrolStart: Math.max(start + 120, hunterX - 240),
-        patrolEnd: Math.min(start + this.sectionLength - 40, hunterX + 240),
+        patrolStart: Math.max(start + 120, hunterX - hunterPatrolRadius),
+        patrolEnd: Math.min(end - 40, hunterX + hunterPatrolRadius),
         carriesCaptive: spawn.carriesCaptive
       });
     });
 
-    if (index === 2) {
-      this.bossSpawns.push({
-        id: "indoraptor-encounter",
-        kind: "indoraptor",
-        x: start + Math.round(this.sectionLength * 0.68)
-      });
-    }
-
-    if (index === 4) {
-      this.bossSpawns.push({
-        id: "indominus-encounter",
-        kind: "indominus",
-        x: start + Math.round(this.sectionLength * 0.68)
-      });
-    }
+    if (index === 2) this.bossSpawns.push({ id: "indoraptor-encounter", kind: "indoraptor", x: at(0.68) });
+    if (index === 4) this.bossSpawns.push({ id: "indominus-encounter", kind: "indominus", x: at(0.68) });
 
     if (isFacilityArea) {
       this.facilitySpawns = {
         consoles: [
-          { id: "aux-power", kind: "power", x: start + 550 },
-          { id: "security-lock", kind: "security", x: start + 1450 }
+          { id: "aux-power", kind: "power", x: at(0.15) },
+          { id: "security-lock", kind: "security", x: at(0.40) }
         ],
-        beta: start + 2300,
-        extraction: start + WORLD.sectionLength * 2 - 300
+        beta: at(0.68),
+        extraction: WORLD.extractionX
       };
       this.facilityProps.push(
-        { x: start + 45, y: 220, w: 270, h: 210, kind: "facility-building" },
-        { x: start + 420, y: 180, w: 410, h: 250, kind: "facility-building" },
-        { x: start + 970, y: 230, w: 340, h: 200, kind: "containment-wing" },
-        { x: start + 1470, y: 245, w: 330, h: 185, kind: "facility-building" },
-        { x: start + 2020, y: 220, w: 360, h: 210, kind: "facility-building" },
-        { x: start + 170, y: 90, w: 28, h: 340, kind: "facility-lamp" },
-        { x: start + 880, y: 80, w: 28, h: 350, kind: "facility-lamp" },
-        { x: start + 1600, y: 80, w: 28, h: 350, kind: "facility-lamp" },
-        { x: start + 2440, y: 80, w: 28, h: 350, kind: "facility-lamp" }
+        { x: at(0.03), y: 220, w: Math.round(sectionLength * 0.11), h: 210, kind: "facility-building" },
+        { x: at(0.20), y: 180, w: Math.round(sectionLength * 0.16), h: 250, kind: "facility-building" },
+        { x: at(0.42), y: 230, w: Math.round(sectionLength * 0.14), h: 200, kind: "containment-wing" },
+        { x: at(0.61), y: 245, w: Math.round(sectionLength * 0.14), h: 185, kind: "facility-building" },
+        { x: at(0.80), y: 220, w: Math.round(sectionLength * 0.13), h: 210, kind: "facility-building" },
+        { x: at(0.06), y: 90, w: 28, h: 340, kind: "facility-lamp" },
+        { x: at(0.26), y: 80, w: 28, h: 350, kind: "facility-lamp" },
+        { x: at(0.52), y: 80, w: 28, h: 350, kind: "facility-lamp" },
+        { x: at(0.77), y: 80, w: 28, h: 350, kind: "facility-lamp" },
+        { x: at(0.94), y: 80, w: 28, h: 350, kind: "facility-lamp" }
       );
     }
+
     if (isFinalArea) {
       this.facilityProps.push(
-        { x: start + 70, y: 220, w: 330, h: 210, kind: "facility-building" },
-        { x: start + 560, y: 180, w: 390, h: 250, kind: "facility-building" },
-        { x: start + 1180, y: 230, w: 330, h: 200, kind: "facility-building" },
-        { x: start + 1860, y: 245, w: 420, h: 185, kind: "facility-building" },
-        { x: start + 140, y: 290, w: this.sectionLength - 320, h: 14, kind: "security-fence" },
-        { x: start + 180, y: 90, w: 28, h: 340, kind: "facility-lamp" },
-        { x: start + 950, y: 80, w: 28, h: 350, kind: "facility-lamp" },
-        { x: start + 1780, y: 80, w: 28, h: 350, kind: "facility-lamp" },
-        { x: start + 2680, y: 80, w: 28, h: 350, kind: "facility-lamp" }
+        { x: at(0.04), y: 220, w: Math.round(sectionLength * 0.15), h: 210, kind: "facility-building" },
+        { x: at(0.24), y: 180, w: Math.round(sectionLength * 0.16), h: 250, kind: "facility-building" },
+        { x: at(0.47), y: 230, w: Math.round(sectionLength * 0.14), h: 200, kind: "facility-building" },
+        { x: at(0.70), y: 245, w: Math.round(sectionLength * 0.16), h: 185, kind: "facility-building" },
+        { x: at(0.04), y: 290, w: Math.round(sectionLength * 0.92), h: 14, kind: "security-fence" },
+        { x: at(0.07), y: 90, w: 28, h: 340, kind: "facility-lamp" },
+        { x: at(0.28), y: 80, w: 28, h: 350, kind: "facility-lamp" },
+        { x: at(0.55), y: 80, w: 28, h: 350, kind: "facility-lamp" },
+        { x: at(0.82), y: 80, w: 28, h: 350, kind: "facility-lamp" },
+        { x: at(0.96), y: 80, w: 28, h: 350, kind: "facility-lamp" }
       );
     }
   }
@@ -272,46 +267,25 @@ export class PlatformWorld {
     for (const platform of this.platforms) {
       if (platform.kind === "ally-bridge") platform.remaining -= delta;
     }
-    this.platforms = this.platforms.filter((platform) =>
-      platform.kind !== "ally-bridge" || platform.remaining > 0
-    );
+    this.platforms = this.platforms.filter((platform) => platform.kind !== "ally-bridge" || platform.remaining > 0);
   }
 
   gapAhead(worldX, maxDistance = 390) {
-    const grounds = this.platforms
-      .filter((platform) => platform.kind === "ground")
-      .sort((a, b) => a.x - b.x);
-    const current = grounds.find((platform) =>
-      platform.x <= worldX && platform.x + platform.w >= worldX
-    );
+    const grounds = this.platforms.filter((platform) => platform.kind === "ground").sort((a,b)=>a.x-b.x);
+    const current = grounds.find((platform) => platform.x <= worldX && platform.x + platform.w >= worldX);
     if (!current) return null;
-
     const next = grounds.find((platform) => platform.x >= current.x + current.w);
     if (!next) return null;
-
-    const start = current.x + current.w;
-    const end = next.x;
-    const width = end - start;
+    const start = current.x + current.w, end = next.x, width = end - start;
     if (start < worldX || start - worldX > maxDistance || width <= 12 || width > 340) return null;
-
     return { start, end, width };
   }
 
   createSupportBridge(start, end, duration = 6.5) {
     const width = end - start;
     if (width <= 12 || width > 340) return null;
-
     const id = "ally-bridge-" + (++this.bridgeSequence);
-    const bridge = {
-      id,
-      x: start,
-      y: this.groundY,
-      w: width,
-      h: 18,
-      kind: "ally-bridge",
-      remaining: duration
-    };
-    this.platforms.push(bridge);
+    this.platforms.push({ id, x: start, y: this.groundY, w: width, h: 18, kind: "ally-bridge", remaining: duration });
     return { id, start, end, duration };
   }
 
@@ -321,12 +295,8 @@ export class PlatformWorld {
 
   pruneBehind(worldX, retain = 1400) {
     const cutoff = worldX - retain;
-    this.platforms = this.platforms.filter((platform) =>
-      platform.x + platform.w >= cutoff
-    );
-    this.obstacles = this.obstacles.filter((obstacle) =>
-      obstacle.x + obstacle.w >= cutoff
-    );
+    this.platforms = this.platforms.filter((platform) => platform.x + platform.w >= cutoff);
+    this.obstacles = this.obstacles.filter((obstacle) => obstacle.x + obstacle.w >= cutoff);
     this.hunterSpawns = this.hunterSpawns.filter((spawn) => spawn.x >= cutoff);
     this.venatosaurusSpawns = this.venatosaurusSpawns.filter((spawn) => spawn.x + 112 >= cutoff);
     this.foodSpawns = this.foodSpawns.filter((spawn) => spawn.x + 120 >= cutoff);
@@ -338,23 +308,14 @@ export class PlatformWorld {
   }
 
   platformsNear(worldX, range = 1200) {
-    return this.platforms.filter((platform) =>
-      platform.x + platform.w >= worldX - 120 &&
-      platform.x <= worldX + range
-    );
+    return this.platforms.filter((platform) => platform.x + platform.w >= worldX - 120 && platform.x <= worldX + range);
   }
 
   visiblePlatforms(cameraX, width) {
-    return this.platforms.filter((platform) =>
-      platform.x + platform.w >= cameraX - 40 &&
-      platform.x <= cameraX + width + 40
-    );
+    return this.platforms.filter((platform) => platform.x + platform.w >= cameraX - 40 && platform.x <= cameraX + width + 40);
   }
 
   visibleObstacles(cameraX, width) {
-    return this.obstacles.filter((obstacle) =>
-      obstacle.x + obstacle.w >= cameraX - 40 &&
-      obstacle.x <= cameraX + width + 40
-    );
+    return this.obstacles.filter((obstacle) => obstacle.x + obstacle.w >= cameraX - 40 && obstacle.x <= cameraX + width + 40);
   }
 }
