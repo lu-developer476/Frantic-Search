@@ -1736,3 +1736,97 @@ html.site-mode-gray .canvas-wrap .hud-strip{
     padding-block:0;
   }
 }
+
+
+/* Remove the mission accent and apply edge-safe typography to selection and narrator panels. */
+.panel-head .mission-brief-header{
+  padding-left:0;
+  border-left:0;
+}
+
+.dino-dialog .character-card{
+  box-sizing:border-box;
+  min-width:0;
+  padding:clamp(12px,1.25vw,16px);
+}
+.dino-dialog .character-number,
+.dino-dialog .character-card small{
+  min-width:0;
+  font-size:var(--operation-hud-font-size);
+  line-height:1.25;
+  letter-spacing:.04em;
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
+.dino-dialog .character-card strong{
+  min-width:0;
+  font-size:clamp(21px,1.9vw,26px);
+  line-height:1.1;
+  overflow-wrap:anywhere;
+}
+.dino-dialog .dialog-back,
+.dino-dialog .dialog-confirm{
+  font-size:var(--operation-hud-font-size);
+  line-height:1.2;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+
+.story-card{
+  box-sizing:border-box;
+  width:min(680px,100%);
+  max-width:100%;
+  max-height:100%;
+  min-width:0;
+  overflow-x:hidden;
+  overflow-y:auto;
+  padding:clamp(18px,3vw,32px);
+}
+.story-kicker,
+.story-narrator,
+.story-actions span{
+  min-width:0;
+  font-size:var(--operation-hud-font-size);
+  line-height:1.3;
+  letter-spacing:.06em;
+  overflow-wrap:anywhere;
+}
+.story-card h2{
+  min-width:0;
+  font-size:clamp(28px,3.6vw,44px);
+  line-height:1.06;
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
+.story-text{
+  min-width:0;
+  font-size:clamp(13px,1vw,15px);
+  line-height:1.65;
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
+.story-actions{
+  min-width:0;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.story-actions button{
+  max-width:100%;
+  font-size:var(--operation-hud-font-size);
+  line-height:1.2;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+@media(max-width:560px){
+  .dino-dialog .character-number,
+  .dino-dialog .character-card small,
+  .dino-dialog .dialog-back,
+  .dino-dialog .dialog-confirm,
+  .story-kicker,
+  .story-narrator,
+  .story-actions span,
+  .story-actions button{
+    font-size:9px;
+  }
+  .story-card{padding:16px}
+}
