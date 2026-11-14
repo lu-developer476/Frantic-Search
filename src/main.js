@@ -957,6 +957,7 @@ function damageVenatosaurus(enemy, amount = 1) {
 
 function damagePlayer() {
   if (!player.takeHit()) return;
+  updatePlayerHealthHud();
   audio.hit();
   burst(player.x + player.w / 2, player.y + player.h / 2, "#ed8e55", 15);
   if (player.health <= 0) endGame();

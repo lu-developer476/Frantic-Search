@@ -9,7 +9,8 @@ export class HunterEnemy {
     this.patrolEnd = patrolEnd;
     this.groundY = groundY;
     this.carriesCaptive = carriesCaptive;
-    this.health = 2;
+    this.maxHealth = 2;
+    this.health = this.maxHealth;
     this.state = "patrol";
     this.stateTimer = 0;
     this.attackCooldown = 0;

@@ -2,6 +2,7 @@ import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.j
 
 export const DINOSAUR_REFERENCE_SCALES = Object.freeze({
   violeta: 1.6,
+  rosa: 1.56,
   vastatosaurusRex: 1.45,
   ligocristusInnocens: 0.9,
   venatosaurusImpavidus: 0.94
@@ -9,8 +10,8 @@ export const DINOSAUR_REFERENCE_SCALES = Object.freeze({
 
 export const REFERENCE_PNG_CHARACTERS = Object.freeze({
   blue: { file: "adult-velociraptor-nublarensis.png", sourceFacing: 1, scale: DINOSAUR_REFERENCE_SCALES.violeta },
-  beta: { file: "juvenile-velociraptor-nublarensis.png", sourceFacing: 1, scale: 1.42 },
-  rosa: { file: "juvenile-velociraptor-nublarensis.png", sourceFacing: 1, scale: 1.42 },
+  beta: { file: "juvenile-velociraptor-nublarensis.png", sourceFacing: 1, scale: DINOSAUR_REFERENCE_SCALES.rosa },
+  rosa: { file: "juvenile-velociraptor-nublarensis.png", sourceFacing: 1, scale: DINOSAUR_REFERENCE_SCALES.rosa },
   vasti: { file: "vastatosaurus-rex.png", sourceFacing: -1, scale: DINOSAUR_REFERENCE_SCALES.vastatosaurusRex },
   ferrucutus: { file: "ferrucutus-cerastes.png", sourceFacing: -1, scale: 1.08 },
   indoraptor: { first: "indoraptor-first-generation.png", second: "indoraptor-second-generation.png", sourceFacing: 1, scale: 1.34 },
@@ -541,7 +542,7 @@ export class SpriteRenderer {
     }
 
     // Keep the juvenile proportions; this visual scale never changes collision geometry.
-    const renderWidth = Math.max(1, Math.round(width * 1.42 * scaleX));
+    const renderWidth = Math.max(1, Math.round(width * DINOSAUR_REFERENCE_SCALES.rosa * scaleX));
     const renderHeight = Math.max(1, Math.round(renderWidth * 61 / 100 * scaleY));
     const dx = Math.round(x + (width - renderWidth) / 2);
     const dy = Math.round(y + height - renderHeight + bob + 2);

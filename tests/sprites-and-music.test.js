@@ -6,6 +6,7 @@ import { AdaptiveMusic } from "../src/audio/AdaptiveMusic.js";
 import { DINOSAUR_REFERENCE_SCALES, REFERENCE_PNG_CHARACTERS, SpriteRenderer } from "../src/rendering/SpriteRenderer.js";
 import { selectActorPose } from "../src/rendering/AnimationProfiles.js";
 import { Player } from "../src/entities/Player.js";
+import { AutonomousCompanion } from "../src/entities/AutonomousCompanion.js";
 
 class FakeNode {
   constructor() {
@@ -89,6 +90,10 @@ test("the requested dinosaur silhouettes use consistent, species-specific visual
   assert.equal(REFERENCE_PNG_CHARACTERS.ligocristus.scale, DINOSAUR_REFERENCE_SCALES.ligocristusInnocens);
   assert.equal(REFERENCE_PNG_CHARACTERS["venatosaurus-impavidus"].scale, DINOSAUR_REFERENCE_SCALES.venatosaurusImpavidus);
 
+  assert.equal(REFERENCE_PNG_CHARACTERS.beta.scale, DINOSAUR_REFERENCE_SCALES.rosa);
+  assert.equal(REFERENCE_PNG_CHARACTERS.rosa.scale, DINOSAUR_REFERENCE_SCALES.rosa);
+  assert.ok(48 * DINOSAUR_REFERENCE_SCALES.rosa > 76 * DINOSAUR_REFERENCE_SCALES.ligocristusInnocens);
+  assert.ok(48 * DINOSAUR_REFERENCE_SCALES.rosa < 64 * DINOSAUR_REFERENCE_SCALES.violeta);
   assert.ok(DINOSAUR_REFERENCE_SCALES.violeta > 1.42);
   assert.ok(DINOSAUR_REFERENCE_SCALES.vastatosaurusRex > 1.18);
   assert.ok(DINOSAUR_REFERENCE_SCALES.ligocristusInnocens < 1.18);
@@ -199,6 +204,29 @@ test("Violeta keeps her double jump and dash, while Vasti keeps stomp and aerial
   assert.equal(airborneVasti.useAbility(), true);
   assert.equal(airborneVasti.animationState, "slam");
   assert.equal(airborneVasti.isSlamming, true);
+});
+
+test("player and autonomous companion expose independent health values", () => {
+  const player = new Player("blue", 100, 430);
+  const companion = new AutonomousCompanion("vasti", 0, 430);
+  assert.equal(player.maxHealth, 3);
+  assert.equal(player.health, player.maxHealth);
+  assert.equal(companion.actor.maxHealth, 3);
+  assert.equal(companion.actor.health, companion.actor.maxHealth);
+  assert.equal(companion.actor.takeHit(), true);
+  assert.equal(companion.actor.health, 2);
+});
+
+test("the player HUD has an accessible health meter and captive labels are removed", () => {
+  const html = readFileSync(resolve("index.html"), "utf8");
+  const main = readFileSync(resolve("src/main.js"), "utf8");
+  assert.match(html, /id="player-health-meter"/);
+  assert.match(html, /id="player-health-fill"/);
+  assert.match(main, /updatePlayerHealthHud\(\)/);
+  assert.match(main, /drawReferenceHealthBar\(actor\)/);
+  assert.doesNotMatch(main, /FERRUCUTUS \/\/ CONFINED/);
+  assert.doesNotMatch(main, /CAPTIVE FREE/);
+  assert.match(main, /spriteW: 76, spriteH: 54/);
 });
 
 test("character picker uses repository PNGs and poachers retain a Canvas fallback", () => {
