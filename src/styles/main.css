@@ -1555,3 +1555,56 @@ html.site-mode-gray .canvas-wrap .hud-strip{
   .canvas-wrap .hud-status-stack .ability-readout,
   .canvas-wrap .hud-status-stack .stegoceratops-readout{font-size:7px}
 }
+
+
+/* Compact the lower control strip so more of the game canvas stays visible. */
+.canvas-wrap .hud-strip>div.hud-summary{
+  gap:clamp(4px,.65vw,9px) clamp(8px,1.1vw,16px);
+  padding:clamp(4px,.42vw,6px) clamp(10px,1.35vw,20px);
+}
+.canvas-wrap .hud-summary .ability-readout,
+.canvas-wrap .hud-summary .stegoceratops-readout,
+.canvas-wrap .hud-summary .interaction-readout{
+  font-size:clamp(8px,.68vw,10px);
+  line-height:1.15;
+}
+.canvas-wrap .hud-summary .hud-controls{
+  font-size:clamp(8px,.66vw,10px);
+  line-height:1.2;
+  white-space:nowrap;
+}
+@media(max-width:900px){
+  .canvas-wrap .hud-strip>div.hud-summary{
+    gap:4px 8px;
+    padding:5px 10px;
+  }
+  .canvas-wrap .hud-summary .hud-controls{
+    white-space:normal;
+    line-height:1.15;
+  }
+}
+@media(max-width:560px){
+  .canvas-wrap .hud-strip>div.hud-summary{
+    gap:4px 7px;
+    padding:4px 8px;
+  }
+  .canvas-wrap .hud-summary .ability-readout,
+  .canvas-wrap .hud-summary .stegoceratops-readout,
+  .canvas-wrap .hud-summary .interaction-readout,
+  .canvas-wrap .hud-summary .hud-controls{
+    font-size:8px;
+  }
+}
+@media(max-height:720px) and (min-width:1024px) and (hover:hover) and (pointer:fine){
+  .canvas-wrap .hud-strip>div.hud-summary{
+    gap:4px 10px;
+    padding:4px 10px;
+  }
+  .canvas-wrap .hud-summary .ability-readout,
+  .canvas-wrap .hud-summary .stegoceratops-readout,
+  .canvas-wrap .hud-summary .interaction-readout,
+  .canvas-wrap .hud-summary .hud-controls{
+    font-size:8px;
+    line-height:1.15;
+  }
+}
