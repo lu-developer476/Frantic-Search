@@ -3,9 +3,13 @@ export class WildDinosaur {
     this.id = id;
     this.kind = kind;
     this.x = x;
-    this.y = groundY - 92;
     this.w = 112;
     this.h = 92;
+    this.baseY = groundY - this.h;
+    this.y = this.baseY;
+    this.vy = 0;
+    this.onGround = true;
+    this.jumpCooldown = 0.55 + (String(id).length % 4) * 0.2;
     this.groundY = groundY;
     this.patrolStart = patrolStart;
     this.patrolEnd = patrolEnd;
@@ -22,6 +26,7 @@ export class WildDinosaur {
 
   update(delta, targets = []) {
     if (this.defeated) return null;
+    this.updateJump(delta);
     this.attackCooldown = Math.max(0, this.attackCooldown - delta);
     this.stateTimer = Math.max(0, this.stateTimer - delta);
     const ownCenter = this.x + this.w / 2;
@@ -51,6 +56,7 @@ export class WildDinosaur {
     }
     if (this.state === "attack") {
       this.x += this.direction * 115 * delta;
+      this.jump();
       if (this.stateTimer <= 0) this.state = "pursuit";
       return null;
     }
@@ -59,6 +65,7 @@ export class WildDinosaur {
       if (target.distance > 82) {
         this.state = "pursuit";
         this.x += this.direction * 104 * delta;
+        this.jump();
       } else if (this.attackCooldown <= 0) {
         this.state = "windup";
         this.stateTimer = 0.38;
@@ -71,7 +78,29 @@ export class WildDinosaur {
       this.direction *= -1;
       this.x = Math.max(this.patrolStart, Math.min(this.patrolEnd - this.w, this.x));
     }
+    this.jump();
     return null;
+  }
+
+  jump() {
+    if (!this.onGround || this.jumpCooldown > 0) return false;
+    this.vy = -390;
+    this.onGround = false;
+    this.jumpCooldown = 1.7;
+    return true;
+  }
+
+  updateJump(delta) {
+    this.jumpCooldown = Math.max(0, this.jumpCooldown - delta);
+    if (this.onGround) return;
+
+    this.vy += 1500 * delta;
+    this.y += this.vy * delta;
+    if (this.y >= this.baseY) {
+      this.y = this.baseY;
+      this.vy = 0;
+      this.onGround = true;
+    }
   }
 
   takeDamage(amount = 1) {

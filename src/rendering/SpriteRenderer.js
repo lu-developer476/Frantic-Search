@@ -18,7 +18,7 @@ export const REFERENCE_PNG_CHARACTERS = Object.freeze({
   indominus: { first: "indominus-rex-first-generation.png", second: "indominus-rex-second-generation.png", sourceFacing: -1, scale: 1.18 },
   "indominus-variant": { file: "indominus-rex-second-generation-variant.png", sourceFacing: -1, scale: 1.18 },
   brontosaurus: { file: "brontosaurus-excelsus-basteri.png", sourceFacing: -1, scale: 1.18 },
-  ligocristus: { file: "ligocristus-innocens.png", sourceFacing: 1, scale: DINOSAUR_REFERENCE_SCALES.ligocristusInnocens },
+  ligocristus: { file: "ligocristus-innocens.png", sourceFacing: -1, scale: DINOSAUR_REFERENCE_SCALES.ligocristusInnocens },
   stegoceratops: { file: "stegoceratops.png", sourceFacing: -1, scale: 1.18 },
   "venatosaurus-impavidus": { file: "venatosaurus-impavidus.png", sourceFacing: -1, scale: DINOSAUR_REFERENCE_SCALES.venatosaurusImpavidus },
   "venatosaurus-saevidicus": { file: "venatosaurus-saevidicus.png", sourceFacing: 1, scale: 1.18 }
@@ -305,7 +305,9 @@ export class SpriteRenderer {
     const bounds = this.referenceBounds.get(definition.file);
     if (!image?.complete || image.naturalWidth === 0 || !bounds) return false;
 
-    const pose = poseOverride ?? selectActorPose(character, actor, elapsed);
+    const pose = poseOverride ?? (actor?.onGround === false
+      ? character + "-jump"
+      : selectActorPose(character, actor, elapsed));
     const phase = phaseOf(actor, character);
     const pace = character === "vasti" ? 5.4 : character === "indominus" ? 4.4 : 8.5;
     const gait = Math.sin(elapsed * pace * Math.PI + phase);

@@ -4,9 +4,13 @@ export class LigocristusPrey {
     this.kind = "ligocristus";
     this.character = "ligocristus";
     this.x = x;
-    this.y = groundY - 54;
     this.w = 76;
     this.h = 54;
+    this.baseY = groundY - this.h;
+    this.y = this.baseY;
+    this.vy = 0;
+    this.onGround = true;
+    this.jumpCooldown = 0.55 + (String(id).length % 4) * 0.2;
     this.groundY = groundY;
     this.patrolStart = patrolStart;
     this.patrolEnd = patrolEnd;
@@ -20,6 +24,7 @@ export class LigocristusPrey {
 
   update(delta, threats = []) {
     if (this.consumed || delta <= 0) return;
+    this.updateJump(delta);
     this.stateTimer = Math.max(0, this.stateTimer - delta);
     const ownCenter = this.x + this.w / 2;
     const nearestThreat = threats
@@ -54,6 +59,28 @@ export class LigocristusPrey {
     }
     this.facing = this.direction;
     this.motionSpeed = (this.x - previousX) / delta;
+    if (this.state === "fleeing") this.jump();
+  }
+
+  jump() {
+    if (!this.onGround || this.jumpCooldown > 0) return false;
+    this.vy = -330;
+    this.onGround = false;
+    this.jumpCooldown = 1.65;
+    return true;
+  }
+
+  updateJump(delta) {
+    this.jumpCooldown = Math.max(0, this.jumpCooldown - delta);
+    if (this.onGround) return;
+
+    this.vy += 1400 * delta;
+    this.y += this.vy * delta;
+    if (this.y >= this.baseY) {
+      this.y = this.baseY;
+      this.vy = 0;
+      this.onGround = true;
+    }
   }
 
   consume() {
