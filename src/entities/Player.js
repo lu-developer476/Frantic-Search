@@ -13,7 +13,7 @@ export class Player {
     this.jumpCount = 0;
     this.coyoteTimer = 0;
     this.invulnerable = 0;
-    this.maxHealth = 3;
+    this.maxHealth = 5;
     this.health = this.maxHealth;
     this.dashTimer = 0;
     this.abilityCooldown = 0;

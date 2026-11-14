@@ -202,10 +202,14 @@ export class PlatformWorld {
 
     if (index === 0 || index === 1) {
       const ratio = index === 0 ? 0.66 : 0.55;
+      const brontosaurusX = at(ratio) + Math.round((random() - 0.5) * 90);
       this.brontosaurusSpawns.push({
         id: "brontosaurus-" + index,
-        x: at(ratio) + Math.round((random() - 0.5) * 90),
-        groundY: this.groundY, kind: "brontosaurus"
+        x: brontosaurusX,
+        patrolStart: Math.max(start + 100, brontosaurusX - 430),
+        patrolEnd: Math.min(end - 80, brontosaurusX + 650),
+        groundY: this.groundY,
+        kind: "brontosaurus"
       });
     }
 
@@ -279,6 +283,38 @@ export class PlatformWorld {
     const start = current.x + current.w, end = next.x, width = end - start;
     if (start < worldX || start - worldX > maxDistance || width <= 12 || width > 340) return null;
     return { start, end, width };
+  }
+
+  gapBehind(worldX, maxDistance = 390) {
+    const grounds = this.platforms.filter((platform) => platform.kind === "ground").sort((a, b) => a.x - b.x);
+    const current = grounds.find((platform) => platform.x <= worldX && platform.x + platform.w >= worldX);
+    if (!current) return null;
+    const previous = grounds.filter((platform) => platform.x + platform.w <= current.x).at(-1);
+    if (!previous) return null;
+    const start = previous.x + previous.w;
+    const end = current.x;
+    const width = end - start;
+    const distance = worldX - end;
+    if (distance < 0 || distance > maxDistance || width <= 12 || width > 340) return null;
+    return { start, end, width };
+  }
+
+  hasGroundSupportAt(worldX, groundY = this.groundY, includeBridges = true) {
+    return this.platforms.some((platform) =>
+      (platform.kind === "ground" || (includeBridges && platform.kind === "ally-bridge")) &&
+      worldX >= platform.x && worldX <= platform.x + platform.w &&
+      Math.abs(platform.y - groundY) <= 16
+    );
+  }
+
+  resolveGroundPitfall(entity, groundY = this.groundY) {
+    if (!entity || entity.defeated || Math.abs(entity.y + entity.h - groundY) > 18) return false;
+    if (this.hasGroundSupportAt(entity.x + entity.w / 2, groundY, true)) return false;
+    entity.defeated = true;
+    entity.fellIntoPit = true;
+    entity.state = "defeated";
+    entity.motionSpeed = 0;
+    return true;
   }
 
   createSupportBridge(start, end, duration = 6.5) {

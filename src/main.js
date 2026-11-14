@@ -11,6 +11,7 @@ import { Player } from "./entities/Player.js";
 import { AutonomousCompanion } from "./entities/AutonomousCompanion.js";
 import { HunterEnemy } from "./entities/HunterEnemy.js";
 import { WildDinosaur } from "./entities/WildDinosaur.js";
+import { LigocristusPrey, Brontosaurus } from "./entities/LigocristusPrey.js";
 import { FerrucutusAlly } from "./entities/FerrucutusAlly.js";
 import { FerrucutusCaptive } from "./entities/FerrucutusCaptive.js";
 import { IndoraptorBoss } from "./entities/IndoraptorBoss.js";
@@ -768,13 +769,23 @@ function syncEncounters() {
   for (const spawn of world.foodSpawns) {
     if (seenFoodSpawns.has(spawn.id)) continue;
     seenFoodSpawns.add(spawn.id);
-    foodSources.push({ ...spawn, y: GAME.groundY - 82, w: 112, h: 82, spriteW: 76, spriteH: 54, consumed: false });
+    foodSources.push(new LigocristusPrey({
+      ...spawn,
+      groundY: spawn.groundY ?? GAME.groundY,
+      patrolStart: spawn.x - 125,
+      patrolEnd: spawn.x + 165
+    }));
   }
 
   for (const spawn of world.brontosaurusSpawns) {
     if (seenBrontosaurusSpawns.has(spawn.id)) continue;
     seenBrontosaurusSpawns.add(spawn.id);
-    wildlife.push({ ...spawn, y: GAME.groundY - 178, w: 300, h: 178, facing: 1 });
+    wildlife.push(new Brontosaurus({
+      ...spawn,
+      groundY: spawn.groundY ?? GAME.groundY,
+      patrolStart: spawn.patrolStart ?? spawn.x - 430,
+      patrolEnd: spawn.patrolEnd ?? spawn.x + 650
+    }));
   }
 }
 
@@ -813,8 +824,9 @@ function tryEatFood(actor, radius = 150) {
       Math.abs((item.y + item.h) - (actor.y + actor.h)) < 125)
     .sort((a, b) => Math.abs(a.x - actor.x) - Math.abs(b.x - actor.x))[0];
   if (!source) return false;
+  source.consume?.();
   source.consumed = true;
-  actor.health = Math.min(actor.maxHealth ?? 3, actor.health + 1);
+  actor.health = Math.min(actor.maxHealth ?? 5, actor.health + 1);
   actor.feedingTimer = 0.75;
   burst(source.x + source.w / 2, source.y + source.h / 2, "#9bd48a", 14);
   audio.collect();
@@ -984,6 +996,13 @@ function registerHunterResult(hunter, result) {
     audio.hit();
     burst(hunter.x + hunter.w / 2, hunter.y + hunter.h / 2, "#e8a77d", 9);
   }
+}
+
+function resolveEnemyPitfall(enemy) {
+  if (!world.resolveGroundPitfall(enemy, GAME.groundY)) return false;
+  beginEnemyFade(enemy);
+  burst(enemy.x + enemy.w / 2, GAME.groundY - 10, "#87966f", 14);
+  return true;
 }
 
 function damageHunter(hunter, amount, source) {
@@ -1425,6 +1444,7 @@ function update(delta) {
   for (const hunter of hunters) {
     const previousState = hunter.state;
     hunter.update(delta, player);
+    if (resolveEnemyPitfall(hunter)) continue;
     if (previousState !== hunter.state && (hunter.state === "investigate" || hunter.state === "windup")) audio.collect();
 
     if (
@@ -1452,6 +1472,7 @@ function update(delta) {
       ...venatosauruses.filter((other) => other !== enemy && !other.defeated).map((other) => ({ target: other, kind: "venatosaurus" }))
     ];
     const event = enemy.update(delta, targets);
+    if (resolveEnemyPitfall(enemy)) continue;
     if (event?.type === "attack") {
       if (event.target === player) { damagePlayer(); if (player.health <= 0) return; }
       else if (venatosauruses.includes(event.target)) damageVenatosaurus(event.target, 1);
@@ -1463,6 +1484,14 @@ function update(delta) {
       dashHitIds.add(enemy.id);
     }
   }
+
+  const preyThreats = [
+    player,
+    ...autonomousCompanions.map((companion) => companion.actor),
+    ...venatosauruses.filter((enemy) => !enemy.defeated)
+  ];
+  for (const source of foodSources) source.update?.(delta, preyThreats);
+  for (const animal of wildlife) animal.update(delta, venatosauruses);
 
   for (const companion of autonomousCompanions) {
     tryEatFood(companion.actor);
@@ -1619,7 +1648,7 @@ function render() {
         ctx, "ligocristus",
         food.x + (food.w - spriteW) / 2,
         food.y + food.h - spriteH,
-        spriteW, spriteH, food, elapsed, { facing: -1 }
+        spriteW, spriteH, food, elapsed, { facing: food.direction ?? -1 }
       );
     } else {
       ctx.fillStyle = food.kind === "hunter" ? "#6b6250" : "#485b45";

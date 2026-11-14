@@ -4,6 +4,7 @@ export class AutonomousCompanion {
   constructor(character, x, groundY, slot = 0) {
     this.character = character;
     this.actor = new Player(character, x, groundY);
+    this.lastSafePosition = { x: this.actor.x, y: this.actor.y };
     this.slot = slot;
     this.attackCooldown = 0;
     this.abilityCooldown = 0;
@@ -53,9 +54,18 @@ export class AutonomousCompanion {
       item.x < actor.x + (direction > 0 ? actor.w + 112 : 36) &&
       item.y + item.h > actor.y + 12
     );
-    const gap = world.gapAhead(actor.x + actor.w * (direction > 0 ? 1 : 0), 190);
+    const gap = direction > 0
+      ? world.gapAhead(actor.x, 300)
+      : world.gapBehind(actor.x + actor.w, 300);
+    const gapDistance = gap
+      ? direction > 0 ? gap.start - actor.x : actor.x + actor.w - gap.end
+      : Infinity;
+    // Jump near the lip so the short jump has enough horizontal travel to clear the pit.
+    const gapNeedsJump = Boolean(gap && gap.width <= 340 && gapDistance <= 58 && gapDistance >= -12);
     const leaderAbove = leader.y + leader.h < actor.y + actor.h - 38 && Math.abs(leader.x - actor.x) < 210;
-    if (actor.onGround && (obstacle || (gap && Math.abs(gap.start - actor.x) < 135) || leaderAbove)) {
+    const obstacleNeedsJump = obstacle && (!gap || gapDistance > 180);
+    const leaderNeedsJump = leaderAbove && (!gap || gapDistance > 240);
+    if (actor.onGround && (gapNeedsJump || obstacleNeedsJump || leaderNeedsJump)) {
       this.input.actions.add("jump");
     }
 
@@ -80,11 +90,21 @@ export class AutonomousCompanion {
     actor.update(delta, this.input);
     const result = physics.step(actor, delta, world.platformsNear(actor.x));
     if (result.fell) {
-      actor.x = Math.max(0, formationX);
-      actor.y = actor.groundY - actor.h;
+      const safe = this.lastSafePosition ?? { x: Math.max(0, formationX), y: world.groundY - actor.h };
+      actor.x = Math.max(0, safe.x);
+      actor.y = Number.isFinite(safe.y) ? safe.y : world.groundY - actor.h;
       actor.vx = 0;
       actor.vy = 0;
       actor.onGround = true;
+      actor.jumpCount = 0;
+      actor.coyoteTimer = 0;
+      actor.animationState = null;
+      actor.animationTimer = 0;
+      actor.invulnerable = Math.max(actor.invulnerable, 0.65);
+      this.lastSafePosition = { x: actor.x, y: actor.y };
+    }
+    if (actor.onGround && world.hasGroundSupportAt(actor.x + actor.w / 2, world.groundY, false)) {
+      this.lastSafePosition = { x: actor.x, y: actor.y };
     }
     actor.motionSpeed = actor.vx;
 
