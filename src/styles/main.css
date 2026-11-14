@@ -2427,3 +2427,45 @@ html.site-mode-gray .story-card .story-actions span{
   .character-confirmation-card .dialog-actions{gap:8px}
   .character-confirmation-card .dialog-actions button{padding:9px 8px;font-size:9px}
 }
+
+
+/* Character selection copy uses regular weight; no decorative numeric prefixes. */
+.dino-dialog .character-info .character-name,
+.dino-dialog .character-info .character-species,
+.dino-dialog .character-info small,
+.character-confirmation-choice .character-name,
+.character-confirmation-choice .character-species,
+.character-confirmation-choice small{
+  font-weight:400 !important;
+}
+.dino-dialog .character-info .character-name{
+  font-size:clamp(17px,1.7vw,23px);
+  line-height:1.15;
+  letter-spacing:.08em;
+}
+.dino-dialog .character-info .character-species{
+  font-family:"Courier New",monospace;
+  font-size:clamp(8px,.72vw,10px);
+  line-height:1.35;
+}
+.dino-dialog .character-info small{
+  font-size:clamp(7px,.66vw,9px);
+  line-height:1.4;
+}
+
+/* HUD status copy is contiguous: exactly one spaced vertical separator. */
+.canvas-wrap .hud-strip .hud-status-stack{
+  gap:0 !important;
+  column-gap:0 !important;
+}
+.canvas-wrap .hud-strip .hud-status-stack .stegoceratops-readout::before{
+  content:" | ";
+  display:inline;
+  margin:0;
+  color:#b9c9bf;
+}
+@media(max-width:900px){
+  .canvas-wrap .hud-strip .hud-status-stack{
+    gap:0 !important;
+  }
+}
