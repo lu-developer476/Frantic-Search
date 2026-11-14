@@ -44,7 +44,8 @@ test("X is labelled as dash and HABILIDAD remains reserved for the Stegoceratops
   assert.match(i18n, /abilityReady: "HABILIDAD LISTA"/);
   assert.match(i18n, /abilityReady: "ABILITY READY"/);
   assert.match(html, /id="ability-status"[^>]*data-i18n="dashReady">EMBESTIDA LISTA/);
-  assert.match(html, /id="stegoceratops-status"[^>]*STEGOCERATOPS \\[C\\] \/\/ HABILIDAD LISTA/);
+  assert.ok(html.includes('id="stegoceratops-status" class="stegoceratops-readout">STEGOCERATOPS [C] // HABILIDAD LISTA'));
   assert.match(main, /abilityLabel\.textContent = ready \? ui\("dashReady"\)/);
-  assert.match(main, /stegoceratopsStatusLabel\.textContent = "STEGOCERATOPS \\[C\\] \/\/"[\s\S]*?ui\("abilityReady"\)/);
+  assert.ok(main.includes('stegoceratopsStatusLabel.textContent = "STEGOCERATOPS [C] //" +'));
+  assert.match(main, /stegoceratopsStatusLabel\.textContent[\s\S]*?ui\("abilityReady"\)/);
 });
