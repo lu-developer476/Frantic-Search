@@ -2059,3 +2059,177 @@ html.site-mode-beige .story-card .story-actions span,
 html.site-mode-gray .story-card .story-actions span{
   color:#ffe36b;
 }
+
+
+/* Pause screen: centered in the playable canvas with a clear action hierarchy. */
+.canvas-wrap .game-overlay.pause-mode{
+  z-index:20;
+  display:grid;
+  place-items:center;
+  padding:clamp(16px,4vw,48px);
+  box-sizing:border-box;
+  background:rgba(5,14,23,.9);
+  opacity:1;
+  pointer-events:auto;
+  backdrop-filter:blur(5px);
+}
+.canvas-wrap .game-overlay.pause-mode .overlay-content{
+  display:none !important;
+}
+.pause-menu,
+.pause-confirmation{
+  display:grid;
+  place-items:center;
+  width:100%;
+  min-width:0;
+}
+.pause-menu.hidden,
+.pause-confirmation.hidden{
+  display:none !important;
+}
+.pause-menu{
+  gap:clamp(22px,4vh,38px);
+  max-width:620px;
+  margin:auto;
+  text-align:center;
+}
+.pause-menu h2{
+  margin:0;
+  color:#ffe36b;
+  font-family:"Courier New",monospace;
+  font-size:clamp(34px,5.2vw,66px);
+  font-weight:900;
+  line-height:1.05;
+  letter-spacing:.025em;
+  text-align:center;
+  text-shadow:4px 4px 0 #102334,7px 7px 0 #07131d;
+}
+.pause-actions{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:12px;
+  width:min(340px,100%);
+  margin:0 auto;
+}
+.pause-action{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  min-height:48px;
+  padding:12px 20px;
+  border:2px solid #f1cd62;
+  border-radius:0;
+  background:#19384c;
+  color:#fff3c5;
+  font-family:"Courier New",monospace;
+  font-size:clamp(12px,1vw,14px);
+  font-weight:900;
+  line-height:1.2;
+  letter-spacing:.08em;
+  text-align:center;
+  cursor:pointer;
+  box-shadow:4px 4px 0 #081722;
+  transition:background .16s ease,transform .16s ease,box-shadow .16s ease;
+}
+.pause-action.primary{
+  border-color:#ffe36b;
+  background:#f5d45f;
+  color:#183040;
+}
+.pause-action.secondary{
+  border-color:#637f83;
+  background:#24495a;
+}
+.pause-action:hover{
+  transform:translate(-1px,-1px);
+  box-shadow:5px 5px 0 #081722;
+  filter:brightness(1.08);
+}
+.pause-action:focus-visible{
+  outline:3px solid #fff3c5;
+  outline-offset:4px;
+}
+.pause-confirmation{
+  position:absolute;
+  inset:0;
+  z-index:4;
+  padding:clamp(16px,4vw,48px);
+  box-sizing:border-box;
+  background:rgba(3,10,17,.86);
+  backdrop-filter:blur(7px);
+}
+.pause-confirmation-card{
+  display:grid;
+  justify-items:center;
+  gap:clamp(12px,2vh,20px);
+  width:min(500px,100%);
+  padding:clamp(22px,3.5vw,38px);
+  border:3px solid #f1cd62;
+  background:#19384c;
+  color:#fff3c5;
+  box-shadow:7px 7px 0 #081722;
+  text-align:center;
+}
+.pause-confirmation-card h3{
+  margin:0;
+  color:#ffe36b;
+  font-family:"Courier New",monospace;
+  font-size:clamp(22px,3vw,34px);
+  font-weight:900;
+  line-height:1.15;
+  text-shadow:3px 3px 0 #0b1b27;
+}
+.pause-confirmation-card p{
+  max-width:42ch;
+  margin:0;
+  color:#fff3c5;
+  font-family:"Courier New",monospace;
+  font-size:clamp(12px,1vw,14px);
+  font-weight:600;
+  line-height:1.55;
+}
+.pause-confirmation-actions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  width:100%;
+  margin-top:6px;
+}
+@media(max-width:560px){
+  .canvas-wrap .game-overlay.pause-mode{
+    padding:14px;
+  }
+  .pause-menu{
+    gap:22px;
+  }
+  .pause-menu h2{
+    font-size:clamp(28px,8vw,42px);
+  }
+  .pause-actions{
+    width:min(300px,100%);
+    gap:9px;
+  }
+  .pause-action{
+    min-height:44px;
+    padding:10px 12px;
+    font-size:11px;
+  }
+  .pause-confirmation{
+    padding:14px;
+  }
+  .pause-confirmation-card{
+    padding:18px 14px;
+  }
+  .pause-confirmation-actions{
+    grid-template-columns:minmax(0,1fr);
+  }
+}
+
+/* Lower HUD labels and controls use regular weight, not bold. */
+.canvas-wrap .hud-strip .hud-status-stack .ability-readout,
+.canvas-wrap .hud-strip .hud-status-stack .stegoceratops-readout,
+.canvas-wrap .hud-strip .hud-status-stack .interaction-readout,
+.canvas-wrap .hud-strip .hud-summary .hud-controls{
+  font-weight:400 !important;
+}
