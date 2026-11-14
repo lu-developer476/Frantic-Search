@@ -67,6 +67,11 @@
           
           <div class="canvas-wrap">
             <canvas id="game" width="960" height="540" aria-label="Juego de plataformas Frantic Search"></canvas>
+            <section class="mission-banner" role="status" aria-label="Informe de misión">
+              <span class="mission-banner-kicker" data-i18n="missionBrief">INFORME DE MISIÓN</span>
+              <small id="campaign-chapter">COASTAL HIGHWAY</small>
+              <strong id="campaign-objective">FOLLOW THE CONVOY</strong>
+            </section>
             <div id="overlay" class="game-overlay hidden" aria-live="polite">
               <div class="overlay-content">
                 <span class="overlay-kicker">FRANTIC SEARCH // OPERATION 01</span>
@@ -123,15 +128,11 @@
             </section>
                     <div class="hud-strip" role="region" aria-label="Estado de la operación">
             <div class="hud-summary">
-              <div class="objective">
-                <small id="campaign-chapter">COASTAL HIGHWAY</small>
-                <b id="campaign-objective">FOLLOW THE CONVOY</b>
-              </div>
               <div class="hud-status-stack">
                 <small id="ability-status" class="ability-readout" data-i18n="dashReady">EMBESTIDA LISTA</small>
                 <small id="stegoceratops-status" class="stegoceratops-readout">STEGOCERATOPS [C] // HABILIDAD LISTA</small>
+                <small id="interaction-hint" class="interaction-readout"></small>
               </div>
-              <small id="interaction-hint" class="interaction-readout"></small>
               <p class="hud-controls" data-i18n="controls">A / D MOVER · ESPACIO / ↑ SALTAR · X HABILIDAD · C STEGOCERATOPS · E INTERACTUAR · P PAUSAR</p>
             </div>
           </div>
