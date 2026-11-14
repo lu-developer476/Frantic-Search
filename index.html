@@ -78,6 +78,24 @@
                 <p class="overlay-message"></p>
                 <button id="overlay-action-button" type="button" hidden><span data-i18n="continue">CONTINUAR</span></button>
               </div>
+              <section id="pause-menu" class="pause-menu hidden" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+                <h2 id="pause-title" data-i18n="operationPaused">OPERACIÓN EN PAUSA</h2>
+                <div class="pause-actions">
+                  <button id="pause-continue" class="pause-action primary" type="button" data-i18n="continue">CONTINUAR</button>
+                  <button id="pause-restart" class="pause-action" type="button" data-i18n="restart">REINICIAR</button>
+                  <button id="pause-exit" class="pause-action secondary" type="button" data-i18n="exit">SALIR</button>
+                </div>
+              </section>
+              <section id="pause-confirmation" class="pause-confirmation hidden" role="dialog" aria-modal="true" aria-labelledby="pause-confirmation-title" aria-describedby="pause-confirmation-message">
+                <div class="pause-confirmation-card">
+                  <h3 id="pause-confirmation-title">¿REINICIAR LA OPERACIÓN?</h3>
+                  <p id="pause-confirmation-message"></p>
+                  <div class="pause-confirmation-actions">
+                    <button id="confirm-pause-action" class="pause-action primary" type="button" data-i18n="confirm">CONFIRMAR</button>
+                    <button id="cancel-pause-action" class="pause-action secondary" type="button" data-i18n="cancel">CANCELAR</button>
+                  </div>
+                </div>
+              </section>
             </div>
             <section id="start-screen" class="start-screen" aria-label="PANTALLA DE INICIO" data-i18n-aria="startScreen">
               <div class="start-screen-copy">
