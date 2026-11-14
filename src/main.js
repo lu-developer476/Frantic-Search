@@ -47,7 +47,6 @@ const rescuesLabel = document.querySelector("#rescues");
 const bestLabel = document.querySelector("#best");
 const playerHealthMeter = document.querySelector("#player-health-meter");
 const playerHealthFill = document.querySelector("#player-health-fill");
-const playerHealthValue = document.querySelector("#player-health-value");
 const abilityLabel = document.querySelector("#ability-status");
 const campaignObjectiveLabel = document.querySelector("#campaign-objective");
 const campaignChapterLabel = document.querySelector("#campaign-chapter");
@@ -788,15 +787,13 @@ function syncFacility() {
 }
 
 function updatePlayerHealthHud() {
-  if (!playerHealthMeter || !playerHealthFill || !playerHealthValue) return;
+  if (!playerHealthMeter || !playerHealthFill) return;
   const maxHealth = Math.max(1, player.maxHealth ?? 3);
   const health = Math.max(0, Math.min(maxHealth, player.health ?? 0));
   const ratio = health / maxHealth;
   playerHealthFill.style.width = (ratio * 100) + "%";
   playerHealthMeter.setAttribute("aria-valuemax", String(maxHealth));
   playerHealthMeter.setAttribute("aria-valuenow", String(health));
-  playerHealthMeter.setAttribute("aria-valuetext", health + "/" + maxHealth);
-  playerHealthValue.textContent = health + "/" + maxHealth;
 }
 
 function tryEatFood(actor, radius = 150) {
@@ -1432,8 +1429,7 @@ function update(delta) {
 
     if (
       !hunter.defeated &&
-      (CollisionSystem.hunterAttackHit(player, hunter) ||
-        ((hunter.state === "pursuit" || hunter.state === "attack") && CollisionSystem.bodyHit(player, hunter)))
+      CollisionSystem.hunterAttackHit(player, hunter)
     ) {
       damagePlayer();
       if (player.health <= 0) return;
