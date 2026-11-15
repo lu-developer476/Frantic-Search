@@ -1168,7 +1168,59 @@ function advanceStory() {
 
 function interactWithFacility() {
   if (!freeRoamMode) {
-    const captive = ferrucutusCaptives.find((entry) => entry.canInteract(player));  }
+  const captive = ferrucutusCaptives.find((entry) => entry.canInteract(player));
+  if (captive && captive.rescue(player)) {
+    rescuedFerrucutusCageIds.add(captive.id);
+    ferrucutusCaptives = ferrucutusCaptives.filter((entry) => entry !== captive);
+    rescues += 1;
+    allies.push(new FerrucutusAlly({
+      id: "rescued-" + captive.id,
+      x: captive.x + 18,
+      groundY: GAME.groundY
+    }));
+    audio.rescue();
+    burst(captive.x + captive.w / 2, captive.y + captive.h / 2, "#d8f36a", 26);
+    updateCampaignHud();
+    return true;
+  }
+
+  for (const terminal of facilityConsoles) {
+    if (!terminal.canInteract(player)) continue;
+    if (terminal.kind === "security" && !campaign.flags.powerRestored) {
+      campaign.queueScene("security-terminal-locked", "SECURITY TERMINAL LOCKED", [
+        "The security terminal has no auxiliary power. The power relay must be activated first."
+      ]);
+      renderStoryPanel();
+      return true;
+    }
+    if (campaign.activateConsole(terminal.kind)) {
+      terminal.activate();
+      audio.rescue();
+      renderStoryPanel();
+      updateCampaignHud();
+      return true;
+    }
+  }
+
+  if (beta && beta.state === "confined" &&
+      Math.abs((player.x + player.w / 2) - (beta.x + beta.w / 2)) < 112) {
+    if (!campaign.canFreeBeta()) {
+      campaign.queueScene("beta-cell-locked-hint", "CELL BLOCK C", [
+        "Rosa's cell remains sealed. Auxiliary power must be restored and the security lock disengaged before she can be freed."
+      ]);
+      renderStoryPanel();
+      return true;
+    }
+    if (beta.rescue() && campaign.freeBeta()) {
+      rescues += 1;
+      audio.rescue();
+      burst(beta.x + beta.w / 2, beta.y + beta.h / 2, "#d8f36a", 28);
+      renderStoryPanel();
+      updateCampaignHud();
+      return true;
+    }
+  }
+  }
   const food = foodSources.find((item) => !item.consumed &&
     Math.abs(item.x + item.w / 2 - (player.x + player.w / 2)) < 145 &&
     Math.abs((item.y + item.h) - (player.y + player.h)) < 125);
