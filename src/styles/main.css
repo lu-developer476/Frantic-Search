@@ -2699,8 +2699,12 @@ html.site-mode-gray .story-card .story-actions span{
 }
 .start-screen-copy .start-menu-view #empty-stomach-button,
 .start-screen-copy .start-menu-view #time-attack-button,
-.start-screen-copy .start-menu-view #survival-button{
+.start-screen-copy .start-menu-view #survival-button,
+.start-screen-copy .start-menu-view #continue-campaign-button{
   display:flex;width:100%;min-width:0;min-height:48px;margin:0;
+}
+.start-screen-copy .start-menu-view #continue-campaign-button{
+  padding:13px 15px;
 }
 @media(min-width:768px) and (max-width:1023px){
   .start-screen{grid-template-columns:minmax(0,1fr) minmax(110px,.42fr);gap:12px;padding:18px}

@@ -113,26 +113,31 @@
               <div class="start-screen-copy">
                 <p id="start-screen-message" hidden></p>
                 <div id="start-menu-home" class="start-screen-actions">
-                  <button id="continue-campaign-button" type="button" hidden>
-                    <span data-i18n="continueCampaign">CONTINUAR CAMPAÑA</span>
-                    
-                  </button>
                   <button id="start-button" type="button" aria-expanded="false" aria-controls="start-menu-options">
                     <span data-i18n="play">INICIAR</span>
                     
                   </button>
-                  <button id="delete-campaign-save-button" type="button" hidden data-i18n="deleteCampaignSave">
-                    BORRAR PARTIDA GUARDADA
-                  </button>
                 </div>
                 <div id="start-menu-options" class="start-menu-view" hidden aria-label="Opciones de inicio">
-                  <button id="campaign-button" class="menu-primary" type="button">
+                  <button id="campaign-button" class="menu-primary" type="button" aria-expanded="false" aria-controls="campaign-menu">
                     <span data-i18n="campaign">CAMPAÑA</span>
                   </button>
                   <button id="minigames-button" type="button" aria-expanded="false" aria-controls="minigames-menu">
                     <span data-i18n="minigames">MINIJUEGOS</span>
                   </button>
                   <button id="start-menu-back-button" class="menu-back" type="button" data-i18n="back">VOLVER</button>
+                </div>
+                <div id="campaign-menu" class="start-menu-view" hidden aria-label="Campaña" data-i18n-aria="campaign">
+                  <button id="continue-campaign-button" class="menu-primary" type="button" hidden>
+                    <span data-i18n="continueCampaign">CONTINUAR CAMPAÑA</span>
+                  </button>
+                  <button id="new-campaign-button" type="button">
+                    <span data-i18n="newCampaign">NUEVA CAMPAÑA</span>
+                  </button>
+                  <button id="delete-campaign-save-button" type="button" hidden data-i18n="deleteCampaignSave">
+                    BORRAR PARTIDA GUARDADA
+                  </button>
+                  <button id="campaign-back-button" class="menu-back" type="button" data-i18n="back">VOLVER</button>
                 </div>
                 <div id="minigames-menu" class="start-menu-view" hidden aria-label="Minijuegos">
                   <button id="empty-stomach-button" type="button" data-i18n="emptyStomach">EMPTY STOMACH</button>

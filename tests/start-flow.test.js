@@ -71,3 +71,29 @@ test("chapter arrival dialogue opens automatically at the level boundary", async
   assert.equal(LEVELS[1].distance, 6055);
   assert.equal(GAME.playerX + LEVELS[1].distance, 6200);
 });
+
+
+test("campaign actions are grouped under the campaign menu", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
+  const i18n = await readFile(new URL("../src/i18n.js", import.meta.url), "utf8");
+
+  const homeStart = html.indexOf('<div id="start-menu-home"');
+  const optionsStart = html.indexOf('<div id="start-menu-options"');
+  const campaignStart = html.indexOf('<div id="campaign-menu"');
+  const campaignEnd = html.indexOf("</div>", campaignStart);
+  const homeMenu = html.slice(homeStart, optionsStart);
+  const campaignMenu = html.slice(campaignStart, campaignEnd);
+
+  assert.ok(campaignStart > optionsStart, "campaign submenu must follow the main options");
+  assert.ok(!homeMenu.includes('id="continue-campaign-button"'), "continue action must not remain on the home screen");
+  assert.ok(!homeMenu.includes('id="delete-campaign-save-button"'), "save management must stay inside the campaign menu");
+  assert.ok(campaignMenu.includes('id="continue-campaign-button"'));
+  assert.ok(campaignMenu.includes('id="new-campaign-button"'));
+  assert.ok(campaignMenu.includes('id="delete-campaign-save-button"'));
+
+  assert.ok(main.includes('campaignButton.addEventListener("click", () => showStartMenuPage("campaign"))'));
+  assert.ok(main.includes('newCampaignButton.addEventListener("click", () => openDinoModal("start", "campaign"))'));
+  assert.match(i18n, /newCampaign:\s*"NUEVA CAMPAÑA"/);
+  assert.match(i18n, /newCampaign:\s*"NEW CAMPAIGN"/);
+});

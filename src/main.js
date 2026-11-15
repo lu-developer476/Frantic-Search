@@ -58,8 +58,11 @@ const startScreenMessage = document.querySelector("#start-screen-message");
 const startButton = document.querySelector("#start-button");
 const startMenuHome = document.querySelector("#start-menu-home");
 const startMenuOptions = document.querySelector("#start-menu-options");
+const campaignMenu = document.querySelector("#campaign-menu");
 const minigamesMenu = document.querySelector("#minigames-menu");
 const campaignButton = document.querySelector("#campaign-button");
+const newCampaignButton = document.querySelector("#new-campaign-button");
+const campaignBackButton = document.querySelector("#campaign-back-button");
 const minigamesButton = document.querySelector("#minigames-button");
 const startMenuBackButton = document.querySelector("#start-menu-back-button");
 const minigamesBackButton = document.querySelector("#minigames-back-button");
@@ -2652,7 +2655,12 @@ pauseConfirmation.addEventListener("click", (event) => {
   if (event.target === pauseConfirmation) closePauseConfirmation();
 });
 startButton.addEventListener("click", () => showStartMenuPage("options"));
-campaignButton.addEventListener("click", () => openDinoModal("start", "campaign"));
+campaignButton.addEventListener("click", () => showStartMenuPage("campaign"));
+newCampaignButton.addEventListener("click", () => openDinoModal("start", "campaign"));
+campaignBackButton.addEventListener("click", () => {
+  showStartMenuPage("options");
+  campaignButton.focus();
+});
 minigamesButton.addEventListener("click", () => showStartMenuPage("minigames"));
 startMenuBackButton.addEventListener("click", () => {
   showStartMenuPage("home");
@@ -2734,7 +2742,7 @@ function closeDinoModal() {
   characterConfirmation.classList.add("hidden");
   if (selectionReturn === "start") {
     showStartMenuPage(selectionMenuPage);
-    (selectionMenuPage === "options" ? campaignButton : selectionMenuPage === "minigames" ? minigamesButton : startButton).focus();
+    (selectionMenuPage === "campaign" ? newCampaignButton : selectionMenuPage === "options" ? campaignButton : selectionMenuPage === "minigames" ? minigamesButton : startButton).focus();
   } else {
     overlay.classList.remove("hidden");
     overlayActionButton.focus();
@@ -2763,12 +2771,14 @@ function startFromDinoModal() {
 }
 
 function showStartMenuPage(page = "home") {
-  const nextPage = ["home", "options", "minigames"].includes(page) ? page : "home";
+  const nextPage = ["home", "options", "campaign", "minigames"].includes(page) ? page : "home";
   activeStartMenuPage = nextPage;
   startMenuHome.hidden = nextPage !== "home";
   startMenuOptions.hidden = nextPage !== "options";
+  campaignMenu.hidden = nextPage !== "campaign";
   minigamesMenu.hidden = nextPage !== "minigames";
   startButton.setAttribute("aria-expanded", String(nextPage !== "home"));
+  campaignButton.setAttribute("aria-expanded", String(nextPage === "campaign"));
   minigamesButton.setAttribute("aria-expanded", String(nextPage === "minigames"));
   startScreen.classList.remove("hidden");
 }
