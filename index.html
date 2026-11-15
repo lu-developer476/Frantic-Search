@@ -112,21 +112,36 @@
             <section id="start-screen" class="start-screen" aria-label="PANTALLA DE INICIO" data-i18n-aria="startScreen">
               <div class="start-screen-copy">
                 <p id="start-screen-message" hidden></p>
-                <div class="start-screen-actions">
+                <div id="start-menu-home" class="start-screen-actions">
                   <button id="continue-campaign-button" type="button" hidden>
                     <span data-i18n="continueCampaign">CONTINUAR CAMPAÑA</span>
                     <b aria-hidden="true">↗</b>
                   </button>
-                  <button id="start-button" type="button">
+                  <button id="start-button" type="button" aria-expanded="false" aria-controls="start-menu-options">
                     <span data-i18n="play">INICIAR</span>
                     <b aria-hidden="true">↗</b>
                   </button>
-                  <button id="empty-stomach-button" type="button" data-i18n="emptyStomach">EMPTY STOMACH</button>
-                  <button id="time-attack-button" type="button"><span data-i18n="timeAttack">TIME ATTACK</span><b aria-hidden="true">↗</b></button>
-                  <button id="survival-button" type="button"><span data-i18n="survival">SURVIVAL</span><b aria-hidden="true">↗</b></button>
                   <button id="delete-campaign-save-button" type="button" hidden data-i18n="deleteCampaignSave">
                     BORRAR PARTIDA GUARDADA
                   </button>
+                </div>
+                <div id="start-menu-options" class="start-menu-view" hidden aria-label="Opciones de inicio">
+                  <button id="campaign-button" class="menu-primary" type="button">
+                    <span data-i18n="campaign">CAMPAÑA</span><b aria-hidden="true">↗</b>
+                  </button>
+                  <button id="minigames-button" type="button" aria-expanded="false" aria-controls="minigames-menu">
+                    <span data-i18n="minigames">MINIJUEGOS</span><b aria-hidden="true">↗</b>
+                  </button>
+                  <button id="start-menu-back-button" class="menu-back" type="button" data-i18n="back">VOLVER</button>
+                </div>
+                <div id="minigames-menu" class="start-menu-view" hidden aria-label="Minijuegos">
+                  <button id="empty-stomach-button" type="button" data-i18n="emptyStomach">EMPTY STOMACH</button>
+                  <button id="time-attack-button" type="button"><span data-i18n="timeAttack">TIME ATTACK</span><b aria-hidden="true">↗</b></button>
+                  <button id="survival-button" type="button"><span data-i18n="survival">SURVIVAL</span><b aria-hidden="true">↗</b></button>
+                  <button id="free-roam-button" type="button">
+                    <span data-i18n="freeRoam">RECORRIDO LIBRE</span><b aria-hidden="true">↗</b>
+                  </button>
+                  <button id="minigames-back-button" class="menu-back" type="button" data-i18n="back">VOLVER</button>
                 </div>
               </div>
               <div class="start-screen-visual" aria-hidden="true">

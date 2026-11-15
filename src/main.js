@@ -35,7 +35,7 @@ import { TimeAttack } from "./minigames/TimeAttack.js";
 import { Survival } from "./minigames/Survival.js";
 
 const canvas = document.querySelector("#game");
-const desktopPlayback = window.matchMedia("(min-width: 1024px) and (hover: hover) and (pointer: fine)");
+const desktopPlayback = window.matchMedia("(min-width: 768px) and (hover: hover) and (pointer: fine)");
 // Render directly to the native 960×540 game canvas. The old 320×180
 // intermediate buffer discarded most sprite detail before it was enlarged again.
 const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
@@ -55,6 +55,14 @@ const overlay = document.querySelector("#overlay");
 const startScreen = document.querySelector("#start-screen");
 const startScreenMessage = document.querySelector("#start-screen-message");
 const startButton = document.querySelector("#start-button");
+const startMenuHome = document.querySelector("#start-menu-home");
+const startMenuOptions = document.querySelector("#start-menu-options");
+const minigamesMenu = document.querySelector("#minigames-menu");
+const campaignButton = document.querySelector("#campaign-button");
+const minigamesButton = document.querySelector("#minigames-button");
+const startMenuBackButton = document.querySelector("#start-menu-back-button");
+const minigamesBackButton = document.querySelector("#minigames-back-button");
+const freeRoamButton = document.querySelector("#free-roam-button");
 const emptyStomachButton = document.querySelector("#empty-stomach-button");
 const emptyStomachPanel = document.querySelector("#empty-stomach-panel");
 const timeAttackButton = document.querySelector("#time-attack-button");
@@ -110,6 +118,9 @@ const confirmCharacterButton = document.querySelector("#confirm-character");
 const playCharacterButton = document.querySelector("#play-character");
 const backCharacterConfirmationButton = document.querySelector("#back-character-confirmation");
 let selectionReturn = "start";
+let activeStartMenuPage = "home";
+let selectionMenuPage = "home";
+let pendingGameMode = "campaign";
 const menuToggle = document.querySelector("#menu-toggle");
 const navMenu = document.querySelector("#nav-menu");
 const soundIcon = document.querySelector("#sound-icon");
@@ -117,13 +128,13 @@ const soundLabel = document.querySelector("#sound-label");
 
 const save = new SaveManager();
 const emptyStomach = new EmptyStomach(emptyStomachPanel, () => {
-  if (!running && !desktopBlocked) startScreen.classList.remove("hidden");
+  if (!running && !desktopBlocked) showStartMenuPage("minigames");
 });
 const timeAttack = new TimeAttack(timeAttackPanel, () => {
-  if (!running && !desktopBlocked) startScreen.classList.remove("hidden");
+  if (!running && !desktopBlocked) showStartMenuPage("minigames");
 }, spriteRenderer);
 const survival = new Survival(survivalPanel, () => {
-  if (!running && !desktopBlocked) startScreen.classList.remove("hidden");
+  if (!running && !desktopBlocked) showStartMenuPage("minigames");
 }, spriteRenderer);
 const audio = new AudioManager();
 const music = new AdaptiveMusic();
@@ -141,6 +152,7 @@ let selected = savedCharacter === "vasti" ? "vasti" : "blue";
 if (savedCharacter !== selected) save.update({ selectedCharacter: selected });
 let running = false;
 let paused = false;
+let freeRoamMode = false;
 let last = 0;
 let accumulator = 0;
 let frameRequestId = null;
@@ -1096,11 +1108,17 @@ function drawPickupNotice(){
 }
 
 function updateCampaignHud() {
-  if(campaignObjectiveLabel)campaignObjectiveLabel.textContent=tr(campaign.objective);
-  if(campaignChapterLabel)campaignChapterLabel.textContent=tr(campaign.chapter);
-  if(secondaryObjectivesLabel)secondaryObjectivesLabel.textContent=ui("fieldSamples")+" "+collectedCount("amber")+"/"+COLLECTIBLE_TOTALS.amber+
-    " · "+ui("intelFiles")+" "+collectedCount("intel")+"/"+COLLECTIBLE_TOTALS.intel;
-  if(rescuesLabel)rescuesLabel.textContent=String(rescues).padStart(2,"0");
+  if (freeRoamMode) {
+    if (campaignObjectiveLabel) campaignObjectiveLabel.textContent = ui("freeRoamObjective");
+    if (campaignChapterLabel) campaignChapterLabel.textContent = ui("freeRoam");
+    if (secondaryObjectivesLabel) secondaryObjectivesLabel.textContent = ui("freeRoamHint");
+  } else {
+    if (campaignObjectiveLabel) campaignObjectiveLabel.textContent = tr(campaign.objective);
+    if (campaignChapterLabel) campaignChapterLabel.textContent = tr(campaign.chapter);
+    if (secondaryObjectivesLabel) secondaryObjectivesLabel.textContent = ui("fieldSamples") + " " + collectedCount("amber") + "/" + COLLECTIBLE_TOTALS.amber +
+      " · " + ui("intelFiles") + " " + collectedCount("intel") + "/" + COLLECTIBLE_TOTALS.intel;
+  }
+  if (rescuesLabel) rescuesLabel.textContent = String(rescues).padStart(2, "0");
 }
 
 function renderStoryPanel({ syncAudio = true } = {}) {
@@ -1149,58 +1167,8 @@ function advanceStory() {
 }
 
 function interactWithFacility() {
-  const captive = ferrucutusCaptives.find((entry) => entry.canInteract(player));
-  if (captive && captive.rescue(player)) {
-    rescuedFerrucutusCageIds.add(captive.id);
-    ferrucutusCaptives = ferrucutusCaptives.filter((entry) => entry !== captive);
-    rescues += 1;
-    allies.push(new FerrucutusAlly({
-      id: "rescued-" + captive.id,
-      x: captive.x + 18,
-      groundY: GAME.groundY
-    }));
-    audio.rescue();
-    burst(captive.x + captive.w / 2, captive.y + captive.h / 2, "#d8f36a", 26);
-    updateCampaignHud();
-    return true;
-  }
-
-  for (const terminal of facilityConsoles) {
-    if (!terminal.canInteract(player)) continue;
-    if (terminal.kind === "security" && !campaign.flags.powerRestored) {
-      campaign.queueScene("security-terminal-locked", "SECURITY TERMINAL LOCKED", [
-        "The security terminal has no auxiliary power. The power relay must be activated first."
-      ]);
-      renderStoryPanel();
-      return true;
-    }
-    if (campaign.activateConsole(terminal.kind)) {
-      terminal.activate();
-      audio.rescue();
-      renderStoryPanel();
-      updateCampaignHud();
-      return true;
-    }
-  }
-
-  if (beta && beta.state === "confined" &&
-      Math.abs((player.x + player.w / 2) - (beta.x + beta.w / 2)) < 112) {
-    if (!campaign.canFreeBeta()) {
-      campaign.queueScene("beta-cell-locked-hint", "CELL BLOCK C", [
-        "Rosa's cell remains sealed. Auxiliary power must be restored and the security lock disengaged before she can be freed."
-      ]);
-      renderStoryPanel();
-      return true;
-    }
-    if (beta.rescue() && campaign.freeBeta()) {
-      rescues += 1;
-      audio.rescue();
-      burst(beta.x + beta.w / 2, beta.y + beta.h / 2, "#d8f36a", 28);
-      renderStoryPanel();
-      updateCampaignHud();
-      return true;
-    }
-  }
+  if (!freeRoamMode) {
+    const captive = ferrucutusCaptives.find((entry) => entry.canInteract(player));  }
   const food = foodSources.find((item) => !item.consumed &&
     Math.abs(item.x + item.w / 2 - (player.x + player.w / 2)) < 145 &&
     Math.abs((item.y + item.h) - (player.y + player.h)) < 125);
@@ -1475,9 +1443,11 @@ function damageBoss(boss, amount, source) {
     bossCueTitle = boss.title || (boss.kind === "indoraptor" ? "INDORAPTOR DEFEATED" : "INDOMINUS DEFEATED");
     bossCueTimer = 2.4;
     audio.bossDefeat();
-    campaign.onBossDefeated(boss.kind, boss.id);
+    if (!freeRoamMode) {
+      campaign.onBossDefeated(boss.kind, boss.id);
+      renderStoryPanel();
+    }
     updateCampaignHud();
-    renderStoryPanel();
     activeBoss = null;
   }
 }
@@ -1587,7 +1557,7 @@ function updateStegoceratops(delta) {
 }
 
 function update(delta) {
-  if (!running || paused || campaign.sceneOpen) return;
+  if (!running || paused || (!freeRoamMode && campaign.sceneOpen)) return;
   elapsed += delta;
   bossCueTimer = Math.max(0, bossCueTimer - delta);
   pickupCueTimer = Math.max(0, pickupCueTimer - delta);
@@ -1658,9 +1628,9 @@ function update(delta) {
   syncBossEncounter();
   syncFacility();
   music.setTheme(currentMusicTheme());
-  campaign.updateLocation(player.x);
+  if (!freeRoamMode) campaign.updateLocation(player.x);
   updateCampaignHud();
-  if (campaign.sceneOpen) return;
+  if (!freeRoamMode && campaign.sceneOpen) return;
   if (input.consume("interact")) {
     interactWithFacility();
     if (campaign.sceneOpen) return;
@@ -2019,6 +1989,7 @@ function currentCampaignLevelIndex() {
 function captureRestartSnapshot(levelIndex, distanceValue = distance) {
   return {
     schemaVersion: 1,
+    freeRoamMode,
     selectedCharacter: selected,
     levelIndex,
     distance: Math.max(0, Math.round(distanceValue)),
@@ -2046,7 +2017,7 @@ function refreshContinueCampaignButton() {
   continueCampaignButton.disabled = !desktopPlayback.matches;
 }
 function persistCampaignProgressSnapshot(snapshot) {
-  if (!snapshot || campaign.flags.completed) return false;
+  if (freeRoamMode || !snapshot || campaign.flags.completed) return false;
   const saved = save.saveCampaignProgress({
     snapshot,
     levelStartSnapshot: levelStartSnapshot ?? snapshot,
@@ -2061,6 +2032,7 @@ function persistCampaignProgressSnapshot(snapshot) {
 function saveCurrentCampaignSafely({ allowNarration = false } = {}) {
   if (
     !running ||
+    freeRoamMode ||
     campaign.flags.completed ||
     !player.onGround ||
     activeBoss ||
@@ -2074,6 +2046,7 @@ function saveCurrentCampaignSafely({ allowNarration = false } = {}) {
 function updateCampaignAutosave(delta) {
   if (
     !running ||
+    freeRoamMode ||
     campaign.flags.completed ||
     campaign.sceneOpen ||
     activeBoss ||
@@ -2091,12 +2064,13 @@ function updateCampaignAutosave(delta) {
   persistCampaignProgressSnapshot(captureRestartSnapshot(currentCampaignLevelIndex()));
 }
 function saveLevelEntrySnapshot(levelIndex) {
+  if (freeRoamMode) return;
   levelStartSnapshot = captureRestartSnapshot(levelIndex, LEVELS[levelIndex].distance);
   latestLevelCheckpoint = levelStartSnapshot;
   persistCampaignProgressSnapshot(levelStartSnapshot);
 }
 function updateLevelCheckpoint() {
-  if (!running || campaign.sceneOpen || campaign.flags.completed || !player.onGround) return;
+  if (!running || freeRoamMode || campaign.sceneOpen || campaign.flags.completed || !player.onGround) return;
   const levelIndex = currentCampaignLevelIndex();
   if (!canActivateLevelCheckpoint(levelIndex, campaign.flags)) return;
   const checkpointDistance = getLevelCheckpointDistance(levelIndex, { levels: LEVELS, world: WORLD, game: GAME });
@@ -2108,6 +2082,7 @@ function updateLevelCheckpoint() {
 }
 function restoreRestartSnapshot(snapshot, savedProgress = null) {
   if (!snapshot || !desktopPlayback.matches) return false;
+  freeRoamMode = Boolean(snapshot.freeRoamMode);
   if (snapshot.selectedCharacter === "blue" || snapshot.selectedCharacter === "vasti") {
     selected = snapshot.selectedCharacter;
     save.update({ selectedCharacter: selected });
@@ -2305,8 +2280,9 @@ function resetPlayer(worldSeed = undefined) {
   particles = [];
 }
 
-function start() {
+function start(mode = "campaign") {
   if (!desktopPlayback.matches) return;
+  freeRoamMode = mode === "free-roam";
   cancelScheduledFrame();
   audio.unlock();
   startScreen.classList.add("hidden");
@@ -2337,11 +2313,16 @@ function start() {
   campaignAutosaveElapsed = 0;
   stateLabel.textContent = ui("inProgress");
   rescuesLabel.textContent = "00";
-  campaign.begin();
+  if (!freeRoamMode) {
+    campaign.begin();
+    levelStartSnapshot = captureRestartSnapshot(0, 0);
+    latestLevelCheckpoint = levelStartSnapshot;
+    persistCampaignProgressSnapshot(levelStartSnapshot);
+  } else {
+    levelStartSnapshot = null;
+    latestLevelCheckpoint = null;
+  }
   updateCampaignHud();
-  levelStartSnapshot = captureRestartSnapshot(0, 0);
-  latestLevelCheckpoint = levelStartSnapshot;
-  persistCampaignProgressSnapshot(levelStartSnapshot);
   renderStoryPanel();
   last = performance.now();
   render();
@@ -2441,6 +2422,9 @@ function returnToMainMenu() {
   storyPanel.classList.add("hidden");
   startScreenMessage.textContent = "";
   startScreenMessage.hidden = true;
+  freeRoamMode = false;
+  pendingGameMode = "campaign";
+  showStartMenuPage("home");
   startButton.hidden = false;
   startButton.disabled = !desktopPlayback.matches;
   refreshContinueCampaignButton();
@@ -2458,7 +2442,7 @@ function confirmPendingPauseAction() {
   if (!action || !paused) return;
   closePauseConfirmation(false);
   if (action === "restart") {
-    start();
+    start(freeRoamMode ? "free-roam" : "campaign");
     return;
   }
   if (action === "exit") returnToMainMenu();
@@ -2521,7 +2505,21 @@ cancelPauseActionButton.addEventListener("click", () => closePauseConfirmation()
 pauseConfirmation.addEventListener("click", (event) => {
   if (event.target === pauseConfirmation) closePauseConfirmation();
 });
-startButton.addEventListener("click", () => openDinoModal("start"));
+startButton.addEventListener("click", () => showStartMenuPage("options"));
+campaignButton.addEventListener("click", () => openDinoModal("start", "campaign"));
+minigamesButton.addEventListener("click", () => showStartMenuPage("minigames"));
+startMenuBackButton.addEventListener("click", () => {
+  showStartMenuPage("home");
+  startButton.focus();
+});
+minigamesBackButton.addEventListener("click", () => {
+  showStartMenuPage("options");
+  minigamesButton.focus();
+});
+freeRoamButton.addEventListener("click", () => {
+  if (!desktopPlayback.matches || desktopBlocked) return;
+  openDinoModal("start", "free-roam");
+});
 emptyStomachButton.addEventListener("click", () => {
   if (!desktopPlayback.matches || desktopBlocked) return;
   startScreen.classList.add("hidden");
@@ -2573,9 +2571,11 @@ deleteCampaignSaveButton.addEventListener("click", () => {
   refreshContinueCampaignButton();
 });
 
-function openDinoModal(returnTo = "start") {
+function openDinoModal(returnTo = "start", gameMode = "campaign") {
   if (!desktopPlayback.matches || running || desktopBlocked) return;
   selectionReturn = returnTo;
+  pendingGameMode = gameMode;
+  selectionMenuPage = activeStartMenuPage;
   characterConfirmation.classList.add("hidden");
   if (returnTo === "start") startScreen.classList.add("hidden");
   selectCharacter(selected);
@@ -2587,8 +2587,8 @@ function closeDinoModal() {
   dinoModal.classList.add("hidden");
   characterConfirmation.classList.add("hidden");
   if (selectionReturn === "start") {
-    startScreen.classList.remove("hidden");
-    startButton.focus();
+    showStartMenuPage(selectionMenuPage);
+    (selectionMenuPage === "options" ? campaignButton : selectionMenuPage === "minigames" ? minigamesButton : startButton).focus();
   } else {
     overlay.classList.remove("hidden");
     overlayActionButton.focus();
@@ -2613,7 +2613,18 @@ function startFromDinoModal() {
   if (!dinoModal.classList.contains("hidden") || characterConfirmation.classList.contains("hidden") || !desktopPlayback.matches) return;
   characterConfirmation.classList.add("hidden");
   dinoModal.classList.add("hidden");
-  start();
+  start(pendingGameMode);
+}
+
+function showStartMenuPage(page = "home") {
+  const nextPage = ["home", "options", "minigames"].includes(page) ? page : "home";
+  activeStartMenuPage = nextPage;
+  startMenuHome.hidden = nextPage !== "home";
+  startMenuOptions.hidden = nextPage !== "options";
+  minigamesMenu.hidden = nextPage !== "minigames";
+  startButton.setAttribute("aria-expanded", String(nextPage !== "home"));
+  minigamesButton.setAttribute("aria-expanded", String(nextPage === "minigames"));
+  startScreen.classList.remove("hidden");
 }
 
 function setMenuOpen(open) {
@@ -2739,13 +2750,23 @@ window.addEventListener("keydown", (event) => {
     else if (!characterConfirmation.classList.contains("hidden")) returnToCharacterSelection();
     else if (!dinoModal.classList.contains("hidden")) closeDinoModal();
     else if (!navMenu.classList.contains("hidden")) setMenuOpen(false);
+    else if (activeStartMenuPage === "minigames") {
+      showStartMenuPage("options");
+      minigamesButton.focus();
+    } else if (activeStartMenuPage === "options") {
+      showStartMenuPage("home");
+      startButton.focus();
+    }
     return;
   }
   if (event.code === "Enter" && event.target instanceof Element && event.target.closest("button, a, input, select, textarea, [role='button']")) return;
   if (event.code === "KeyP" && !event.repeat && !campaign.sceneOpen && pauseConfirmation.classList.contains("hidden")) togglePause();
   if (event.code === "Enter" && !event.repeat && campaign.sceneOpen) advanceStory();
   else if (event.code === "Enter" && !event.repeat && !running && !paused && !desktopBlocked && dinoModal.classList.contains("hidden") && navMenu.classList.contains("hidden")) {
-    openDinoModal(overlay.classList.contains("hidden") ? "start" : "overlay");
+    if (!overlay.classList.contains("hidden")) openDinoModal("overlay");
+    else if (activeStartMenuPage === "home") showStartMenuPage("options");
+    else if (activeStartMenuPage === "options") openDinoModal("start", "campaign");
+    else minigamesButton.focus();
   }
 });
 
