@@ -153,6 +153,7 @@ export class EmptyStomach {
     this.root.classList.remove("paused");
     this.pauseOverlay.hidden = true;
     this.controlsStrip.hidden = true;
+    this.root.querySelector("[data-empty-title]").textContent = this.text("HAMBRE INSACIABLE", "EMPTY STOMACH");
     this.root.querySelector("[data-empty-subtitle]").hidden = false;
     this.root.querySelector("[data-empty-instructions]").hidden = false;
     this.updatePauseButton();
@@ -294,7 +295,7 @@ export class EmptyStomach {
       );
       prey.animationState = threatened ? "perturbed" : "running";
       prey.x -= (speed * 0.72) * delta;
-      prey.y = FLOOR - prey.h + Math.sin(this.elapsed * 7 + prey.phase) * 2;
+      prey.y = FLOOR - prey.h;
     }
     this.herd = this.herd.filter((prey) => prey.beingEaten || prey.x > -140);
 
@@ -387,6 +388,7 @@ export class EmptyStomach {
     const score = scoreForDistance(this.distance);
     this.best = Math.max(this.best, score);
     try { localStorage.setItem("frantic-empty-stomach-best", String(this.best)); } catch {}
+    this.root.querySelector("[data-empty-title]").textContent = this.text("PARTIDA FINALIZADA", "GAME OVER");
     this.root.querySelector("[data-empty-subtitle]").hidden = true;
     this.root.querySelector("[data-empty-instructions]").hidden = true;
     this.root.querySelector("[data-empty-result]").textContent = this.text("CORAL FUE DEVORADA", "CORAL WAS EATEN");
@@ -414,10 +416,14 @@ export class EmptyStomach {
     const animation = this.animations[key];
     if (animation?.frames.length) {
       const index = getAnimatedFrameIndex(animation.frames, animationTime);
+      const frame = animation.frames[index];
+      const bottomPadding = key.startsWith("parasaur")
+        ? frame.bottomPadding ?? animation.bottomPadding
+        : animation.bottomPadding;
       const drawY = key === "coral" || key.startsWith("parasaur")
-        ? getGroundAlignedY(y, h, animation.height, animation.bottomPadding)
+        ? getGroundAlignedY(y, h, animation.height, bottomPadding)
         : y;
-      this.ctx.drawImage(animation.frames[index].image, x, drawY, w, h);
+      this.ctx.drawImage(frame.image, x, drawY, w, h);
     } else {
       this.ctx.fillStyle = fallback;
       this.ctx.fillRect(x + 10, y + 20, w - 20, h - 24);

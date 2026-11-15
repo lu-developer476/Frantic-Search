@@ -89,6 +89,7 @@ test("Empty Stomach removes the Coral survival caption and keeps the death resul
 
 test("Empty Stomach hides intro description and controls after death, then restores them on retry", () => {
   const nodes = {
+    "[data-empty-title]": { hidden: false, textContent: "HAMBRE INSACIABLE" },
     "[data-empty-subtitle]": { hidden: false },
     "[data-empty-instructions]": { hidden: false },
     "[data-empty-result]": { hidden: true, textContent: "" },
@@ -123,6 +124,7 @@ test("Empty Stomach hides intro description and controls after death, then resto
 
   simulation.finish();
 
+  assert.equal(nodes["[data-empty-title]"].textContent, "PARTIDA FINALIZADA");
   assert.equal(nodes["[data-empty-subtitle]"].hidden, true);
   assert.equal(nodes["[data-empty-instructions]"].hidden, true);
   assert.equal(nodes["[data-empty-result]"].textContent, "CORAL FUE DEVORADA");
@@ -131,6 +133,7 @@ test("Empty Stomach hides intro description and controls after death, then resto
 
   simulation.reset();
 
+  assert.equal(nodes["[data-empty-title]"].textContent, "HAMBRE INSACIABLE");
   assert.equal(nodes["[data-empty-subtitle]"].hidden, false);
   assert.equal(nodes["[data-empty-instructions]"].hidden, false);
 });
@@ -311,27 +314,57 @@ test("Empty Stomach ends the run when Coral collides with a departing predator",
 });
 
 
-test("Empty Stomach aligns Parasaurolophus GIFs with the floor without changing their frame size", () => {
-  const frame = { id: "parasaur-frame" };
+test("Empty Stomach grounds every Parasaurolophus animation frame independently", () => {
+  const frames = [
+    { image: { id: "raised-feet" }, delay: 100, bottomPadding: 25 },
+    { image: { id: "lowered-feet" }, delay: 100, bottomPadding: 10 }
+  ];
   const drawCalls = [];
   const simulation = Object.create(EmptyStomach.prototype);
   Object.assign(simulation, {
     elapsed: 0,
-    animations: {
-      parasaurRun: {
-        height: 100,
-        bottomPadding: 25,
-        frames: [{ image: frame, delay: 100 }]
-      }
-    },
+    animations: Object.fromEntries(
+      ["parasaurRun", "parasaurIdle", "parasaurPerturbed"].map((key) => [
+        key,
+        { height: 100, bottomPadding: 0, frames }
+      ])
+    ),
     ctx: {
       drawImage(...args) { drawCalls.push(args); }
     }
   });
 
-  simulation.drawSprite("parasaurRun", 10, 366, 100, 72, "#8e9b72");
+  for (const key of ["parasaurRun", "parasaurIdle", "parasaurPerturbed"]) {
+    simulation.drawSprite(key, 10, 366, 100, 72, "#8e9b72", 0);
+    simulation.drawSprite(key, 10, 366, 100, 72, "#8e9b72", 100);
+  }
 
-  assert.deepEqual(drawCalls, [[frame, 10, 384, 100, 72]]);
+  for (let index = 0; index < drawCalls.length; index += 2) {
+    const [firstImage, firstX, firstY, firstWidth, firstHeight] = drawCalls[index];
+    const [secondImage, secondX, secondY, secondWidth, secondHeight] = drawCalls[index + 1];
+    assert.equal(firstImage.id, "raised-feet");
+    assert.equal(secondImage.id, "lowered-feet");
+    assert.equal(firstX, 10);
+    assert.equal(secondX, 10);
+    const firstBottomPadding = frames[0].bottomPadding;
+    const secondBottomPadding = frames[1].bottomPadding;
+    const firstVisibleBottom = firstY + firstHeight * (100 - firstBottomPadding) / 100;
+    const secondVisibleBottom = secondY + secondHeight * (100 - secondBottomPadding) / 100;
+    assert.equal(firstVisibleBottom, 438, "the first frame's visible feet end at the floor");
+    assert.equal(secondVisibleBottom, 438, "the second frame's visible feet end at the floor");
+    assert.equal(firstWidth, 100);
+    assert.equal(secondWidth, 100);
+    assert.equal(firstHeight, 72);
+    assert.equal(secondHeight, 72);
+    assert.notEqual(firstY, secondY, "each frame uses its own transparent bottom padding");
+  }
+});
+
+test("Animated GIF loader stores visible bottom padding on every decoded frame", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const source = await readFile(new URL("../src/minigames/AnimatedGif.js", import.meta.url), "utf8");
+  assert.match(source, /const frameBottomPadding = getBottomTransparentPadding\(snapshotData\)/);
+  assert.match(source, /bottomPadding: frameBottomPadding/);
 });
 
 test("Empty Stomach includes the pause key in both instruction labels for Spanish and English", () => {
@@ -376,4 +409,27 @@ test("Empty Stomach static gameplay controls include the pause key", async () =>
   assert.ok(html.includes(
     '<span data-empty-controls-text>A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · P: PAUSAR · ESC: SALIR</span>'
   ));
+});
+
+
+test("Empty Stomach keeps Parasaurolophus entity coordinates fixed on the floor", () => {
+  const prey = {
+    x: 400,
+    y: 370,
+    w: 100,
+    h: 72,
+    phase: 2.4,
+    beingEaten: false,
+    beingEatenElapsed: 0,
+    animationState: "running"
+  };
+  const simulation = makeSimulation({
+    player: { x: 250, y: 366, w: 88, h: 72 },
+    herd: [prey]
+  });
+
+  for (let frame = 0; frame < 12; frame += 1) {
+    simulation.update(0.04);
+    assert.equal(prey.y, 366, "the Parasaurolophus base stays on the floor while moving");
+  }
 });

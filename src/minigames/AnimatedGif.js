@@ -158,9 +158,14 @@ export async function loadAnimatedGif(url) {
     snapshotContext.drawImage(canvas, 0, 0);
     const snapshotData = snapshotContext.getImageData(0, 0, width, height);
     if (removeEdgeBackground(snapshotData) > 0) snapshotContext.putImageData(snapshotData, 0, 0);
-    bottomPadding = Math.min(bottomPadding, getBottomTransparentPadding(snapshotData));
+    const frameBottomPadding = getBottomTransparentPadding(snapshotData);
+    bottomPadding = Math.min(bottomPadding, frameBottomPadding);
 
-    renderedFrames.push({ image: snapshot, delay: Math.max(20, Number(frame.delay) || 100) });
+    renderedFrames.push({
+      image: snapshot,
+      delay: Math.max(20, Number(frame.delay) || 100),
+      bottomPadding: frameBottomPadding
+    });
     previous = frame;
   }
   return { width, height, bottomPadding: bottomPadding === height ? 0 : bottomPadding, frames: renderedFrames };
