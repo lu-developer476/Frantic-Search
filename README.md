@@ -55,6 +55,13 @@ Narrator interludes pause the simulation so the player can read the story and ev
 - Procedural sound effects for movement, damage, rescue and boss events.
 - No remote music or image downloads are required at runtime. Interface typography loads Barlow, Barlow Condensed and IBM Plex Mono from Google Fonts, with system fallbacks.
 
+## Campaign persistence
+
+- Campaign progress is stored locally in the browser and can be resumed from the start screen.
+- Automatic saves are written at chapter entries, unlocked checkpoints and safe intervals while the player is grounded and no boss encounter is active.
+- A save preserves the selected protagonist, procedural world seed, campaign objectives and story queue, defeated boss flags, Rosa's rescue state, Ferrucutus rescues, player health and checkpoint/retry positions.
+- Continue restores the saved route and campaign state. The saved campaign can also be deleted from the start screen; best distance, total rescues and other preferences remain intact.
+
 ## Performance and accessibility
 
 - Fixed-step physics simulation at 60 Hz with a capped frame delta.

@@ -350,12 +350,12 @@ test("the header shows only the italicized, bold Frantic Search link", () => {
 test("player and autonomous companion expose independent health values", () => {
   const player = new Player("blue", 100, 430);
   const companion = new AutonomousCompanion("vasti", 0, 430);
-  assert.equal(player.maxHealth, 3);
+  assert.equal(player.maxHealth, 5);
   assert.equal(player.health, player.maxHealth);
-  assert.equal(companion.actor.maxHealth, 3);
+  assert.equal(companion.actor.maxHealth, 5);
   assert.equal(companion.actor.health, companion.actor.maxHealth);
   assert.equal(companion.actor.takeHit(), true);
-  assert.equal(companion.actor.health, 2);
+  assert.equal(companion.actor.health, 4);
 });
 
 test("the player HUD has an accessible health meter and captive labels are removed", () => {

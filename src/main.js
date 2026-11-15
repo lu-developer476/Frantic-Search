@@ -50,6 +50,8 @@ const overlay = document.querySelector("#overlay");
 const startScreen = document.querySelector("#start-screen");
 const startScreenMessage = document.querySelector("#start-screen-message");
 const startButton = document.querySelector("#start-button");
+const continueCampaignButton = document.querySelector("#continue-campaign-button");
+const deleteCampaignSaveButton = document.querySelector("#delete-campaign-save-button");
 const overlayActionButton = document.querySelector("#overlay-action-button");
 const overlayContent = overlay.querySelector(".overlay-content");
 const overlayExitButton = document.querySelector("#overlay-exit-button");
@@ -71,6 +73,7 @@ let pauseActionTrigger = null;
 let failureScreenActive = false;
 let levelStartSnapshot = null;
 let latestLevelCheckpoint = null;
+let campaignAutosaveElapsed = 0;
 const stateLabel = document.querySelector("#game-state");
 const distanceLabel = document.querySelector("#distance");
 const rescuesLabel = document.querySelector("#rescues");
@@ -144,6 +147,7 @@ let finalDepartureDone = false;
 let allies = [];
 let ferrucutusCaptives = [];
 let seenFerrucutusCages = new Set();
+let rescuedFerrucutusCageIds = new Set();
 let seenHunterSpawns = new Set();
 let seenBossSpawns = new Set();
 let bosses = [];
@@ -159,6 +163,7 @@ let facilityConsoles = [];
 let extractionX = null;
 let campaignSaved = false;
 
+const CAMPAIGN_AUTOSAVE_INTERVAL = 12;
 const rand = (min, max) => min + Math.random() * (max - min);
 const level = () => levelTransition?.phase === "exit"
   ? LEVELS[levelTransition.fromIndex]
@@ -1056,6 +1061,7 @@ function advanceStory() {
 function interactWithFacility() {
   const captive = ferrucutusCaptives.find((entry) => entry.canInteract(player));
   if (captive && captive.rescue(player)) {
+    rescuedFerrucutusCageIds.add(captive.id);
     ferrucutusCaptives = ferrucutusCaptives.filter((entry) => entry !== captive);
     rescues += 1;
     allies.push(new FerrucutusAlly({
@@ -1121,6 +1127,8 @@ function finishCampaign() {
     rescues: save.get("rescues") + rescues,
     bestDistance: Math.max(save.get("bestDistance"), Math.floor(distance))
   });
+  save.clearCampaignProgress();
+  refreshContinueCampaignButton();
   audio.rescue();
   music.setTheme("victory");
   music.setPaused(false);
@@ -1849,6 +1857,7 @@ function update(delta) {
       : beta?.state === "following" ? "ROSA // " + ui("escorting") : "";
   }
   updateLevelCheckpoint();
+  updateCampaignAutosave(delta);
 }
 
 function render() {
@@ -1967,10 +1976,20 @@ function scheduleFrame() {
 function cloneCampaignScene(scene) {
   return scene ? { ...scene, lines: [...scene.lines] } : null;
 }
+function currentCampaignLevelIndex() {
+  return LEVELS.reduce((current, item, index) => distance >= item.distance ? index : current, 0);
+}
 function captureRestartSnapshot(levelIndex, distanceValue = distance) {
   return {
-    levelIndex, distance: Math.max(0, Math.round(distanceValue)), worldSeed: world.seed,
-    rescues, playerHealth: player.health, stegoceratopsCooldown,
+    schemaVersion: 1,
+    selectedCharacter: selected,
+    levelIndex,
+    distance: Math.max(0, Math.round(distanceValue)),
+    worldSeed: world.seed,
+    rescues,
+    playerHealth: player.health,
+    stegoceratopsCooldown,
+    rescuedFerrucutusCageIds: [...rescuedFerrucutusCageIds],
     allies: allies.filter((ally) => !ally.departed).map((ally) => ({
       id: ally.id, distanceBehind: Math.max(150, player.x - ally.x)
     })),
@@ -1981,22 +2000,81 @@ function captureRestartSnapshot(levelIndex, distanceValue = distance) {
     }
   };
 }
+function refreshContinueCampaignButton() {
+  if (!continueCampaignButton || !deleteCampaignSaveButton) return;
+  const available = Boolean(save.getCampaignProgress());
+  continueCampaignButton.hidden = !available;
+  deleteCampaignSaveButton.hidden = !available;
+  continueCampaignButton.disabled = !desktopPlayback.matches;
+}
+function persistCampaignProgressSnapshot(snapshot) {
+  if (!snapshot || campaign.flags.completed) return false;
+  const saved = save.saveCampaignProgress({
+    snapshot,
+    levelStartSnapshot: levelStartSnapshot ?? snapshot,
+    checkpointSnapshot: latestLevelCheckpoint ?? levelStartSnapshot ?? snapshot
+  });
+  if (saved) {
+    campaignAutosaveElapsed = 0;
+    refreshContinueCampaignButton();
+  }
+  return saved;
+}
+function saveCurrentCampaignSafely({ allowNarration = false } = {}) {
+  if (
+    !running ||
+    campaign.flags.completed ||
+    !player.onGround ||
+    activeBoss ||
+    levelTransition ||
+    finalDeparture ||
+    stegoceratops ||
+    (campaign.sceneOpen && !allowNarration)
+  ) return false;
+  return persistCampaignProgressSnapshot(captureRestartSnapshot(currentCampaignLevelIndex()));
+}
+function updateCampaignAutosave(delta) {
+  if (
+    !running ||
+    campaign.flags.completed ||
+    campaign.sceneOpen ||
+    activeBoss ||
+    !player.onGround ||
+    levelTransition ||
+    finalDeparture ||
+    stegoceratops
+  ) {
+    campaignAutosaveElapsed = 0;
+    return;
+  }
+
+  campaignAutosaveElapsed += delta;
+  if (campaignAutosaveElapsed < CAMPAIGN_AUTOSAVE_INTERVAL) return;
+  persistCampaignProgressSnapshot(captureRestartSnapshot(currentCampaignLevelIndex()));
+}
 function saveLevelEntrySnapshot(levelIndex) {
   levelStartSnapshot = captureRestartSnapshot(levelIndex, LEVELS[levelIndex].distance);
   latestLevelCheckpoint = levelStartSnapshot;
+  persistCampaignProgressSnapshot(levelStartSnapshot);
 }
 function updateLevelCheckpoint() {
   if (!running || campaign.sceneOpen || campaign.flags.completed || !player.onGround) return;
-  const levelIndex = LEVELS.reduce((current, item, index) => distance >= item.distance ? index : current, 0);
+  const levelIndex = currentCampaignLevelIndex();
   if (!canActivateLevelCheckpoint(levelIndex, campaign.flags)) return;
   const checkpointDistance = getLevelCheckpointDistance(levelIndex, { levels: LEVELS, world: WORLD, game: GAME });
   if (distance < checkpointDistance) return;
   if (latestLevelCheckpoint?.levelIndex === levelIndex && latestLevelCheckpoint.distance >= checkpointDistance) return;
   latestLevelCheckpoint = captureRestartSnapshot(levelIndex);
+  persistCampaignProgressSnapshot(latestLevelCheckpoint);
   audio.collect();
 }
-function restoreRestartSnapshot(snapshot) {
+function restoreRestartSnapshot(snapshot, savedProgress = null) {
   if (!snapshot || !desktopPlayback.matches) return false;
+  if (snapshot.selectedCharacter === "blue" || snapshot.selectedCharacter === "vasti") {
+    selected = snapshot.selectedCharacter;
+    save.update({ selectedCharacter: selected });
+    selectCharacter(selected);
+  }
   cancelScheduledFrame();
   audio.unlock();
   resetPlayer(snapshot.worldSeed);
@@ -2017,10 +2095,20 @@ function restoreRestartSnapshot(snapshot) {
   lastLevelIndex = snapshot.levelIndex;
   introSequence = false; levelTransition = null; finalDeparture = false; finalDepartureDone = false;
   campaignSaved = false;
-  latestLevelCheckpoint = snapshot;
+  campaignAutosaveElapsed = 0;
+  if (savedProgress) {
+    levelStartSnapshot = savedProgress.levelStartSnapshot;
+    latestLevelCheckpoint = savedProgress.checkpointSnapshot;
+  } else {
+    latestLevelCheckpoint = snapshot;
+  }
   world.extendTo(player.x + WORLD.maxSectionLength + 1200);
   world.pruneBehind(player.x);
   syncEncounters();
+  rescuedFerrucutusCageIds = new Set(snapshot.rescuedFerrucutusCageIds);
+  ferrucutusCaptives = ferrucutusCaptives.filter((captive) =>
+    !rescuedFerrucutusCageIds.has(captive.id)
+  );
   const actorCutoff = player.x - 280;
   hunters = hunters.filter((actor) => actor.x + actor.w >= actorCutoff);
   venatosauruses = venatosauruses.filter((actor) => actor.x + actor.w >= actorCutoff);
@@ -2126,6 +2214,8 @@ function frame(now) {
 }
 
 function resetPlayer(worldSeed = undefined) {
+  campaignAutosaveElapsed = 0;
+  rescuedFerrucutusCageIds = new Set();
   campaign = new CampaignManager();
   beta = null;
   facilityConsoles = [];
@@ -2196,12 +2286,14 @@ function start() {
   accumulator = 0;
   distance = 0;
   rescues = 0;
+  campaignAutosaveElapsed = 0;
   stateLabel.textContent = ui("inProgress");
   rescuesLabel.textContent = "00";
   campaign.begin();
   updateCampaignHud();
   levelStartSnapshot = captureRestartSnapshot(0, 0);
   latestLevelCheckpoint = levelStartSnapshot;
+  persistCampaignProgressSnapshot(levelStartSnapshot);
   renderStoryPanel();
   last = performance.now();
   render();
@@ -2282,6 +2374,7 @@ function closePauseConfirmation(restoreFocus = true) {
 }
 
 function returnToMainMenu() {
+  saveCurrentCampaignSafely({ allowNarration: true });
   running = false;
   failureScreenActive = false;
   overlayContent.hidden = false;
@@ -2302,6 +2395,7 @@ function returnToMainMenu() {
   startScreenMessage.hidden = true;
   startButton.hidden = false;
   startButton.disabled = !desktopPlayback.matches;
+  refreshContinueCampaignButton();
   startScreen.classList.remove("hidden");
   stateLabel.textContent = ui("standby");
   pendingPauseAction = null;
@@ -2395,6 +2489,23 @@ overlayExitButton.addEventListener("click", returnToMainMenu);
 retryLevelStartButton.addEventListener("click", () => restoreRestartSnapshot(levelStartSnapshot));
 retryCheckpointButton.addEventListener("click", () => restoreRestartSnapshot(latestLevelCheckpoint));
 retryCancelButton.addEventListener("click", closeRetryOptions);
+continueCampaignButton.addEventListener("click", () => {
+  const progress = save.getCampaignProgress();
+  if (!progress) {
+    refreshContinueCampaignButton();
+    return;
+  }
+  restoreRestartSnapshot(progress.snapshot, progress);
+});
+deleteCampaignSaveButton.addEventListener("click", () => {
+  if (!save.getCampaignProgress()) {
+    refreshContinueCampaignButton();
+    return;
+  }
+  if (!window.confirm(ui("deleteCampaignSavePrompt"))) return;
+  save.clearCampaignProgress();
+  refreshContinueCampaignButton();
+});
 
 function openDinoModal(returnTo = "start") {
   if (!desktopPlayback.matches || running || desktopBlocked) return;
@@ -2580,6 +2691,7 @@ if (save.get("muted")) {
 function syncDesktopAccess() {
   const canPlay = desktopPlayback.matches;
   startButton.disabled = !canPlay;
+  continueCampaignButton.disabled = !canPlay;
 
   if (!canPlay) {
     if (running) {
@@ -2616,6 +2728,7 @@ desktopPlayback.addEventListener("change", syncDesktopAccess);
 
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
+    saveCurrentCampaignSafely({ allowNarration: true });
     cancelScheduledFrame();
     return;
   }
@@ -2629,8 +2742,13 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 
+window.addEventListener("pagehide", () => {
+  saveCurrentCampaignSafely({ allowNarration: true });
+});
+
 applyLanguage();
 setEnvironmentMode(environmentMode);
 selectCharacter(selected);
 render();
+refreshContinueCampaignButton();
 syncDesktopAccess();
