@@ -73,9 +73,7 @@ const storyProgress = document.querySelector("#story-progress");
 const storyNextButton = document.querySelector("#story-next");
 const dinoModal = document.querySelector("#dino-modal");
 const characterConfirmation = document.querySelector("#character-confirmation");
-const confirmationName = document.querySelector("#character-confirmation-name");
-const confirmationSpecies = document.querySelector("#character-confirmation-species");
-const confirmationAbility = document.querySelector("#character-confirmation-ability");
+const confirmationTitle = document.querySelector("#character-confirmation-title");
 const confirmCharacterButton = document.querySelector("#confirm-character");
 const playCharacterButton = document.querySelector("#play-character");
 const backCharacterConfirmationButton = document.querySelector("#back-character-confirmation");
@@ -2018,10 +2016,8 @@ function confirmPendingPauseAction() {
 }
 
 function updateCharacterConfirmationCopy() {
-  const isVasti = selected === "vasti";
-  confirmationName.textContent = isVasti ? "VASTI" : "VIOLETA";
-  confirmationSpecies.textContent = ui(isVasti ? "titan" : "raptor");
-  confirmationAbility.textContent = ui(isVasti ? "vastiAbility" : "blueAbility");
+  const characterName = selected === "vasti" ? "VASTI" : "VIOLETA";
+  confirmationTitle.textContent = ui("characterConfirmTitle").replace("{character}", characterName);
 }
 
 function selectCharacter(value) {
