@@ -1878,8 +1878,6 @@ function render() {
   }
   ctx.restore();
 
-  ctx.fillStyle = "#d8f36a";
-  ctx.fillRect(24, 47, Math.min(220, distance / 12), 3);
   ctx.fillStyle = "#d2a27d";
   ctx.font = "10px monospace";
   ctx.fillText(tr(selected === "blue" ? "VIOLETA // DOUBLE JUMP + DASH" : selected === "rosa" ? "ROSA // JUVENILE RAPTOR" : "VASTI // HEAVY STOMP"), 24, GAME.height - 18);
