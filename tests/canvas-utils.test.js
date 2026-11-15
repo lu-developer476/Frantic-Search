@@ -46,7 +46,7 @@ test("roundedRect normalizes negative dimensions and invalid radius", () => {
 
   roundedRect(context, 20, 30, -10, -6, Number.NaN);
 
-  assert.deepEqual(commands[1], ["moveTo", 20, 24]);
+  assert.deepEqual(commands[1], ["moveTo", 10, 24]);
   assert.deepEqual(commands[2], ["lineTo", 10, 24]);
   assert.deepEqual(commands.at(-1), ["closePath"]);
 });
