@@ -2573,6 +2573,14 @@ html.site-mode-gray .story-card .story-actions span{
 .empty-stomach-actions button{padding:10px 14px;border:1px solid #8c9d77;background:#1d2b26;color:#e9f0dc;font:700 9px var(--font-mono);letter-spacing:.1em;cursor:pointer}
 .empty-stomach-stage{position:relative;flex:1;min-height:0;display:grid;place-items:center;overflow:hidden;border:1px solid #77866a;background:#b8d0c4}
 .empty-stomach-stage canvas{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+.empty-stomach-bottom{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:42px;padding:8px 12px;border:1px solid #77866a;background:#182820;color:#e9f0dc}
+.empty-stomach-bottom[hidden]{display:none}
+.empty-stomach-bottom span{font:700 9px var(--font-mono);letter-spacing:.04em;text-transform:uppercase}
+.empty-stomach-bottom button{flex:0 0 auto;padding:8px 12px;border:1px solid #e1a17f;background:#e1a17f;color:#1b211a;font:700 9px var(--font-mono);letter-spacing:.08em;cursor:pointer}
+.empty-stomach-bottom button:hover{background:#efb392}
+.empty-stomach-pause-overlay{position:absolute;inset:0;z-index:3;display:grid;place-items:center;background:rgba(7,13,12,.55);pointer-events:none}
+.empty-stomach-pause-overlay[hidden]{display:none}
+.empty-stomach-pause-overlay span{padding:16px 28px;border:1px solid #e1a17f;background:rgba(20,31,25,.92);color:#f3f1df;font:800 clamp(30px,6vw,56px)/1 var(--font-condensed);letter-spacing:.08em}
 .empty-stomach-intro{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;background:linear-gradient(135deg,rgba(8,17,14,.83),rgba(18,29,22,.76))}
 .empty-stomach-panel.playing .empty-stomach-intro{pointer-events:none;background:transparent}
 .empty-stomach-panel.playing .empty-stomach-intro>*{display:none}
@@ -2584,7 +2592,7 @@ html.site-mode-gray .story-card .story-actions span{
 .empty-stomach-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px}
 .empty-stomach-actions button:first-child,.empty-stomach-actions button:nth-child(2){border-color:#e1a17f;background:#e1a17f;color:#1b211a}
 .empty-stomach-actions button[hidden],.empty-stomach-intro [hidden]{display:none!important}
-@media(max-width:700px){.empty-stomach-panel{padding:8px}.empty-stomach-intro h2{font-size:40px}.empty-stomach-intro p{font-size:11px}}
+@media(max-width:700px){.empty-stomach-panel{padding:8px}.empty-stomach-intro h2{font-size:40px}.empty-stomach-intro p{font-size:11px}.empty-stomach-bottom{align-items:stretch;flex-direction:column;gap:7px}.empty-stomach-bottom span{text-align:center;font-size:8px}.empty-stomach-bottom button{width:100%}}
 
 
 /* Time Attack — a self-contained timed hunting section. */

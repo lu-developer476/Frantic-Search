@@ -79,6 +79,71 @@ test("Empty Stomach uses decoded GIF frames instead of static Image objects", as
   assert.doesNotMatch(source, /new Image\(\)/);
 });
 
+test("Empty Stomach removes the Coral survival caption and keeps the death result concise", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const source = await readFile(new URL("../src/minigames/EmptyStomach.js", import.meta.url), "utf8");
+  assert.doesNotMatch(source, /CORAL \/\/ SUPERVIVENCIA|CORAL \/\/ SURVIVAL/);
+  assert.match(source, /textContent = this\.text\("CORAL FUE DEVORADA", "CORAL WAS EATEN"\)/);
+  assert.doesNotMatch(source, /CORAL FUE DEVORADA · DISTANCIA|CORAL WAS EATEN · DISTANCE/);
+});
+
+test("Empty Stomach pauses and resumes its animation loop from the keyboard or pause button", () => {
+  const classNames = new Set();
+  const pauseOverlay = { hidden: true };
+  const pauseButton = {
+    textContent: "",
+    setAttribute(name, value) { this[name] = value; }
+  };
+  const simulation = Object.create(EmptyStomach.prototype);
+  Object.assign(simulation, {
+    running: true,
+    paused: false,
+    frame: 17,
+    keys: new Set(["KeyA"]),
+    pauseButton,
+    pauseOverlay,
+    locale: "es",
+    root: {
+      classList: {
+        add(name) { classNames.add(name); },
+        remove(name) { classNames.delete(name); }
+      }
+    }
+  });
+
+  const previousCancel = globalThis.cancelAnimationFrame;
+  const previousRequest = globalThis.requestAnimationFrame;
+  let cancelled = null;
+  let scheduled = null;
+  globalThis.cancelAnimationFrame = (id) => { cancelled = id; };
+  globalThis.requestAnimationFrame = (callback) => { scheduled = callback; return 23; };
+
+  try {
+    simulation.pause();
+    assert.equal(simulation.running, true);
+    assert.equal(simulation.paused, true);
+    assert.equal(cancelled, 17);
+    assert.equal(simulation.frame, null);
+    assert.equal(pauseOverlay.hidden, false);
+    assert.equal(pauseButton.textContent, "P: REANUDAR");
+    assert.equal(classNames.has("paused"), true);
+    assert.equal(simulation.keys.size, 0);
+
+    simulation.resume();
+    assert.equal(simulation.paused, false);
+    assert.equal(pauseOverlay.hidden, true);
+    assert.equal(pauseButton.textContent, "P: PAUSAR");
+    assert.equal(classNames.has("paused"), false);
+    assert.equal(typeof scheduled, "function");
+    assert.equal(simulation.frame, 23);
+  } finally {
+    if (previousCancel === undefined) delete globalThis.cancelAnimationFrame;
+    else globalThis.cancelAnimationFrame = previousCancel;
+    if (previousRequest === undefined) delete globalThis.requestAnimationFrame;
+    else globalThis.requestAnimationFrame = previousRequest;
+  }
+});
+
 
 function makeSimulation({ player, enemies = [], herd = [] }) {
   const simulation = Object.create(EmptyStomach.prototype);

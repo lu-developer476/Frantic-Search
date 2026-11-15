@@ -72,6 +72,10 @@ export class EmptyStomach {
     this.ctx = this.canvas.getContext("2d");
     this.onExit = onExit;
     this.locale = "es";
+    this.pauseButton = root.querySelector("[data-empty-pause]");
+    this.pauseOverlay = root.querySelector("[data-empty-pause-overlay]");
+    this.controlsStrip = root.querySelector("[data-empty-controls]");
+    this.paused = false;
     this.animations = {};
     this.assetPromises = Object.entries(ASSETS).map(async ([key, path]) => {
       try {
@@ -96,10 +100,12 @@ export class EmptyStomach {
     try { this.best = Number(localStorage.getItem("frantic-empty-stomach-best")) || 0; } catch {}
     this.handleKeyDown = (event) => {
       if (!this.root.classList.contains("active")) return;
-      if (["ArrowLeft", "ArrowRight", "ArrowUp", "Space"].includes(event.code)) event.preventDefault();
+      if (["ArrowLeft", "ArrowRight", "ArrowUp", "Space", "KeyP"].includes(event.code)) event.preventDefault();
       if (event.code === "Escape" && !event.repeat) { this.exit(); return; }
+      if (event.code === "KeyP" && !event.repeat) { this.togglePause(); return; }
+      if (this.paused) return;
       if (["ArrowLeft", "ArrowRight", "ArrowUp", "Space", "KeyA", "KeyD", "KeyW"].includes(event.code)) this.keys.add(event.code);
-      if (["Space", "ArrowUp", "KeyW"].includes(event.code) && !event.repeat && !this.running) this.start();
+      if (["Space", "ArrowUp", "KeyW"].includes(event.code) && !event.repeat && !this.running && !this.paused) this.start();
     };
     this.handleKeyUp = (event) => this.keys.delete(event.code);
     window.addEventListener("keydown", this.handleKeyDown);
@@ -107,6 +113,7 @@ export class EmptyStomach {
     root.querySelector("[data-empty-start]").addEventListener("click", () => this.start());
     root.querySelector("[data-empty-retry]").addEventListener("click", () => this.start());
     root.querySelector("[data-empty-exit]").addEventListener("click", () => this.exit());
+    this.pauseButton.addEventListener("click", () => this.togglePause());
     this.render();
   }
 
@@ -115,7 +122,10 @@ export class EmptyStomach {
     this.locale = locale === "en" ? "en" : "es";
     this.root.querySelector("[data-empty-title]").textContent = this.text("HAMBRE INSACIABLE", "EMPTY STOMACH");
     this.root.querySelector("[data-empty-subtitle]").textContent = this.text("Coral corre por su vida. Los depredadores no van a detenerse.", "Coral is running for her life. The predators won't stop.");
-    this.root.querySelector("[data-empty-instructions]").textContent = this.text("A / D o ← / →: moverse · ESPACIO / ↑: saltar · ESC: salir", "A / D or ← / →: move · SPACE / ↑: jump · ESC: exit");
+    this.root.querySelector("[data-empty-instructions]").textContent = this.text("A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · ESC: SALIR", "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · ESC: EXIT");
+    this.root.querySelector("[data-empty-controls-text]").textContent = this.text("A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · ESC: SALIR", "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · ESC: EXIT");
+    this.root.querySelector("[data-empty-pause-label]").textContent = this.text("PAUSA", "PAUSED");
+    this.updatePauseButton();
     this.root.querySelector("[data-empty-start]").textContent = this.text("COMENZAR", "START RUN");
     this.root.querySelector("[data-empty-retry]").textContent = this.text("VOLVER A CORRER", "RUN AGAIN");
     this.root.querySelector("[data-empty-exit]").textContent = this.text("VOLVER AL MENÚ", "BACK TO MENU");
@@ -137,8 +147,13 @@ export class EmptyStomach {
 
   reset() {
     this.running = false;
+    this.paused = false;
     if (this.frame !== null) cancelAnimationFrame(this.frame);
     this.frame = null;
+    this.root.classList.remove("paused");
+    this.pauseOverlay.hidden = true;
+    this.controlsStrip.hidden = true;
+    this.updatePauseButton();
     this.last = 0;
     this.elapsed = 0;
     this.distance = 0;
@@ -155,7 +170,12 @@ export class EmptyStomach {
     if (!this.root.classList.contains("active")) return;
     this.reset();
     this.running = true;
+    this.paused = false;
+    this.root.classList.remove("paused");
     this.root.classList.add("playing");
+    this.controlsStrip.hidden = false;
+    this.pauseOverlay.hidden = true;
+    this.updatePauseButton();
     this.root.querySelector("[data-empty-start]").hidden = true;
     this.root.querySelector("[data-empty-retry]").hidden = true;
     this.root.querySelector("[data-empty-result]").hidden = true;
@@ -164,12 +184,47 @@ export class EmptyStomach {
   }
 
   tick(now) {
-    if (!this.running) return;
+    if (!this.running || this.paused) return;
     const delta = Math.min((now - this.last) / 1000 || 0, 0.04);
     this.last = now;
     this.update(delta);
     this.render();
-    if (this.running) this.frame = requestAnimationFrame((time) => this.tick(time));
+    if (this.running && !this.paused) this.frame = requestAnimationFrame((time) => this.tick(time));
+  }
+
+  updatePauseButton() {
+    if (!this.pauseButton) return;
+    this.pauseButton.textContent = this.paused
+      ? this.text("P: REANUDAR", "P: RESUME")
+      : this.text("P: PAUSAR", "P: PAUSE");
+    this.pauseButton.setAttribute("aria-label", this.pauseButton.textContent);
+  }
+
+  togglePause() {
+    if (!this.running) return;
+    if (this.paused) this.resume();
+    else this.pause();
+  }
+
+  pause() {
+    if (!this.running || this.paused) return;
+    this.paused = true;
+    if (this.frame !== null) cancelAnimationFrame(this.frame);
+    this.frame = null;
+    this.keys.clear();
+    this.root.classList.add("paused");
+    this.pauseOverlay.hidden = false;
+    this.updatePauseButton();
+  }
+
+  resume() {
+    if (!this.running || !this.paused) return;
+    this.paused = false;
+    this.root.classList.remove("paused");
+    this.pauseOverlay.hidden = true;
+    this.last = performance.now();
+    this.updatePauseButton();
+    this.frame = requestAnimationFrame((now) => this.tick(now));
   }
 
   moveEnemyTowards(enemy, targetX, chaseSpeed, delta) {
@@ -320,12 +375,17 @@ export class EmptyStomach {
   finish() {
     if (!this.running) return;
     this.running = false;
+    this.paused = false;
     if (this.frame !== null) cancelAnimationFrame(this.frame);
     this.frame = null;
+    this.root.classList.remove("paused");
+    this.pauseOverlay.hidden = true;
+    this.controlsStrip.hidden = true;
+    this.updatePauseButton();
     const score = scoreForDistance(this.distance);
     this.best = Math.max(this.best, score);
     try { localStorage.setItem("frantic-empty-stomach-best", String(this.best)); } catch {}
-    this.root.querySelector("[data-empty-result]").textContent = this.text(`CORAL FUE DEVORADA · DISTANCIA: ${score} M · RÉCORD: ${this.best} M`, `CORAL WAS EATEN · DISTANCE: ${score} M · BEST: ${this.best} M`);
+    this.root.querySelector("[data-empty-result]").textContent = this.text("CORAL FUE DEVORADA", "CORAL WAS EATEN");
     this.root.classList.remove("playing");
     this.root.querySelector("[data-empty-result]").hidden = false;
     this.root.querySelector("[data-empty-retry]").hidden = false;
@@ -335,10 +395,13 @@ export class EmptyStomach {
 
   exit() {
     this.running = false;
+    this.paused = false;
     if (this.frame !== null) cancelAnimationFrame(this.frame);
     this.frame = null;
     this.keys.clear();
-    this.root.classList.remove("active", "playing");
+    this.pauseOverlay.hidden = true;
+    this.controlsStrip.hidden = true;
+    this.root.classList.remove("active", "playing", "paused");
     this.root.setAttribute("aria-hidden", "true");
     this.onExit();
   }
@@ -404,8 +467,6 @@ export class EmptyStomach {
     ctx.fillStyle = "#18221d";
     ctx.font = "bold 16px monospace";
     ctx.fillText(this.text("DISTANCIA", "DISTANCE") + "  " + scoreForDistance(this.distance) + " M", 26, 34);
-    ctx.font = "11px monospace";
-    ctx.fillText(this.text("CORAL // SUPERVIVENCIA", "CORAL // SURVIVAL"), 26, 54);
     if (!this.running && !this.root.querySelector("[data-empty-result]").hidden) {
       ctx.fillStyle = "rgba(7,13,12,.45)";
       ctx.fillRect(0, 0, WIDTH, HEIGHT);

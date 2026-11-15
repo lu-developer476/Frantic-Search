@@ -157,6 +157,9 @@
             <section id="empty-stomach-panel" class="empty-stomach-panel" aria-label="Empty Stomach" aria-hidden="true">
               <div class="empty-stomach-stage">
                 <canvas width="960" height="540" aria-label="Empty Stomach endless survival minigame"></canvas>
+                <div class="empty-stomach-pause-overlay" data-empty-pause-overlay hidden>
+                  <span data-empty-pause-label>PAUSA</span>
+                </div>
                 <div class="empty-stomach-intro">
                   <h2 data-empty-title>EMPTY STOMACH</h2>
                   <p data-empty-subtitle>Coral corre por su vida. Los depredadores no van a detenerse.</p>
@@ -168,6 +171,10 @@
                     <button type="button" data-empty-exit>VOLVER AL MENÚ</button>
                   </div>
                 </div>
+              </div>
+              <div class="empty-stomach-bottom" data-empty-controls hidden>
+                <span data-empty-controls-text>A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · ESC: SALIR</span>
+                <button type="button" data-empty-pause>P: PAUSAR</button>
               </div>
             </section>
             <section id="time-attack-panel" class="time-attack-panel" aria-label="Time Attack" aria-hidden="true">
