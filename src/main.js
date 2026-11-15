@@ -27,6 +27,7 @@ import { getLevelCheckpointDistance, canActivateLevelCheckpoint } from "./campai
 import { Beta } from "./entities/Beta.js";
 import { FacilityConsole } from "./entities/FacilityConsole.js";
 import { SpriteRenderer } from "./rendering/SpriteRenderer.js";
+import { drawBackgroundScenery, drawGroundScenery } from "./rendering/SceneryRenderer.js";
 import { t as uiText, translateText } from "./i18n.js";
 
 const canvas = document.querySelector("#game");
@@ -300,25 +301,6 @@ function drawBackground() {
       ctx.moveTo(x, 430); ctx.lineTo(x + 54, 292); ctx.lineTo(x + 104, 340);
       ctx.lineTo(x + 172, 238); ctx.lineTo(x + 250, 430); ctx.closePath(); ctx.fill();
     }
-    for (let i = 0; i < 11; i += 1) {
-      const x = ((i * 137 - cameraX * 0.34) % 1420 + 1420) % 1420 - 110;
-      const top = 22 + (i % 4) * 34;
-      const trunkWidth = 18 + (i % 3) * 5;
-      const crownWidth = 48 + (i % 4) * 13;
-      ctx.fillStyle = i % 2 ? scene.tree : scene.treeLight;
-      ctx.beginPath();
-      ctx.moveTo(x + trunkWidth / 2, top);
-      ctx.lineTo(x - crownWidth / 2, top + 122);
-      ctx.lineTo(x - crownWidth / 2 + 15, 430);
-      ctx.lineTo(x + crownWidth / 2 + 15, 430);
-      ctx.lineTo(x + crownWidth / 2, top + 122);
-      ctx.closePath(); ctx.fill();
-      ctx.fillStyle = scene.treeTrunk;
-      ctx.fillRect(x, top + 92, trunkWidth, 338 - top);
-      ctx.fillRect(x - 11, 408, trunkWidth + 22, 18);
-      ctx.fillStyle = scene.detail;
-      ctx.fillRect(x + 3, top + 145, 3, 190 - top);
-    }
   } else if (environment === "black-site") {
     ctx.fillStyle = scene.ridge; ctx.fillRect(0, 350, GAME.width, 80);
     for (let i = 0; i < 7; i += 1) {
@@ -421,6 +403,14 @@ function drawBackground() {
       ctx.fillStyle = scene.window; ctx.fillRect(x, 414, 42, 3);
     }
   }
+
+  drawBackgroundScenery(
+    ctx,
+    world.visibleScenery(cameraX, GAME.width, "background", environment),
+    cameraX,
+    GAME.width,
+    scene
+  );
 
   ctx.fillStyle = scene.under; ctx.fillRect(0, 430, GAME.width, 110);
   ctx.fillStyle = scene.detail;
@@ -1870,6 +1860,10 @@ function render() {
     }
   }
   for (const platform of world.visiblePlatforms(cameraX, GAME.width)) drawPlatform(platform);
+  const sceneryScene = level();
+  for (const prop of world.visibleScenery(cameraX, GAME.width, "ground", sceneryScene.environment)) {
+    drawGroundScenery(ctx, prop, sceneryScene);
+  }
   for (const prop of world.facilityProps) {
     if (prop.x + prop.w >= cameraX - 50 && prop.x <= cameraX + GAME.width + 50) drawFacilityProp(prop);
   }

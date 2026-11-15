@@ -131,3 +131,11 @@ Vercel uses the root asset path (`/`). After Git integration is connected, pushe
 ## Originality and rights
 
 This is an unofficial fan-made project and is not affiliated with Universal Products & Experiences or Amblin Entertainment. Character sprites and soundtrack are original assets created for this project. The visual direction takes inspiration from classic 8-bit side-scrolling arcade runners; no assets, sprites, code or music from Pixeljam's Dino Run are included.
+
+
+## Procedural environment scenery
+
+- Outdoor sections generate deterministic far and mid tree layers from the world seed, with separate species, silhouettes, size ranges and density for the coast, redwood frontier, black-site perimeter, containment campus and extraction route.
+- Ground details such as ferns, fallen logs, driftwood, rocks, shrubs, stumps, planters and rubble add biome-specific context.
+- Scenery generation uses independent random streams and protected gameplay zones, so decorative placement does not reshuffle platforms, enemy encounters or rescue objectives.
+- Rosa's indoor containment environment intentionally remains free of outdoor vegetation.

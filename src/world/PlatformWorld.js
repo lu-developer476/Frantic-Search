@@ -1,4 +1,5 @@
 import { GAME, LEVELS, WORLD } from "../config/GameConfig.js";
+import { generateSectionScenery } from "./SceneryGenerator.js";
 
 function seededRandom(seed) {
   let state = seed >>> 0;
@@ -126,6 +127,7 @@ export class PlatformWorld {
     this.bossSpawns = [];
     this.facilitySpawns = null;
     this.facilityProps = [];
+    this.sceneryProps = [];
     this.generatedSections = 0;
     this.bridgeSequence = 0;
     this.extendTo(GAME.playerX + WORLD.maxSectionLength + 1200);
@@ -189,8 +191,8 @@ export class PlatformWorld {
       ...(BOSS_RATIOS_BY_SECTION[index] ?? [])
     ].map(at);
 
+    const occupiedCages = this.ferrucutusCageSpawns.filter((cage) => cage.x >= start && cage.x < end);
     if (!isBossArena && !isFacilityArea) {
-      const occupiedCages = this.ferrucutusCageSpawns.filter((cage) => cage.x >= start && cage.x < end);
       const obstacleRatios = shuffle([0.08, 0.20, 0.32, 0.44, 0.56, 0.68, 0.80, 0.92], random);
       const targetObstacleCount = 4 + Math.floor(random() * 2);
       let placedObstacles = 0;
@@ -300,6 +302,25 @@ export class PlatformWorld {
         { x: at(0.96), y: 80, w: 28, h: 350, kind: "facility-lamp" }
       );
     }
+
+    const scenerySafeZones = [
+      ...(!continuousFloor && !isBossArena ? [{ x: start + 815, radius: 125 }] : []),
+      ...reservedCharacterPositions.map((x) => ({ x, radius: 175 })),
+      ...occupiedCages.map((cage) => ({ x: cage.x + FERRUCUTUS_CAGE_WIDTH / 2, radius: 230 })),
+      ...this.obstacles
+        .filter((obstacle) => obstacle.x >= start && obstacle.x <= end)
+        .map((obstacle) => ({ x: obstacle.x + obstacle.w / 2, radius: 115 })),
+      ...(BOSS_RATIOS_BY_SECTION[index] ?? []).map((ratio) => ({ x: at(ratio), radius: 660 }))
+    ];
+    this.sceneryProps.push(...generateSectionScenery({
+      seed: this.seed,
+      sectionIndex: index,
+      sectionStart: start,
+      sectionLength,
+      groundY: this.groundY,
+      environment: LEVELS[levelIndex]?.environment,
+      safeZones: scenerySafeZones
+    }));
   }
 
   update(delta) {
@@ -385,6 +406,20 @@ export class PlatformWorld {
     this.platforms = this.platforms.filter((platform) => platform.id !== id);
   }
 
+  visibleScenery(cameraX, width, layer = null, environment = null) {
+    return this.sceneryProps.filter((prop) => {
+      if (layer && prop.layer !== layer) return false;
+      if (environment && prop.environment !== environment) return false;
+      if (prop.layer === "ground") {
+        return prop.x + prop.width / 2 >= cameraX - 120 &&
+          prop.x - prop.width / 2 <= cameraX + width + 120;
+      }
+      const screenX = width * (1 - prop.parallax) * 0.5 +
+        (prop.x - cameraX) * prop.parallax;
+      return screenX + prop.width >= -180 && screenX - prop.width <= width + 180;
+    });
+  }
+
   pruneBehind(worldX, retain = 1400) {
     const cutoff = worldX - retain;
     this.platforms = this.platforms.filter((platform) => platform.x + platform.w >= cutoff);
@@ -397,6 +432,11 @@ export class PlatformWorld {
     this.ferrucutusCageSpawns = this.ferrucutusCageSpawns.filter((spawn) => spawn.x >= cutoff);
     this.bossSpawns = this.bossSpawns.filter((spawn) => spawn.x >= cutoff);
     this.facilityProps = this.facilityProps.filter((prop) => prop.x + prop.w >= cutoff);
+    this.sceneryProps = this.sceneryProps.filter((prop) =>
+      prop.layer === "ground"
+        ? prop.x + prop.width / 2 >= cutoff
+        : prop.x + prop.width >= worldX - 6200
+    );
   }
 
   platformsNear(worldX, range = 1200) {
