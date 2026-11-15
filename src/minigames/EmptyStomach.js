@@ -122,8 +122,8 @@ export class EmptyStomach {
     this.locale = locale === "en" ? "en" : "es";
     this.root.querySelector("[data-empty-title]").textContent = this.text("HAMBRE INSACIABLE", "EMPTY STOMACH");
     this.root.querySelector("[data-empty-subtitle]").textContent = this.text("Coral corre por su vida. Los depredadores no van a detenerse.", "Coral is running for her life. The predators won't stop.");
-    this.root.querySelector("[data-empty-instructions]").textContent = this.text("A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · ESC: SALIR", "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · ESC: EXIT");
-    this.root.querySelector("[data-empty-controls-text]").textContent = this.text("A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · ESC: SALIR", "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · ESC: EXIT");
+    this.root.querySelector("[data-empty-instructions]").textContent = this.text("A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · P: PAUSAR · ESC: SALIR", "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · P: PAUSE · ESC: EXIT");
+    this.root.querySelector("[data-empty-controls-text]").textContent = this.text("A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · P: PAUSAR · ESC: SALIR", "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · P: PAUSE · ESC: EXIT");
     this.root.querySelector("[data-empty-pause-label]").textContent = this.text("PAUSA", "PAUSED");
     this.updatePauseButton();
     this.root.querySelector("[data-empty-start]").textContent = this.text("COMENZAR", "START RUN");
@@ -414,7 +414,7 @@ export class EmptyStomach {
     const animation = this.animations[key];
     if (animation?.frames.length) {
       const index = getAnimatedFrameIndex(animation.frames, animationTime);
-      const drawY = key === "coral"
+      const drawY = key === "coral" || key.startsWith("parasaur")
         ? getGroundAlignedY(y, h, animation.height, animation.bottomPadding)
         : y;
       this.ctx.drawImage(animation.frames[index].image, x, drawY, w, h);

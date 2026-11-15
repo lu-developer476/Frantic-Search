@@ -309,3 +309,71 @@ test("Empty Stomach ends the run when Coral collides with a departing predator",
   assert.equal(simulation.finished, true);
   assert.equal(simulation.running, false);
 });
+
+
+test("Empty Stomach aligns Parasaurolophus GIFs with the floor without changing their frame size", () => {
+  const frame = { id: "parasaur-frame" };
+  const drawCalls = [];
+  const simulation = Object.create(EmptyStomach.prototype);
+  Object.assign(simulation, {
+    elapsed: 0,
+    animations: {
+      parasaurRun: {
+        height: 100,
+        bottomPadding: 25,
+        frames: [{ image: frame, delay: 100 }]
+      }
+    },
+    ctx: {
+      drawImage(...args) { drawCalls.push(args); }
+    }
+  });
+
+  simulation.drawSprite("parasaurRun", 10, 366, 100, 72, "#8e9b72");
+
+  assert.deepEqual(drawCalls, [[frame, 10, 384, 100, 72]]);
+});
+
+test("Empty Stomach includes the pause key in both instruction labels for Spanish and English", () => {
+  const selectors = [
+    "[data-empty-title]",
+    "[data-empty-subtitle]",
+    "[data-empty-instructions]",
+    "[data-empty-controls-text]",
+    "[data-empty-pause-label]",
+    "[data-empty-start]",
+    "[data-empty-retry]",
+    "[data-empty-exit]"
+  ];
+  const nodes = new Map(selectors.map((selector) => [selector, { textContent: "" }]));
+  const simulation = Object.create(EmptyStomach.prototype);
+  Object.assign(simulation, {
+    locale: "es",
+    pauseButton: {
+      textContent: "",
+      setAttribute(name, value) { this[name] = value; }
+    },
+    root: {
+      querySelector(selector) { return nodes.get(selector); }
+    },
+    render() {}
+  });
+
+  simulation.setLocale("es");
+  const spanish = "A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · P: PAUSAR · ESC: SALIR";
+  assert.equal(nodes.get("[data-empty-instructions]").textContent, spanish);
+  assert.equal(nodes.get("[data-empty-controls-text]").textContent, spanish);
+
+  simulation.setLocale("en");
+  const english = "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · P: PAUSE · ESC: EXIT";
+  assert.equal(nodes.get("[data-empty-instructions]").textContent, english);
+  assert.equal(nodes.get("[data-empty-controls-text]").textContent, english);
+});
+
+test("Empty Stomach static gameplay controls include the pause key", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  assert.ok(html.includes(
+    '<span data-empty-controls-text>A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · P: PAUSAR · ESC: SALIR</span>'
+  ));
+});
