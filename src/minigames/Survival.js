@@ -727,9 +727,11 @@ export class Survival {
     ctx.font = "9px monospace";
     ctx.fillStyle = "#d8f36a";
     ctx.fillText(this.text("VIDA", "HEALTH"), 700, 26);
-    for (let i = 0; i < this.player.maxHealth; i += 1) {
-      ctx.fillStyle = i < this.player.health ? "#d8f36a" : "#34463a";
-      ctx.fillRect(700 + i * 18, 34, 13, 8);
+    if (this.player) {
+      for (let i = 0; i < this.player.maxHealth; i += 1) {
+        ctx.fillStyle = i < this.player.health ? "#d8f36a" : "#34463a";
+        ctx.fillRect(700 + i * 18, 34, 13, 8);
+      }
     }
     ctx.font = "9px monospace";
     ctx.fillStyle = "#c8d5c6";

@@ -4,7 +4,7 @@ const FLOOR = 438;
 const ASSETS = {
   coral: "minigame/empty-stomach/gif/main/miniraptor-run.gif",
   xenoraptor: "minigame/empty-stomach/gif/enemies/xenoraptor/xenoraptor-crypticus-run.gif",
-  velociraptor: "minigame/empty-stomach/gif/enemies/velociraptor/velociraptor-run.gif",
+  velociraptor: "minigame/empty-stomach/gif/enemies/velociraptor/velociraptor-walk.gif",
   parasaurRun: "minigame/empty-stomach/gif/enviroment/parasaurolophus/run.gif",
   parasaurIdle: "minigame/empty-stomach/gif/enviroment/parasaurolophus/idle.gif"
 };
