@@ -9,7 +9,7 @@ const UI = {
     environmentMode: "MODO AMBIENTAL",
     audio: "AUDIO",
     spanish: "ESPAÑOL",
-    english: "ENGLISH",
+    english: "INGLÉS",
     beige: "BEIGE",
     gray: "GRIS",
     desktopOnly: "SOLO COMPUTADORA",
