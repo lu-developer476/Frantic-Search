@@ -50,8 +50,9 @@ const PLATFORM_LAYOUTS = [
 const FERRUCUTUS_CAGE_WIDTH = 164;
 const CAPTIVE_RATIOS_BY_SECTION = [[0.20], [0.52], [0.32], [0.42], [0.30], [], []];
 const CHAPTER_BY_SECTION = [0, 1, 2, 2, 3, 4, 5];
+const BOSS_RATIOS_BY_SECTION = [[], [0.68], [], [], [0.68], [], []];
 const VENATOSAURUS_RATIOS_BY_SECTION = [
-  [0.12, 0.70], [0.20, 0.65, 0.90], [0.18, 0.44, 0.86],
+  [0.12, 0.70], [0.20, 0.45, 0.90], [0.18, 0.44, 0.86],
   [0.18, 0.50, 0.87], [0.14, 0.44, 0.84], [], [0.25, 0.62, 0.84]
 ];
 const FOOD_RATIOS_BY_SECTION = [
@@ -60,7 +61,7 @@ const FOOD_RATIOS_BY_SECTION = [
 ];
 const HUNTER_SPAWNS_BY_SECTION = [
   [{ ratio: 0.46, carriesCaptive: true }, { ratio: 0.78, carriesCaptive: false }],
-  [{ ratio: 0.27, carriesCaptive: false }, { ratio: 0.76, carriesCaptive: false }],
+  [{ ratio: 0.27, carriesCaptive: false }, { ratio: 0.92, carriesCaptive: false }],
   [],
   [{ ratio: 0.22, carriesCaptive: false }, { ratio: 0.82, carriesCaptive: true }],
   [],
@@ -120,7 +121,7 @@ export class PlatformWorld {
     const random = seededRandom(sectionSeed);
     this.sectionSeeds[index] = sectionSeed;
 
-    const isBossArena = index === 2 || index === 4;
+    const isBossArena = index === 4;
     const isFacilityArea = index === 5;
     const isFinalArea = index === 6;
     const levelIndex = CHAPTER_BY_SECTION[index] ?? LEVELS.length - 1;
@@ -150,12 +151,12 @@ export class PlatformWorld {
       ...generatedLedges
     );
 
-    const chapterEnvironment = LEVELS[levelIndex].environment;
     const reservedCharacterPositions = [
       ...(CAPTIVE_RATIOS_BY_SECTION[index] ?? []),
       ...(VENATOSAURUS_RATIOS_BY_SECTION[index] ?? []),
       ...(FOOD_RATIOS_BY_SECTION[index] ?? []),
-      ...(HUNTER_SPAWNS_BY_SECTION[index] ?? []).map((spawn) => spawn.ratio)
+      ...(HUNTER_SPAWNS_BY_SECTION[index] ?? []).map((spawn) => spawn.ratio),
+      ...(BOSS_RATIOS_BY_SECTION[index] ?? [])
     ].map(at);
 
     if (!isBossArena && !isFacilityArea) {
@@ -176,7 +177,10 @@ export class PlatformWorld {
         const crowdsCharacter = reservedCharacterPositions.some((position) =>
           Math.abs(obstacleCenter - position) < 220
         );
-        if (overlapsCage || crowdsCharacter) continue;
+        const crowdsBossArena = (BOSS_RATIOS_BY_SECTION[index] ?? []).some((ratio) =>
+          Math.abs(obstacleCenter - at(ratio)) < 700
+        );
+        if (overlapsCage || crowdsCharacter || crowdsBossArena) continue;
         this.obstacles.push({ x: obstacleX, y: this.groundY - height, w: width, h: height, type: obstacleType, passed: false });
         placedObstacles += 1;
       }
@@ -187,7 +191,7 @@ export class PlatformWorld {
       const x = at(ratio) + Math.round((random() - 0.5) * 50);
       this.venatosaurusSpawns.push({
         id: "venatosaurus-" + index + "-" + spawnIndex,
-        kind: chapterEnvironment === "wild" ? "venatosaurus-impavidus" : "venatosaurus-saevidicus",
+        kind: levelIndex === 0 ? "venatosaurus-impavidus" : "venatosaurus-saevidicus",
         x,
         patrolStart: Math.max(start + 120, x - patrolRadius),
         patrolEnd: Math.min(end - 40, x + patrolRadius),
@@ -225,7 +229,7 @@ export class PlatformWorld {
       });
     });
 
-    if (index === 2) this.bossSpawns.push({ id: "indoraptor-encounter", kind: "indoraptor", x: at(0.68) });
+    if (index === 1) this.bossSpawns.push({ id: "indoraptor-encounter", kind: "indoraptor", x: at(0.68) });
     if (index === 4) this.bossSpawns.push({ id: "indominus-encounter", kind: "indominus", x: at(0.68) });
 
     if (isFacilityArea) {

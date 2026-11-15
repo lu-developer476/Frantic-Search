@@ -64,22 +64,22 @@ export class CampaignManager {
 
     if (worldX >= chapterStart(1)) {
       this.chapter = LEVELS[1].name;
-      this.objective = "TRACK THE CONVOY";
+      this.objective = this.flags.indoraptorDefeated ? "BREACH THE BLACK SITE" : "SURVIVE THE REDWOOD FRONTIER";
       this.queueScene("redwood-arrival", "REDWOOD FRONTIER", [
-        "The convoy has left the highway and entered the redwood corridor. Heat signatures ahead indicate several armed escorts.",
-        "Movement among the trees reveals that the forest is not empty. Every step brings the group closer to the operation's perimeter."
+        "The convoy leaves the coastal highway and enters the Redwood Frontier. Towering redwoods close over the route, while armed poacher escorts patrol the forest.",
+        "A second set of tracks cuts through the undergrowth. An Indoraptor is hunting ahead, and the route will not be safe until it is stopped."
       ]);
     }
     if (worldX >= chapterStart(2)) {
       this.chapter = LEVELS[2].name;
-      this.objective = this.flags.indoraptorDefeated ? "PUSH INTO THE FACILITY" : "SURVIVE THE INDORAPTOR";
-      this.queueScene("black-site-arrival", "UNREGISTERED FACILITY", [
-        "At the edge of the forest, a clandestine research complex comes into view. Armed patrols guard every visible entrance.",
-        "An apex predator is moving inside the complex. Its containment signal confirms that the operation is holding a creature powerful enough to threaten the surrounding region."
+      this.objective = this.flags.indoraptorDefeated ? "BREACH THE BLACK SITE" : "DEFEAT THE INDORAPTOR";
+      this.queueScene("black-site-arrival", "POACHER BLACK SITE", [
+        "Beyond the Redwood Frontier, the Poacher Black Site appears behind reinforced fencing and guarded service roads.",
+        "Breach the clandestine complex and follow the convoy's trail toward Rosa's containment wing."
       ]);
     }
     if (worldX >= WORLD.sectionStarts[3]) {
-      if (this.flags.indoraptorDefeated) this.objective = "PUSH INTO THE FACILITY";
+      this.objective = this.flags.indoraptorDefeated ? "BREACH THE BLACK SITE" : "DEFEAT THE INDORAPTOR";
       this.queueScene("black-site-interior", "INNER RESEARCH PERIMETER", [
         "The first perimeter is behind the group. A second service corridor leads deeper into the black site, where transport records and containment systems converge.",
         "The route is longer than the convoy trail suggested. Patrols are spread across the industrial grounds, and the next containment sector remains ahead."
@@ -87,7 +87,7 @@ export class CampaignManager {
     }
     if (worldX >= chapterStart(3)) {
       this.chapter = LEVELS[3].name;
-      this.objective = this.flags.indominusDefeated ? "ENTER THE CONTAINMENT WING" : "NEUTRALIZE THE INDOMINUS";
+      this.objective = this.flags.indominusDefeated ? "RESTORE AUXILIARY POWER" : "DEFEAT THE INDOMINUS REX";
       this.queueScene("containment-perimeter-arrival", "CONTAINMENT PERIMETER", [
         "The inner perimeter opens onto a reinforced containment yard. Heavy blast doors divide this sector from the cell block.",
         "The Indominus Rex is guarding the only route forward. Its defeat is required before the facility's auxiliary systems can be reached."
@@ -104,7 +104,7 @@ export class CampaignManager {
     }
 
     if (this.flags.betaFreed) {
-      this.objective = "ESCORT ROSA TO EXTRACTION";
+      this.objective = "ESCORT ROSA TO THE EAST GATE";
       if (worldX >= chapterStart(5)) {
         this.chapter = LEVELS[5].name;
         this.queueScene("extraction-arrival", "EXTRACTION ZONE", [
@@ -120,15 +120,15 @@ export class CampaignManager {
   onBossDefeated(kind) {
     if (kind === "indoraptor") {
       this.flags.indoraptorDefeated = true;
-      this.objective = "ADVANCE TO THE BLACK SITE";
+      this.objective = "BREACH THE BLACK SITE";
       this.queueScene("indoraptor-defeated", "THREAT NEUTRALIZED", [
-        "The Indoraptor falls. With the perimeter's primary asset neutralized, the entrance to the complex is no longer under the same threat.",
-        "Beyond the defeated guardian, the search for Rosa continues."
+        "The Indoraptor falls at the edge of Redwood Frontier. The route to Poacher Black Site is now open.",
+        "The route to the clandestine complex is clear. The search for Rosa continues beyond its perimeter."
       ]);
     }
     if (kind === "indominus") {
       this.flags.indominusDefeated = true;
-      this.objective = "ENTER THE CONTAINMENT WING";
+      this.objective = "RESTORE AUXILIARY POWER";
       this.queueScene("indominus-defeated", "CONTAINMENT BREACHED", [
         "The Indominus Rex is defeated. Its containment systems fall silent, but Rosa's cell remains sealed behind the facility's security network.",
         "With the perimeter threat removed, the path to the containment wing is finally open."
@@ -148,7 +148,7 @@ export class CampaignManager {
       ]);
     } else if (kind === "security" && this.flags.powerRestored) {
       this.flags.securityReleased = true;
-      this.objective = "FIND ROSA'S CELL";
+      this.objective = "FREE ROSA";
       this.queueScene("security-released", "CONTAINMENT LOCK RELEASED", [
         "The security lockdown disengages. Cell block C is now accessible.",
         "At the end of the corridor, Rosa's enclosure stands between the family and a long-awaited reunion."
@@ -169,7 +169,7 @@ export class CampaignManager {
     if (!this.canFreeBeta()) return false;
     this.flags.betaFreed = true;
     this.chapter = LEVELS[4].name;
-    this.objective = "ESCORT ROSA TO EXTRACTION";
+    this.objective = "ESCORT ROSA TO THE EAST GATE";
     this.queueScene("beta-rescued", "SUBJECT ROSA SECURED", [
       "Rosa is freed from containment. After everything that happened, she stays close to Violeta as the rescue team approaches the east service gate.",
       "Her vital signs are stable. The only remaining task is to escort her to the extraction marker.",
@@ -192,8 +192,8 @@ export class CampaignManager {
 
   refreshObjective() {
     if (this.flags.completed) this.objective = "MISSION COMPLETE";
-    else if (this.flags.betaFreed) this.objective = "ESCORT ROSA TO EXTRACTION";
-    else if (this.flags.securityReleased) this.objective = "FIND ROSA'S CELL";
+    else if (this.flags.betaFreed) this.objective = "ESCORT ROSA TO THE EAST GATE";
+    else if (this.flags.securityReleased) this.objective = "FREE ROSA";
     else if (this.flags.powerRestored) this.objective = "RELEASE THE SECURITY LOCK";
     else if (this.flags.indominusDefeated) this.objective = "RESTORE AUXILIARY POWER";
   }

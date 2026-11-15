@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { LEVELS } from "../src/config/GameConfig.js";
 
 test("the mission brief shares the top panel bar with distance, rescues, record, health and game state", async () => {
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
@@ -151,4 +152,21 @@ test("character selection and narrator panels share readable, edge-safe typograp
   assert.match(rules, /\.story-text\s*\{[^}]*overflow-wrap:anywhere/s);
   assert.match(rules, /\.story-card\s*\{[^}]*max-height:100%[^}]*overflow-y:auto[^}]*padding:clamp/s);
   assert.match(rules, /\.dino-dialog \.character-card\s*\{[^}]*padding:clamp/s);
+});
+
+
+test("the six README campaign chapters each have a dedicated Canvas environment", async () => {
+  const expectedEnvironments = ["coastal", "redwood", "black-site", "containment", "rosa-containment", "extraction"];
+  const expectedThemes = ["coastal", "forest", "industrial", "industrial", "facility", "extraction"];
+  assert.equal(LEVELS.length, 6);
+  assert.deepEqual(LEVELS.map((chapter) => chapter.environment), expectedEnvironments);
+  assert.deepEqual(LEVELS.map((chapter) => chapter.musicTheme), expectedThemes);
+
+  const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
+  const start = main.indexOf("function drawBackground()");
+  const end = main.indexOf("\nfunction ", start + 16);
+  const background = main.slice(start, end);
+  for (const environment of expectedEnvironments) {
+    assert.ok(background.includes('environment === "' + environment + '"'), "missing Canvas scene: " + environment);
+  }
 });

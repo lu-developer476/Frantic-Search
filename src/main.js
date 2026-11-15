@@ -145,7 +145,7 @@ const rand = (min, max) => min + Math.random() * (max - min);
 const level = () => levelTransition?.phase === "exit"
   ? LEVELS[levelTransition.fromIndex]
   : [...LEVELS].reverse().find((item) => distance >= item.distance) || LEVELS[0];
-const currentMusicTheme = () => campaign.flags.completed ? "victory" : activeBoss ? "boss" : beta?.state === "following" ? "extraction" : level().environment === "wild" ? "coastal" : level().environment;
+const currentMusicTheme = () => campaign.flags.completed ? "victory" : activeBoss ? "boss" : beta?.state === "following" ? "extraction" : level().musicTheme;
 const best = () => Math.max(save.get("bestDistance"), Math.floor(distance));
 const ui = (key) => uiText(key, locale);
 const tr = (value) => translateText(value, locale);
@@ -216,95 +216,190 @@ function drawDino(x, y, width, height, color, kind, phase = 0, alpha = 1, facing
 }
 function drawBackground() {
   const scene = level();
-  const shift = (cameraX * 0.13) % 1120;
   const environment = scene.environment;
+  const scroll = (cameraX * 0.13) % 1320;
+  const fineScroll = (cameraX * 0.29) % 1320;
+  const indoor = environment === "rosa-containment";
+
   ctx.fillStyle = scene.sky;
   ctx.fillRect(0, 0, GAME.width, GAME.height);
-  ctx.fillStyle = scene.sun;
-  ctx.fillRect(770, 58, 34, 34);
-  ctx.fillRect(762, 66, 50, 18);
-  ctx.fillStyle = scene.sunShade;
-  ctx.fillRect(778, 92, 18, 5);
 
-  for (let i = 0; i < 5; i += 1) {
-    const x = ((i * 248 - cameraX * 0.075) % 1180 + 1180) % 1180 - 100;
-    const y = 62 + (i % 3) * 43;
-    ctx.fillStyle = scene.cloudShadow;
-    ctx.fillRect(x + 8, y + 8, 58, 12);
-    ctx.fillRect(x + 20, y, 34, 12);
-    ctx.fillStyle = scene.cloud;
-    ctx.fillRect(x, y + 4, 58, 10);
-    ctx.fillRect(x + 13, y - 4, 35, 12);
+  if (!indoor) {
+    const sunY = environment === "extraction" ? 150 : 58;
+    const sunSize = environment === "extraction" ? 54 : 34;
+    ctx.fillStyle = scene.sun;
+    ctx.fillRect(770, sunY, sunSize, sunSize);
+    ctx.fillRect(762, sunY + 8, sunSize + 16, sunSize - 16);
+    ctx.fillStyle = scene.sunShade;
+    ctx.fillRect(778, sunY + sunSize + 5, 22, 5);
+    for (let i = 0; i < 5; i += 1) {
+      const x = ((i * 248 - cameraX * 0.075) % 1180 + 1180) % 1180 - 100;
+      const y = 52 + (i % 3) * 43;
+      ctx.fillStyle = scene.cloudShadow;
+      ctx.fillRect(x + 8, y + 8, 58, 12);
+      ctx.fillRect(x + 20, y, 34, 12);
+      ctx.fillStyle = scene.cloud;
+      ctx.fillRect(x, y + 4, 58, 10);
+      ctx.fillRect(x + 13, y - 4, 35, 12);
+    }
   }
 
-  for (let i = -1; i < 6; i += 1) {
-    const x = i * 260 - shift;
-    ctx.fillStyle = scene.mountain;
-    ctx.beginPath();
-    ctx.moveTo(x, 402);
-    ctx.lineTo(x + 52, 326);
-    ctx.lineTo(x + 88, 350);
-    ctx.lineTo(x + 145, 266);
-    ctx.lineTo(x + 204, 350);
-    ctx.lineTo(x + 226, 329);
-    ctx.lineTo(x + 278, 402);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = scene.snow;
-    ctx.fillRect(x + 130, 282, 18, 8);
-    ctx.fillRect(x + 144, 274, 12, 8);
-    ctx.fillRect(x + 159, 288, 12, 7);
-  }
-
-  for (let i = -1; i < 5; i += 1) {
-    const x = i * 310 - ((cameraX * 0.22) % 1240);
+  if (environment === "coastal") {
     ctx.fillStyle = scene.ridge;
-    ctx.beginPath();
-    ctx.moveTo(x, 430);
-    ctx.lineTo(x + 22, 370);
-    ctx.lineTo(x + 76, 342);
-    ctx.lineTo(x + 142, 366);
-    ctx.lineTo(x + 202, 326);
-    ctx.lineTo(x + 268, 368);
-    ctx.lineTo(x + 310, 430);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  if (environment === "wild" || environment === "forest") {
+    ctx.fillRect(0, 328, GAME.width, 102);
+    ctx.fillStyle = scene.mountain;
+    for (let i = -1; i < 5; i += 1) {
+      const x = i * 300 - scroll;
+      ctx.beginPath();
+      ctx.moveTo(x, 360); ctx.lineTo(x + 70, 314); ctx.lineTo(x + 144, 350);
+      ctx.lineTo(x + 220, 306); ctx.lineTo(x + 300, 360); ctx.closePath(); ctx.fill();
+    }
+    ctx.fillStyle = scene.cloud;
     for (let i = 0; i < 13; i += 1) {
-      const x = ((i * 103 - cameraX * 0.34) % 1160 + 1160) % 1160 - 80;
-      const base = 427 - (i % 3) * 10;
-      const size = 25 + (i % 4) * 8;
-      ctx.fillStyle = scene.treeTrunk;
-      ctx.fillRect(x + size * 0.43, base - size, 8, size + 8);
-      ctx.fillStyle = i % 2 ? scene.tree : scene.treeLight;
-      ctx.fillRect(x + 3, base - size - 18, size + 14, 20);
-      ctx.fillRect(x + 11, base - size - 29, size - 2, 13);
-      ctx.fillRect(x - 5, base - size - 8, 12, 13);
+      const x = ((i * 91 - cameraX * 0.38) % 1040 + 1040) % 1040;
+      const y = 352 + (i % 4) * 15;
+      ctx.fillRect(x, y, 38, 3); ctx.fillRect(x + 13, y + 7, 22, 2);
     }
-  } else {
-    for (let i = 0; i < 6; i += 1) {
-      const x = ((i * 218 - cameraX * 0.29) % 1320 + 1320) % 1320 - 150;
-      const height = 96 + (i % 3) * 30;
-      ctx.fillStyle = scene.buildingShadow;
-      ctx.fillRect(x + 7, 302 - height, 174, height + 128);
-      ctx.fillStyle = scene.building;
-      ctx.fillRect(x, 294 - height, 174, height + 136);
-      ctx.fillStyle = scene.buildingLight;
-      ctx.fillRect(x, 294 - height, 174, 7);
-      for (let j = 0; j < 4; j += 1) {
-        ctx.fillStyle = scene.window;
-        ctx.fillRect(x + 16 + j * 39, 314 - height, 18, 8);
-        ctx.fillRect(x + 16 + j * 39, 350 - height, 18, 8);
+    ctx.fillStyle = scene.buildingShadow;
+    ctx.fillRect(0, 388, GAME.width, 6);
+    ctx.fillStyle = scene.buildingLight;
+    ctx.fillRect(0, 385, GAME.width, 3);
+    for (let i = 0; i < 12; i += 1) {
+      const x = ((i * 96 - cameraX * 0.30) % 1080 + 1080) % 1080;
+      ctx.fillStyle = scene.buildingShadow; ctx.fillRect(x, 386, 5, 34);
+      ctx.fillStyle = scene.warning; ctx.fillRect(x - 2, 386, 9, 4);
+    }
+  } else if (environment === "redwood") {
+    ctx.fillStyle = scene.ridge;
+    for (let i = -1; i < 6; i += 1) {
+      const x = i * 250 - fineScroll * 0.7;
+      ctx.beginPath();
+      ctx.moveTo(x, 430); ctx.lineTo(x + 54, 292); ctx.lineTo(x + 104, 340);
+      ctx.lineTo(x + 172, 238); ctx.lineTo(x + 250, 430); ctx.closePath(); ctx.fill();
+    }
+    for (let i = 0; i < 11; i += 1) {
+      const x = ((i * 137 - cameraX * 0.34) % 1420 + 1420) % 1420 - 110;
+      const top = 22 + (i % 4) * 34;
+      const trunkWidth = 18 + (i % 3) * 5;
+      const crownWidth = 48 + (i % 4) * 13;
+      ctx.fillStyle = i % 2 ? scene.tree : scene.treeLight;
+      ctx.beginPath();
+      ctx.moveTo(x + trunkWidth / 2, top);
+      ctx.lineTo(x - crownWidth / 2, top + 122);
+      ctx.lineTo(x - crownWidth / 2 + 15, 430);
+      ctx.lineTo(x + crownWidth / 2 + 15, 430);
+      ctx.lineTo(x + crownWidth / 2, top + 122);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = scene.treeTrunk;
+      ctx.fillRect(x, top + 92, trunkWidth, 338 - top);
+      ctx.fillRect(x - 11, 408, trunkWidth + 22, 18);
+      ctx.fillStyle = scene.detail;
+      ctx.fillRect(x + 3, top + 145, 3, 190 - top);
+    }
+  } else if (environment === "black-site") {
+    ctx.fillStyle = scene.ridge; ctx.fillRect(0, 350, GAME.width, 80);
+    for (let i = 0; i < 7; i += 1) {
+      const x = ((i * 218 - fineScroll) % 1520 + 1520) % 1520 - 180;
+      const height = 104 + (i % 3) * 35;
+      const width = 164 + (i % 2) * 42;
+      ctx.fillStyle = scene.buildingShadow; ctx.fillRect(x + 8, 294 - height, width, height + 136);
+      ctx.fillStyle = scene.building; ctx.fillRect(x, 286 - height, width, height + 144);
+      ctx.fillStyle = scene.buildingLight; ctx.fillRect(x, 286 - height, width, 7);
+      for (let row = 0; row < 3; row += 1) for (let column = 0; column < 4; column += 1) {
+        ctx.fillStyle = column % 2 ? scene.window : scene.warning;
+        ctx.fillRect(x + 14 + column * 36, 310 - height + row * 29, 16, 9);
       }
-      ctx.fillStyle = scene.warning;
-      ctx.fillRect(x + 15, 302 - height, 38, 4);
+      ctx.fillStyle = scene.warning; ctx.fillRect(x + 14, 292 - height, 44, 4);
+      ctx.fillStyle = scene.buildingShadow; ctx.fillRect(x + width - 15, 230 - height, 8, 68);
+    }
+    ctx.fillStyle = scene.buildingShadow; ctx.fillRect(0, 354, GAME.width, 5);
+    ctx.fillStyle = scene.buildingLight; ctx.fillRect(0, 351, GAME.width, 3);
+    for (let i = 0; i < 16; i += 1) {
+      const x = ((i * 74 - cameraX * 0.42) % 1060 + 1060) % 1060;
+      ctx.fillStyle = scene.buildingShadow; ctx.fillRect(x, 352, 4, 78);
+      ctx.fillStyle = scene.warning; ctx.fillRect(x - 2, 350, 8, 3);
+    }
+  } else if (environment === "containment") {
+    ctx.fillStyle = scene.ridge; ctx.fillRect(0, 286, GAME.width, 144);
+    ctx.fillStyle = scene.buildingShadow; ctx.fillRect(0, 214, GAME.width, 216);
+    for (let i = 0; i < 7; i += 1) {
+      const x = ((i * 176 - scroll) % 1232 + 1232) % 1232 - 120;
+      ctx.fillStyle = scene.building; ctx.fillRect(x, 250 - (i % 3) * 24, 150, 180);
+      ctx.fillStyle = scene.buildingLight; ctx.fillRect(x + 8, 258 - (i % 3) * 24, 134, 8);
+      ctx.fillStyle = scene.window; ctx.fillRect(x + 22, 280 - (i % 3) * 24, 34, 48);
+      ctx.fillRect(x + 68, 280 - (i % 3) * 24, 58, 48);
+      ctx.fillStyle = scene.buildingShadow; ctx.fillRect(x + 28, 338 - (i % 3) * 24, 96, 72);
+      ctx.fillStyle = scene.warning; ctx.fillRect(x + 5, 246 - (i % 3) * 24, 140, 5);
+    }
+    ctx.fillStyle = scene.warning; ctx.fillRect(0, 376, GAME.width, 8);
+    for (let i = -1; i < 25; i += 1) {
+      const x = i * 48 - ((cameraX * 0.55) % 48);
+      ctx.fillStyle = scene.platformShadow;
+      ctx.beginPath(); ctx.moveTo(x, 384); ctx.lineTo(x + 22, 376);
+      ctx.lineTo(x + 43, 376); ctx.lineTo(x + 21, 384); ctx.closePath(); ctx.fill();
+    }
+    for (let i = 0; i < 8; i += 1) {
+      const x = ((i * 142 - cameraX * 0.25) % 1120 + 1120) % 1120;
+      ctx.fillStyle = scene.buildingLight; ctx.fillRect(x, 120, 10, 118);
+      ctx.fillStyle = scene.warning; ctx.fillRect(x - 5, 114, 20, 7);
+    }
+  } else if (environment === "rosa-containment") {
+    ctx.fillStyle = scene.buildingShadow; ctx.fillRect(0, 0, GAME.width, 430);
+    ctx.fillStyle = scene.building; ctx.fillRect(0, 64, GAME.width, 366);
+    ctx.fillStyle = scene.buildingShadow; ctx.fillRect(0, 64, GAME.width, 16); ctx.fillRect(0, 344, GAME.width, 86);
+    ctx.fillStyle = scene.buildingLight; ctx.fillRect(0, 78, GAME.width, 5);
+    for (let i = 0; i < 5; i += 1) {
+      const x = ((i * 220 - fineScroll) % 1100 + 1100) % 1100 - 90;
+      ctx.fillStyle = scene.buildingShadow; ctx.fillRect(x, 124, 164, 178);
+      ctx.fillStyle = scene.buildingLight; ctx.fillRect(x + 8, 132, 148, 112);
+      ctx.fillStyle = scene.sky; ctx.fillRect(x + 15, 139, 134, 98);
+      ctx.fillStyle = scene.ridge; ctx.fillRect(x + 21, 146, 122, 84);
+      ctx.fillStyle = scene.buildingShadow; ctx.fillRect(x + 77, 139, 7, 98); ctx.fillRect(x + 15, 184, 134, 6);
+      ctx.fillStyle = scene.window; ctx.fillRect(x + 16, 249, 130, 9);
+      ctx.fillStyle = scene.warning; ctx.fillRect(x + 16, 266, 38, 5);
+      ctx.fillStyle = scene.detail; ctx.fillRect(x + 119, 266, 27, 5);
+    }
+    for (let i = 0; i < 7; i += 1) {
+      const x = ((i * 152 - cameraX * 0.18) % 1100 + 1100) % 1100;
+      ctx.fillStyle = scene.window; ctx.fillRect(x, 28, 68, 7);
+      ctx.fillStyle = scene.buildingLight; ctx.fillRect(x + 8, 35, 52, 3);
+    }
+    ctx.fillStyle = scene.warning; ctx.fillRect(0, 396, GAME.width, 8);
+    for (let i = 0; i < 20; i += 1) {
+      const x = i * 52 - ((cameraX * 0.35) % 52);
+      ctx.fillStyle = scene.platformShadow; ctx.fillRect(x, 396, 24, 8);
+    }
+  } else if (environment === "extraction") {
+    ctx.fillStyle = scene.mountain;
+    for (let i = -1; i < 5; i += 1) {
+      const x = i * 310 - scroll;
+      ctx.beginPath(); ctx.moveTo(x, 365); ctx.lineTo(x + 92, 292);
+      ctx.lineTo(x + 158, 332); ctx.lineTo(x + 238, 278);
+      ctx.lineTo(x + 310, 365); ctx.closePath(); ctx.fill();
+    }
+    ctx.fillStyle = scene.buildingShadow; ctx.fillRect(0, 328, GAME.width, 7);
+    for (let i = 0; i < 15; i += 1) {
+      const x = ((i * 86 - cameraX * 0.3) % 1120 + 1120) % 1120;
+      ctx.fillStyle = scene.buildingLight; ctx.fillRect(x, 326, 4, 104);
+      ctx.fillStyle = scene.warning; ctx.fillRect(x - 2, 322, 8, 4);
+    }
+    ctx.fillStyle = scene.buildingShadow; ctx.fillRect(338, 238, 284, 138);
+    ctx.fillStyle = scene.building; ctx.fillRect(350, 214, 260, 162);
+    ctx.fillStyle = scene.buildingLight; ctx.fillRect(350, 214, 260, 9);
+    ctx.fillStyle = scene.buildingShadow; ctx.fillRect(396, 256, 168, 120);
+    ctx.fillStyle = scene.ridge; ctx.fillRect(411, 267, 138, 109);
+    ctx.fillStyle = scene.warning; ctx.fillRect(382, 198, 196, 8);
+    ctx.fillStyle = scene.window; ctx.fillRect(406, 232, 148, 20);
+    ctx.fillStyle = scene.buildingShadow; ctx.font = "bold 11px monospace"; ctx.textAlign = "center";
+    ctx.fillText(tr("EAST GATE"), GAME.width / 2, 246); ctx.textAlign = "start";
+    ctx.fillStyle = scene.buildingLight; ctx.fillRect(0, 390, GAME.width, 4);
+    for (let i = 0; i < 12; i += 1) {
+      const x = ((i * 104 - cameraX * 0.5) % 1120 + 1120) % 1120;
+      ctx.fillStyle = scene.window; ctx.fillRect(x, 414, 42, 3);
     }
   }
 
-  ctx.fillStyle = scene.under;
-  ctx.fillRect(0, 430, GAME.width, 110);
+  ctx.fillStyle = scene.under; ctx.fillRect(0, 430, GAME.width, 110);
   ctx.fillStyle = scene.detail;
   for (let i = 0; i < 24; i += 1) {
     const x = ((i * 67 - cameraX * 0.48) % 1020 + 1020) % 1020;
@@ -313,7 +408,6 @@ function drawBackground() {
     if (i % 3 === 0) ctx.fillRect(x + 4, y - 4, 3, 5);
   }
 }
-
 
 function drawPlatform(platform) {
   const scene = level();

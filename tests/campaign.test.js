@@ -19,9 +19,9 @@ function progressToFacility(campaign) {
   drainScenes(campaign);
   campaign.updateLocation(GAME.playerX + LEVELS[1].distance);
   drainScenes(campaign);
-  campaign.updateLocation(GAME.playerX + LEVELS[2].distance);
-  drainScenes(campaign);
   campaign.onBossDefeated("indoraptor");
+  drainScenes(campaign);
+  campaign.updateLocation(GAME.playerX + LEVELS[2].distance);
   drainScenes(campaign);
   campaign.updateLocation(WORLD.sectionStarts[3]);
   drainScenes(campaign);
@@ -56,7 +56,7 @@ test("Beta cannot be freed until Indominus, power and security are complete", ()
   assert.equal(campaign.canFreeBeta(), true);
   assert.equal(campaign.freeBeta(), true);
   assert.equal(campaign.flags.betaFreed, true);
-  assert.equal(campaign.objective, "ESCORT ROSA TO EXTRACTION");
+  assert.equal(campaign.objective, "ESCORT ROSA TO THE EAST GATE");
 });
 
 test("complete narrative can only be queued after Beta is rescued", () => {
@@ -83,6 +83,11 @@ test("opening and chapter narration is queued in order and can be advanced", () 
   drainScenes(campaign);
   campaign.updateLocation(GAME.playerX + LEVELS[1].distance);
   assert.equal(campaign.activeScene.id, "redwood-arrival");
+  assert.match(campaign.activeScene.lines.join(" "), /Indoraptor/);
+  drainScenes(campaign);
+  campaign.onBossDefeated("indoraptor");
+  campaign.updateLocation(GAME.playerX + LEVELS[1].distance + 200);
+  assert.equal(campaign.objective, "BREACH THE BLACK SITE");
   drainScenes(campaign);
   campaign.updateLocation(GAME.playerX + LEVELS[2].distance);
   assert.equal(campaign.activeScene.id, "black-site-arrival");
@@ -146,7 +151,7 @@ test("the extraction chapter begins only after Rosa is freed and the route is re
   campaign.flags.betaFreed = true;
   campaign.updateLocation(WORLD.extractionChapterStartX - 1);
   assert.equal(campaign.chapter, "ROSA CONTAINMENT");
-  assert.equal(campaign.objective, "ESCORT ROSA TO EXTRACTION");
+  assert.equal(campaign.objective, "ESCORT ROSA TO THE EAST GATE");
   drainScenes(campaign);
   campaign.updateLocation(WORLD.extractionChapterStartX + 1);
   assert.equal(campaign.chapter, "EXTRACTION ZONE");

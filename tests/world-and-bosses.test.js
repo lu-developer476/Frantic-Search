@@ -14,6 +14,10 @@ test("campaign world stops after the finite extraction area", () => {
   assert.equal(world.bossSpawns.length, 2);
   assert.equal(world.bossSpawns[0].kind, "indoraptor");
   assert.equal(world.bossSpawns[1].kind, "indominus");
+  assert.ok(world.bossSpawns[0].x >= WORLD.sectionStarts[1]);
+  assert.ok(world.bossSpawns[0].x < WORLD.sectionStarts[2]);
+  assert.ok(world.bossSpawns[1].x >= WORLD.sectionStarts[4]);
+  assert.ok(world.bossSpawns[1].x < WORLD.sectionStarts[5]);
   assert.ok(world.facilitySpawns);
   assert.equal(world.facilitySpawns.extraction, WORLD.extractionX);
   const finalFloor = world.platforms.find((platform) =>
@@ -69,18 +73,23 @@ test("procedural hazards never overlap Ferrucutus containment cages", () => {
   }
 });
 
-test("boss arenas have continuous floor and no normal hunter spawns", () => {
+test("boss arenas have continuous local floors and no poacher patrol inside the fight", () => {
   const world = new PlatformWorld(430);
   world.extendTo(WORLD.totalLength + 5000);
-  for (const start of [WORLD.sectionStarts[2], WORLD.sectionStarts[4]]) {
+  for (const boss of world.bossSpawns) {
+    const arenaStart = boss.x - 570;
+    const arenaEnd = boss.x + 560;
     const grounds = world.platforms
-      .filter((platform) => platform.kind === "ground" && platform.x >= start && platform.x < start + 1500)
+      .filter((platform) => platform.kind === "ground" && platform.x <= arenaEnd && platform.x + platform.w >= arenaStart)
       .sort((a, b) => a.x - b.x);
-    for (let i = 1; i < grounds.length; i += 1) {
-      assert.equal(grounds[i - 1].x + grounds[i - 1].w, grounds[i].x);
+    let coveredTo = arenaStart;
+    for (const ground of grounds) {
+      if (ground.x > coveredTo) break;
+      coveredTo = Math.max(coveredTo, ground.x + ground.w);
     }
+    assert.ok(coveredTo >= arenaEnd, "each boss arena must have uninterrupted ground support");
+    assert.equal(world.hunterSpawns.some((spawn) => spawn.x >= arenaStart && spawn.x <= arenaEnd), false);
   }
-  assert.equal(world.hunterSpawns.some((spawn) => spawn.id.startsWith("hunter-2-") || spawn.id.startsWith("hunter-4-")), false);
 });
 
 test("Indoraptor only takes damage during exposed recovery", () => {
