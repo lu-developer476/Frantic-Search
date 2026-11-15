@@ -599,7 +599,7 @@ body{background:linear-gradient(180deg,#203f52 0%,#152637 100%)}
 .menu-option{border:2px solid #66838a;border-radius:0;background:#25485a;color:#fff4c8;font-family:"Courier New",monospace;font-weight:700}
 .menu-option.active{border-color:#ffe36b;background:#496c56;color:#fff1a8;box-shadow:inset 0 0 0 2px #ffe36b40}
 .game-panel{border:4px solid #132638;border-radius:0;background:#19344a;box-shadow:7px 7px 0 #091722}
-.panel-head{padding:8px 12px;border-bottom:2px solid #f1cd62;background:#24465a;color:#d1e4d6;font-weight:900}
+.panel-head{padding:8px 12px;border-bottom:0;background:#24465a;color:#d1e4d6;font-weight:900}
 .panel-head span:last-child{color:#ffe36b}
 .panel-head i{border-radius:0;background:#6df27e;box-shadow:2px 2px 0 #17351f}
 .canvas-wrap{background:#59c7da;border-bottom:3px solid #f1cd62}
