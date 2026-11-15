@@ -1,5 +1,8 @@
 import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.js";
 
+const REFERENCE_OUTLINE_WIDTH = 2;
+const REFERENCE_OUTLINE_COLOR = "#000000";
+
 export const DINOSAUR_REFERENCE_SCALES = Object.freeze({
   violeta: 1.6,
   rosa: 1.56,
@@ -229,8 +232,8 @@ export class SpriteRenderer {
 
   getOutlinedReferenceImage(file, image, bounds, drawWidth, drawHeight) {
     if (!(this.outlinedReferenceImages instanceof Map)) this.outlinedReferenceImages = new Map();
-    const border = 2;
-    const key = file + ":" + drawWidth + "x" + drawHeight + ":outline-" + border;
+    const border = REFERENCE_OUTLINE_WIDTH;
+    const key = file + ":" + drawWidth + "x" + drawHeight + ":outline-" + border + "px";
     if (this.outlinedReferenceImages.has(key)) return this.outlinedReferenceImages.get(key);
 
     // Expand the complete opaque silhouette by two pixels in every direction.
@@ -258,7 +261,7 @@ export class SpriteRenderer {
         border, border, drawWidth, drawHeight
       );
       maskContext.globalCompositeOperation = "source-in";
-      maskContext.fillStyle = "#050706";
+      maskContext.fillStyle = REFERENCE_OUTLINE_COLOR;
       maskContext.fillRect(0, 0, canvasWidth, canvasHeight);
 
       const outlined = createSurface();
@@ -266,9 +269,10 @@ export class SpriteRenderer {
       if (!outlineContext) return null;
       outlineContext.imageSmoothingEnabled = false;
 
-      // Expand the alpha silhouette in all eight directions plus its centre.
+      // Use a circular two-pixel dilation so diagonal edges stay fine rather than blocky.
       for (let offsetY = -border; offsetY <= border; offsetY += 1) {
         for (let offsetX = -border; offsetX <= border; offsetX += 1) {
+          if (offsetX * offsetX + offsetY * offsetY > border * border) continue;
           outlineContext.drawImage(mask, offsetX, offsetY);
         }
       }

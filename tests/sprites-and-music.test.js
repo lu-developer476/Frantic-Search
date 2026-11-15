@@ -152,6 +152,61 @@ test("PNG drawing uses alpha-cropped source bounds, pixel sampling and character
   assert.equal(context.globalAlpha, 0.5);
 });
 
+test("reference dinosaur outlines use a fine, pure-black two-pixel contour", () => {
+  const previousOffscreenCanvas = globalThis.OffscreenCanvas;
+  const surfaces = [];
+
+  class FakeOffscreenCanvas {
+    constructor(width, height) {
+      this.width = width;
+      this.height = height;
+      this.context = {
+        calls: [],
+        imageSmoothingEnabled: true,
+        globalCompositeOperation: "source-over",
+        fillStyle: "",
+        drawImage(...args) { this.calls.push(["drawImage", ...args]); },
+        fillRect(...args) { this.calls.push(["fillRect", ...args]); }
+      };
+      surfaces.push(this);
+    }
+    getContext() { return this.context; }
+  }
+
+  globalThis.OffscreenCanvas = FakeOffscreenCanvas;
+  try {
+    const file = "vastatosaurus-rex.png";
+    const { renderer, reference } = rendererWithReference(file);
+    const outlined = renderer.getOutlinedReferenceImage(
+      file,
+      reference,
+      { x: 18, y: 22, width: 820, height: 380 },
+      32,
+      16
+    );
+
+    assert.equal(outlined.width, 36);
+    assert.equal(outlined.height, 20);
+    assert.equal(surfaces.length, 2);
+    assert.equal(surfaces[0].context.fillStyle, "#000000");
+
+    const outlineDraws = surfaces[1].context.calls
+      .filter(([operation]) => operation === "drawImage");
+    const dilationDraws = outlineDraws.slice(0, -1);
+    assert.equal(dilationDraws.length, 13);
+    assert.ok(dilationDraws.some(([, source, x, y]) => source === surfaces[0] && x === 2 && y === 0));
+    assert.ok(!dilationDraws.some(([, source, x, y]) =>
+      source === surfaces[0] && Math.abs(x) === 2 && Math.abs(y) === 2
+    ));
+    assert.deepEqual(outlineDraws.at(-1), [
+      "drawImage", reference, 18, 22, 820, 380, 2, 2, 32, 16
+    ]);
+  } finally {
+    if (previousOffscreenCanvas === undefined) delete globalThis.OffscreenCanvas;
+    else globalThis.OffscreenCanvas = previousOffscreenCanvas;
+  }
+});
+
 test("Indoraptor gameplay rendering draws the generation-two PNG in phase two", () => {
   const file = "indoraptor-second-generation.png";
   const { renderer, reference } = rendererWithReference(file);
