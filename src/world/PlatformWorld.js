@@ -195,15 +195,18 @@ export class PlatformWorld {
 
     const occupiedCages = this.ferrucutusCageSpawns.filter((cage) => cage.x >= start && cage.x < end);
     if (!isBossArena && !isFacilityArea) {
-      const obstacleRatios = shuffle([0.08, 0.20, 0.32, 0.44, 0.56, 0.68, 0.80, 0.92], random);
+      // Place ground obstacles between the existing raised ledges so climbable
+      // boulders add new routes instead of colliding with the current platform layout.
+      const obstacleRatios = shuffle([0.13, 0.25, 0.37, 0.49, 0.61, 0.73, 0.85, 0.93], random);
       const targetObstacleCount = 4 + Math.floor(random() * 2);
       let placedObstacles = 0;
       for (const ratio of obstacleRatios) {
         if (placedObstacles >= targetObstacleCount) break;
         const obstacleX = at(ratio) + Math.round((random() - 0.5) * 24);
         const obstacleType = random() < 0.5 ? "crate" : "rock";
-        const width = obstacleType === "crate" ? 52 : 56;
-        const height = obstacleType === "crate" ? 52 : 58;
+        const rockVariant = (index + Math.round(ratio * 100)) % 3;
+        const width = obstacleType === "crate" ? 52 : 104 + rockVariant * 8;
+        const height = obstacleType === "crate" ? 52 : 72 + rockVariant * 6;
         const obstacleCenter = obstacleX + width / 2;
         const overlapsCage = occupiedCages.some((cage) =>
           obstacleX < cage.x + FERRUCUTUS_CAGE_WIDTH + 24 && obstacleX + width > cage.x - 24
@@ -215,7 +218,18 @@ export class PlatformWorld {
           Math.abs(obstacleCenter - at(ratio)) < 700
         );
         if (overlapsCage || crowdsCharacter || crowdsBossArena) continue;
-        this.obstacles.push({ x: obstacleX, y: this.groundY - height, w: width, h: height, type: obstacleType, passed: false });
+        const obstacle = { x: obstacleX, y: this.groundY - height, w: width, h: height, type: obstacleType, passed: false };
+        this.obstacles.push(obstacle);
+        if (obstacleType === "rock") {
+          // The top shelf is a real one-way landing surface, not just scenery.
+          this.platforms.push({
+            x: obstacleX + 22,
+            y: obstacle.y + 4,
+            w: width - 42,
+            h: 14,
+            kind: "rock-ledge"
+          });
+        }
         placedObstacles += 1;
       }
     }

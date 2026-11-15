@@ -116,3 +116,27 @@ test("Ligocristus and Venatosaurus perform autonomous jumps while fleeing or pur
   assert.equal(enemy.onGround, false);
   assert.ok(enemy.vy < 0);
 });
+
+
+test("a dust stun disables a pursuing Venatosaurus for the full two seconds", () => {
+  const enemy = new WildDinosaur({
+    id: "venatosaurus-dust-stun",
+    kind: "venatosaurus-impavidus",
+    x: 100,
+    groundY: 430,
+    patrolStart: 0,
+    patrolEnd: 700
+  });
+
+  assert.equal(enemy.stun(2), true);
+  assert.equal(enemy.state, "stunned");
+  enemy.takeDamage(1);
+  assert.equal(enemy.stateTimer, 2, "ordinary damage must not shorten the dust stun");
+
+  enemy.update(1.99, []);
+  assert.equal(enemy.state, "stunned");
+  enemy.update(0.02, []);
+  assert.equal(enemy.state, "patrol");
+  enemy.takeDamage(999);
+  assert.equal(enemy.stun(2), false, "defeated dinosaurs cannot be stunned");
+});

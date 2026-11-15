@@ -2677,11 +2677,11 @@ html.site-mode-gray .story-card .story-actions span{
 .start-screen-copy .start-screen-actions[hidden],
 .start-screen-copy .start-menu-view[hidden]{display:none!important}
 .start-screen-copy .start-menu-view button{
-  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  display:flex;align-items:center;justify-content:center;gap:16px;
   width:100%;min-width:0;min-height:48px;margin:0;padding:13px 15px;
   border:1px solid #8c9d77;border-radius:2px;background:#26372f;color:#eff3e5;
   font-family:var(--font-mono);font-size:9px;font-weight:800;letter-spacing:.12em;
-  text-align:left;cursor:pointer;transition:background .18s ease,border-color .18s ease,transform .18s ease;
+  text-align:center;cursor:pointer;transition:background .18s ease,border-color .18s ease,transform .18s ease;
 }
 .start-screen-copy .start-menu-view button:hover{
   background:#354c3e;border-color:#d8f36a;transform:translateY(-1px)

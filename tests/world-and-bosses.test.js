@@ -289,3 +289,23 @@ test("Indoraptor proportions follow its upright reference and attack hitboxes re
   const groundedPlayer = { x: boss.x + boss.w - 2, y: 368, w: 64, h: 62 };
   assert.equal(CollisionSystem.bossAttackHit(groundedPlayer, boss), true);
 });
+
+
+test("natural boulders expose elevated landing surfaces", () => {
+  const world = new PlatformWorld(GAME.groundY, { seed: 424242 });
+  world.extendTo(50000);
+  const rocks = world.obstacles.filter((obstacle) => obstacle.type === "rock");
+  const rockPlatforms = world.platforms.filter((platform) => platform.kind === "rock-ledge");
+
+  assert.ok(rocks.length > 0);
+  assert.equal(rockPlatforms.length, rocks.length);
+  for (const platform of rockPlatforms) {
+    const rock = rocks.find((obstacle) =>
+      platform.x === obstacle.x + 22 &&
+      platform.y === obstacle.y + 4 &&
+      platform.w === obstacle.w - 42
+    );
+    assert.ok(rock, "each elevated rock platform must match a visible boulder");
+    assert.ok(platform.y < GAME.groundY, "the rock shelf must sit above the ground");
+  }
+});

@@ -195,6 +195,7 @@ let activeBoss = null;
 let bossCueTimer = 0;
 let bossCueTitle = "";
 let dashHitIds = new Set();
+let dashDustClouds = [];
 let particles = [];
 let campaign = new CampaignManager();
 let beta = null;
@@ -467,6 +468,7 @@ function drawBackground() {
 
 function drawPlatform(platform) {
   const scene = level();
+  if (platform.kind === "rock-ledge") return;
   if (platform.kind === "ground") {
     ctx.fillStyle = scene.soil;
     ctx.fillRect(platform.x, platform.y, platform.w, platform.h);
@@ -667,22 +669,100 @@ function drawObstacle(obstacle) {
     ctx.fillStyle = "#303a35";
     ctx.fillRect(obstacle.x + 5, obstacle.y + obstacle.h - 8, obstacle.w - 10, 8);
   } else {
-    ctx.fillStyle = "#b8b08a";
+    ctx.fillStyle = "#686f61";
     ctx.beginPath();
     ctx.moveTo(obstacle.x, obstacle.y + obstacle.h);
-    ctx.lineTo(obstacle.x + obstacle.w * 0.15, obstacle.y + obstacle.h * 0.35);
-    ctx.lineTo(obstacle.x + obstacle.w * 0.36, obstacle.y + obstacle.h * 0.48);
-    ctx.lineTo(obstacle.x + obstacle.w * 0.55, obstacle.y);
-    ctx.lineTo(obstacle.x + obstacle.w * 0.78, obstacle.y + obstacle.h * 0.4);
+    ctx.lineTo(obstacle.x + obstacle.w * 0.08, obstacle.y + obstacle.h * 0.52);
+    ctx.lineTo(obstacle.x + obstacle.w * 0.20, obstacle.y + 4);
+    ctx.lineTo(obstacle.x + obstacle.w * 0.80, obstacle.y + 4);
+    ctx.lineTo(obstacle.x + obstacle.w * 0.92, obstacle.y + obstacle.h * 0.48);
     ctx.lineTo(obstacle.x + obstacle.w, obstacle.y + obstacle.h);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = "#e0d5a4";
-    ctx.fillRect(obstacle.x + obstacle.w * 0.22, obstacle.y + obstacle.h * 0.42, 8, 4);
+    ctx.fillStyle = "#929982";
+    ctx.fillRect(obstacle.x + obstacle.w * 0.22, obstacle.y + 5, obstacle.w * 0.55, 5);
+    ctx.fillStyle = "#4d584b";
+    ctx.fillRect(obstacle.x + obstacle.w * 0.12, obstacle.y + obstacle.h * 0.72, obstacle.w * 0.27, 4);
+    ctx.fillRect(obstacle.x + obstacle.w * 0.68, obstacle.y + obstacle.h * 0.64, obstacle.w * 0.19, 5);
+    ctx.fillStyle = "#c0c0a0";
+    ctx.fillRect(obstacle.x + obstacle.w * 0.32, obstacle.y + 9, obstacle.w * 0.20, 3);
   }
   ctx.restore();
 }
 
+
+function createDashDustCloud() {
+  const direction = Math.sign(player.facing) || 1;
+  const width = 205;
+  const height = player.h + 14;
+  const x = direction > 0 ? player.x - 135 : player.x + player.w - 70;
+  const y = player.y - 6;
+  const lifetime = 0.72;
+  dashDustClouds.push({
+    x, y, w: width, h: height,
+    life: lifetime, max: lifetime,
+    hitIds: new Set()
+  });
+  burst(x + width * 0.58, y + height * 0.72, "#c8bca1", 9);
+}
+
+function updateDashDust(delta) {
+  for (const cloud of dashDustClouds) {
+    cloud.life = Math.max(0, cloud.life - delta);
+    if (cloud.life <= 0) continue;
+
+    for (const enemy of venatosauruses) {
+      if (
+        enemy.defeated ||
+        cloud.hitIds.has(enemy.id) ||
+        !["pursuit", "windup", "attack"].includes(enemy.state)
+      ) continue;
+
+      // Venatosaurus head position follows its facing direction; only a face-level
+      // contact with the dust plume interrupts an active pursuit.
+      const faceX = enemy.x + enemy.w * (enemy.direction > 0 ? 0.82 : 0.18);
+      const faceY = enemy.y + enemy.h * 0.34;
+      const hitFace = faceX >= cloud.x && faceX <= cloud.x + cloud.w &&
+        faceY >= cloud.y && faceY <= cloud.y + cloud.h;
+      if (!hitFace) continue;
+
+      cloud.hitIds.add(enemy.id);
+      enemy.stun(2 + delta);
+      burst(faceX, faceY, "#d7c8a7", 8);
+    }
+  }
+  dashDustClouds = dashDustClouds.filter((cloud) => cloud.life > 0);
+}
+
+function drawDashDustCloud(cloud) {
+  const fade = Math.max(0, Math.min(1, cloud.life / cloud.max));
+  if (fade <= 0) return;
+  const rise = (1 - fade) * 12;
+  const puffs = [
+    [0.10, 0.72, 0.15, 0.23], [0.27, 0.48, 0.17, 0.28],
+    [0.46, 0.64, 0.19, 0.25], [0.63, 0.42, 0.16, 0.28],
+    [0.80, 0.65, 0.16, 0.23], [0.94, 0.77, 0.10, 0.18]
+  ];
+  ctx.save();
+  ctx.globalAlpha = fade * 0.68;
+  puffs.forEach(([px, py, rx, ry], index) => {
+    ctx.fillStyle = index % 2 ? "#c0b397" : "#d9ccb0";
+    ctx.beginPath();
+    ctx.ellipse(
+      cloud.x + cloud.w * px,
+      cloud.y + cloud.h * py - rise,
+      cloud.w * rx,
+      cloud.h * ry,
+      0, 0, Math.PI * 2
+    );
+    ctx.fill();
+  });
+  ctx.globalAlpha = fade * 0.56;
+  ctx.fillStyle = "#e0d5bd";
+  ctx.fillRect(cloud.x + cloud.w * 0.18, cloud.y + cloud.h * 0.52 - rise, 12, 5);
+  ctx.fillRect(cloud.x + cloud.w * 0.68, cloud.y + cloud.h * 0.31 - rise, 9, 4);
+  ctx.restore();
+}
 
 function burst(x, y, color = "#d8f36a", count = 12) {
   for (let i = 0; i < count; i += 1) {
@@ -1650,6 +1730,10 @@ function update(delta) {
   if (input.consume("special")) activateStegoceratops();
   if (player.consumeJumpEvent()) audio.jump();
   const abilityEvent = player.consumeAbilityEvent();
+  if (abilityEvent === "dash") {
+    dashHitIds.clear();
+    createDashDustCloud();
+  }
   if (abilityEvent === "dash" || abilityEvent === "stomp") audio.collect();
   if (abilityEvent === "slam") audio.hit();
 
@@ -1749,6 +1833,8 @@ function update(delta) {
     if (!running || player.health <= 0) return;
   }
   hunterProjectiles = hunterProjectiles.filter((projectile) => projectile.active);
+
+  updateDashDust(delta);
 
   for (const enemy of venatosauruses) {
     const targets = [
@@ -1971,6 +2057,7 @@ function render() {
       if (!enemy.defeated) drawReferenceHealthBar(enemy);
     }
   }
+  for (const cloud of dashDustClouds) drawDashDustCloud(cloud);
   for (const hunter of hunters) {
     if (hunter.x + hunter.w >= cameraX - 90 && hunter.x <= cameraX + GAME.width + 90) drawHunter(hunter);
   }
@@ -2333,6 +2420,7 @@ function resetPlayer(worldSeed = undefined) {
   bossCueTimer = 0;
   bossCueTitle = "";
   dashHitIds = new Set();
+  dashDustClouds = [];
   syncEncounters();
   cameraX = 0;
   particles = [];

@@ -105,6 +105,14 @@ export class WildDinosaur {
     }
   }
 
+  stun(duration = 2) {
+    if (this.defeated || !Number.isFinite(duration) || duration <= 0) return false;
+    const remainingStun = this.state === "stunned" ? this.stateTimer : 0;
+    this.state = "stunned";
+    this.stateTimer = Math.max(remainingStun, duration);
+    return true;
+  }
+
   takeDamage(amount = 1) {
     if (this.defeated || amount <= 0) return { hit: false, defeated: this.defeated };
     this.health = Math.max(0, this.health - amount);
@@ -113,8 +121,9 @@ export class WildDinosaur {
       this.state = "defeated";
       return { hit: true, defeated: true };
     }
+    const remainingStun = this.state === "stunned" ? this.stateTimer : 0;
     this.state = "stunned";
-    this.stateTimer = 0.32;
+    this.stateTimer = Math.max(remainingStun, 0.32);
     return { hit: true, defeated: false };
   }
 
