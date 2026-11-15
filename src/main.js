@@ -35,7 +35,7 @@ import { TimeAttack } from "./minigames/TimeAttack.js";
 import { Survival } from "./minigames/Survival.js";
 
 const canvas = document.querySelector("#game");
-const desktopPlayback = window.matchMedia("(min-width: 768px) and (hover: hover) and (pointer: fine)");
+const desktopPlayback = window.matchMedia("(min-width: 768px) and (any-pointer: fine)");
 // Render directly to the native 960×540 game canvas. The old 320×180
 // intermediate buffer discarded most sprite detail before it was enlarged again.
 const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
