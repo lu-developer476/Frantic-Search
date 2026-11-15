@@ -1,5 +1,6 @@
 import { GAME, LEVELS, WORLD } from "../config/GameConfig.js";
 import { generateSectionScenery } from "./SceneryGenerator.js";
+import { generateSectionCollectibles } from "./CollectibleGenerator.js";
 
 function seededRandom(seed) {
   let state = seed >>> 0;
@@ -128,6 +129,7 @@ export class PlatformWorld {
     this.facilitySpawns = null;
     this.facilityProps = [];
     this.sceneryProps = [];
+    this.collectibleSpawns = [];
     this.generatedSections = 0;
     this.bridgeSequence = 0;
     this.extendTo(GAME.playerX + WORLD.maxSectionLength + 1200);
@@ -320,6 +322,9 @@ export class PlatformWorld {
       groundY: this.groundY,
       environment: LEVELS[levelIndex]?.environment,
       safeZones: scenerySafeZones
+    }));
+    this.collectibleSpawns.push(...generateSectionCollectibles({
+      seed: this.seed, sectionIndex: index, sectionStart: start, sectionLength, groundY: this.groundY
     }));
   }
 

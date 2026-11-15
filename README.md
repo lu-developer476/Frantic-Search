@@ -56,6 +56,13 @@ Narrator interludes pause the simulation so the player can read the story and ev
 - Procedural sound effects for movement, damage, rescue and boss events.
 - No remote music or image downloads are required at runtime. Interface typography loads Barlow, Barlow Condensed and IBM Plex Mono from Google Fonts, with system fallbacks.
 
+## Collectibles, rewards and secondary objectives
+
+- Twelve optional amber fossil fragments appear across outdoor chapters. Each restores one health point when possible; six raise maximum health from five to six, and completing the full survey restores health.
+- Three optional research drives are hidden in the black-site and containment areas. Recovering all three reduces Stegoceratops' support cooldown from 30 to 24 seconds.
+- Progress appears beneath the main mission objective. These tasks never block campaign progression.
+- Collected items, the health-capacity reward and support upgrade persist in continue, checkpoint and retry snapshots.
+
 ## Campaign persistence
 
 - Campaign progress is stored locally in the browser and can be resumed from the start screen.
@@ -106,7 +113,7 @@ npm run preview
 npm run check
 ```
 
-The automated suite covers campaign gating, facility terminal interaction, Rosa escort, finite world generation, chapter-scaled Ferrucutus captive counts, wildlife enemy behaviour, boss phases, attack patterns, dodge recovery and hitboxes, sprite availability, sprite loading and adaptive music scheduling.
+The automated suite covers campaign gating, facility terminal interaction, Rosa escort, finite world generation, deterministic collectible placement and save validation, chapter-scaled Ferrucutus captive counts, wildlife enemy behaviour, boss phases, attack patterns, dodge recovery and hitboxes, sprite availability, sprite loading and adaptive music scheduling.
 
 ## Deploy to Vercel
 

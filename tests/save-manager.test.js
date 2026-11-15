@@ -30,6 +30,7 @@ function createSnapshot(overrides = {}) {
     rescues: 0,
     playerHealth: 5,
     stegoceratopsCooldown: 0,
+    collectedCollectibleIds: [],
     rescuedFerrucutusCageIds: [],
     allies: [],
     campaign: {
@@ -154,4 +155,33 @@ test("malformed local storage falls back to defaults without breaking startup", 
   const save = new SaveManager();
   assert.equal(save.get("bestDistance"), 0);
   assert.equal(save.getCampaignProgress(), null);
+});
+
+test("legacy snapshots without collectible fields remain valid",()=>{
+ const legacy=createSnapshot();delete legacy.collectedCollectibleIds;
+ assert.equal(isValidCampaignSnapshot(legacy),true);
+});
+test("collectible progress permits six health only after six amber fossils",()=>{
+ const ids=["amber-0-1","amber-0-2","amber-1-1","amber-1-2","amber-2-1","amber-2-2","intel-2"];
+ assert.equal(isValidCampaignSnapshot(createSnapshot({playerHealth:6,collectedCollectibleIds:ids})),true);
+ assert.equal(isValidCampaignSnapshot(createSnapshot({playerHealth:6,collectedCollectibleIds:["amber-0-1"]})),false);
+ assert.equal(isValidCampaignSnapshot(createSnapshot({playerHealth:7,collectedCollectibleIds:ids})),false);
+ assert.equal(isValidCampaignSnapshot(createSnapshot({collectedCollectibleIds:["unknown"]})),false);
+});
+test("continue and checkpoint data retain collected collectible IDs",(t)=>{
+ installStorage(t);const save=new SaveManager();
+ const current=createSnapshot({collectedCollectibleIds:["amber-0-1","intel-2"],playerHealth:6});
+ const start=createSnapshot(),checkpoint=createSnapshot({collectedCollectibleIds:["amber-0-1"]});
+ assert.equal(save.saveCampaignProgress({snapshot:current,levelStartSnapshot:start,checkpointSnapshot:checkpoint}),true);
+ const loaded=new SaveManager().getCampaignProgress();
+ assert.deepEqual(loaded.snapshot.collectedCollectibleIds,["amber-0-1","intel-2"]);
+ assert.deepEqual(loaded.levelStartSnapshot.collectedCollectibleIds,[]);
+ assert.deepEqual(loaded.checkpointSnapshot.collectedCollectibleIds,["amber-0-1"]);
+});
+
+
+test("malformed collectible ledgers are rejected without throwing", () => {
+  const snapshot = createSnapshot();
+  assert.equal(isValidCampaignSnapshot({ ...snapshot, collectedCollectibleIds: "amber-0-1" }), false);
+  assert.equal(isValidCampaignSnapshot({ ...snapshot, collectedCollectibleIds: { fossil: true } }), false);
 });

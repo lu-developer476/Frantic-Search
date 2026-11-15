@@ -22,6 +22,7 @@ import { PhysicsSystem } from "./systems/PhysicsSystem.js";
 import { CollisionSystem } from "./systems/CollisionSystem.js";
 import { beginEnemyFade, advanceEnemyFade, getEnemyOpacity, isEnemyFadeComplete } from "./systems/EnemyFadeSystem.js";
 import { PlatformWorld } from "./world/PlatformWorld.js";
+import { COLLECTIBLE_TOTALS } from "./world/CollectibleGenerator.js";
 import { CampaignManager, BOSS_ENCOUNTER_FLAGS } from "./campaign/CampaignManager.js";
 import { getLevelCheckpointDistance, canActivateLevelCheckpoint } from "./campaign/CheckpointManager.js";
 import { Beta } from "./entities/Beta.js";
@@ -86,6 +87,7 @@ const controlsLabel = document.querySelector(".hud-controls");
 const stegoceratopsStatusLabel = document.querySelector("#stegoceratops-status");
 const campaignObjectiveLabel = document.querySelector("#campaign-objective");
 const campaignChapterLabel = document.querySelector("#campaign-chapter");
+const secondaryObjectivesLabel = document.querySelector("#secondary-objectives");
 const interactionHintLabel = document.querySelector("#interaction-hint");
 const storyPanel = document.querySelector("#story-panel");
 const storyTitle = document.querySelector("#story-title");
@@ -151,6 +153,12 @@ let seenFerrucutusCages = new Set();
 let rescuedFerrucutusCageIds = new Set();
 let seenHunterSpawns = new Set();
 let seenBossSpawns = new Set();
+let collectibles = [];
+let seenCollectibleSpawns = new Set();
+let collectedCollectibleIds = new Set();
+let pickupCueTimer = 0;
+let pickupCueTitle = "";
+let pickupCueMessage = "";
 let bosses = [];
 let activeBoss = null;
 let bossCueTimer = 0;
@@ -165,6 +173,10 @@ let extractionX = null;
 let campaignSaved = false;
 
 const CAMPAIGN_AUTOSAVE_INTERVAL = 12;
+const BASE_STEGOCERATOPS_COOLDOWN = 30;
+const INTEL_STEGOCERATOPS_COOLDOWN = 24;
+const AMBER_MAX_HEALTH_MILESTONE = 6;
+const AMBER_BONUS_HEALTH = 1;
 const rand = (min, max) => min + Math.random() * (max - min);
 const level = () => levelTransition?.phase === "exit"
   ? LEVELS[levelTransition.fromIndex]
@@ -935,6 +947,11 @@ function syncEncounters() {
       patrolEnd: spawn.patrolEnd ?? spawn.x + 650
     }));
   }
+  for(const spawn of world.collectibleSpawns){
+    if(seenCollectibleSpawns.has(spawn.id))continue;
+    seenCollectibleSpawns.add(spawn.id);
+    if(!collectedCollectibleIds.has(spawn.id))collectibles.push({...spawn});
+  }
 }
 
 function syncFacility() {
@@ -947,11 +964,11 @@ function syncFacility() {
 }
 
 function updateStegoceratopsHud() {
-  if (!stegoceratopsStatusLabel) return;
-  const ready = stegoceratopsCooldown <= 0;
-  stegoceratopsStatusLabel.textContent = "STEGOCERATOPS [C] - " +
-    (ready ? ui("abilityReady") : ui("cooldown") + " " + stegoceratopsCooldown.toFixed(1) + "s");
-  stegoceratopsStatusLabel.classList.toggle("ready", ready);
+  if(!stegoceratopsStatusLabel)return;
+  const ready=stegoceratopsCooldown<=0,upgrade=hasIntelSupportUpgrade();
+  const status=ready?ui("abilityReady")+(upgrade?" · "+currentStegoceratopsCooldown()+"s":""):ui("cooldown")+" "+stegoceratopsCooldown.toFixed(1)+"s";
+  stegoceratopsStatusLabel.textContent="STEGOCERATOPS [C] - "+status+(upgrade?" · "+ui("supportUpgrade"):"");
+  stegoceratopsStatusLabel.classList.toggle("ready",ready);
 }
 
 function updatePlayerAbilityHud() {
@@ -997,10 +1014,75 @@ function tryEatFood(actor, radius = 150) {
   return true;
 }
 
+function collectedCount(type) {
+  const prefix=type+"-";let count=0;
+  for(const id of collectedCollectibleIds)if(id.startsWith(prefix))count+=1;
+  return count;
+}
+function hasIntelSupportUpgrade(){return collectedCount("intel")>=COLLECTIBLE_TOTALS.intel;}
+function currentStegoceratopsCooldown(){return hasIntelSupportUpgrade()?INTEL_STEGOCERATOPS_COOLDOWN:BASE_STEGOCERATOPS_COOLDOWN;}
+function applyCollectibleUnlocks(){
+  if(collectedCount("amber")>=AMBER_MAX_HEALTH_MILESTONE)player.maxHealth=Math.max(player.maxHealth,5+AMBER_BONUS_HEALTH);
+  if(hasIntelSupportUpgrade())stegoceratopsCooldown=Math.min(stegoceratopsCooldown,INTEL_STEGOCERATOPS_COOLDOWN);
+}
+function showPickupNotice(titleKey,messageKey){pickupCueTitle=titleKey;pickupCueMessage=messageKey;pickupCueTimer=2.8;}
+function collectNearbyCollectibles(){
+  const bounds={x:player.x+12,y:player.y+8,w:Math.max(12,player.w-24),h:Math.max(12,player.h-16)};
+  for(let index=collectibles.length-1;index>=0;index-=1){
+    const item=collectibles[index],pickup={x:item.x-16,y:item.y-4,w:32,h:38};
+    if(collectedCollectibleIds.has(item.id)||!CollisionSystem.overlaps(bounds,pickup))continue;
+    const previousAmber=collectedCount("amber"),previousIntel=hasIntelSupportUpgrade();
+    collectedCollectibleIds.add(item.id);collectibles.splice(index,1);
+    if(item.type==="amber"){
+      const healed=player.health<player.maxHealth;
+      if(healed)player.health=Math.min(player.maxHealth,player.health+1);
+      const count=collectedCount("amber");
+      let message=healed?"healthRestored":"fieldSurveyProgress";
+      if(count>=AMBER_MAX_HEALTH_MILESTONE&&previousAmber<AMBER_MAX_HEALTH_MILESTONE){
+        player.maxHealth=Math.max(player.maxHealth,5+AMBER_BONUS_HEALTH);
+        player.health=Math.min(player.maxHealth,player.health+1);
+        message="maxHealthReward";
+      }else if(count>=COLLECTIBLE_TOTALS.amber){player.health=player.maxHealth;message="fullSurveyReward";}
+      showPickupNotice("amberSampleRecovered",message);
+      burst(item.x,item.y+item.h/2,"#f3c36b",18);
+    }else{
+      showPickupNotice("intelDriveRecovered",!previousIntel&&hasIntelSupportUpgrade()?"supportUpgradeReward":"intelProgress");
+      burst(item.x,item.y+item.h/2,"#79d9d2",20);
+    }
+    audio.collect();applyCollectibleUnlocks();updateCampaignHud();updatePlayerHealthHud();updateStegoceratopsHud();
+  }
+}
+function drawCollectible(context,item){
+  const bob=Math.sin(elapsed*3.4+item.phase)*3,centerY=item.y+item.h/2+bob;
+  context.save();context.globalAlpha=.78+Math.sin(elapsed*5+item.phase)*.12;context.shadowBlur=12;
+  context.shadowColor=item.type==="amber"?"#ffd36d":"#68e4df";context.fillStyle=item.type==="amber"?"#ffd36d":"#68e4df";
+  context.beginPath();context.arc(item.x,centerY,15+Math.sin(elapsed*4+item.phase)*1.5,0,Math.PI*2);context.fill();context.shadowBlur=0;
+  if(item.type==="amber"){
+    context.fillStyle="#a85c28";context.beginPath();context.moveTo(item.x,centerY-12);context.lineTo(item.x+8,centerY-1);
+    context.lineTo(item.x+3,centerY+12);context.lineTo(item.x-7,centerY+7);context.lineTo(item.x-9,centerY-5);context.closePath();context.fill();
+    context.fillStyle="#fff0a8";context.fillRect(item.x-2,centerY-8,3,6);context.fillRect(item.x+3,centerY-1,3,4);
+  }else{
+    context.fillStyle="#143c4b";context.fillRect(item.x-10,centerY-8,20,17);
+    context.strokeStyle="#dcffef";context.lineWidth=2;context.strokeRect(item.x-10,centerY-8,20,17);
+    context.fillStyle="#aaf8e7";context.fillRect(item.x-4,centerY-3,8,3);context.fillRect(item.x-4,centerY+3,3,2);context.fillRect(item.x+2,centerY+3,3,2);
+  }
+  context.restore();
+}
+function drawPickupNotice(){
+  if(pickupCueTimer<=0)return;
+  ctx.save();ctx.globalAlpha=Math.min(1,pickupCueTimer*1.4);ctx.fillStyle="#0d191be8";ctx.fillRect(260,464,440,46);
+  ctx.strokeStyle=pickupCueTitle==="intelDriveRecovered"?"#68e4df":"#ffd36d";ctx.lineWidth=2;ctx.strokeRect(260,464,440,46);
+  ctx.textAlign="center";ctx.fillStyle="#fff1c7";ctx.font="bold 11px monospace";ctx.fillText(ui(pickupCueTitle),GAME.width/2,482);
+  ctx.fillStyle="#d8f3d8";ctx.font="9px monospace";ctx.fillText(ui(pickupCueMessage),GAME.width/2,498);
+  ctx.textAlign="start";ctx.restore();
+}
+
 function updateCampaignHud() {
-  if (campaignObjectiveLabel) campaignObjectiveLabel.textContent = tr(campaign.objective);
-  if (campaignChapterLabel) campaignChapterLabel.textContent = tr(campaign.chapter);
-  if (rescuesLabel) rescuesLabel.textContent = String(rescues).padStart(2, "0");
+  if(campaignObjectiveLabel)campaignObjectiveLabel.textContent=tr(campaign.objective);
+  if(campaignChapterLabel)campaignChapterLabel.textContent=tr(campaign.chapter);
+  if(secondaryObjectivesLabel)secondaryObjectivesLabel.textContent=ui("fieldSamples")+" "+collectedCount("amber")+"/"+COLLECTIBLE_TOTALS.amber+
+    " · "+ui("intelFiles")+" "+collectedCount("intel")+"/"+COLLECTIBLE_TOTALS.intel;
+  if(rescuesLabel)rescuesLabel.textContent=String(rescues).padStart(2,"0");
 }
 
 function renderStoryPanel({ syncAudio = true } = {}) {
@@ -1456,8 +1538,8 @@ function updateLevelTransition(delta) {
 }
 
 function activateStegoceratops() {
-  if (stegoceratops || stegoceratopsCooldown > 0 || !running || campaign.flags.completed) return false;
-  stegoceratopsCooldown = 30;
+  if(stegoceratops||stegoceratopsCooldown>0||!running||campaign.flags.completed)return false;
+  stegoceratopsCooldown=currentStegoceratopsCooldown();
   stegoceratops = { id: "stegoceratops-special", x: cameraX - 190, y: GAME.groundY - 126, w: 170, h: 126, direction: 1, state: "charge", hitIds: new Set() };
   audio.collect();
   return true;
@@ -1490,6 +1572,7 @@ function update(delta) {
   if (!running || paused || campaign.sceneOpen) return;
   elapsed += delta;
   bossCueTimer = Math.max(0, bossCueTimer - delta);
+  pickupCueTimer = Math.max(0, pickupCueTimer - delta);
   world.update(delta);
 
   if (finalDeparture) {
@@ -1577,6 +1660,8 @@ function update(delta) {
     lastLevelIndex = currentLevelIndex;
     return;
   }
+
+  collectNearbyCollectibles();
 
   for (const hunter of hunters) {
     const previousState = hunter.state;
@@ -1800,6 +1885,9 @@ function render() {
   for (const prop of world.visibleScenery(cameraX, GAME.width, "ground", sceneryScene.environment)) {
     drawGroundScenery(ctx, prop, sceneryScene);
   }
+  for(const item of collectibles){
+    if(item.x+item.w>=cameraX-50&&item.x-item.w<=cameraX+GAME.width+50)drawCollectible(ctx,item);
+  }
   for (const prop of world.facilityProps) {
     if (prop.x + prop.w >= cameraX - 50 && prop.x <= cameraX + GAME.width + 50) drawFacilityProp(prop);
   }
@@ -1887,6 +1975,7 @@ function render() {
   ctx.fillStyle = "#d8f36a";
   ctx.fillText(tr("FERRUCUTUS RESCUE // SUPPORT ACTIVE"), GAME.width - 314, GAME.height - 18);
   drawBossHud();
+  drawPickupNotice();
 
   // All actors and scenery were drawn directly at native game resolution.
 }
@@ -1920,6 +2009,7 @@ function captureRestartSnapshot(levelIndex, distanceValue = distance) {
     playerHealth: player.health,
     stegoceratopsCooldown,
     rescuedFerrucutusCageIds: [...rescuedFerrucutusCageIds],
+    collectedCollectibleIds: [...collectedCollectibleIds].sort(),
     allies: allies.filter((ally) => !ally.departed).map((ally) => ({
       id: ally.id, distanceBehind: Math.max(150, player.x - ally.x)
     })),
@@ -2016,11 +2106,15 @@ function restoreRestartSnapshot(snapshot, savedProgress = null) {
   campaign.chapter = snapshot.campaign.chapter;
   distance = snapshot.distance;
   rescues = snapshot.rescues;
+  collectedCollectibleIds = new Set(snapshot.collectedCollectibleIds ?? []);
+  collectibles = collectibles.filter((item) => !collectedCollectibleIds.has(item.id));
+  applyCollectibleUnlocks();
   player.x = GAME.playerX + distance;
   player.y = GAME.groundY - player.h;
   player.vx = 0; player.vy = 0; player.onGround = true;
   player.health = Math.max(1, Math.min(player.maxHealth, snapshot.playerHealth));
   stegoceratopsCooldown = snapshot.stegoceratopsCooldown;
+  applyCollectibleUnlocks();
   cameraX = Math.max(0, player.x - 330);
   lastLevelIndex = snapshot.levelIndex;
   introSequence = false; levelTransition = null; finalDeparture = false; finalDepartureDone = false;
@@ -2146,6 +2240,12 @@ function frame(now) {
 function resetPlayer(worldSeed = undefined) {
   campaignAutosaveElapsed = 0;
   rescuedFerrucutusCageIds = new Set();
+  collectibles = [];
+  seenCollectibleSpawns = new Set();
+  collectedCollectibleIds = new Set();
+  pickupCueTimer = 0;
+  pickupCueTitle = "";
+  pickupCueMessage = "";
   campaign = new CampaignManager();
   beta = null;
   facilityConsoles = [];

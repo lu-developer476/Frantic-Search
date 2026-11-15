@@ -28,6 +28,21 @@ function isNonEmptyString(value, maxLength = 180) {
   return typeof value === "string" && value.trim().length > 0 && value.length <= maxLength;
 }
 
+function isCollectibleId(value) {
+  if (!isNonEmptyString(value, 80)) return false;
+  const parts = value.split("-");
+  const digits = (part) => part.length > 0 && /^[0-9]+$/.test(part);
+  if (parts[0] === "amber") {
+    const section = Number(parts[1]), slot = Number(parts[2]);
+    return parts.length === 3 && digits(parts[1]) && digits(parts[2]) && section >= 0 && section <= 6 && section !== 5 && slot >= 1 && slot <= 2;
+  }
+  if (parts[0] === "intel") {
+    const section = Number(parts[1]);
+    return parts.length === 2 && digits(parts[1]) && section >= 2 && section <= 4;
+  }
+  return false;
+}
+
 function isScene(scene) {
   return Boolean(
     scene &&
@@ -53,6 +68,15 @@ export function isValidCampaignSnapshot(snapshot) {
   const flags = campaign?.flags;
   const validFlags = flags && typeof flags === "object" &&
     CAMPAIGN_FLAGS.every((key) => typeof flags[key] === "boolean");
+  const collectedIds = Array.isArray(snapshot.collectedCollectibleIds)
+    ? snapshot.collectedCollectibleIds
+    : [];
+  const validCollectibles = snapshot.collectedCollectibleIds === undefined ||
+    (Array.isArray(snapshot.collectedCollectibleIds) &&
+      collectedIds.length <= 15 &&
+      new Set(collectedIds).size === collectedIds.length &&
+      collectedIds.every(isCollectibleId));
+  const healthCap = collectedIds.filter((id) => typeof id === "string" && id.startsWith("amber-")).length >= 6 ? 6 : 5;
 
   return (
     (snapshot.selectedCharacter === "blue" || snapshot.selectedCharacter === "vasti") &&
@@ -69,7 +93,8 @@ export function isValidCampaignSnapshot(snapshot) {
     snapshot.rescues >= 0 &&
     Number.isInteger(snapshot.playerHealth) &&
     snapshot.playerHealth >= 1 &&
-    snapshot.playerHealth <= 5 &&
+    snapshot.playerHealth <= healthCap &&
+    validCollectibles &&
     Number.isFinite(snapshot.stegoceratopsCooldown) &&
     snapshot.stegoceratopsCooldown >= 0 &&
     snapshot.stegoceratopsCooldown <= 30 &&
