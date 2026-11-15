@@ -22,6 +22,7 @@ import { CollisionSystem } from "./systems/CollisionSystem.js";
 import { beginEnemyFade, advanceEnemyFade, getEnemyOpacity, isEnemyFadeComplete } from "./systems/EnemyFadeSystem.js";
 import { PlatformWorld } from "./world/PlatformWorld.js";
 import { CampaignManager } from "./campaign/CampaignManager.js";
+import { getLevelCheckpointDistance, canActivateLevelCheckpoint } from "./campaign/CheckpointManager.js";
 import { Beta } from "./entities/Beta.js";
 import { FacilityConsole } from "./entities/FacilityConsole.js";
 import { SpriteRenderer } from "./rendering/SpriteRenderer.js";
@@ -49,6 +50,12 @@ const startScreen = document.querySelector("#start-screen");
 const startScreenMessage = document.querySelector("#start-screen-message");
 const startButton = document.querySelector("#start-button");
 const overlayActionButton = document.querySelector("#overlay-action-button");
+const overlayContent = overlay.querySelector(".overlay-content");
+const overlayExitButton = document.querySelector("#overlay-exit-button");
+const retryOptions = document.querySelector("#retry-options");
+const retryLevelStartButton = document.querySelector("#retry-level-start");
+const retryCheckpointButton = document.querySelector("#retry-checkpoint");
+const retryCancelButton = document.querySelector("#retry-cancel");
 const pauseMenu = document.querySelector("#pause-menu");
 const pauseContinueButton = document.querySelector("#pause-continue");
 const pauseRestartButton = document.querySelector("#pause-restart");
@@ -60,6 +67,9 @@ const confirmPauseActionButton = document.querySelector("#confirm-pause-action")
 const cancelPauseActionButton = document.querySelector("#cancel-pause-action");
 let pendingPauseAction = null;
 let pauseActionTrigger = null;
+let failureScreenActive = false;
+let levelStartSnapshot = null;
+let latestLevelCheckpoint = null;
 const stateLabel = document.querySelector("#game-state");
 const distanceLabel = document.querySelector("#distance");
 const rescuesLabel = document.querySelector("#rescues");
@@ -992,9 +1002,15 @@ function renderStoryPanel({ syncAudio = true } = {}) {
 
 function showCampaignEnding() {
   if (!campaign.flags.completed) return;
+  failureScreenActive = false;
+  overlayContent.hidden = false;
+  retryOptions.classList.add("hidden");
+  overlayExitButton.hidden = true;
   storyPanel?.classList.add("hidden");
   overlay.querySelector(".overlay-kicker").textContent = ui("operationComplete");
   overlay.querySelector("h2").innerHTML = locale === "es" ? "LA TRAJIMOS<br><em>A CASA.</em>" : "WE BROUGHT<br><em>HER HOME.</em>";
+  overlay.querySelector("h2").hidden = false;
+  overlay.querySelector("p").hidden = false;
   overlay.querySelector("p").textContent = ui("rescuedMessage");
   overlay.querySelector("button").textContent = ui("replay");
   overlay.querySelector("button").hidden = false;
@@ -1459,8 +1475,10 @@ function updateLevelTransition(delta) {
     for (const companion of autonomousCompanions) { companion.actor.x = baseX - 116; companion.actor.vx = 0; }
     if (beta?.state === "following") { beta.x = baseX - beta.followDistance; beta.motionSpeed = 0; }
     allies = allies.filter((ally) => ally.x + ally.w < cameraX + GAME.width + 100);
+    const enteredLevelIndex = levelTransition.nextIndex;
     distance = levelTransition.nextDistance;
     levelTransition = null;
+    saveLevelEntrySnapshot(enteredLevelIndex);
   }
 }
 
@@ -1771,6 +1789,7 @@ function update(delta) {
       ? ui("interact")
       : beta?.state === "following" ? "ROSA // " + ui("escorting") : "";
   }
+  updateLevelCheckpoint();
 }
 
 function render() {
@@ -1883,6 +1902,118 @@ function scheduleFrame() {
   frameRequestId = requestAnimationFrame(frame);
 }
 
+function cloneCampaignScene(scene) {
+  return scene ? { ...scene, lines: [...scene.lines] } : null;
+}
+function captureRestartSnapshot(levelIndex, distanceValue = distance) {
+  return {
+    levelIndex, distance: Math.max(0, Math.round(distanceValue)), worldSeed: world.seed,
+    rescues, playerHealth: player.health, stegoceratopsCooldown,
+    allies: allies.filter((ally) => !ally.departed).map((ally) => ({
+      id: ally.id, distanceBehind: Math.max(150, player.x - ally.x)
+    })),
+    campaign: {
+      flags: { ...campaign.flags }, seenScenes: [...campaign.seenScenes],
+      queue: campaign.queue.map(cloneCampaignScene), activeScene: cloneCampaignScene(campaign.activeScene),
+      objective: campaign.objective, chapter: campaign.chapter
+    }
+  };
+}
+function saveLevelEntrySnapshot(levelIndex) {
+  levelStartSnapshot = captureRestartSnapshot(levelIndex, LEVELS[levelIndex].distance);
+  latestLevelCheckpoint = levelStartSnapshot;
+}
+function updateLevelCheckpoint() {
+  if (!running || campaign.sceneOpen || campaign.flags.completed || !player.onGround) return;
+  const levelIndex = LEVELS.reduce((current, item, index) => distance >= item.distance ? index : current, 0);
+  if (!canActivateLevelCheckpoint(levelIndex, campaign.flags)) return;
+  const checkpointDistance = getLevelCheckpointDistance(levelIndex, { levels: LEVELS, world: WORLD, game: GAME });
+  if (distance < checkpointDistance) return;
+  if (latestLevelCheckpoint?.levelIndex === levelIndex && latestLevelCheckpoint.distance >= checkpointDistance) return;
+  latestLevelCheckpoint = captureRestartSnapshot(levelIndex);
+  audio.collect();
+}
+function restoreRestartSnapshot(snapshot) {
+  if (!snapshot || !desktopPlayback.matches) return false;
+  cancelScheduledFrame();
+  audio.unlock();
+  resetPlayer(snapshot.worldSeed);
+  campaign.flags = { ...snapshot.campaign.flags };
+  campaign.seenScenes = new Set(snapshot.campaign.seenScenes);
+  campaign.queue = snapshot.campaign.queue.map(cloneCampaignScene);
+  campaign.activeScene = cloneCampaignScene(snapshot.campaign.activeScene);
+  campaign.objective = snapshot.campaign.objective;
+  campaign.chapter = snapshot.campaign.chapter;
+  distance = snapshot.distance;
+  rescues = snapshot.rescues;
+  player.x = GAME.playerX + distance;
+  player.y = GAME.groundY - player.h;
+  player.vx = 0; player.vy = 0; player.onGround = true;
+  player.health = Math.max(1, Math.min(player.maxHealth, snapshot.playerHealth));
+  stegoceratopsCooldown = snapshot.stegoceratopsCooldown;
+  cameraX = Math.max(0, player.x - 330);
+  lastLevelIndex = snapshot.levelIndex;
+  introSequence = false; levelTransition = null; finalDeparture = false; finalDepartureDone = false;
+  campaignSaved = false;
+  latestLevelCheckpoint = snapshot;
+  world.extendTo(player.x + WORLD.maxSectionLength + 1200);
+  world.pruneBehind(player.x);
+  syncEncounters();
+  const actorCutoff = player.x - 280;
+  hunters = hunters.filter((actor) => actor.x + actor.w >= actorCutoff);
+  venatosauruses = venatosauruses.filter((actor) => actor.x + actor.w >= actorCutoff);
+  foodSources = foodSources.filter((actor) => actor.x + actor.w >= actorCutoff);
+  wildlife = wildlife.filter((actor) => actor.x + actor.w >= actorCutoff);
+  ferrucutusCaptives = ferrucutusCaptives.filter((actor) => actor.x + actor.w >= actorCutoff);
+  if (campaign.flags.indoraptorDefeated) seenBossSpawns.add("indoraptor-encounter");
+  if (campaign.flags.indominusDefeated) seenBossSpawns.add("indominus-encounter");
+  syncBossEncounter();
+  syncFacility();
+  for (const terminal of facilityConsoles) {
+    if ((terminal.kind === "power" && campaign.flags.powerRestored) ||
+        (terminal.kind === "security" && campaign.flags.securityReleased)) terminal.activate();
+  }
+  if (campaign.flags.betaFreed && beta?.state === "confined") {
+    beta.rescue(); beta.x = player.x - beta.followDistance; beta.y = player.y + player.h - beta.h;
+  }
+  allies = snapshot.allies.map((ally) => new FerrucutusAlly({
+    id: ally.id, x: player.x - ally.distanceBehind, groundY: GAME.groundY
+  }));
+  autonomousCompanions.forEach((companion) => {
+    companion.actor.x = player.x - 150;
+    companion.actor.y = GAME.groundY - companion.actor.h;
+    companion.actor.vx = 0; companion.actor.vy = 0;
+  });
+  elapsed = 0; accumulator = 0; last = performance.now();
+  running = true; paused = false; failureScreenActive = false;
+  document.body.classList.remove("game-paused");
+  startScreen.classList.add("hidden"); dinoModal.classList.add("hidden"); characterConfirmation.classList.add("hidden");
+  overlayContent.hidden = false; retryOptions.classList.add("hidden"); overlayExitButton.hidden = true;
+  overlay.classList.remove("pause-mode"); overlay.classList.add("hidden"); overlayActionButton.hidden = true;
+  pauseMenu.classList.add("hidden"); pauseConfirmation.classList.add("hidden");
+  pendingPauseAction = null; pauseActionTrigger = null;
+  updatePlayerHealthHud(); updateCampaignHud(); renderStoryPanel();
+  stateLabel.textContent = ui("inProgress");
+  music.start(audio.context, currentMusicTheme()); music.setPaused(false); music.setEnabled(audio.enabled);
+  render(); scheduleFrame();
+  return true;
+}
+function openRetryOptions() {
+  if (!failureScreenActive) return;
+  overlayContent.hidden = true; retryOptions.classList.remove("hidden"); retryLevelStartButton.focus();
+}
+function closeRetryOptions() {
+  retryOptions.classList.add("hidden"); overlayContent.hidden = false; overlayActionButton.focus();
+}
+function updateDefeatScreenCopy() {
+  overlay.querySelector(".overlay-kicker").textContent = ui("missionFailed");
+  const title = overlay.querySelector("h2"); title.hidden = false; title.textContent = ui("retryPrompt");
+  const message = overlay.querySelector("p"); message.textContent = ""; message.hidden = true;
+  overlayActionButton.textContent = ui("retry"); overlayActionButton.hidden = false;
+  overlayExitButton.textContent = ui("exit"); overlayExitButton.hidden = false;
+  retryLevelStartButton.textContent = ui("retryLevelStart");
+  retryCheckpointButton.textContent = ui("retryCheckpoint");
+}
 function handleFrameError(error) {
   console.error("[Frantic Search] Simulation frame failed:", error);
   cancelScheduledFrame();
@@ -1899,6 +2030,10 @@ function handleFrameError(error) {
     : "An error occurred while updating or drawing the game. Open the console for details, then restart the operation.";
   overlay.querySelector("button").hidden = false;
   overlay.querySelector("button").textContent = ui("retry");
+  failureScreenActive = false;
+  overlayContent.hidden = false;
+  retryOptions.classList.add("hidden");
+  overlayExitButton.hidden = true;
   overlay.classList.remove("hidden");
 }
 
@@ -1927,7 +2062,7 @@ function frame(now) {
   scheduleFrame();
 }
 
-function resetPlayer() {
+function resetPlayer(worldSeed = undefined) {
   campaign = new CampaignManager();
   beta = null;
   facilityConsoles = [];
@@ -1935,7 +2070,7 @@ function resetPlayer() {
   campaignSaved = false;
   player = new Player(selected, GAME.playerX, GAME.groundY);
   player.x = -155;
-  world = new PlatformWorld(GAME.groundY);
+  world = new PlatformWorld(GAME.groundY, worldSeed === undefined ? {} : { seed: worldSeed });
   hunters = [];
   venatosauruses = [];
   foodSources = [];
@@ -1975,6 +2110,10 @@ function start() {
   startScreen.classList.add("hidden");
   dinoModal.classList.add("hidden");
   overlayActionButton.hidden = true;
+  overlayContent.hidden = false;
+  retryOptions.classList.add("hidden");
+  overlayExitButton.hidden = true;
+  failureScreenActive = false;
   pauseMenu.classList.add("hidden");
   pauseConfirmation.classList.add("hidden");
   overlay.classList.remove("pause-mode");
@@ -1997,6 +2136,8 @@ function start() {
   rescuesLabel.textContent = "00";
   campaign.begin();
   updateCampaignHud();
+  levelStartSnapshot = captureRestartSnapshot(0, 0);
+  latestLevelCheckpoint = levelStartSnapshot;
   renderStoryPanel();
   last = performance.now();
   render();
@@ -2020,13 +2161,10 @@ function endGame() {
   });
   bestLabel.textContent = String(save.get("bestDistance")).padStart(4, "0") + " m";
   stateLabel.textContent = ui("signalLost");
-  overlay.querySelector("h2").hidden = false;
-  overlay.querySelector("p").hidden = false;
-  overlay.querySelector(".overlay-kicker").textContent = ui("missionInterrupted");
-  overlay.querySelector("h2").innerHTML = locale === "es" ? "LA NATURALEZA<br><em>CONTRAATACA.</em>" : "THE WILD<br><em>STRIKES BACK.</em>";
-  overlay.querySelector("p").textContent = ui("defeatMessage").replace("{distance}", String(Math.floor(distance))).replace("{rescues}", String(rescues));
-  overlay.querySelector("button").hidden = false;
-  overlay.querySelector("button").textContent = ui("retry");
+  failureScreenActive = true;
+  overlayContent.hidden = false;
+  retryOptions.classList.add("hidden");
+  updateDefeatScreenCopy();
   overlay.classList.remove("hidden");
   render();
 }
@@ -2081,6 +2219,11 @@ function closePauseConfirmation(restoreFocus = true) {
 
 function returnToMainMenu() {
   running = false;
+  failureScreenActive = false;
+  overlayContent.hidden = false;
+  retryOptions.classList.add("hidden");
+  overlayExitButton.hidden = true;
+  overlayActionButton.hidden = true;
   paused = false;
   cancelScheduledFrame();
   music.stop();
@@ -2178,8 +2321,16 @@ overlayActionButton.addEventListener("click", () => {
     togglePause();
     return;
   }
+  if (failureScreenActive) {
+    openRetryOptions();
+    return;
+  }
   if (!running) openDinoModal("overlay");
 });
+overlayExitButton.addEventListener("click", returnToMainMenu);
+retryLevelStartButton.addEventListener("click", () => restoreRestartSnapshot(levelStartSnapshot));
+retryCheckpointButton.addEventListener("click", () => restoreRestartSnapshot(latestLevelCheckpoint));
+retryCancelButton.addEventListener("click", closeRetryOptions);
 
 function openDinoModal(returnTo = "start") {
   if (!desktopPlayback.matches || running || desktopBlocked) return;
@@ -2276,12 +2427,9 @@ function applyLanguage() {
     stateLabel.textContent = ui("inProgress");
   } else if (campaign.flags.completed) {
     showCampaignEnding();
-  } else if (["SIGNAL LOST", "SEÑAL PERDIDA"].includes(stateLabel.textContent)) {
+  } else if (failureScreenActive || ["SIGNAL LOST", "SEÑAL PERDIDA"].includes(stateLabel.textContent)) {
     stateLabel.textContent = ui("signalLost");
-    overlay.querySelector(".overlay-kicker").textContent = ui("missionInterrupted");
-    overlay.querySelector("h2").innerHTML = locale === "es" ? "LA NATURALEZA<br><em>CONTRAATACA.</em>" : "THE WILD<br><em>STRIKES BACK.</em>";
-    overlay.querySelector("p").textContent = ui("defeatMessage").replace("{distance}", String(Math.floor(distance))).replace("{rescues}", String(rescues));
-    overlay.querySelector("button").textContent = ui("retry");
+    updateDefeatScreenCopy();
   } else {
     stateLabel.textContent = ui("standby");
     startScreenMessage.textContent = "";

@@ -76,8 +76,19 @@
                 <span class="overlay-kicker">FRANTIC SEARCH // OPERATION 01</span>
                 <h2></h2>
                 <p class="overlay-message"></p>
-                <button id="overlay-action-button" type="button" hidden><span data-i18n="continue">CONTINUAR</span></button>
+                <div class="overlay-actions">
+                  <button id="overlay-action-button" type="button" hidden><span data-i18n="continue">CONTINUAR</span></button>
+                  <button id="overlay-exit-button" class="overlay-secondary" type="button" data-i18n="exit" hidden>SALIR</button>
+                </div>
               </div>
+              <section id="retry-options" class="retry-options hidden" role="dialog" aria-modal="true" aria-labelledby="retry-options-title">
+                <h2 id="retry-options-title" data-i18n="retryPrompt">¿Reintentar?</h2>
+                <div class="retry-actions">
+                  <button id="retry-level-start" class="retry-option-button" type="button" data-i18n="retryLevelStart">DESDE EL INICIO DEL NIVEL</button>
+                  <button id="retry-checkpoint" class="retry-option-button" type="button" data-i18n="retryCheckpoint">DESDE EL ÚLTIMO CHECKPOINT</button>
+                </div>
+                <button id="retry-cancel" class="retry-back-button" type="button" data-i18n="back">VOLVER</button>
+              </section>
               <section id="pause-menu" class="pause-menu hidden" role="dialog" aria-modal="true" aria-labelledby="pause-title">
                 <h2 id="pause-title" data-i18n="operationPaused">OPERACIÓN EN PAUSA</h2>
                 <div class="pause-actions">

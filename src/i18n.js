@@ -50,7 +50,10 @@ const UI = {
     next: "SIGUIENTE",
     operationComplete: "OPERACIÓN COMPLETADA",
     replay: "JUGAR DE NUEVO",
-    missionInterrupted: "MISIÓN INTERRUMPIDA",
+    missionFailed: "MISIÓN FALLIDA",
+    retryPrompt: "¿Reintentar?",
+    retryLevelStart: "DESDE EL INICIO DEL NIVEL",
+    retryCheckpoint: "DESDE EL ÚLTIMO CHECKPOINT",
     retry: "REINTENTAR",
     operationPaused: "OPERACIÓN EN PAUSA",
     restart: "REINICIAR",
@@ -67,8 +70,7 @@ const UI = {
     signalLost: "SEÑAL PERDIDA",
     inProgress: "EN CURSO",
     desktopOverlayTitle: "SOLO PARA<br><em>COMPUTADORA.</em>",
-    rescuedMessage: "Rosa fue rescatada. La instalación clandestina quedó expuesta. Campaña completada.",
-    defeatMessage: "Distancia: {distance} m · Rescates: {rescues}. Volvé a intentarlo."
+    rescuedMessage: "Rosa fue rescatada. La instalación clandestina quedó expuesta. Campaña completada."
   },
   en: {
     sound: "SOUND",
@@ -121,7 +123,10 @@ const UI = {
     next: "NEXT",
     operationComplete: "OPERATION COMPLETE",
     replay: "PLAY AGAIN",
-    missionInterrupted: "MISSION INTERRUPTED",
+    missionFailed: "MISSION FAILED",
+    retryPrompt: "Retry?",
+    retryLevelStart: "FROM LEVEL START",
+    retryCheckpoint: "FROM LAST CHECKPOINT",
     retry: "RETRY",
     operationPaused: "OPERATION PAUSED",
     restart: "RESTART",
@@ -138,8 +143,7 @@ const UI = {
     signalLost: "SIGNAL LOST",
     inProgress: "IN PROGRESS",
     desktopOverlayTitle: "DESKTOP<br><em>ONLY.</em>",
-    rescuedMessage: "Rosa has been rescued. The clandestine facility has been exposed. Campaign completed.",
-    defeatMessage: "Distance: {distance} m · Rescues: {rescues}. Try again."
+    rescuedMessage: "Rosa has been rescued. The clandestine facility has been exposed. Campaign completed."
   }
 };
 
@@ -174,7 +178,7 @@ const ENGLISH_TO_SPANISH = {
   "OPERATION COMPLETE": "OPERACIÓN COMPLETADA",
   "MISSION COMPLETE": "MISIÓN COMPLETADA",
   "OPERATION: LOST HATCHLING": "OPERACIÓN: CRÍA PERDIDA",
-  "MISSION INTERRUPTED": "MISIÓN INTERRUMPIDA",
+  "MISSION FAILED": "MISIÓN FALLIDA",
   "SECURITY TERMINAL LOCKED": "TERMINAL DE SEGURIDAD BLOQUEADA",
   "CELL BLOCK C": "BLOQUE DE CELDAS C",
   "A poacher convoy crosses the coastal highway, carrying a young Velociraptor toward an unregistered research facility.": "Un convoy de cazadores furtivos cruza la ruta costera y transporta a una joven Velociraptor hacia un centro de investigación sin registro.",

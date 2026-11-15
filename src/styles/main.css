@@ -2485,3 +2485,26 @@ html.site-mode-gray .story-card .story-actions span{
   content:"|";
   margin:0 .32em;
 }
+
+
+/* Defeat flow: a direct exit and two explicit retry destinations. */
+.overlay-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}
+.overlay-content .overlay-actions button{min-width:min(210px,100%);margin:0}
+.overlay-content .overlay-actions #overlay-action-button{border-color:#102b39;background:#f5d45f;color:#183040;box-shadow:4px 4px 0 #081722}
+.overlay-content .overlay-actions #overlay-action-button:hover{background:#fff09a}
+.overlay-content .overlay-actions .overlay-secondary{border-color:#637f83;background:#24495a;color:#fff3c5;box-shadow:4px 4px 0 #081722}
+.overlay-content[hidden],.retry-options.hidden,.retry-options[hidden]{display:none!important}
+.retry-options{display:grid;gap:clamp(16px,2.5vh,24px);width:min(610px,72%);padding:clamp(22px,4vw,42px);box-sizing:border-box;pointer-events:auto;text-align:left;text-shadow:0 2px 12px #000}
+.retry-options h2{margin:0;color:#fff4ca;font-family:"Courier New",monospace;font-size:clamp(28px,4vw,48px);font-weight:900;line-height:1;text-shadow:4px 4px 0 #102334,7px 7px 0 #07131d}
+.retry-actions{display:grid;gap:12px}
+.retry-options button{width:100%;min-height:48px;padding:12px 16px;border:3px solid #102b39;background:#f5d45f;color:#183040;box-shadow:4px 4px 0 #081722;font-family:"Courier New",monospace;font-size:clamp(10px,.9vw,13px);font-weight:900;letter-spacing:.06em;text-align:center;cursor:pointer}
+.retry-options button:hover{background:#fff09a;transform:translate(-1px,-1px)}
+.retry-options .retry-back-button{width:auto;min-width:160px;justify-self:start;border-color:#637f83;background:#24495a;color:#fff3c5}
+.retry-options button:focus-visible{outline:3px solid #fff3c5;outline-offset:4px}
+@media(max-width:560px){
+  .overlay-actions{display:grid;grid-template-columns:1fr;gap:9px}
+  .overlay-content .overlay-actions button{width:min(260px,100%)}
+  .retry-options{width:100%;padding:18px;gap:16px}
+  .retry-options h2{font-size:clamp(25px,8vw,38px)}
+  .retry-options button{min-height:44px;padding:10px 12px;font-size:10px}
+}
