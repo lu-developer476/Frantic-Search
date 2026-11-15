@@ -121,7 +121,8 @@
                     <span data-i18n="play">INICIAR</span>
                     <b aria-hidden="true">↗</b>
                   </button>
-                  <button id="empty-stomach-button" type="button" data-i18n="emptyStomach">EMPTY STOMACH <b aria-hidden="true">↗</b></button>
+                  <button id="empty-stomach-button" type="button" data-i18n="emptyStomach">EMPTY STOMACH</button>
+                  <button id="time-attack-button" type="button"><span data-i18n="timeAttack">TIME ATTACK</span><b aria-hidden="true">↗</b></button>
                   <button id="delete-campaign-save-button" type="button" hidden data-i18n="deleteCampaignSave">
                     BORRAR PARTIDA GUARDADA
                   </button>
@@ -154,6 +155,27 @@
                     <button type="button" data-empty-start>COMENZAR</button>
                     <button type="button" data-empty-retry hidden>VOLVER A CORRER</button>
                     <button type="button" data-empty-exit>VOLVER AL MENÚ</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section id="time-attack-panel" class="time-attack-panel" aria-label="Time Attack" aria-hidden="true">
+              <div class="time-attack-top">
+                <span>FRANTIC SEARCH // HUNTING MODE</span>
+                <span data-ta-status>SECTION 01 // EXTRACTION</span>
+              </div>
+              <div class="time-attack-stage">
+                <canvas width="960" height="540" aria-label="Time Attack four-hunter dinosaur hunting minigame"></canvas>
+                <div class="time-attack-intro">
+                  <small>TIME TRIAL // FOUR-HUNTER SQUAD</small>
+                  <h2 data-ta-title>TIME ATTACK</h2>
+                  <p data-ta-subtitle>Una escuadra de cuatro cazadores. Catorce dinosaurios. Despejá la ruta y llegá a la extracción lo más rápido posible.</p>
+                  <p class="time-attack-instructions" data-ta-instructions></p>
+                  <p class="time-attack-result" data-ta-result hidden></p>
+                  <div class="time-attack-actions">
+                    <button type="button" data-ta-start>INICIAR CAZA</button>
+                    <button type="button" data-ta-retry hidden>REPETIR SECCIÓN</button>
+                    <button type="button" data-ta-exit>VOLVER AL MENÚ</button>
                   </div>
                 </div>
               </div>

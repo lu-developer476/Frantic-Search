@@ -4,7 +4,13 @@
 
 Frantic Search is an unofficial fan-made dinosaur survival-platformer. Play as Violeta or Vasti, keep the other protagonist by your side, and rescue Rosa from a clandestine poaching and research operation.
 
-## Additional game modes\n\n- **Empty Stomach** is an endless survival minigame starring Coral, the miniraptor in `miniraptor-run.gif`. Escape the xenoraptors and velociraptors while Parasaurolophus herds flee through the environment. The run has no finish line: it ends only when a predator catches Coral. Distance is scored and the personal best is stored locally.\n\n## Campaign\n
+## Additional game modes
+
+- **Empty Stomach** is an endless survival minigame starring Coral, the miniraptor in `miniraptor-run.gif`. Escape the xenoraptors and velociraptors while Parasaurolophus herds flee through the environment. The run has no finish line: it ends only when a predator catches Coral. Distance is scored and the personal best is stored locally.
+- **Time Attack** is a finite hunting time trial. Control one hunter alongside three AI teammates, eliminate all 14 Venatosaurus across four waves, and reach extraction. The fastest successful completion is stored locally.
+
+## Campaign
+
 The finite campaign runs through six chapters:
 
 1. **Coastal Highway** — follow the poacher convoy.
@@ -79,7 +85,26 @@ Narrator interludes pause the simulation so the player can read the story and ev
 - Reduced-motion preferences are respected by the interface.
 - Keyboard and touch controls are supported.
 
-## Empty Stomach controls\n\n| Action | Keyboard |\n|---|---|\n| Move | A / D or ← / → |\n| Jump | Space / ↑ / W |\n| Exit minigame | Esc |\n\n## Controls\n
+## Empty Stomach controls
+
+| Action | Keyboard |
+|---|---|
+| Move | A / D or ← / → |
+| Jump | Space / ↑ / W |
+| Exit minigame | Esc |
+
+## Time Attack controls
+
+| Action | Keyboard / mouse |
+|---|---|
+| Move | A / D or ← / → |
+| Jump | W / ↑ |
+| Fire | Space / F or left mouse button |
+| Pause / resume | P |
+| Exit minigame | Esc |
+
+## Controls
+
 | Action | Keyboard | Touch |
 |---|---|---|
 | Move | A / D or ← / → | ← / → |
@@ -111,7 +136,7 @@ npm run preview
 npm run check
 ```
 
-The automated suite covers campaign gating, facility terminal interaction, Rosa escort, finite world generation, deterministic collectible placement and save validation, chapter-scaled Ferrucutus captive counts, wildlife enemy behaviour, boss phases, attack patterns, dodge recovery and hitboxes, sprite availability, sprite loading and adaptive music scheduling.
+The automated suite covers campaign gating, facility terminal interaction, Rosa escort, finite world generation, deterministic collectible placement and save validation, chapter-scaled Ferrucutus captive counts, wildlife enemy behaviour, boss phases, attack patterns, dodge recovery and hitboxes, Time Attack wave planning and completion timing, sprite availability, sprite loading and adaptive music scheduling.
 
 ## Deploy to Vercel
 

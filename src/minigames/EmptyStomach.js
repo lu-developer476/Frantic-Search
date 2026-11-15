@@ -74,7 +74,7 @@ export class EmptyStomach {
 
   open() {
     this.root.classList.add("active");
-    root.classList.remove("playing");
+    this.root.classList.remove("playing");
     root.setAttribute("aria-hidden", "false");
     this.reset();
     this.root.querySelector("[data-empty-start]").hidden = false;

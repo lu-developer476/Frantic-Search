@@ -2556,7 +2556,8 @@ html.site-mode-gray .story-card .story-actions span{
 .empty-stomach-stage{position:relative;flex:1;min-height:0;display:grid;place-items:center;overflow:hidden;border:1px solid #77866a;background:#b8d0c4}
 .empty-stomach-stage canvas{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
 .empty-stomach-intro{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;background:linear-gradient(135deg,rgba(8,17,14,.83),rgba(18,29,22,.76))}
-.empty-stomach-panel.playing .empty-stomach-intro{pointer-events:none;background:transparent}\n.empty-stomach-panel.playing .empty-stomach-intro>*{display:none}
+.empty-stomach-panel.playing .empty-stomach-intro{pointer-events:none;background:transparent}
+.empty-stomach-panel.playing .empty-stomach-intro>*{display:none}
 .empty-stomach-intro small{color:#e8b18f;font:700 9px var(--font-mono);letter-spacing:.2em}
 .empty-stomach-intro h2{margin:10px 0;color:#f3f1df;font:800 clamp(42px,8vw,84px)/.9 var(--font-condensed);letter-spacing:.04em}
 .empty-stomach-intro p{max-width:54ch;color:#d6dfd1;font-size:13px;line-height:1.6}
@@ -2566,3 +2567,35 @@ html.site-mode-gray .story-card .story-actions span{
 .empty-stomach-actions button:first-child,.empty-stomach-actions button:nth-child(2){border-color:#e1a17f;background:#e1a17f;color:#1b211a}
 .empty-stomach-actions button[hidden],.empty-stomach-intro [hidden]{display:none!important}
 @media(max-width:700px){.empty-stomach-panel{padding:8px}.empty-stomach-top{font-size:7px}.empty-stomach-intro h2{font-size:40px}.empty-stomach-intro p{font-size:11px}}
+
+
+/* Time Attack — a self-contained timed hunting section. */
+.start-screen-copy #time-attack-button{
+  display:flex;align-items:center;justify-content:space-between;width:100%;min-height:46px;
+  padding:13px 15px;border:1px solid #8c9d77;background:#26372f;color:#eff3e5;
+  font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;cursor:pointer;transition:.18s;
+}
+.start-screen-copy #time-attack-button:hover{background:#354c3e;border-color:#d8f36a;transform:translateY(-1px)}
+.start-screen-copy #time-attack-button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.start-screen-copy #time-attack-button b{font-size:17px;line-height:1}
+.time-attack-panel{
+  position:absolute;inset:0;z-index:25;display:none;padding:clamp(12px,2.4vw,28px);
+  background:radial-gradient(ellipse at 50% 35%,#34483a,#101a18 72%);color:#edf2e7;
+}
+.time-attack-panel.active{display:flex;flex-direction:column;gap:12px}
+.time-attack-top{display:flex;justify-content:space-between;align-items:center;gap:12px;font:700 9px var(--font-mono);letter-spacing:.15em;color:#d7e5c8}
+.time-attack-stage{position:relative;flex:1;min-height:0;display:grid;place-items:center;overflow:hidden;border:1px solid #77866a;background:#a9c6bd}
+.time-attack-stage canvas{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated;touch-action:none}
+.time-attack-intro{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;background:linear-gradient(135deg,rgba(8,17,14,.87),rgba(18,29,22,.78))}
+.time-attack-panel.playing .time-attack-intro{pointer-events:none;background:transparent}
+.time-attack-panel.playing .time-attack-intro>*{display:none}
+.time-attack-intro small{color:#e8b18f;font:700 9px var(--font-mono);letter-spacing:.2em}
+.time-attack-intro h2{margin:10px 0;color:#f3f1df;font:800 clamp(42px,8vw,84px)/.9 var(--font-condensed);letter-spacing:.04em}
+.time-attack-intro p{max-width:68ch;color:#d6dfd1;font-size:12px;line-height:1.6}
+.time-attack-instructions{font:10px var(--font-mono)!important}
+.time-attack-result{padding:10px 16px;border:1px solid #d28d79;background:#1b2823;color:#ffd1b4;font:700 11px var(--font-mono)}
+.time-attack-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.time-attack-actions button{padding:10px 14px;border:1px solid #8c9d77;background:#1d2b26;color:#e9f0dc;font:700 9px var(--font-mono);letter-spacing:.1em;cursor:pointer}
+.time-attack-actions button:first-child,.time-attack-actions button:nth-child(2){border-color:#d8f36a;background:#d8f36a;color:#1b211a}
+.time-attack-actions button[hidden],.time-attack-intro [hidden]{display:none!important}
+@media(max-width:700px){.time-attack-panel{padding:8px}.time-attack-top{font-size:7px}.time-attack-intro h2{font-size:40px}.time-attack-intro p{font-size:11px}}
