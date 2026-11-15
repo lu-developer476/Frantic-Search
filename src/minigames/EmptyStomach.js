@@ -24,18 +24,17 @@ export function scoreForDistance(distance) {
   return Math.max(0, Math.floor(distance / 10));
 }
 
-export const ENEMY_CHASE_DURATION = 4;
+export const ENEMY_CHASE_DURATION = 2;
 export const ENEMY_EAT_DURATION = 1.35;
-export const ENEMY_REST_DURATION = 1.6;
 
-export function createPredator(player, kind, phase = 0) {
+export function createPredator(kind, phase = 0) {
   const isXenoraptor = kind === "xenoraptor";
   const w = isXenoraptor ? 148 : 126;
   const h = isXenoraptor ? 104 : 86;
-  const x = Math.max(-w, player.x - w - 28);
+  // Spawn fully outside the canvas; the predator enters from its left edge.
   return {
     kind: isXenoraptor ? "xenoraptor" : "velociraptor",
-    x,
+    x: -w,
     y: FLOOR - h,
     w,
     h,
@@ -51,7 +50,7 @@ export function createPredator(player, kind, phase = 0) {
 export function enemyAnimationKey(enemy, elapsed = 0) {
   const isXenoraptor = enemy.kind === "xenoraptor";
   if (enemy.state === "eating") return isXenoraptor ? "xenoraptorAttack" : "velociraptorEat";
-  if (enemy.state === "resting" || (enemy.state === "hunting" && !enemy.preyTarget)) {
+  if (enemy.state === "departing" || (enemy.state === "hunting" && !enemy.preyTarget)) {
     return isXenoraptor ? "xenoraptorJump" : "velociraptorIdle";
   }
 
@@ -199,7 +198,7 @@ export class EmptyStomach {
     this.spawnTimer -= delta;
     if (this.spawnTimer <= 0) {
       const kind = Math.random() < 0.46 ? "xenoraptor" : "velociraptor";
-      this.enemies.push(createPredator(p, kind, Math.random() * 6));
+      this.enemies.push(createPredator(kind, Math.random() * 6));
       this.spawnTimer = Math.max(0.95, 2.6 - this.elapsed * 0.018) + Math.random() * 0.7;
     }
 
@@ -288,17 +287,14 @@ export class EmptyStomach {
           const eatenPrey = enemy.eatTarget;
           this.herd = this.herd.filter((prey) => prey !== eatenPrey);
           enemy.eatTarget = null;
-          enemy.state = "resting";
-          enemy.stateTimer = ENEMY_REST_DURATION;
+          // The predator stops animating and is carried off-screen by the scrolling ground.
+          enemy.state = "departing";
+          enemy.stateTimer = 0;
         }
-      } else if (enemy.state === "resting") {
-        enemy.stateTimer = Math.max(0, enemy.stateTimer - delta);
+      } else if (enemy.state === "departing") {
+        // Like a treadmill belt: the predator holds its pose while the world scrolls left.
+        enemy.x -= speed * delta;
         enemy.y = FLOOR - enemy.h;
-        if (enemy.stateTimer <= 0) {
-          enemy.state = "chasing";
-          enemy.stateTimer = ENEMY_CHASE_DURATION;
-          enemy.preyTarget = null;
-        }
       }
 
       const enemyHitbox = {
@@ -313,7 +309,7 @@ export class EmptyStomach {
       }
     }
 
-    this.enemies = this.enemies.filter((enemy) => enemy.x > -240 && enemy.x < WIDTH + 240);
+    this.enemies = this.enemies.filter((enemy) => enemy.x + enemy.w > 0 && enemy.x < WIDTH + 240);
   }
   finish() {
     if (!this.running) return;
@@ -383,8 +379,8 @@ export class EmptyStomach {
     }
     for (const enemy of this.enemies) {
       const pose = enemyAnimationKey(enemy, this.elapsed);
-      const frozenPose = enemy.kind === "xenoraptor" &&
-        (enemy.state === "resting" || (enemy.state === "hunting" && !enemy.preyTarget));
+      const frozenPose = enemy.state === "departing" ||
+        (enemy.kind === "xenoraptor" && enemy.state === "hunting" && !enemy.preyTarget);
       this.drawSprite(
         pose,
         enemy.x,

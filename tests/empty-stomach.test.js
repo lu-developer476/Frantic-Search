@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { overlaps, scoreForDistance, createPredator, enemyAnimationKey, EmptyStomach } from "../src/minigames/EmptyStomach.js";
+import { overlaps, scoreForDistance, createPredator, enemyAnimationKey, EmptyStomach, ENEMY_CHASE_DURATION } from "../src/minigames/EmptyStomach.js";
 import { removeEdgeBackground } from "../src/minigames/AnimatedGif.js";
 
 test("Empty Stomach uses rectangle overlap for predator contact", () => {
@@ -86,23 +86,20 @@ function makeSimulation({ player, enemies = [], herd = [] }) {
   return simulation;
 }
 
-test("Empty Stomach spawns every predator to the left of the player", () => {
+test("Empty Stomach spawns every predator just beyond the canvas left edge", () => {
+  assert.equal(ENEMY_CHASE_DURATION, 2);
   for (const kind of ["xenoraptor", "velociraptor"]) {
-    const player = { x: 250, y: 366, w: 88, h: 72 };
-    const enemy = createPredator(player, kind, 0);
-    assert.ok(enemy.x + enemy.w < player.x);
+    const enemy = createPredator(kind, 0);
+    assert.equal(enemy.x, -enemy.w);
+    assert.equal(enemy.x + enemy.w, 0);
     assert.equal(enemy.state, "chasing");
-    assert.equal(enemy.stateTimer, 4);
+    assert.equal(enemy.stateTimer, 2);
   }
-
-  const playerAtLeftEdge = { x: 22, y: 366, w: 88, h: 72 };
-  const enemyAtLeftEdge = createPredator(playerAtLeftEdge, "xenoraptor", 0);
-  assert.ok(enemyAtLeftEdge.x + enemyAtLeftEdge.w < playerAtLeftEdge.x);
 });
 
-test("Empty Stomach ends the four-second player chase and switches to prey hunting", () => {
+test("Empty Stomach ends the two-second player chase and switches to prey hunting", () => {
   const player = { x: 820, y: 366, w: 88, h: 72 };
-  const enemy = createPredator(player, "xenoraptor", 0);
+  const enemy = createPredator("xenoraptor", 0);
   enemy.x = 80;
   enemy.stateTimer = 0.04;
   const simulation = makeSimulation({ player, enemies: [enemy] });
@@ -114,9 +111,9 @@ test("Empty Stomach ends the four-second player chase and switches to prey hunti
   assert.ok(enemy.x > initialX);
 });
 
-test("Empty Stomach predators eat Parasaurolophus, pause in place, then restart their chase", () => {
+test("Empty Stomach predators eat Parasaurolophus, then get carried left while frozen", () => {
   const player = { x: 820, y: 366, w: 88, h: 72 };
-  const enemy = createPredator(player, "velociraptor", 0);
+  const enemy = createPredator("velociraptor", 0);
   enemy.x = 100;
   enemy.state = "hunting";
   enemy.stateTimer = 0;
@@ -144,39 +141,38 @@ test("Empty Stomach predators eat Parasaurolophus, pause in place, then restart 
     simulation.update(0.04);
   }
 
-  assert.equal(enemy.state, "resting");
+  assert.equal(enemy.state, "departing");
   assert.equal(simulation.herd.includes(prey), false);
   assert.equal(enemy.x, feedingPosition);
 
-  const restingPosition = enemy.x;
+  const departurePosition = enemy.x;
+  const departureAnimation = enemyAnimationKey(enemy, simulation.elapsed);
   simulation.update(0.4);
-  assert.equal(enemy.x, restingPosition);
-  assert.equal(enemy.state, "resting");
 
-  simulation.update(2);
-  assert.equal(enemy.state, "chasing");
-  assert.equal(enemy.stateTimer, 4);
+  assert.equal(enemy.state, "departing");
+  assert.ok(enemy.x < departurePosition, "the scrolling canvas carries the predator left");
+  assert.equal(enemyAnimationKey(enemy, simulation.elapsed), departureAnimation);
 });
 
-test("Empty Stomach changes predator GIFs for running, jumping, eating, and resting", () => {
+test("Empty Stomach changes predator GIFs for running, jumping, eating, and departing", () => {
   const xenoraptor = { kind: "xenoraptor", phase: 0, state: "chasing" };
   assert.equal(enemyAnimationKey(xenoraptor, 0), "xenoraptorRun");
   assert.equal(enemyAnimationKey(xenoraptor, Math.PI / (2 * 3.8)), "xenoraptorJump");
   assert.equal(enemyAnimationKey({ ...xenoraptor, state: "eating" }, 0), "xenoraptorAttack");
-  assert.equal(enemyAnimationKey({ ...xenoraptor, state: "resting" }, 0), "xenoraptorJump");
+  assert.equal(enemyAnimationKey({ ...xenoraptor, state: "departing" }, 0), "xenoraptorJump");
 
   const velociraptor = { kind: "velociraptor", phase: 0, state: "chasing" };
   assert.equal(enemyAnimationKey(velociraptor, 0), "velociraptorWalk");
   assert.equal(enemyAnimationKey(velociraptor, Math.PI / (2 * 3.8)), "velociraptorJump");
   assert.equal(enemyAnimationKey({ ...velociraptor, state: "eating" }, 0), "velociraptorEat");
-  assert.equal(enemyAnimationKey({ ...velociraptor, state: "resting" }, 0), "velociraptorIdle");
+  assert.equal(enemyAnimationKey({ ...velociraptor, state: "departing" }, 0), "velociraptorIdle");
 });
 
-test("Empty Stomach ends the run when Coral collides with a stationary predator", () => {
+test("Empty Stomach ends the run when Coral collides with a departing predator", () => {
   const player = { x: 250, y: 366, w: 88, h: 72 };
-  const enemy = createPredator(player, "velociraptor", 0);
+  const enemy = createPredator("velociraptor", 0);
   enemy.x = 230;
-  enemy.state = "resting";
+  enemy.state = "departing";
   enemy.stateTimer = 1;
   const simulation = makeSimulation({ player, enemies: [enemy] });
 
