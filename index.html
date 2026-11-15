@@ -121,6 +121,7 @@
                     <span data-i18n="play">INICIAR</span>
                     <b aria-hidden="true">↗</b>
                   </button>
+                  <button id="empty-stomach-button" type="button" data-i18n="emptyStomach">EMPTY STOMACH <b aria-hidden="true">↗</b></button>
                   <button id="delete-campaign-save-button" type="button" hidden data-i18n="deleteCampaignSave">
                     BORRAR PARTIDA GUARDADA
                   </button>
@@ -133,6 +134,27 @@
                   <span class="radar-ring radar-ring-inner"></span>
                   <span class="radar-crosshair"></span>
                   <span class="radar-ping"></span>
+                </div>
+              </div>
+            </section>
+            <section id="empty-stomach-panel" class="empty-stomach-panel" aria-label="Empty Stomach" aria-hidden="true">
+              <div class="empty-stomach-top">
+                <span>FRANTIC SEARCH // ARCADE MODE</span>
+                <span>RUN // SURVIVE</span>
+              </div>
+              <div class="empty-stomach-stage">
+                <canvas width="960" height="540" aria-label="Empty Stomach endless survival minigame"></canvas>
+                <div class="empty-stomach-intro">
+                  <small>MINIGAME // ENDLESS SURVIVAL</small>
+                  <h2 data-empty-title>EMPTY STOMACH</h2>
+                  <p data-empty-subtitle>Coral corre por su vida. Los depredadores no van a detenerse.</p>
+                  <p class="empty-stomach-instructions" data-empty-instructions></p>
+                  <p class="empty-stomach-result" data-empty-result hidden></p>
+                  <div class="empty-stomach-actions">
+                    <button type="button" data-empty-start>COMENZAR</button>
+                    <button type="button" data-empty-retry hidden>VOLVER A CORRER</button>
+                    <button type="button" data-empty-exit>VOLVER AL MENÚ</button>
+                  </div>
                 </div>
               </div>
             </section>

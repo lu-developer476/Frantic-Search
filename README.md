@@ -4,8 +4,7 @@
 
 Frantic Search is an unofficial fan-made dinosaur survival-platformer. Play as Violeta or Vasti, keep the other protagonist by your side, and rescue Rosa from a clandestine poaching and research operation.
 
-## Campaign
-
+## Additional game modes\n\n- **Empty Stomach** is an endless survival minigame starring Coral, the miniraptor in `miniraptor-run.gif`. Escape the xenoraptors and velociraptors while Parasaurolophus herds flee through the environment. The run has no finish line: it ends only when a predator catches Coral. Distance is scored and the personal best is stored locally.\n\n## Campaign\n
 The finite campaign runs through six chapters:
 
 1. **Coastal Highway** — follow the poacher convoy.
@@ -80,8 +79,7 @@ Narrator interludes pause the simulation so the player can read the story and ev
 - Reduced-motion preferences are respected by the interface.
 - Keyboard and touch controls are supported.
 
-## Controls
-
+## Empty Stomach controls\n\n| Action | Keyboard |\n|---|---|\n| Move | A / D or ← / → |\n| Jump | Space / ↑ / W |\n| Exit minigame | Esc |\n\n## Controls\n
 | Action | Keyboard | Touch |
 |---|---|---|
 | Move | A / D or ← / → | ← / → |

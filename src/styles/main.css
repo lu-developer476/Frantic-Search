@@ -2538,3 +2538,31 @@ html.site-mode-gray .story-card .story-actions span{
 .panel-head .mission-brief-header #secondary-objectives{color:#c6d5bf;font-size:clamp(6px,.55vw,8px)!important;font-weight:400;letter-spacing:.025em}
 @media(max-width:560px){.panel-head{min-height:66px}.panel-head .mission-brief-header{gap:1px!important}.panel-head .mission-brief-header #secondary-objectives{font-size:6px!important}}
 @media(max-height:720px) and (min-width:1024px) and (hover:hover) and (pointer:fine){.panel-head{min-height:58px}}
+
+
+/* Empty Stomach: standalone endless-run survival mode. */
+.start-screen-copy #empty-stomach-button{
+  display:inline-flex;align-items:center;justify-content:center;gap:16px;
+  min-width:150px;min-height:52px;padding:14px 18px;margin:0;
+  border:1px solid #d28d79;border-radius:2px;background:#342622;color:#f2c5a9;
+  font-family:var(--font-mono);font-size:10px;font-weight:800;letter-spacing:.12em;cursor:pointer;
+}
+.start-screen-copy #empty-stomach-button:hover{background:#50352d;border-color:#f0b08e}
+.start-screen-copy #empty-stomach-button:disabled{opacity:.45;cursor:not-allowed}
+.empty-stomach-panel{position:absolute;inset:0;z-index:24;display:none;padding:clamp(12px,2.4vw,28px);background:radial-gradient(ellipse at 50% 35%,#34483a,#101a18 72%);color:#edf2e7}
+.empty-stomach-panel.active{display:flex;flex-direction:column;gap:12px}
+.empty-stomach-top{display:flex;justify-content:space-between;align-items:center;font:700 9px var(--font-mono);letter-spacing:.15em;color:#d7e5c8}
+.empty-stomach-top button,.empty-stomach-actions button{padding:10px 14px;border:1px solid #8c9d77;background:#1d2b26;color:#e9f0dc;font:700 9px var(--font-mono);letter-spacing:.1em;cursor:pointer}
+.empty-stomach-stage{position:relative;flex:1;min-height:0;display:grid;place-items:center;overflow:hidden;border:1px solid #77866a;background:#b8d0c4}
+.empty-stomach-stage canvas{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+.empty-stomach-intro{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;background:linear-gradient(135deg,rgba(8,17,14,.83),rgba(18,29,22,.76))}
+.empty-stomach-panel.playing .empty-stomach-intro{pointer-events:none;background:transparent}\n.empty-stomach-panel.playing .empty-stomach-intro>*{display:none}
+.empty-stomach-intro small{color:#e8b18f;font:700 9px var(--font-mono);letter-spacing:.2em}
+.empty-stomach-intro h2{margin:10px 0;color:#f3f1df;font:800 clamp(42px,8vw,84px)/.9 var(--font-condensed);letter-spacing:.04em}
+.empty-stomach-intro p{max-width:54ch;color:#d6dfd1;font-size:13px;line-height:1.6}
+.empty-stomach-instructions{font:10px var(--font-mono)!important}
+.empty-stomach-result{padding:10px 16px;border:1px solid #d28d79;background:#1b2823;color:#ffd1b4;font:700 11px var(--font-mono)}
+.empty-stomach-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.empty-stomach-actions button:first-child,.empty-stomach-actions button:nth-child(2){border-color:#e1a17f;background:#e1a17f;color:#1b211a}
+.empty-stomach-actions button[hidden],.empty-stomach-intro [hidden]{display:none!important}
+@media(max-width:700px){.empty-stomach-panel{padding:8px}.empty-stomach-top{font-size:7px}.empty-stomach-intro h2{font-size:40px}.empty-stomach-intro p{font-size:11px}}

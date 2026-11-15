@@ -30,6 +30,7 @@ import { FacilityConsole } from "./entities/FacilityConsole.js";
 import { SpriteRenderer } from "./rendering/SpriteRenderer.js";
 import { drawBackgroundScenery, drawGroundScenery } from "./rendering/SceneryRenderer.js";
 import { t as uiText, translateText } from "./i18n.js";
+import { EmptyStomach } from "./minigames/EmptyStomach.js";
 
 const canvas = document.querySelector("#game");
 const desktopPlayback = window.matchMedia("(min-width: 1024px) and (hover: hover) and (pointer: fine)");
@@ -52,6 +53,8 @@ const overlay = document.querySelector("#overlay");
 const startScreen = document.querySelector("#start-screen");
 const startScreenMessage = document.querySelector("#start-screen-message");
 const startButton = document.querySelector("#start-button");
+const emptyStomachButton = document.querySelector("#empty-stomach-button");
+const emptyStomachPanel = document.querySelector("#empty-stomach-panel");
 const continueCampaignButton = document.querySelector("#continue-campaign-button");
 const deleteCampaignSaveButton = document.querySelector("#delete-campaign-save-button");
 const overlayActionButton = document.querySelector("#overlay-action-button");
@@ -107,6 +110,9 @@ const soundIcon = document.querySelector("#sound-icon");
 const soundLabel = document.querySelector("#sound-label");
 
 const save = new SaveManager();
+const emptyStomach = new EmptyStomach(emptyStomachPanel, () => {
+  if (!running && !desktopBlocked) startScreen.classList.remove("hidden");
+});
 const audio = new AudioManager();
 const music = new AdaptiveMusic();
 let locale = save.get("language") || "es";
@@ -2504,6 +2510,12 @@ pauseConfirmation.addEventListener("click", (event) => {
   if (event.target === pauseConfirmation) closePauseConfirmation();
 });
 startButton.addEventListener("click", () => openDinoModal("start"));
+emptyStomachButton.addEventListener("click", () => {
+  if (!desktopPlayback.matches || desktopBlocked) return;
+  startScreen.classList.add("hidden");
+  setMenuOpen(false);
+  emptyStomach.open();
+});
 overlayActionButton.addEventListener("click", () => {
   if (paused) {
     togglePause();
@@ -2591,6 +2603,7 @@ function setLanguage(nextLocale) {
   if (!["es", "en"].includes(nextLocale) || nextLocale === locale) return;
 
   locale = nextLocale;
+  emptyStomach.setLocale(locale);
   save.update({ language: locale });
   applyLanguage();
   updateCampaignHud();
@@ -2602,6 +2615,7 @@ function setLanguage(nextLocale) {
 }
 
 function applyLanguage() {
+  emptyStomach.setLocale(locale);
   document.documentElement.lang = locale;
   document.querySelectorAll("[data-i18n]").forEach((element) => {
     element.textContent = ui(element.dataset.i18n);
@@ -2722,6 +2736,7 @@ function syncDesktopAccess() {
   const canPlay = desktopPlayback.matches;
   startButton.disabled = !canPlay;
   continueCampaignButton.disabled = !canPlay;
+  emptyStomachButton.disabled = !canPlay;
 
   if (!canPlay) {
     if (running) {
