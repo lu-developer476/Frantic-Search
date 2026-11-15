@@ -1,4 +1,4 @@
-<img width="1024" height="680" alt="8bit-favicon" src="https://github.com/user-attachments/assets/3dc6a90c-11e6-41c9-bb83-f29666878604"/>
+<img width="1264" height="842" alt="8bits-artwork" src="https://github.com/user-attachments/assets/6ee25746-266e-4f83-9293-f4ca72201f9e"/>
 
 # Frantic Search — Operation: Lost Hatchling #
 
