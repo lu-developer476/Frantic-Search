@@ -37,7 +37,8 @@ Narrator interludes pause the simulation so the player can read the story and ev
 - **Venatosaurus:** both reference variants spawn as frequent territorial enemies. They jump while patrolling and pursuing, and use a fast pouncing charge against nearby targets. They hunt the protagonists, attack other Venatosaurus and can hunt Ligocristus.
 - **Ligocristus Innocens:** procedural prey with its own health. Violeta can defeat it with her dash, while Vasti can crush it with his stomp. Defeated Ligocristus fade out as translucent carcasses that the player, autonomous companions and Venatosaurus can consume to restore health. Defeated poachers and Venatosaurus remain edible as well.
 - **Indoraptor:** *Jurassic World: Fallen Kingdom* hybrid with a lean black body, gold dorsal stripe and elongated clawed forelimbs. Its eight-part rig supports both supplied generations: black-and-gold first generation and ivory-and-turquoise second generation, which appears at the existing phase-two health threshold. Pounce, claw, jump and feeding poses are supported.
-- **Indominus Rex:** *Jurassic World* hybrid, with a massive pale body, elongated skull and prominent dorsal osteoderms; sonic roar, charge and tail sweep with two phases.
+- **Indominus Rex:** *Jurassic World* hybrid, with a massive pale body, elongated skull and prominent dorsal osteoderms; sonic roar, charge and tail sweep, then a directional ground shockwave in its enraged phase.
+- **Boss combat:** encounters use readable wind-ups, attack-specific hitboxes and punish windows. Phase two adds a distinct move for each species; successfully evading an attack extends its recovery, while Vasti's ground shockwave only hits a grounded boss.
 
 ## Art, animation and audio — release 1.3.1
 
@@ -105,7 +106,7 @@ npm run preview
 npm run check
 ```
 
-The automated suite covers campaign gating, facility terminal interaction, Rosa escort, finite world generation, chapter-scaled Ferrucutus captive counts, wildlife enemy behaviour, miniboss phases and hitboxes, sprite availability, sprite loading and adaptive music scheduling.
+The automated suite covers campaign gating, facility terminal interaction, Rosa escort, finite world generation, chapter-scaled Ferrucutus captive counts, wildlife enemy behaviour, boss phases, attack patterns, dodge recovery and hitboxes, sprite availability, sprite loading and adaptive music scheduling.
 
 ## Deploy to Vercel
 
