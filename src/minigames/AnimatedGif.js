@@ -113,6 +113,20 @@ export function removeEdgeBackground(imageData, tolerance = 28) {
   return removed;
 }
 
+export function getBottomTransparentPadding(imageData) {
+  if (!imageData?.data || !Number.isInteger(imageData.width) || !Number.isInteger(imageData.height)) return 0;
+
+  const { data, width, height } = imageData;
+  if (width < 1 || height < 1 || data.length !== width * height * 4) return 0;
+
+  for (let y = height - 1; y >= 0; y -= 1) {
+    for (let x = 0; x < width; x += 1) {
+      if (data[(y * width + x) * 4 + 3] > 0) return height - y - 1;
+    }
+  }
+  return 0;
+}
+
 export async function loadAnimatedGif(url) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`GIF load failed (${response.status}): ${url}`);
@@ -124,12 +138,19 @@ export async function loadAnimatedGif(url) {
   canvas.width = width; canvas.height = height;
   const context = canvas.getContext("2d", { willReadFrequently: true });
   const renderedFrames = [];
+  const patchCanvas = document.createElement("canvas");
+  let bottomPadding = height;
   let restore = null, previous = null;
   for (const frame of frames) {
     if (previous?.disposalType === 2) context.clearRect(previous.dims.left, previous.dims.top, previous.dims.width, previous.dims.height);
     else if (previous?.disposalType === 3 && restore) context.putImageData(restore, 0, 0);
     restore = frame.disposalType === 3 ? context.getImageData(0, 0, width, height) : null;
-    context.putImageData(new ImageData(frame.patch, frame.dims.width, frame.dims.height), frame.dims.left, frame.dims.top);
+    patchCanvas.width = frame.dims.width;
+    patchCanvas.height = frame.dims.height;
+    const patchContext = patchCanvas.getContext("2d");
+    patchContext.putImageData(new ImageData(frame.patch, frame.dims.width, frame.dims.height), 0, 0);
+    // Transparent GIF pixels must be composited over the previous frame, not written as erasures.
+    context.drawImage(patchCanvas, frame.dims.left, frame.dims.top);
 
     const snapshot = document.createElement("canvas");
     snapshot.width = width; snapshot.height = height;
@@ -137,9 +158,10 @@ export async function loadAnimatedGif(url) {
     snapshotContext.drawImage(canvas, 0, 0);
     const snapshotData = snapshotContext.getImageData(0, 0, width, height);
     if (removeEdgeBackground(snapshotData) > 0) snapshotContext.putImageData(snapshotData, 0, 0);
+    bottomPadding = Math.min(bottomPadding, getBottomTransparentPadding(snapshotData));
 
     renderedFrames.push({ image: snapshot, delay: Math.max(20, Number(frame.delay) || 100) });
     previous = frame;
   }
-  return { width, height, frames: renderedFrames };
+  return { width, height, bottomPadding: bottomPadding === height ? 0 : bottomPadding, frames: renderedFrames };
 }

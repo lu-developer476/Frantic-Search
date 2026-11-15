@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { overlaps, scoreForDistance, createPredator, enemyAnimationKey, EmptyStomach, ENEMY_CHASE_DURATION } from "../src/minigames/EmptyStomach.js";
-import { removeEdgeBackground } from "../src/minigames/AnimatedGif.js";
+import { overlaps, scoreForDistance, getGroundAlignedY, createPredator, enemyAnimationKey, EmptyStomach, ENEMY_CHASE_DURATION } from "../src/minigames/EmptyStomach.js";
+import { removeEdgeBackground, getBottomTransparentPadding } from "../src/minigames/AnimatedGif.js";
 
 test("Empty Stomach uses rectangle overlap for predator contact", () => {
   assert.equal(overlaps({ x: 0, y: 0, w: 20, h: 20 }, { x: 19, y: 5, w: 20, h: 20 }), true);
@@ -13,6 +13,21 @@ test("Empty Stomach converts endless-run distance into a non-negative score", ()
   assert.equal(scoreForDistance(99), 9);
   assert.equal(scoreForDistance(1250), 125);
   assert.equal(scoreForDistance(-50), 0);
+});
+
+test("Empty Stomach aligns Coral's visible GIF pixels with the floor", () => {
+  assert.equal(getGroundAlignedY(366, 72, 198, 44), 382);
+  assert.equal(getGroundAlignedY(366, 72, 198, 0), 366);
+  assert.equal(getGroundAlignedY(366, 72, 0, 44), 366);
+});
+
+test("Animated GIF bottom-padding measurement ignores transparent rows below the sprite", () => {
+  const width = 4, height = 6;
+  const data = new Uint8ClampedArray(width * height * 4);
+  data.set([220, 84, 67, 255], (4 * width + 1) * 4);
+  assert.equal(getBottomTransparentPadding({ data, width, height }), 1);
+  data.set([220, 84, 67, 255], (5 * width + 1) * 4);
+  assert.equal(getBottomTransparentPadding({ data, width, height }), 0);
 });
 
 test("Empty Stomach advances through decoded GIF frames using their frame delays", async () => {

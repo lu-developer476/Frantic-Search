@@ -24,6 +24,12 @@ export function scoreForDistance(distance) {
   return Math.max(0, Math.floor(distance / 10));
 }
 
+export function getGroundAlignedY(y, renderedHeight, sourceHeight, bottomPadding = 0) {
+  if (![y, renderedHeight, sourceHeight].every(Number.isFinite) || sourceHeight <= 0) return y;
+  const padding = Math.max(0, Math.min(sourceHeight, Number(bottomPadding) || 0));
+  return y + renderedHeight * padding / sourceHeight;
+}
+
 export const ENEMY_CHASE_DURATION = 2;
 export const ENEMY_EAT_DURATION = 1.35;
 
@@ -319,7 +325,7 @@ export class EmptyStomach {
     const score = scoreForDistance(this.distance);
     this.best = Math.max(this.best, score);
     try { localStorage.setItem("frantic-empty-stomach-best", String(this.best)); } catch {}
-    this.root.querySelector("[data-empty-result]").textContent = this.text(`CORAL È STATA DIVORATA · DISTANZA: ${score} M · RÉCORD: ${this.best} M`, `CORAL WAS EATEN · DISTANCE: ${score} M · BEST: ${this.best} M`);
+    this.root.querySelector("[data-empty-result]").textContent = this.text(`CORAL FUE DEVORADA · DISTANCIA: ${score} M · RÉCORD: ${this.best} M`, `CORAL WAS EATEN · DISTANCE: ${score} M · BEST: ${this.best} M`);
     this.root.classList.remove("playing");
     this.root.querySelector("[data-empty-result]").hidden = false;
     this.root.querySelector("[data-empty-retry]").hidden = false;
@@ -341,7 +347,10 @@ export class EmptyStomach {
     const animation = this.animations[key];
     if (animation?.frames.length) {
       const index = getAnimatedFrameIndex(animation.frames, animationTime);
-      this.ctx.drawImage(animation.frames[index].image, x, y, w, h);
+      const drawY = key === "coral"
+        ? getGroundAlignedY(y, h, animation.height, animation.bottomPadding)
+        : y;
+      this.ctx.drawImage(animation.frames[index].image, x, drawY, w, h);
     } else {
       this.ctx.fillStyle = fallback;
       this.ctx.fillRect(x + 10, y + 20, w - 20, h - 24);
