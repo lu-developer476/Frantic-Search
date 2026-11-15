@@ -2599,7 +2599,7 @@ overlayActionButton.addEventListener("click", () => {
     openRetryOptions();
     return;
   }
-  if (!running) openDinoModal("overlay");
+  if (!running) openDinoModal("overlay", freeRoamMode ? "free-roam" : "campaign");
 });
 overlayExitButton.addEventListener("click", returnToMainMenu);
 retryLevelStartButton.addEventListener("click", () => restoreRestartSnapshot(levelStartSnapshot));
@@ -2815,7 +2815,7 @@ window.addEventListener("keydown", (event) => {
   if (event.code === "KeyP" && !event.repeat && !campaign.sceneOpen && pauseConfirmation.classList.contains("hidden")) togglePause();
   if (event.code === "Enter" && !event.repeat && campaign.sceneOpen) advanceStory();
   else if (event.code === "Enter" && !event.repeat && !running && !paused && !desktopBlocked && dinoModal.classList.contains("hidden") && navMenu.classList.contains("hidden")) {
-    if (!overlay.classList.contains("hidden")) openDinoModal("overlay");
+    if (!overlay.classList.contains("hidden")) openDinoModal("overlay", freeRoamMode ? "free-roam" : "campaign");
     else if (activeStartMenuPage === "home") showStartMenuPage("options");
     else if (activeStartMenuPage === "options") openDinoModal("start", "campaign");
     else minigamesButton.focus();
