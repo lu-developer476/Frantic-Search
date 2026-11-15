@@ -2532,11 +2532,29 @@ html.site-mode-gray .story-card .story-actions span{
   .retry-options button{min-height:44px;padding:10px 12px;font-size:10px}
 }
 
+/* Keep chapter, objective and collectible progress together on one line. */
 .panel-head{min-height:62px}
-.panel-head .mission-brief-header{display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center;gap:2px!important;white-space:normal!important}
-.panel-head .mission-brief-header small,.panel-head .mission-brief-header strong{display:block!important;flex:0 1 auto;min-width:0;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.panel-head .mission-brief-header{
+  display:flex!important;
+  flex-direction:row!important;
+  flex-wrap:nowrap!important;
+  align-items:baseline!important;
+  justify-content:flex-start;
+  gap:clamp(5px,.6vw,9px)!important;
+  white-space:nowrap!important;
+}
+.panel-head .mission-brief-header small,
+.panel-head .mission-brief-header strong{
+  display:inline-block!important;
+  flex:0 0 auto!important;
+  min-width:max-content;
+  max-width:none!important;
+  white-space:nowrap!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+}
 .panel-head .mission-brief-header #secondary-objectives{color:#c6d5bf;font-size:clamp(6px,.55vw,8px)!important;font-weight:400;letter-spacing:.025em}
-@media(max-width:560px){.panel-head{min-height:66px}.panel-head .mission-brief-header{gap:1px!important}.panel-head .mission-brief-header #secondary-objectives{font-size:6px!important}}
+@media(max-width:560px){.panel-head{min-height:66px}.panel-head .mission-brief-header{gap:4px!important}.panel-head .mission-brief-header #secondary-objectives{font-size:6px!important}}
 @media(max-height:720px) and (min-width:1024px) and (hover:hover) and (pointer:fine){.panel-head{min-height:58px}}
 
 
