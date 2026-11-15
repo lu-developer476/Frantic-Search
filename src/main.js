@@ -2212,7 +2212,7 @@ function returnToCharacterSelection() {
 }
 
 function startFromDinoModal() {
-  if (dinoModal.classList.contains("hidden") || characterConfirmation.classList.contains("hidden") || !desktopPlayback.matches) return;
+  if (!dinoModal.classList.contains("hidden") || characterConfirmation.classList.contains("hidden") || !desktopPlayback.matches) return;
   characterConfirmation.classList.add("hidden");
   dinoModal.classList.add("hidden");
   start();
