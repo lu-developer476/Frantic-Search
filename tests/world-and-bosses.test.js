@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { PlatformWorld } from "../src/world/PlatformWorld.js";
 import { GAME, LEVELS, WORLD } from "../src/config/GameConfig.js";
 import { FerrucutusCaptive } from "../src/entities/FerrucutusCaptive.js";
+import { WildDinosaur } from "../src/entities/WildDinosaur.js";
 import { IndoraptorBoss } from "../src/entities/IndoraptorBoss.js";
 import { IndominusRexBoss } from "../src/entities/IndominusRexBoss.js";
 import { CollisionSystem } from "../src/systems/CollisionSystem.js";
@@ -11,13 +12,24 @@ test("campaign world stops after the finite extraction area", () => {
   const world = new PlatformWorld(430);
   world.extendTo(50000);
   assert.equal(world.generatedSections, 7);
-  assert.equal(world.bossSpawns.length, 2);
-  assert.equal(world.bossSpawns[0].kind, "indoraptor");
-  assert.equal(world.bossSpawns[1].kind, "indominus");
+  assert.equal(world.bossSpawns.length, 5);
+  assert.deepEqual(
+    world.bossSpawns.map(({ id, kind, generation, variant }) => [id, kind, generation, variant ?? null]),
+    [
+      ["indoraptor-first-generation", "indoraptor", 1, null],
+      ["indoraptor-second-generation", "indoraptor", 2, null],
+      ["indominus-first-generation", "indominus", 1, "first-generation"],
+      ["indominus-second-generation", "indominus", 2, "second-generation"],
+      ["indominus-second-generation-variant", "indominus", 2, "second-generation-variant"]
+    ]
+  );
   assert.ok(world.bossSpawns[0].x >= WORLD.sectionStarts[1]);
   assert.ok(world.bossSpawns[0].x < WORLD.sectionStarts[2]);
-  assert.ok(world.bossSpawns[1].x >= WORLD.sectionStarts[4]);
-  assert.ok(world.bossSpawns[1].x < WORLD.sectionStarts[5]);
+  assert.ok(world.bossSpawns[1].x >= WORLD.sectionStarts[2]);
+  assert.ok(world.bossSpawns[1].x < WORLD.sectionStarts[3]);
+  assert.ok(world.bossSpawns.slice(2).every((spawn) =>
+    spawn.x >= WORLD.sectionStarts[4] && spawn.x < WORLD.sectionStarts[5]
+  ));
   assert.ok(world.facilitySpawns);
   assert.equal(world.facilitySpawns.extraction, WORLD.extractionX);
   const finalFloor = world.platforms.find((platform) =>
@@ -73,6 +85,25 @@ test("procedural hazards never overlap Ferrucutus containment cages", () => {
   }
 });
 
+test("a Venatosaurus spawned over the opening pit visibly falls before dying", () => {
+  const world = new PlatformWorld(GAME.groundY, { seed: 20261115 });
+  const spawn = world.venatosaurusSpawns[0];
+  const enemy = new WildDinosaur({ ...spawn, groundY: GAME.groundY });
+
+  assert.equal(world.hasGroundSupportAt(enemy.x + enemy.w / 2, GAME.groundY), false);
+  assert.equal(world.resolveGroundPitfall(enemy, GAME.groundY, GAME.fixedStep), true);
+  assert.equal(enemy.fellIntoPit, true);
+  assert.equal(enemy.defeated, false);
+  assert.equal(enemy.state, "falling");
+
+  for (let frame = 0; frame < 60 && !enemy.defeated; frame += 1) {
+    world.resolveGroundPitfall(enemy, GAME.groundY, GAME.fixedStep);
+  }
+
+  assert.equal(enemy.defeated, true);
+  assert.ok(enemy.y > GAME.groundY + 240);
+});
+
 test("boss arenas have continuous local floors and no poacher patrol inside the fight", () => {
   const world = new PlatformWorld(430);
   world.extendTo(WORLD.totalLength + 5000);
@@ -90,6 +121,37 @@ test("boss arenas have continuous local floors and no poacher patrol inside the 
     assert.ok(coveredTo >= arenaEnd, "each boss arena must have uninterrupted ground support");
     assert.equal(world.hunterSpawns.some((spawn) => spawn.x >= arenaStart && spawn.x <= arenaEnd), false);
   }
+});
+
+test("miniboss visual identities remain fixed when combat phase changes", () => {
+  const indoraptor = new IndoraptorBoss({
+    id: "indoraptor-gen2-fixed",
+    x: 800,
+    groundY: 430,
+    generation: 2
+  });
+  indoraptor.activate();
+  indoraptor.state = "recovering";
+  indoraptor.damageCooldown = 0;
+  indoraptor.takeDamage(4);
+  assert.equal(indoraptor.phase, 2);
+  assert.equal(indoraptor.generation, 2);
+
+  const indominus = new IndominusRexBoss({
+    id: "indominus-variant-fixed",
+    x: 800,
+    groundY: 430,
+    generation: 2,
+    variant: "second-generation-variant"
+  });
+  indominus.activate();
+  indominus.state = "recovering";
+  indominus.damageCooldown = 0;
+  indominus.takeDamage(7);
+  assert.equal(indominus.phase, 2);
+  assert.equal(indominus.generation, 2);
+  assert.equal(indominus.variant, "second-generation-variant");
+  assert.equal(indominus.character, "indominus-variant");
 });
 
 test("Indoraptor only takes damage during exposed recovery", () => {

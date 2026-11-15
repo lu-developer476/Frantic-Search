@@ -1,7 +1,7 @@
 import { BossEnemy } from "./BossEnemy.js";
 
 export class IndominusRexBoss extends BossEnemy {
-  constructor({ id, x, groundY, arenaMinX, arenaMaxX }) {
+  constructor({ id, x, groundY, arenaMinX, arenaMaxX, variant = "first-generation", title, formLabel, formLabelEs }) {
     super({
       id,
       kind: "indominus",
@@ -15,6 +15,20 @@ export class IndominusRexBoss extends BossEnemy {
       moveSpeed: 78,
       attackCooldown: 1.65
     });
+    this.variant = ["first-generation", "second-generation", "second-generation-variant"].includes(variant)
+      ? variant
+      : "first-generation";
+    this.generation = this.variant === "first-generation" ? 1 : 2;
+    this.character = this.variant === "second-generation-variant" ? "indominus-variant" : "indominus";
+    this.title = title ?? (this.variant === "second-generation-variant"
+      ? "INDOMINUS REX // GEN 2 VARIANT"
+      : `INDOMINUS REX // GEN ${this.generation}`);
+    this.formLabel = formLabel ?? (this.variant === "first-generation"
+      ? "ORIGINAL SPECIMEN"
+      : this.variant === "second-generation-variant" ? "SECOND-GENERATION VARIANT" : "SECOND-GENERATION SPECIMEN");
+    this.formLabelEs = formLabelEs ?? (this.variant === "first-generation"
+      ? "EJEMPLAR ORIGINAL"
+      : this.variant === "second-generation-variant" ? "VARIANTE DE SEGUNDA GENERACIÓN" : "EJEMPLAR DE SEGUNDA GENERACIÓN");
     if (Number.isFinite(arenaMinX)) this.arenaMinX = arenaMinX;
     if (Number.isFinite(arenaMaxX)) this.arenaMaxX = arenaMaxX;
     this.roarRadius = 230;

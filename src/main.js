@@ -22,7 +22,7 @@ import { PhysicsSystem } from "./systems/PhysicsSystem.js";
 import { CollisionSystem } from "./systems/CollisionSystem.js";
 import { beginEnemyFade, advanceEnemyFade, getEnemyOpacity, isEnemyFadeComplete } from "./systems/EnemyFadeSystem.js";
 import { PlatformWorld } from "./world/PlatformWorld.js";
-import { CampaignManager } from "./campaign/CampaignManager.js";
+import { CampaignManager, BOSS_ENCOUNTER_FLAGS } from "./campaign/CampaignManager.js";
 import { getLevelCheckpointDistance, canActivateLevelCheckpoint } from "./campaign/CheckpointManager.js";
 import { Beta } from "./entities/Beta.js";
 import { FacilityConsole } from "./entities/FacilityConsole.js";
@@ -1172,10 +1172,17 @@ function registerHunterResult(hunter, result) {
   }
 }
 
-function resolveEnemyPitfall(enemy) {
-  if (!world.resolveGroundPitfall(enemy, GAME.groundY)) return false;
-  beginEnemyFade(enemy);
-  burst(enemy.x + enemy.w / 2, GAME.groundY - 10, "#87966f", 14);
+function resolveEnemyPitfall(enemy, delta) {
+  const wasFalling = enemy.fellIntoPit;
+  if (!world.resolveGroundPitfall(enemy, GAME.groundY, delta)) return false;
+
+  if (!wasFalling) {
+    burst(enemy.x + enemy.w / 2, GAME.groundY - 8, "#87966f", 8);
+  }
+  if (enemy.defeated && !enemy.pitfallFadeStarted) {
+    enemy.pitfallFadeStarted = true;
+    beginEnemyFade(enemy);
+  }
   return true;
 }
 
@@ -1246,7 +1253,7 @@ function drawIndoraptor(boss) {
 }
 
 function drawIndominus(boss) {
-  const referenceKind = boss.phase === 2 && boss.attackIndex % 2 === 0 ? "indominus-variant" : "indominus";
+  const referenceKind = boss.character ?? "indominus";
   const spriteDrawn = spriteRenderer.drawAnimated(ctx, referenceKind, boss.x - 4, boss.y - 4, boss.w + 8, boss.h + 8, boss, elapsed, { alpha: getEnemyOpacity(boss), facing: boss.direction });
   if (!spriteDrawn) return;
   if (boss.state === "telegraph") {
@@ -1345,7 +1352,7 @@ function drawBossHud() {
     ctx.font = "12px monospace";
     ctx.textAlign = "center";
     ctx.fillText(
-      tr(activeBoss.kind === "indoraptor" ? "MINIBOSS // INDORAPTOR" : "MINIBOSS // INDOMINUS REX"),
+      tr(activeBoss.title || (activeBoss.kind === "indoraptor" ? "MINIBOSS // INDORAPTOR" : "MINIBOSS // INDOMINUS REX")),
       GAME.width / 2,
       barY - 11
     );
@@ -1355,7 +1362,7 @@ function drawBossHud() {
     ctx.fillRect(barX, barY, barWidth * (activeBoss.health / activeBoss.maxHealth), 9);
     ctx.fillStyle = "#b9c4b8";
     ctx.font = "9px monospace";
-    ctx.fillText((locale === "es" ? "FASE " : "PHASE ") + activeBoss.phase, GAME.width / 2, barY + 23);
+    ctx.fillText(locale === "es" ? (activeBoss.formLabelEs ?? "EJEMPLAR") : (activeBoss.formLabel ?? "SPECIMEN"), GAME.width / 2, barY + 23);
     ctx.fillStyle = activeBoss.isVulnerable ? "#d8f36a" : "#a5b0a5";
     ctx.font = "8px monospace";
     ctx.fillText(
@@ -1404,7 +1411,7 @@ function syncBossEncounter() {
     boss.activate();
     bosses.push(boss);
     activeBoss = boss;
-    bossCueTitle = spawn.kind === "indoraptor" ? "INDORAPTOR" : "INDOMINUS REX";
+    bossCueTitle = boss.title || (spawn.kind === "indoraptor" ? "INDORAPTOR" : "INDOMINUS REX");
     bossCueTimer = 2.8;
     audio.bossWarning();
     break;
@@ -1425,17 +1432,17 @@ function damageBoss(boss, amount, source) {
   );
 
   if (result.phaseChanged) {
-    bossCueTitle = "PHASE " + boss.phase;
+    bossCueTitle = locale === "es" ? "COMBATE INTENSIFICADO" : "COMBAT INTENSIFIES";
     bossCueTimer = 1.8;
     audio.bossWarning();
   }
 
   if (result.defeated) {
     beginEnemyFade(boss);
-    bossCueTitle = boss.kind === "indoraptor" ? "INDORAPTOR DEFEATED" : "INDOMINUS DEFEATED";
+    bossCueTitle = boss.title || (boss.kind === "indoraptor" ? "INDORAPTOR DEFEATED" : "INDOMINUS DEFEATED");
     bossCueTimer = 2.4;
     audio.bossDefeat();
-    campaign.onBossDefeated(boss.kind);
+    campaign.onBossDefeated(boss.kind, boss.id);
     updateCampaignHud();
     renderStoryPanel();
     activeBoss = null;
@@ -1640,7 +1647,7 @@ function update(delta) {
   for (const hunter of hunters) {
     const previousState = hunter.state;
     const hunterEvent = hunter.update(delta, player);
-    if (resolveEnemyPitfall(hunter)) continue;
+    if (resolveEnemyPitfall(hunter, delta)) continue;
     if (previousState !== hunter.state && (hunter.state === "investigate" || hunter.state === "windup")) audio.collect();
     if (hunterEvent?.type === "shoot") {
       hunterProjectiles.push(new HunterProjectile(hunterEvent.projectile));
@@ -1686,7 +1693,7 @@ function update(delta) {
       ...foodSources.filter((prey) => prey.kind === "ligocristus" && !prey.defeated && !prey.consumed).map((prey) => ({ target: prey, kind: "ligocristus" }))
     ];
     const event = enemy.update(delta, targets);
-    if (resolveEnemyPitfall(enemy)) continue;
+    if (resolveEnemyPitfall(enemy, delta)) continue;
     if (event?.type === "attack") {
       if (event.target === player) { damagePlayer(); if (player.health <= 0) return; }
       else if (venatosauruses.includes(event.target)) damageVenatosaurus(event.target, 1);
@@ -2020,8 +2027,9 @@ function restoreRestartSnapshot(snapshot) {
   foodSources = foodSources.filter((actor) => actor.x + actor.w >= actorCutoff);
   wildlife = wildlife.filter((actor) => actor.x + actor.w >= actorCutoff);
   ferrucutusCaptives = ferrucutusCaptives.filter((actor) => actor.x + actor.w >= actorCutoff);
-  if (campaign.flags.indoraptorDefeated) seenBossSpawns.add("indoraptor-encounter");
-  if (campaign.flags.indominusDefeated) seenBossSpawns.add("indominus-encounter");
+  for (const [encounterId, flag] of Object.entries(BOSS_ENCOUNTER_FLAGS)) {
+    if (campaign.flags[flag]) seenBossSpawns.add(encounterId);
+  }
   syncBossEncounter();
   syncFacility();
   for (const terminal of facilityConsoles) {

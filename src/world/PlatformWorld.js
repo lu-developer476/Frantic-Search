@@ -50,7 +50,37 @@ const PLATFORM_LAYOUTS = [
 const FERRUCUTUS_CAGE_WIDTH = 164;
 const CAPTIVE_RATIOS_BY_SECTION = [[0.20], [0.52], [0.32], [0.42], [0.30], [], []];
 const CHAPTER_BY_SECTION = [0, 1, 2, 2, 3, 4, 5];
-const BOSS_RATIOS_BY_SECTION = [[], [0.68], [], [], [0.68], [], []];
+const BOSS_ENCOUNTERS_BY_SECTION = [
+  [],
+  [{
+    id: "indoraptor-first-generation", kind: "indoraptor", generation: 1, ratio: 0.68,
+    title: "INDORAPTOR // GEN 1", formLabel: "ORIGINAL SPECIMEN", formLabelEs: "EJEMPLAR ORIGINAL"
+  }],
+  [{
+    id: "indoraptor-second-generation", kind: "indoraptor", generation: 2, ratio: 0.68,
+    title: "INDORAPTOR // GEN 2", formLabel: "SECOND-GENERATION SPECIMEN", formLabelEs: "EJEMPLAR DE SEGUNDA GENERACIÓN"
+  }],
+  [],
+  [
+    {
+      id: "indominus-first-generation", kind: "indominus", generation: 1, variant: "first-generation", ratio: 0.28,
+      title: "INDOMINUS REX // GEN 1", formLabel: "ORIGINAL SPECIMEN", formLabelEs: "EJEMPLAR ORIGINAL"
+    },
+    {
+      id: "indominus-second-generation", kind: "indominus", generation: 2, variant: "second-generation", ratio: 0.52,
+      title: "INDOMINUS REX // GEN 2", formLabel: "SECOND-GENERATION SPECIMEN", formLabelEs: "EJEMPLAR DE SEGUNDA GENERACIÓN"
+    },
+    {
+      id: "indominus-second-generation-variant", kind: "indominus", generation: 2, variant: "second-generation-variant", ratio: 0.76,
+      title: "INDOMINUS REX // GEN 2 VARIANT", formLabel: "SECOND-GENERATION VARIANT", formLabelEs: "VARIANTE DE SEGUNDA GENERACIÓN"
+    }
+  ],
+  [],
+  []
+];
+const BOSS_RATIOS_BY_SECTION = BOSS_ENCOUNTERS_BY_SECTION.map((encounters) =>
+  encounters.map(({ ratio }) => ratio)
+);
 const VENATOSAURUS_RATIOS_BY_SECTION = [
   [0.12, 0.70], [0.20, 0.45, 0.90], [0.18, 0.44, 0.86],
   [0.18, 0.50, 0.87], [0.14, 0.44, 0.84], [], [0.25, 0.62, 0.84]
@@ -229,8 +259,9 @@ export class PlatformWorld {
       });
     });
 
-    if (index === 1) this.bossSpawns.push({ id: "indoraptor-encounter", kind: "indoraptor", x: at(0.68) });
-    if (index === 4) this.bossSpawns.push({ id: "indominus-encounter", kind: "indominus", x: at(0.68) });
+    (BOSS_ENCOUNTERS_BY_SECTION[index] ?? []).forEach(({ ratio, ...encounter }) => {
+      this.bossSpawns.push({ ...encounter, x: at(ratio) });
+    });
 
     if (isFacilityArea) {
       this.facilitySpawns = {
@@ -311,12 +342,33 @@ export class PlatformWorld {
     );
   }
 
-  resolveGroundPitfall(entity, groundY = this.groundY) {
-    if (!entity || entity.defeated || Math.abs(entity.y + entity.h - groundY) > 18) return false;
+  resolveGroundPitfall(entity, groundY = this.groundY, delta = GAME.fixedStep) {
+    if (!entity || entity.defeated) return false;
+
+    if (entity.fellIntoPit) {
+      const step = Math.max(0, delta);
+      entity.onGround = false;
+      entity.vy = (entity.vy ?? 0) + GAME.gravity * step;
+      entity.y += entity.vy * step;
+      entity.motionSpeed = 0;
+
+      if (entity.y > groundY + 240) {
+        entity.defeated = true;
+        entity.falling = false;
+        entity.state = "defeated";
+        entity.vy = 0;
+      }
+      return true;
+    }
+
+    if (Math.abs(entity.y + entity.h - groundY) > 18) return false;
     if (this.hasGroundSupportAt(entity.x + entity.w / 2, groundY, true)) return false;
-    entity.defeated = true;
+
     entity.fellIntoPit = true;
-    entity.state = "defeated";
+    entity.falling = true;
+    entity.onGround = false;
+    entity.vy = 0;
+    entity.state = "falling";
     entity.motionSpeed = 0;
     return true;
   }

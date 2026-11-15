@@ -19,7 +19,9 @@ function progressToFacility(campaign) {
   drainScenes(campaign);
   campaign.updateLocation(GAME.playerX + LEVELS[1].distance);
   drainScenes(campaign);
-  campaign.onBossDefeated("indoraptor");
+  campaign.onBossDefeated("indoraptor", "indoraptor-first-generation");
+  drainScenes(campaign);
+  campaign.onBossDefeated("indoraptor", "indoraptor-second-generation");
   drainScenes(campaign);
   campaign.updateLocation(GAME.playerX + LEVELS[2].distance);
   drainScenes(campaign);
@@ -27,11 +29,36 @@ function progressToFacility(campaign) {
   drainScenes(campaign);
   campaign.updateLocation(GAME.playerX + LEVELS[3].distance);
   drainScenes(campaign);
-  campaign.onBossDefeated("indominus");
+  campaign.onBossDefeated("indominus", "indominus-first-generation");
+  drainScenes(campaign);
+  campaign.onBossDefeated("indominus", "indominus-second-generation");
+  drainScenes(campaign);
+  campaign.onBossDefeated("indominus", "indominus-second-generation-variant");
   drainScenes(campaign);
   campaign.updateLocation(GAME.playerX + LEVELS[4].distance);
   drainScenes(campaign);
 }
+
+test("campaign gates progression until all five individual minibosses are defeated", () => {
+  const campaign = new CampaignManager();
+
+  campaign.onBossDefeated("indoraptor", "indoraptor-first-generation");
+  assert.equal(campaign.flags.indoraptorFirstDefeated, true);
+  assert.equal(campaign.flags.indoraptorDefeated, false);
+  campaign.onBossDefeated("indoraptor", "indoraptor-second-generation");
+  assert.equal(campaign.flags.indoraptorDefeated, true);
+
+  campaign.onBossDefeated("indominus", "indominus-first-generation");
+  assert.equal(campaign.flags.indominusFirstDefeated, true);
+  assert.equal(campaign.flags.indominusDefeated, false);
+  campaign.onBossDefeated("indominus", "indominus-second-generation");
+  assert.equal(campaign.flags.indominusSecondDefeated, true);
+  assert.equal(campaign.flags.indominusDefeated, false);
+  assert.equal(campaign.canFreeBeta(), false);
+  campaign.onBossDefeated("indominus", "indominus-second-generation-variant");
+  assert.equal(campaign.flags.indominusVariantDefeated, true);
+  assert.equal(campaign.flags.indominusDefeated, true);
+});
 
 test("security terminal stays locked until auxiliary power is restored", () => {
   const campaign = new CampaignManager();

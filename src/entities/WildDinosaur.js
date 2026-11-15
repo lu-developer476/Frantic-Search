@@ -25,7 +25,7 @@ export class WildDinosaur {
   }
 
   update(delta, targets = []) {
-    if (this.defeated) return null;
+    if (this.defeated || this.fellIntoPit) return null;
     this.updateJump(delta);
     this.attackCooldown = Math.max(0, this.attackCooldown - delta);
     this.stateTimer = Math.max(0, this.stateTimer - delta);

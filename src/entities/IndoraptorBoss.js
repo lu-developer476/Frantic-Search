@@ -1,7 +1,7 @@
 import { BossEnemy } from "./BossEnemy.js";
 
 export class IndoraptorBoss extends BossEnemy {
-  constructor({ id, x, groundY, arenaMinX, arenaMaxX }) {
+  constructor({ id, x, groundY, arenaMinX, arenaMaxX, generation = 1, title, formLabel, formLabelEs }) {
     super({
       id,
       kind: "indoraptor",
@@ -15,16 +15,15 @@ export class IndoraptorBoss extends BossEnemy {
       moveSpeed: 152,
       attackCooldown: 1.4
     });
+    this.generation = Number(generation) >= 2 ? 2 : 1;
+    this.title = title ?? `INDORAPTOR // GEN ${this.generation}`;
+    this.formLabel = formLabel ?? (this.generation === 2 ? "SECOND-GENERATION SPECIMEN" : "ORIGINAL SPECIMEN");
+    this.formLabelEs = formLabelEs ?? (this.generation === 2 ? "EJEMPLAR DE SEGUNDA GENERACIÓN" : "EJEMPLAR ORIGINAL");
     if (Number.isFinite(arenaMinX)) this.arenaMinX = arenaMinX;
     if (Number.isFinite(arenaMaxX)) this.arenaMaxX = arenaMaxX;
     this.attackDurationValue = 0.38;
     this.attackName = null;
     this.pounceOriginY = this.baseY;
-  }
-
-  get generation() {
-    // The visual skin follows the existing health-based combat phase.
-    return this.phase;
   }
 
   chooseAttack() {

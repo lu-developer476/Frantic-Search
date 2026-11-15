@@ -1,5 +1,23 @@
 import { GAME, LEVELS, WORLD } from "../config/GameConfig.js";
 
+export const BOSS_ENCOUNTER_FLAGS = Object.freeze({
+  "indoraptor-first-generation": "indoraptorFirstDefeated",
+  "indoraptor-second-generation": "indoraptorSecondDefeated",
+  "indominus-first-generation": "indominusFirstDefeated",
+  "indominus-second-generation": "indominusSecondDefeated",
+  "indominus-second-generation-variant": "indominusVariantDefeated"
+});
+
+const INDORAPTOR_ENCOUNTERS = [
+  "indoraptor-first-generation",
+  "indoraptor-second-generation"
+];
+const INDOMINUS_ENCOUNTERS = [
+  "indominus-first-generation",
+  "indominus-second-generation",
+  "indominus-second-generation-variant"
+];
+
 const OPENING = [
   "A poacher convoy crosses the coastal highway, carrying a young Velociraptor toward an unregistered research facility.",
   "An intercepted signal identifies the captive as Rosa, Violeta's daughter. The mission is to locate the containment wing, disable its security systems and bring her back alive.",
@@ -10,7 +28,12 @@ const OPENING = [
 export class CampaignManager {
   constructor() {
     this.flags = {
+      indoraptorFirstDefeated: false,
+      indoraptorSecondDefeated: false,
       indoraptorDefeated: false,
+      indominusFirstDefeated: false,
+      indominusSecondDefeated: false,
+      indominusVariantDefeated: false,
       indominusDefeated: false,
       powerRestored: false,
       securityReleased: false,
@@ -90,7 +113,7 @@ export class CampaignManager {
       this.objective = this.flags.indominusDefeated ? "RESTORE AUXILIARY POWER" : "DEFEAT THE INDOMINUS REX";
       this.queueScene("containment-perimeter-arrival", "CONTAINMENT PERIMETER", [
         "The inner perimeter opens onto a reinforced containment yard. Heavy blast doors divide this sector from the cell block.",
-        "The Indominus Rex is guarding the only route forward. Its defeat is required before the facility's auxiliary systems can be reached."
+        "Three distinct Indominus Rex specimens occupy the reinforced containment yard. They are separate individuals, and all three must be defeated before the facility's auxiliary systems can be reached."
       ]);
     }
     if (worldX >= chapterStart(4)) {
@@ -117,22 +140,51 @@ export class CampaignManager {
     }
   }
 
-  onBossDefeated(kind) {
+  onBossDefeated(kind, encounterId = null) {
     if (kind === "indoraptor") {
-      this.flags.indoraptorDefeated = true;
-      this.objective = "BREACH THE BLACK SITE";
-      this.queueScene("indoraptor-defeated", "THREAT NEUTRALIZED", [
-        "The Indoraptor falls at the edge of Redwood Frontier. The route to Poacher Black Site is now open.",
-        "The route to the clandestine complex is clear. The search for Rosa continues beyond its perimeter."
-      ]);
+      const wasComplete = this.flags.indoraptorDefeated;
+      const encounterFlag = BOSS_ENCOUNTER_FLAGS[encounterId];
+      if (encounterFlag?.startsWith("indoraptor")) {
+        this.flags[encounterFlag] = true;
+      } else if (!encounterId) {
+        // Keep the original public method call compatible with existing campaign integrations.
+        this.flags.indoraptorFirstDefeated = true;
+        this.flags.indoraptorSecondDefeated = true;
+      }
+
+      this.flags.indoraptorDefeated = INDORAPTOR_ENCOUNTERS.every((id) =>
+        this.flags[BOSS_ENCOUNTER_FLAGS[id]]
+      );
+      if (!wasComplete && this.flags.indoraptorDefeated) {
+        this.objective = "BREACH THE BLACK SITE";
+        this.queueScene("indoraptor-defeated", "THREATS NEUTRALIZED", [
+          "Both Indoraptor specimens have been defeated. The route to Poacher Black Site is now open.",
+          "The two genetically distinct predators are no longer guarding the route. The search for Rosa continues beyond the perimeter."
+        ]);
+      }
     }
+
     if (kind === "indominus") {
-      this.flags.indominusDefeated = true;
-      this.objective = "RESTORE AUXILIARY POWER";
-      this.queueScene("indominus-defeated", "CONTAINMENT BREACHED", [
-        "The Indominus Rex is defeated. Its containment systems fall silent, but Rosa's cell remains sealed behind the facility's security network.",
-        "With the perimeter threat removed, the path to the containment wing is finally open."
-      ]);
+      const wasComplete = this.flags.indominusDefeated;
+      const encounterFlag = BOSS_ENCOUNTER_FLAGS[encounterId];
+      if (encounterFlag?.startsWith("indominus")) {
+        this.flags[encounterFlag] = true;
+      } else if (!encounterId) {
+        this.flags.indominusFirstDefeated = true;
+        this.flags.indominusSecondDefeated = true;
+        this.flags.indominusVariantDefeated = true;
+      }
+
+      this.flags.indominusDefeated = INDOMINUS_ENCOUNTERS.every((id) =>
+        this.flags[BOSS_ENCOUNTER_FLAGS[id]]
+      );
+      if (!wasComplete && this.flags.indominusDefeated) {
+        this.objective = "RESTORE AUXILIARY POWER";
+        this.queueScene("indominus-defeated", "CONTAINMENT BREACHED", [
+          "All three Indominus Rex specimens are defeated. Their containment systems fall silent, but Rosa's cell remains sealed behind the facility's security network.",
+          "With every perimeter specimen neutralized, the path to the containment wing is finally open."
+        ]);
+      }
     }
     this.refreshObjective();
   }

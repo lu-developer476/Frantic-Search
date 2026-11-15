@@ -30,7 +30,7 @@ export class HunterEnemy {
   }
 
   updateBehavior(delta, target) {
-    if (this.defeated) return null;
+    if (this.defeated || this.fellIntoPit) return null;
 
     this.attackCooldown = Math.max(0, this.attackCooldown - delta);
     this.stateTimer = Math.max(0, this.stateTimer - delta);
