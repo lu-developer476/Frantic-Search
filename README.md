@@ -1,3 +1,4 @@
+<img width="1024" height="680" alt="8bit-favicon" src="https://github.com/user-attachments/assets/0d4171b3-7929-4ad9-9276-840fbafacee3" />
 # Frantic Search — Operation: Lost Hatchling
 
 **Version 1.3.1 · 2D pixel-art survival-platformer · HTML5 Canvas · JavaScript · Vite**
