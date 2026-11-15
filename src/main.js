@@ -32,6 +32,7 @@ import { drawBackgroundScenery, drawGroundScenery } from "./rendering/SceneryRen
 import { t as uiText, translateText } from "./i18n.js";
 import { EmptyStomach } from "./minigames/EmptyStomach.js";
 import { TimeAttack } from "./minigames/TimeAttack.js";
+import { Survival } from "./minigames/Survival.js";
 
 const canvas = document.querySelector("#game");
 const desktopPlayback = window.matchMedia("(min-width: 1024px) and (hover: hover) and (pointer: fine)");
@@ -58,6 +59,8 @@ const emptyStomachButton = document.querySelector("#empty-stomach-button");
 const emptyStomachPanel = document.querySelector("#empty-stomach-panel");
 const timeAttackButton = document.querySelector("#time-attack-button");
 const timeAttackPanel = document.querySelector("#time-attack-panel");
+const survivalButton = document.querySelector("#survival-button");
+const survivalPanel = document.querySelector("#survival-panel");
 const continueCampaignButton = document.querySelector("#continue-campaign-button");
 const deleteCampaignSaveButton = document.querySelector("#delete-campaign-save-button");
 const overlayActionButton = document.querySelector("#overlay-action-button");
@@ -117,6 +120,9 @@ const emptyStomach = new EmptyStomach(emptyStomachPanel, () => {
   if (!running && !desktopBlocked) startScreen.classList.remove("hidden");
 });
 const timeAttack = new TimeAttack(timeAttackPanel, () => {
+  if (!running && !desktopBlocked) startScreen.classList.remove("hidden");
+}, spriteRenderer);
+const survival = new Survival(survivalPanel, () => {
   if (!running && !desktopBlocked) startScreen.classList.remove("hidden");
 }, spriteRenderer);
 const audio = new AudioManager();
@@ -2528,6 +2534,12 @@ timeAttackButton.addEventListener("click", () => {
   setMenuOpen(false);
   timeAttack.open();
 });
+survivalButton.addEventListener("click", () => {
+  if (!desktopPlayback.matches || desktopBlocked) return;
+  startScreen.classList.add("hidden");
+  setMenuOpen(false);
+  survival.open();
+});
 overlayActionButton.addEventListener("click", () => {
   if (paused) {
     togglePause();
@@ -2617,6 +2629,7 @@ function setLanguage(nextLocale) {
   locale = nextLocale;
   emptyStomach.setLocale(locale);
   timeAttack.setLocale(locale);
+  survival.setLocale(locale);
   save.update({ language: locale });
   applyLanguage();
   updateCampaignHud();
@@ -2630,6 +2643,7 @@ function setLanguage(nextLocale) {
 function applyLanguage() {
   emptyStomach.setLocale(locale);
   timeAttack.setLocale(locale);
+  survival.setLocale(locale);
   document.documentElement.lang = locale;
   document.querySelectorAll("[data-i18n]").forEach((element) => {
     element.textContent = ui(element.dataset.i18n);
@@ -2752,6 +2766,7 @@ function syncDesktopAccess() {
   continueCampaignButton.disabled = !canPlay;
   emptyStomachButton.disabled = !canPlay;
   timeAttackButton.disabled = !canPlay;
+  survivalButton.disabled = !canPlay;
 
   if (!canPlay) {
     if (running) {

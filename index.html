@@ -123,6 +123,7 @@
                   </button>
                   <button id="empty-stomach-button" type="button" data-i18n="emptyStomach">EMPTY STOMACH</button>
                   <button id="time-attack-button" type="button"><span data-i18n="timeAttack">TIME ATTACK</span><b aria-hidden="true">↗</b></button>
+                  <button id="survival-button" type="button"><span data-i18n="survival">SURVIVAL</span><b aria-hidden="true">↗</b></button>
                   <button id="delete-campaign-save-button" type="button" hidden data-i18n="deleteCampaignSave">
                     BORRAR PARTIDA GUARDADA
                   </button>
@@ -176,6 +177,31 @@
                     <button type="button" data-ta-start>INICIAR CAZA</button>
                     <button type="button" data-ta-retry hidden>REPETIR SECCIÓN</button>
                     <button type="button" data-ta-exit>VOLVER AL MENÚ</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section id="survival-panel" class="survival-panel" aria-label="Survival" aria-hidden="true">
+              <div class="survival-top">
+                <span>FRANTIC SEARCH // ENDLESS WAVES</span>
+                <span data-survival-status>SURVIVAL // WAVE 01</span>
+              </div>
+              <div class="survival-stage">
+                <canvas width="960" height="540" aria-label="Survival endless progressive waves minigame"></canvas>
+                <div class="survival-intro">
+                  <small>ENDLESS COMBAT // PICK YOUR SIDE</small>
+                  <h2 data-survival-title>SURVIVAL</h2>
+                  <p data-survival-subtitle>Elegí tu bando y aguantá todas las oleadas que puedas. Cada ronda trae más enemigos y más resistencia.</p>
+                  <p class="survival-instructions" data-survival-instructions></p>
+                  <p class="survival-result" data-survival-result hidden></p>
+                  <div class="survival-actions" data-survival-options>
+                    <button type="button" data-survival-role="hunter" data-survival-hunter>JUGAR COMO CAZADOR</button>
+                    <button type="button" data-survival-role="blue" data-survival-violeta>JUGAR COMO VIOLETA</button>
+                    <button type="button" data-survival-role="vasti" data-survival-vasti>JUGAR COMO VASTI</button>
+                  </div>
+                  <div class="survival-actions">
+                    <button type="button" data-survival-retry hidden>VOLVER A INTENTAR</button>
+                    <button type="button" data-survival-exit>VOLVER AL MENÚ</button>
                   </div>
                 </div>
               </div>

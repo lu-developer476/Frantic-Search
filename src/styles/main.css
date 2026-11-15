@@ -2599,3 +2599,45 @@ html.site-mode-gray .story-card .story-actions span{
 .time-attack-actions button:first-child,.time-attack-actions button:nth-child(2){border-color:#d8f36a;background:#d8f36a;color:#1b211a}
 .time-attack-actions button[hidden],.time-attack-intro [hidden]{display:none!important}
 @media(max-width:700px){.time-attack-panel{padding:8px}.time-attack-top{font-size:7px}.time-attack-intro h2{font-size:40px}.time-attack-intro p{font-size:11px}}
+
+
+/* Survival — endless progressive arena with hunter and dinosaur loadouts. */
+.start-screen-copy #survival-button{
+  display:flex;align-items:center;justify-content:space-between;width:100%;min-height:46px;
+  padding:13px 15px;border:1px solid #8c9d77;background:#303c32;color:#eff3e5;
+  font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;cursor:pointer;transition:.18s;
+}
+.start-screen-copy #survival-button:hover{background:#40503c;border-color:#d8f36a;transform:translateY(-1px)}
+.start-screen-copy #survival-button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.start-screen-copy #survival-button b{font-size:17px;line-height:1}
+.survival-panel{
+  position:absolute;inset:0;z-index:26;display:none;padding:clamp(12px,2.4vw,28px);
+  background:radial-gradient(ellipse at 50% 35%,#34483a,#101a18 72%);color:#edf2e7;
+}
+.survival-panel.active{display:flex;flex-direction:column;gap:12px}
+.survival-top{display:flex;justify-content:space-between;align-items:center;gap:12px;font:700 9px var(--font-mono);letter-spacing:.15em;color:#d7e5c8}
+.survival-stage{position:relative;flex:1;min-height:0;display:grid;place-items:center;overflow:hidden;border:1px solid #77866a;background:#9cbdb6}
+.survival-stage canvas{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated;touch-action:none}
+.survival-intro{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px;text-align:center;background:linear-gradient(135deg,rgba(8,17,14,.88),rgba(18,29,22,.78));
+}
+.survival-panel.playing .survival-intro{pointer-events:none;background:transparent}
+.survival-panel.playing .survival-intro>*{display:none}
+.survival-intro small{color:#e8b18f;font:700 9px var(--font-mono);letter-spacing:.2em}
+.survival-intro h2{margin:10px 0;color:#f3f1df;font:800 clamp(42px,8vw,84px)/.9 var(--font-condensed);letter-spacing:.04em}
+.survival-intro p{max-width:72ch;color:#d6dfd1;font-size:12px;line-height:1.6}
+.survival-instructions{font:10px var(--font-mono)!important}
+.survival-result{padding:10px 16px;border:1px solid #d28d79;background:#1b2823;color:#ffd1b4;font:700 11px var(--font-mono)}
+.survival-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.survival-actions button{
+  padding:10px 14px;border:1px solid #8c9d77;background:#1d2b26;color:#e9f0dc;
+  font:700 9px var(--font-mono);letter-spacing:.1em;cursor:pointer;
+}
+.survival-actions button:first-child{border-color:#d8f36a;background:#d8f36a;color:#1b211a}
+.survival-actions button[hidden],.survival-intro [hidden]{display:none!important}
+@media(max-width:700px){
+  .survival-panel{padding:8px}.survival-top{font-size:7px}
+  .survival-intro h2{font-size:40px}.survival-intro p{font-size:11px}
+  .survival-actions{gap:6px}.survival-actions button{padding:9px 10px;font-size:8px}
+}

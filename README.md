@@ -8,6 +8,7 @@ Frantic Search is an unofficial fan-made dinosaur survival-platformer. Play as V
 
 - **Empty Stomach** is an endless survival minigame starring Coral, the miniraptor in `miniraptor-run.gif`. Escape the xenoraptors and velociraptors while Parasaurolophus herds flee through the environment. The run has no finish line: it ends only when a predator catches Coral. Distance is scored and the personal best is stored locally.
 - **Time Attack** is a finite hunting time trial. Control one hunter alongside three AI teammates, eliminate all 14 Venatosaurus across four waves, and reach extraction. The fastest successful completion is stored locally.
+- **Survival** is an endless arena with progressive waves. Play as an armed hunter against Venatosaurus, or choose Violeta / Vasti to fight poachers. Enemy count, health and pressure increase over time; every second cleared wave restores one health point. Personal bests are saved separately for each role.
 
 ## Campaign
 
@@ -103,6 +104,14 @@ Narrator interludes pause the simulation so the player can read the story and ev
 | Pause / resume | P |
 | Exit minigame | Esc |
 
+## Survival controls
+
+| Role | Controls |
+|---|---|
+| Hunter | A / D or arrows to move · Space to jump · F or left mouse button to fire |
+| Violeta / Vasti | A / D or arrows to move · Space to jump · X to use the character ability |
+| Both | P to pause · Esc to exit |
+
 ## Controls
 
 | Action | Keyboard | Touch |
@@ -136,7 +145,7 @@ npm run preview
 npm run check
 ```
 
-The automated suite covers campaign gating, facility terminal interaction, Rosa escort, finite world generation, deterministic collectible placement and save validation, chapter-scaled Ferrucutus captive counts, wildlife enemy behaviour, boss phases, attack patterns, dodge recovery and hitboxes, Time Attack wave planning and completion timing, sprite availability, sprite loading and adaptive music scheduling.
+The automated suite covers campaign gating, facility terminal interaction, Rosa escort, finite world generation, deterministic collectible placement and save validation, chapter-scaled Ferrucutus captive counts, wildlife enemy behaviour, boss phases, attack patterns, dodge recovery and hitboxes, Time Attack wave planning and completion timing, Survival wave scaling, wave-clear gates and record handling, sprite availability, sprite loading and adaptive music scheduling.
 
 ## Deploy to Vercel
 
