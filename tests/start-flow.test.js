@@ -48,3 +48,26 @@ test("desktop startup accepts any available fine pointer on hybrid devices", asy
     "CSS must hide the game only when no fine pointer is available"
   );
 });
+
+test("chapter arrival dialogue opens automatically at the level boundary", async () => {
+  const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
+  const { GAME, LEVELS } = await import("../src/config/GameConfig.js");
+  const updateStart = main.indexOf("function update(delta) {");
+  const distanceUpdate = main.indexOf("distance = Math.max(0, player.x - GAME.playerX);", updateStart);
+  const locationUpdate = main.indexOf("campaign.updateLocation(player.x);", updateStart);
+  const sceneGuard = main.indexOf("if (!freeRoamMode && campaign.sceneOpen)", locationUpdate);
+  const interactStart = main.indexOf('if (input.consume("interact"))', sceneGuard);
+
+  assert.ok(updateStart >= 0 && distanceUpdate > updateStart && distanceUpdate < locationUpdate);
+  assert.ok(locationUpdate > distanceUpdate && sceneGuard > locationUpdate);
+  assert.ok(interactStart > sceneGuard, "the pending-scene guard must run before further gameplay input");
+
+  const sceneGate = main.slice(sceneGuard, interactStart);
+  assert.ok(sceneGate.includes("distanceLabel.textContent = Math.floor(distance)"));
+  assert.ok(sceneGate.includes("bestLabel.textContent = Math.floor(best())"));
+  assert.ok(sceneGate.includes("renderStoryPanel();"));
+  assert.ok(sceneGate.includes("return;"));
+
+  assert.equal(LEVELS[1].distance, 6055);
+  assert.equal(GAME.playerX + LEVELS[1].distance, 6200);
+});

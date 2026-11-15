@@ -1680,14 +1680,19 @@ function update(delta) {
   syncBossEncounter();
   syncFacility();
   music.setTheme(currentMusicTheme());
+  distance = Math.max(0, player.x - GAME.playerX);
   if (!freeRoamMode) campaign.updateLocation(player.x);
   updateCampaignHud();
-  if (!freeRoamMode && campaign.sceneOpen) return;
+  if (!freeRoamMode && campaign.sceneOpen) {
+    distanceLabel.textContent = Math.floor(distance).toString().padStart(4, "0") + " m";
+    bestLabel.textContent = Math.floor(best()).toString().padStart(4, "0") + " m";
+    renderStoryPanel();
+    return;
+  }
   if (input.consume("interact")) {
     interactWithFacility();
     if (campaign.sceneOpen) return;
   }
-  distance = Math.max(0, player.x - GAME.playerX);
   cameraX = Math.max(0, player.x - 330);
   const currentLevelIndex = LEVELS.reduce((current, item, index) => distance >= item.distance ? index : current, 0);
   if (currentLevelIndex > lastLevelIndex && currentLevelIndex < LEVELS.length) {
