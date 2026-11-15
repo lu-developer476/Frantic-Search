@@ -122,7 +122,9 @@ test("reference images are loaded from the Vite base path and cached", () => {
     const second = renderer.getReferenceImage("adult-velociraptor-nublarensis.png");
     assert.equal(first, second);
     assert.equal(first.src, "/game/references/adult-velociraptor-nublarensis.png?v=20261113-all-reference-dinosaurs-environments-3");
-    assert.equal(renderer.referenceImages.size, 18);
+    assert.equal(renderer.referenceImages.size, 14);
+    assert.ok([...renderer.referenceImages.values()].every((image) => /.png\?v=/.test(image.src)));
+    assert.equal(renderer.readiness().total, 14);
   } finally {
     if (previousImage === undefined) delete globalThis.Image;
     else globalThis.Image = previousImage;
@@ -175,6 +177,45 @@ test("Violeta and Vasti player rendering reads their PNG references directly", (
     const player = { id: character, facing: 1, onGround: true, vx: 0, duck: false, animationState: null };
     assert.equal(renderer.drawDinosaur(context, character, 100, 200, 72, 66, player, 0.3), true);
     assert.equal(context.calls.find(([name]) => name === "drawImage")?.[1], reference);
+  }
+});
+
+
+test("PNG-backed actors and poachers never request removed SVG sprite files", () => {
+  const renderer = Object.create(SpriteRenderer.prototype);
+  renderer.drawReferencePng = () => false;
+  renderer.get = () => { throw new Error("A removed SVG sprite was requested"); };
+  const context = createRenderContext();
+
+  for (const character of [...Object.keys(REFERENCE_PNG_CHARACTERS), "hunter"]) {
+    assert.equal(renderer.drawAnimated(context, character, 0, 0, 32, 32, {}, 0), false);
+  }
+  assert.equal(renderer.drawDinosaur(context, "blue", 0, 0, 32, 32, {}, 0), false);
+});
+
+test("failed reference-image loads are reported without retrying the missing asset", () => {
+  const previousImage = globalThis.Image;
+  const instances = [];
+  const notifications = [];
+  class FakeImage {
+    constructor() {
+      this.complete = false;
+      this.naturalWidth = 0;
+      this.src = "";
+      instances.push(this);
+    }
+  }
+  globalThis.Image = FakeImage;
+  try {
+    const renderer = new SpriteRenderer("/", (file, readiness, status) => notifications.push({ file, status }));
+    const file = "adult-velociraptor-nublarensis.png";
+    instances[0].onerror();
+    assert.deepEqual(notifications[0], { file, status: "error" });
+    assert.equal(renderer.getReferenceImage(file), null);
+    assert.equal(instances.length, 14);
+  } finally {
+    if (previousImage === undefined) delete globalThis.Image;
+    else globalThis.Image = previousImage;
   }
 });
 

@@ -38,12 +38,7 @@ const REFERENCE_PRELOAD_FILES = [
   "ligocristus-innocens.png",
   "stegoceratops.png",
   "venatosaurus-impavidus.png",
-  "venatosaurus-saevidicus.png",
-  // Legacy motion-reference GIFs are cached alongside the canonical environment-matched PNG artwork.
-  "velociraptor-idle.gif",
-  "velociraptor-walk.gif",
-  "velociraptor-jump.gif",
-  "velociraptor-eat.gif"
+  "venatosaurus-saevidicus.png"
 ];
 
 const SPRITE_ASSET_VERSION = "20261113-all-reference-dinosaurs-environments-3";
@@ -211,19 +206,21 @@ export class SpriteRenderer {
     const image = new Image();
     image.decoding = "async";
     image.onload = () => {
+      let status = "error";
       if (image.naturalWidth > 0) {
         this.referenceLoaded.add(file);
         this.referenceBounds.set(file, this.measureOpaqueBounds(image));
+        status = "loaded";
       } else {
         this.referenceFailed.add(file);
       }
       if (typeof image.decode === "function") image.decode().catch(() => {});
-      this.onAssetChange?.(file, this.readiness());
+      this.onAssetChange?.(file, this.readiness(), status);
     };
     image.onerror = () => {
       this.referenceFailed.add(file);
       this.referenceImages.delete(file);
-      this.onAssetChange?.(file, this.readiness());
+      this.onAssetChange?.(file, this.readiness(), "error");
     };
     this.referenceImages.set(file, image);
     image.src = this.baseUrl + "references/" + file + "?v=" + SPRITE_ASSET_VERSION;
@@ -406,19 +403,21 @@ export class SpriteRenderer {
     const image = new Image();
     image.decoding = "async";
     image.onload = () => {
+      let status = "error";
       if (image.naturalWidth > 0) {
         this.loaded.add(name);
         this.failed.delete(name);
+        status = "loaded";
       } else {
         this.failed.add(name);
       }
       if (typeof image.decode === "function") image.decode().catch(() => {});
-      this.onAssetChange?.(name, this.readiness());
+      this.onAssetChange?.(name, this.readiness(), status);
     };
     image.onerror = () => {
       this.failed.add(name);
       this.images.delete(name);
-      this.onAssetChange?.(name, this.readiness());
+      this.onAssetChange?.(name, this.readiness(), "error");
     };
     this.images.set(name, image);
     image.src = this.baseUrl + "assets/sprites/" + name + ".svg?v=" + SPRITE_ASSET_VERSION;
@@ -847,7 +846,7 @@ export class SpriteRenderer {
 
   drawVastiRig(context, width, height, actor, elapsed, pose, alpha) {
     // Vasti faces left in the original JPG. Mirror the complete rig for right-facing movement.
-    // Idle / gait / bite timing is adapted from the supplied idle, walk and eat GIFs.
+    // Idle / gait / bite timing is generated procedurally from the reference silhouette.
     // The jump pose is composed from the still JPG only; no jump GIF is used.
     const actorFacing = actor?.facing ?? 1;
     const mirror = actorFacing > 0;
@@ -1464,6 +1463,12 @@ export class SpriteRenderer {
 
   drawAnimated(context, character, x, y, width, height, actor, elapsed, options = {}) {
     if (this.drawReferencePng(context, character, x, y, width, height, actor ?? {}, elapsed, options)) return true;
+
+    // The repository ships PNG reference artwork, not the legacy SVG sprite sheet.
+    // Avoid requesting unavailable SVGs while a PNG is loading; callers keep their
+    // native Canvas fallback until the reference image is ready.
+    if (character === "hunter" || REFERENCE_PNG_CHARACTERS[character]) return false;
+
     if (character === "beta" && this.drawReferenceRosa(context, x, y, width, height, actor, elapsed, options.alpha ?? 1)) return true;
     if (character === "vasti" && this.drawVasti(context, x, y, width, height, actor, elapsed, options.alpha ?? 1)) return true;
     if (character === "ferrucutus" && this.drawReferenceFerrucutus(context, x, y, width, height, actor, elapsed, options.alpha ?? 1)) return true;
@@ -1508,16 +1513,16 @@ export class SpriteRenderer {
       alpha,
       facing: player?.facing ?? 1
     }, pose)) return true;
-    if (kind === "blue" && this.drawReferenceVioleta(context, x, drawY, width, naturalHeight, player ?? {}, elapsed, alpha, pose)) return true;
-    if (kind === "rosa" && this.drawReferenceRosa(context, x, drawY, width, naturalHeight, player ?? {}, elapsed, alpha, pose)) return true;
-    if (kind !== "blue" && kind !== "rosa" && this.drawVasti(context, x, y, width, height, player ?? {}, elapsed, alpha, pose)) return true;
-    return this.draw(context, pose, x, drawY, width, naturalHeight, { alpha, facing: player?.facing ?? 1 });
+
+    // Player characters use the committed PNG references. main.js draws the
+    // native pixel-Canvas fallback until the corresponding reference image loads.
+    return false;
   }
 
   readiness() {
     return {
       ready: this.referenceLoaded.size + this.loaded.size,
-      total: Object.keys(REFERENCE_PNG_CHARACTERS).length + SPRITES.length,
+      total: REFERENCE_PRELOAD_FILES.length,
       failed: this.referenceFailed.size + this.failed.size
     };
   }

@@ -33,10 +33,16 @@ const desktopPlayback = window.matchMedia("(min-width: 1024px) and (hover: hover
 // intermediate buffer discarded most sprite detail before it was enlarged again.
 const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
 ctx.imageSmoothingEnabled = false;
-const spriteRenderer = new SpriteRenderer(import.meta.env.BASE_URL, () => {
-  // Assets may finish loading while the simulation is running. The normal frame loop
-  // will draw them; only force a redraw while the game is static or paused.
-  if (!running || paused) render();
+let spriteRenderPending = false;
+const spriteRenderer = new SpriteRenderer(import.meta.env.BASE_URL, (_asset, _readiness, status) => {
+  // Failed legacy assets must not trigger extra full-canvas redraws. The active game
+  // loop already renders successful loads; when static, coalesce them into one frame.
+  if (status !== "loaded" || (running && !paused) || spriteRenderPending) return;
+  spriteRenderPending = true;
+  requestAnimationFrame(() => {
+    spriteRenderPending = false;
+    if (!running || paused) render();
+  });
 });
 const overlay = document.querySelector("#overlay");
 const startScreen = document.querySelector("#start-screen");
