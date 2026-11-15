@@ -24,12 +24,14 @@ export class EmptyStomach {
     this.ctx = this.canvas.getContext("2d");
     this.onExit = onExit;
     this.locale = "es";
-    this.images = {};
-    for (const [key, path] of Object.entries(ASSETS)) {
-      const image = new Image();
-      image.src = `${import.meta.env.BASE_URL}${path}`;
-      this.images[key] = image;
-    }
+    this.animations = {};
+    this.assetPromises = Object.entries(ASSETS).map(async ([key, path]) => {
+      try {
+        this.animations[key] = await loadAnimatedGif(`${import.meta.env.BASE_URL}${path}`);
+      } catch (error) {
+        console.error(`[Empty Stomach] Failed to decode ${key} GIF:`, error);
+      }
+    });
     this.keys = new Set();
     this.running = false;
     this.frame = null;
@@ -211,9 +213,11 @@ export class EmptyStomach {
   }
 
   drawSprite(key, x, y, w, h, fallback) {
-    const image = this.images[key];
-    if (image?.complete && image.naturalWidth > 0) this.ctx.drawImage(image, x, y, w, h);
-    else {
+    const animation = this.animations[key];
+    if (animation?.frames.length) {
+      const index = getAnimatedFrameIndex(animation.frames, this.elapsed * 1000);
+      this.ctx.drawImage(animation.frames[index].image, x, y, w, h);
+    } else {
       this.ctx.fillStyle = fallback;
       this.ctx.fillRect(x + 10, y + 20, w - 20, h - 24);
     }
