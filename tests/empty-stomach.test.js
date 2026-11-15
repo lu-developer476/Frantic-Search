@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { overlaps, scoreForDistance, getGroundAlignedY, createPredator, enemyAnimationKey, EmptyStomach, ENEMY_CHASE_DURATION } from "../src/minigames/EmptyStomach.js";
+import { overlaps, scoreForDistance, getGroundAlignedY, createPredator, enemyAnimationKey, EmptyStomach, ENEMY_CHASE_DURATION, INTRO_DURATION, PLAYER_WIDTH, PLAYER_HEIGHT } from "../src/minigames/EmptyStomach.js";
 import { removeEdgeBackground, getBottomTransparentPadding } from "../src/minigames/AnimatedGif.js";
 
 test("Empty Stomach uses rectangle overlap for predator contact", () => {
@@ -216,6 +216,81 @@ function makeSimulation({ player, enemies = [], herd = [] }) {
   };
   return simulation;
 }
+
+test("Empty Stomach uses a five-second entrance before the survival run begins", () => {
+  assert.equal(INTRO_DURATION, 5);
+  assert.equal(PLAYER_WIDTH, 80);
+  assert.equal(PLAYER_HEIGHT, 66);
+
+  const simulation = Object.create(EmptyStomach.prototype);
+  Object.assign(simulation, {
+    phase: "intro",
+    introElapsed: 0,
+    sceneryOffset: 0,
+    elapsed: 0,
+    distance: 0,
+    spawnTimer: 0,
+    preyTimer: 0,
+    player: { x: -PLAYER_WIDTH, w: PLAYER_WIDTH },
+    controlsStrip: { hidden: true }
+  });
+
+  simulation.updateIntro(2.5);
+  assert.equal(simulation.phase, "intro");
+  assert.equal(simulation.player.x, 85, "Coral should be halfway across the intro path");
+  assert.equal(simulation.controlsStrip.hidden, true);
+
+  simulation.updateIntro(2.5);
+  assert.equal(simulation.phase, "playing");
+  assert.equal(simulation.player.x, 250);
+  assert.equal(simulation.elapsed, 0, "the survival timer starts after the intro");
+  assert.equal(simulation.distance, 0, "intro travel is excluded from the score");
+  assert.equal(simulation.spawnTimer, 1.2);
+  assert.equal(simulation.preyTimer, 0.8);
+  assert.equal(simulation.controlsStrip.hidden, false);
+});
+
+test("Empty Stomach starts the intro with Coral fully outside the left edge", () => {
+  const selectors = [
+    "[data-empty-title]", "[data-empty-subtitle]", "[data-empty-instructions]",
+    "[data-empty-result]", "[data-empty-start]", "[data-empty-retry]", "[data-empty-exit]"
+  ];
+  const nodes = Object.fromEntries(selectors.map((selector) => [selector, { hidden: true, textContent: "" }]));
+  const classes = new Set(["active"]);
+  const simulation = Object.create(EmptyStomach.prototype);
+  Object.assign(simulation, {
+    root: {
+      querySelector(selector) { return nodes[selector]; },
+      classList: {
+        contains(name) { return classes.has(name); },
+        add(name) { classes.add(name); },
+        remove(name) { classes.delete(name); }
+      }
+    },
+    locale: "es",
+    pauseButton: { textContent: "", setAttribute(name, value) { this[name] = value; } },
+    pauseOverlay: { hidden: true },
+    controlsStrip: { hidden: false },
+    keys: new Set(),
+    running: false,
+    paused: false,
+    frame: null
+  });
+
+  const previousRequest = globalThis.requestAnimationFrame;
+  globalThis.requestAnimationFrame = () => 7;
+  try {
+    simulation.start();
+    assert.equal(simulation.phase, "intro");
+    assert.equal(simulation.running, true);
+    assert.equal(simulation.player.x, -PLAYER_WIDTH);
+    assert.equal(simulation.player.x + simulation.player.w, 0);
+    assert.equal(simulation.controlsStrip.hidden, true);
+  } finally {
+    if (previousRequest === undefined) delete globalThis.requestAnimationFrame;
+    else globalThis.requestAnimationFrame = previousRequest;
+  }
+});
 
 test("Empty Stomach spawns every predator just beyond the canvas left edge", () => {
   assert.equal(ENEMY_CHASE_DURATION, 2);

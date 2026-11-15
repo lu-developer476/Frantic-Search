@@ -2,6 +2,16 @@ import { loadAnimatedGif, getAnimatedFrameIndex } from "./AnimatedGif.js";
 const WIDTH = 960;
 const HEIGHT = 540;
 const FLOOR = 438;
+export const INTRO_DURATION = 5;
+export const PLAYER_WIDTH = 80;
+export const PLAYER_HEIGHT = 66;
+const INTRO_END_X = 250;
+const PRAIRIE_HERD = [
+  { x: 32, y: 368, w: 72, h: 52 },
+  { x: 282, y: 358, w: 88, h: 64 },
+  { x: 610, y: 366, w: 78, h: 56 },
+  { x: 905, y: 354, w: 92, h: 66 }
+];
 const ASSETS = {
   coral: "minigame/empty-stomach/gif/main/miniraptor-run.gif",
   xenoraptorRun: "minigame/empty-stomach/gif/enemies/xenoraptor/xenoraptor-crypticus-run.gif",
@@ -86,6 +96,10 @@ export class EmptyStomach {
     });
     this.keys = new Set();
     this.running = false;
+    this.phase = "idle";
+    this.introElapsed = 0;
+    this.animationClock = 0;
+    this.sceneryOffset = 0;
     this.frame = null;
     this.last = 0;
     this.elapsed = 0;
@@ -95,7 +109,7 @@ export class EmptyStomach {
     this.enemies = [];
     this.herd = [];
     this.particles = [];
-    this.player = { x: 250, y: FLOOR - 72, w: 88, h: 72, vy: 0, grounded: true };
+    this.player = { x: INTRO_END_X, y: FLOOR - PLAYER_HEIGHT, w: PLAYER_WIDTH, h: PLAYER_HEIGHT, vy: 0, grounded: true };
     this.best = 0;
     try { this.best = Number(localStorage.getItem("frantic-empty-stomach-best")) || 0; } catch {}
     this.handleKeyDown = (event) => {
@@ -103,7 +117,7 @@ export class EmptyStomach {
       if (["ArrowLeft", "ArrowRight", "ArrowUp", "Space", "KeyP"].includes(event.code)) event.preventDefault();
       if (event.code === "Escape" && !event.repeat) { this.exit(); return; }
       if (event.code === "KeyP" && !event.repeat) { this.togglePause(); return; }
-      if (this.paused) return;
+      if (this.phase === "intro" || this.paused) return;
       if (["ArrowLeft", "ArrowRight", "ArrowUp", "Space", "KeyA", "KeyD", "KeyW"].includes(event.code)) this.keys.add(event.code);
       if (["Space", "ArrowUp", "KeyW"].includes(event.code) && !event.repeat && !this.running && !this.paused) this.start();
     };
@@ -157,6 +171,10 @@ export class EmptyStomach {
     this.root.querySelector("[data-empty-subtitle]").hidden = false;
     this.root.querySelector("[data-empty-instructions]").hidden = false;
     this.updatePauseButton();
+    this.phase = "idle";
+    this.introElapsed = 0;
+    this.animationClock = 0;
+    this.sceneryOffset = 0;
     this.last = 0;
     this.elapsed = 0;
     this.distance = 0;
@@ -165,7 +183,7 @@ export class EmptyStomach {
     this.enemies = [];
     this.herd = [];
     this.particles = [];
-    this.player = { x: 250, y: FLOOR - 72, w: 88, h: 72, vy: 0, grounded: true };
+    this.player = { x: INTRO_END_X, y: FLOOR - PLAYER_HEIGHT, w: PLAYER_WIDTH, h: PLAYER_HEIGHT, vy: 0, grounded: true };
     this.keys.clear();
   }
 
@@ -173,10 +191,15 @@ export class EmptyStomach {
     if (!this.root.classList.contains("active")) return;
     this.reset();
     this.running = true;
+    this.phase = "intro";
+    this.introElapsed = 0;
+    this.animationClock = 0;
+    this.sceneryOffset = 0;
+    this.player.x = -this.player.w;
     this.paused = false;
     this.root.classList.remove("paused");
     this.root.classList.add("playing");
-    this.controlsStrip.hidden = false;
+    this.controlsStrip.hidden = true;
     this.pauseOverlay.hidden = true;
     this.updatePauseButton();
     this.root.querySelector("[data-empty-start]").hidden = true;
@@ -186,11 +209,29 @@ export class EmptyStomach {
     this.frame = requestAnimationFrame((now) => this.tick(now));
   }
 
+  updateIntro(delta) {
+    this.introElapsed = Math.min(INTRO_DURATION, this.introElapsed + delta);
+    this.sceneryOffset += 52 * delta;
+    const progress = this.introElapsed / INTRO_DURATION;
+    this.player.x = -this.player.w + (INTRO_END_X + this.player.w) * progress;
+
+    if (progress >= 1) {
+      this.phase = "playing";
+      this.elapsed = 0;
+      this.distance = 0;
+      this.spawnTimer = 1.2;
+      this.preyTimer = 0.8;
+      this.controlsStrip.hidden = false;
+    }
+  }
+
   tick(now) {
     if (!this.running || this.paused) return;
     const delta = Math.min((now - this.last) / 1000 || 0, 0.04);
     this.last = now;
-    this.update(delta);
+    this.animationClock += delta;
+    if (this.phase === "intro") this.updateIntro(delta);
+    else if (this.phase === "playing") this.update(delta);
     this.render();
     if (this.running && !this.paused) this.frame = requestAnimationFrame((time) => this.tick(time));
   }
@@ -245,6 +286,7 @@ export class EmptyStomach {
     this.elapsed += delta;
     const speed = Math.min(310, 150 + this.elapsed * 2.2);
     this.distance += speed * delta;
+    this.sceneryOffset = (this.sceneryOffset ?? 0) + speed * delta;
     const p = this.player;
     const left = this.keys.has("ArrowLeft") || this.keys.has("KeyA");
     const right = this.keys.has("ArrowRight") || this.keys.has("KeyD");
@@ -300,10 +342,10 @@ export class EmptyStomach {
     this.herd = this.herd.filter((prey) => prey.beingEaten || prey.x > -140);
 
     const playerHitbox = {
-      x: p.x + 14,
-      y: p.y + 10,
-      w: p.w - 28,
-      h: p.h - 14
+      x: p.x + 12,
+      y: p.y + 9,
+      w: p.w - 24,
+      h: p.h - 12
     };
 
     for (const enemy of this.enemies) {
@@ -378,6 +420,7 @@ export class EmptyStomach {
   finish() {
     if (!this.running) return;
     this.running = false;
+    this.phase = "finished";
     this.paused = false;
     if (this.frame !== null) cancelAnimationFrame(this.frame);
     this.frame = null;
@@ -401,6 +444,7 @@ export class EmptyStomach {
 
   exit() {
     this.running = false;
+    this.phase = "idle";
     this.paused = false;
     if (this.frame !== null) cancelAnimationFrame(this.frame);
     this.frame = null;
@@ -412,7 +456,7 @@ export class EmptyStomach {
     this.onExit();
   }
 
-  drawSprite(key, x, y, w, h, fallback, animationTime = this.elapsed * 1000) {
+  drawSprite(key, x, y, w, h, fallback, animationTime = (this.animationClock ?? this.elapsed ?? 0) * 1000) {
     const animation = this.animations[key];
     if (animation?.frames.length) {
       const index = getAnimatedFrameIndex(animation.frames, animationTime);
@@ -432,27 +476,111 @@ export class EmptyStomach {
 
   render() {
     const ctx = this.ctx;
+    const scroll = Number.isFinite(this.sceneryOffset) ? this.sceneryOffset : 0;
     ctx.clearRect(0, 0, WIDTH, HEIGHT);
-    const gradient = ctx.createLinearGradient(0, 0, 0, HEIGHT);
-    gradient.addColorStop(0, "#b8d0c4");
-    gradient.addColorStop(0.72, "#e0d7ae");
-    gradient.addColorStop(1, "#7d8861");
-    ctx.fillStyle = gradient;
+
+    // A sunlit open prairie replaces the previous muted woodland backdrop.
+    const sky = ctx.createLinearGradient(0, 0, 0, HEIGHT);
+    sky.addColorStop(0, "#72c9e8");
+    sky.addColorStop(0.56, "#c4e8d2");
+    sky.addColorStop(1, "#eff0b4");
+    ctx.fillStyle = sky;
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
-    ctx.fillStyle = "#6c8568";
-    for (let i = 0; i < 9; i++) {
-      const x = ((i * 150 - this.distance * 0.18) % 1200 + 1200) % 1200 - 100;
-      ctx.fillRect(x, 250 - (i % 3) * 22, 28, 190);
-      ctx.fillRect(x - 22, 268 - (i % 3) * 22, 72, 12);
-      ctx.fillRect(x - 12, 238 - (i % 3) * 22, 52, 12);
+
+    const sunGlow = ctx.createRadialGradient(790, 98, 12, 790, 98, 170);
+    sunGlow.addColorStop(0, "rgba(255, 247, 184, 0.72)");
+    sunGlow.addColorStop(1, "rgba(255, 247, 184, 0)");
+    ctx.fillStyle = sunGlow;
+    ctx.fillRect(610, 0, 350, 280);
+    ctx.fillStyle = "#fff2a8";
+    ctx.beginPath();
+    ctx.arc(790, 98, 34, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Soft clouds and distant rolling grassland establish depth.
+    ctx.fillStyle = "rgba(255, 255, 239, 0.62)";
+    for (let i = 0; i < 4; i += 1) {
+      const x = ((150 + i * 255 - scroll * 0.035) % 1180 + 1180) % 1180 - 110;
+      const y = 76 + (i % 2) * 46;
+      ctx.beginPath();
+      ctx.ellipse(x, y, 38, 13, 0, 0, Math.PI * 2);
+      ctx.ellipse(x + 27, y - 7, 27, 17, 0, 0, Math.PI * 2);
+      ctx.ellipse(x + 51, y, 34, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
     }
-    ctx.fillStyle = "#4d6043";
+
+    ctx.fillStyle = "#b2d77e";
+    ctx.beginPath();
+    ctx.moveTo(0, 350);
+    ctx.bezierCurveTo(125, 292, 230, 305, 350, 347);
+    ctx.bezierCurveTo(485, 382, 590, 288, 730, 324);
+    ctx.bezierCurveTo(835, 350, 900, 318, WIDTH, 300);
+    ctx.lineTo(WIDTH, HEIGHT);
+    ctx.lineTo(0, HEIGHT);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = "#94c65d";
+    ctx.beginPath();
+    ctx.moveTo(0, 386);
+    ctx.bezierCurveTo(175, 340, 280, 365, 420, 386);
+    ctx.bezierCurveTo(585, 410, 690, 344, 820, 365);
+    ctx.bezierCurveTo(890, 377, 930, 370, WIDTH, 356);
+    ctx.lineTo(WIDTH, HEIGHT);
+    ctx.lineTo(0, HEIGHT);
+    ctx.closePath();
+    ctx.fill();
+
+    // Distant shrubs drift more slowly than the foreground.
+    for (let i = 0; i < 18; i += 1) {
+      const x = ((i * 67 - scroll * 0.22) % 1120 + 1120) % 1120 - 80;
+      const y = 366 + (i % 4) * 8;
+      ctx.fillStyle = i % 2 ? "#6fa54c" : "#7fb653";
+      ctx.beginPath();
+      ctx.ellipse(x, y, 25 + (i % 3) * 5, 8 + (i % 2) * 3, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // A few Parasaurolophus graze across the horizon, making Coral part of a living herd.
+    for (let i = 0; i < PRAIRIE_HERD.length; i += 1) {
+      const animal = PRAIRIE_HERD[i];
+      const x = ((animal.x - scroll * 0.12) % (WIDTH + 180) + (WIDTH + 180)) % (WIDTH + 180) - 90;
+      this.drawSprite(
+        "parasaurIdle",
+        x,
+        animal.y,
+        animal.w,
+        animal.h,
+        "#82975e",
+        (this.animationClock ?? 0) * 1000 + i * 310
+      );
+    }
+
+    const ground = ctx.createLinearGradient(0, FLOOR, 0, HEIGHT);
+    ground.addColorStop(0, "#83b947");
+    ground.addColorStop(0.38, "#65983d");
+    ground.addColorStop(1, "#456d32");
+    ctx.fillStyle = ground;
     ctx.fillRect(0, FLOOR, WIDTH, HEIGHT - FLOOR);
-    ctx.fillStyle = "#a2a36a";
-    for (let i = 0; i < 36; i++) {
-      const x = ((i * 37 - this.distance * 1.2) % 1000 + 1000) % 1000;
-      ctx.fillRect(x, FLOOR + 10 + (i % 3) * 9, 16 + (i % 4) * 4, 3);
+
+    // Sunlit grass and small wildflowers move beneath the running dinosaurs.
+    for (let i = 0; i < 58; i += 1) {
+      const x = ((i * 29 - scroll * (0.72 + (i % 3) * 0.08)) % 1040 + 1040) % 1040;
+      const y = FLOOR + 8 + (i % 5) * 17;
+      ctx.strokeStyle = i % 3 ? "#b9d77a" : "#d8df86";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(x, y + 10);
+      ctx.lineTo(x + ((i % 2) ? -3 : 4), y - 3 - (i % 4) * 2);
+      ctx.stroke();
+      if (i % 7 === 0) {
+        ctx.fillStyle = "#f1df91";
+        ctx.beginPath();
+        ctx.arc(x + 3, y - 5, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
+
     for (const prey of this.herd) {
       const pose = prey.beingEaten
         ? (prey.beingEatenElapsed < 0.65 ? "parasaurPerturbed" : "parasaurIdle")
@@ -470,13 +598,15 @@ export class EmptyStomach {
         enemy.w,
         enemy.h,
         enemy.kind === "xenoraptor" ? "#6c524b" : "#34433c",
-        frozenPose ? 0 : this.elapsed * 1000
+        frozenPose ? 0 : this.animationClock * 1000
       );
     }
     this.drawSprite("coral", this.player.x, this.player.y, this.player.w, this.player.h, "#e7a7a0");
-    ctx.fillStyle = "#18221d";
-    ctx.font = "bold 16px monospace";
-    ctx.fillText(this.text("DISTANCIA", "DISTANCE") + "  " + scoreForDistance(this.distance) + " M", 26, 34);
+    if (this.phase === "playing" || this.phase === "finished") {
+      ctx.fillStyle = "#30452a";
+      ctx.font = "bold 16px monospace";
+      ctx.fillText(this.text("DISTANCIA", "DISTANCE") + "  " + scoreForDistance(this.distance) + " M", 26, 34);
+    }
     if (!this.running && !this.root.querySelector("[data-empty-result]").hidden) {
       ctx.fillStyle = "rgba(7,13,12,.45)";
       ctx.fillRect(0, 0, WIDTH, HEIGHT);
