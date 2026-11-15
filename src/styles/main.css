@@ -2722,3 +2722,96 @@ html.site-mode-gray .story-card .story-actions span{
   .hud-summary .interaction-readout{display:none}
   .hud-controls{font-size:5px}
 }
+
+
+/* Consistent button sizing and centered labels across every interactive group. */
+button {
+  text-align: center;
+}
+
+.menu-options .menu-option,
+button.character-card {
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+}
+
+.start-screen-copy .start-screen-actions {
+  width: min(100%, 430px);
+}
+
+.start-screen-copy .start-screen-actions > button {
+  flex: 1 1 0;
+  min-width: 0;
+  justify-content: center;
+  text-align: center;
+}
+
+.start-screen-copy .start-screen-actions > #delete-campaign-save-button {
+  width: auto;
+  min-width: 0;
+  justify-content: center;
+  text-align: center;
+}
+
+.start-screen-copy .start-menu-view button,
+.start-screen-copy .start-menu-view #time-attack-button,
+.start-screen-copy .start-menu-view #survival-button {
+  align-self: stretch;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+}
+
+.start-screen-copy .start-menu-view button.menu-back {
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  justify-content: center;
+  text-align: center;
+}
+
+.overlay-actions > button,
+.empty-stomach-actions > button,
+.time-attack-actions > button,
+.survival-actions > button {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.overlay-content .overlay-actions > button {
+  min-width: 0;
+  width: auto;
+}
+
+.retry-options .retry-back-button {
+  justify-self: stretch;
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+}
+
+.retry-options .retry-option-button {
+  width: 100%;
+  text-align: center;
+}
+
+.pause-action,
+.dino-dialog .dialog-actions button,
+.character-confirmation-card .dialog-actions button,
+.pause-confirmation-actions button {
+  width: 100%;
+  min-width: 0;
+  justify-content: center;
+  text-align: center;
+}
+

@@ -136,7 +136,7 @@ export class TimeAttack {
 
   setLocale(locale) {
     this.locale = locale === "en" ? "en" : "es";
-    this.root.querySelector("[data-ta-title]").textContent = "TIME ATTACK";
+    this.root.querySelector("[data-ta-title]").textContent = this.text("HORA DE ATACAR", "TIME ATTACK");
     this.root.querySelector("[data-ta-subtitle]").textContent = this.text(
       "Una escuadra de cuatro cazadores. Catorce dinosaurios. Despejá la ruta y llegá a la extracción lo más rápido posible.",
       "A four-hunter squad. Fourteen dinosaurs. Clear the route and reach extraction as fast as possible."

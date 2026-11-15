@@ -157,7 +157,7 @@ export class Survival {
 
   setLocale(locale) {
     this.locale = locale === "en" ? "en" : "es";
-    this.root.querySelector("[data-survival-title]").textContent = "SURVIVAL";
+    this.root.querySelector("[data-survival-title]").textContent = this.text("SUPERVIVENCIA", "SURVIVAL");
     this.root.querySelector("[data-survival-subtitle]").textContent = this.text(
       "Elegí tu bando y aguantá todas las oleadas que puedas. Cada ronda trae más enemigos y más resistencia.",
       "Choose your side and survive as many waves as you can. Every round brings more enemies and tougher opponents."
