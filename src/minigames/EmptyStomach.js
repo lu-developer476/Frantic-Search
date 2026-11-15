@@ -1,3 +1,4 @@
+import { loadAnimatedGif, getAnimatedFrameIndex } from "./AnimatedGif.js";
 const WIDTH = 960;
 const HEIGHT = 540;
 const FLOOR = 438;
