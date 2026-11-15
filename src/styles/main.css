@@ -2819,3 +2819,64 @@ button.character-card {
   text-align: center;
 }
 
+
+
+/* Keep the complete operation header on one line and clarify collectible progress. */
+.panel-head .mission-brief-header {
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
+}
+.panel-head .mission-brief-header > * {
+  white-space: nowrap !important;
+}
+.panel-head .mission-brief-header #secondary-objectives {
+  color: #dce8d7;
+  font-size: clamp(9px, .82vw, 11px) !important;
+  font-weight: 700 !important;
+  letter-spacing: .025em;
+  white-space: nowrap !important;
+}
+
+@media (max-width: 1120px) {
+  .panel-head {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center;
+    justify-content: flex-start;
+    gap: clamp(8px, .9vw, 12px);
+    min-height: 58px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    scrollbar-width: thin;
+  }
+  .panel-head .panel-metrics {
+    order: 1;
+    flex: 0 0 auto;
+    flex-wrap: nowrap !important;
+    gap: clamp(6px, .6vw, 8px);
+  }
+  .panel-head .panel-metric {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .panel-head .mission-brief-header {
+    order: 2;
+    flex: 0 0 auto;
+    gap: clamp(5px, .6vw, 8px) !important;
+  }
+  .panel-head .panel-health {
+    order: 3;
+    flex: 0 0 92px;
+    width: 92px;
+    min-width: 92px;
+    max-width: 92px;
+    margin: 0;
+  }
+  .panel-head #game-state {
+    order: 4;
+    flex: 0 0 auto;
+    margin-left: auto;
+    white-space: nowrap;
+  }
+}
