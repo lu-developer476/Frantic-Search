@@ -18,9 +18,19 @@ export class CollisionSystem {
     );
   }
 
-  static hunterAttackHit(player, hunter) {
-    const attack = hunter.attackBox;
-    return attack ? CollisionSystem.overlaps(player, attack, 7) : false;
+  static obstacleDamagesDinosaur(obstacle) {
+    return Boolean(obstacle) && obstacle.type !== "crate";
+  }
+
+  static projectileHit(projectile, target) {
+    const radius = projectile.radius ?? 7;
+    const bounds = {
+      x: projectile.x - radius,
+      y: projectile.y - radius,
+      w: radius * 2,
+      h: radius * 2
+    };
+    return CollisionSystem.overlaps(bounds, target, 3);
   }
 
   static bossAttackHit(player, boss) {

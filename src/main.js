@@ -11,6 +11,7 @@ import { InputManager } from "./core/InputManager.js";
 import { Player } from "./entities/Player.js";
 import { AutonomousCompanion } from "./entities/AutonomousCompanion.js";
 import { HunterEnemy } from "./entities/HunterEnemy.js";
+import { HunterProjectile } from "./entities/HunterProjectile.js";
 import { WildDinosaur } from "./entities/WildDinosaur.js";
 import { LigocristusPrey, Brontosaurus } from "./entities/LigocristusPrey.js";
 import { FerrucutusAlly } from "./entities/FerrucutusAlly.js";
@@ -126,6 +127,7 @@ let cameraX = 0;
 let player = new Player(selected, GAME.playerX, GAME.groundY);
 let world = new PlatformWorld(GAME.groundY);
 let hunters = [];
+let hunterProjectiles = [];
 let venatosauruses = [];
 let foodSources = [];
 let wildlife = [];
@@ -862,11 +864,34 @@ function drawHunter(hunter) {
     drawWorldHealthBar(x + 4, y - 7, 30, hunter.health, hunter.maxHealth);
   }
 
-  const attack = hunter.attackBox;
-  if (attack) {
-    ctx.fillStyle = "#ed8e5528";
-    ctx.fillRect(attack.x, attack.y, attack.w, attack.h);
+  if (hunter.state === "attack" && !defeated) {
+    ctx.fillStyle = "#ff6a3d";
+    ctx.beginPath();
+    ctx.arc(hunter.direction > 0 ? x + hunter.w + 7 : x - 7, y + 31, 4, 0, Math.PI * 2);
+    ctx.fill();
   }
+}
+
+function drawHunterProjectile(projectile) {
+  const fade = Math.min(1, projectile.life / 0.18);
+  ctx.save();
+  ctx.globalAlpha = fade;
+  ctx.shadowColor = "#ff1f2d";
+  ctx.shadowBlur = 15;
+  ctx.fillStyle = "#b81725";
+  ctx.beginPath();
+  ctx.arc(projectile.x, projectile.y, projectile.radius + 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "#ff3644";
+  ctx.beginPath();
+  ctx.arc(projectile.x, projectile.y, projectile.radius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#ffd5d5";
+  ctx.beginPath();
+  ctx.arc(projectile.x - projectile.radius * 0.32, projectile.y - projectile.radius * 0.34, projectile.radius * 0.28, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
 }
 
 function syncEncounters() {
@@ -1190,6 +1215,13 @@ function damagePlayer() {
   audio.hit();
   burst(player.x + player.w / 2, player.y + player.h / 2, "#ed8e55", 15);
   if (player.health <= 0) endGame();
+}
+
+function damageCompanion(actor) {
+  if (!actor?.takeHit?.()) return false;
+  audio.hit();
+  burst(actor.x + actor.w / 2, actor.y + actor.h / 2, "#ed8e55", 12);
+  return true;
 }
 
 
@@ -1607,9 +1639,12 @@ function update(delta) {
 
   for (const hunter of hunters) {
     const previousState = hunter.state;
-    hunter.update(delta, player);
+    const hunterEvent = hunter.update(delta, player);
     if (resolveEnemyPitfall(hunter)) continue;
     if (previousState !== hunter.state && (hunter.state === "investigate" || hunter.state === "windup")) audio.collect();
+    if (hunterEvent?.type === "shoot") {
+      hunterProjectiles.push(new HunterProjectile(hunterEvent.projectile));
+    }
 
     if (
       player.dashTimer > 0 &&
@@ -1619,15 +1654,29 @@ function update(delta) {
     ) {
       damageHunter(hunter, 1, "blue-dash");
     }
-
-    if (
-      !hunter.defeated &&
-      CollisionSystem.hunterAttackHit(player, hunter)
-    ) {
-      damagePlayer();
-      if (player.health <= 0) return;
-    }
   }
+
+  const projectileTargets = [
+    { entity: player, kind: "player" },
+    ...autonomousCompanions.map((companion) => ({ entity: companion.actor, kind: "companion" })),
+    ...venatosauruses.filter((enemy) => !enemy.defeated).map((enemy) => ({ entity: enemy, kind: "wild-dinosaur" })),
+    ...(activeBoss && !activeBoss.defeated ? [{ entity: activeBoss, kind: "boss" }] : [])
+  ];
+  for (const projectile of hunterProjectiles) {
+    projectile.update(delta);
+    if (!projectile.active) continue;
+    const hit = projectileTargets.find(({ entity }) => CollisionSystem.projectileHit(projectile, entity));
+    if (!hit) continue;
+    projectile.active = false;
+
+    if (hit.kind === "player") damagePlayer();
+    else if (hit.kind === "companion") damageCompanion(hit.entity);
+    else if (hit.kind === "wild-dinosaur") damageVenatosaurus(hit.entity, projectile.damage);
+    else if (hit.kind === "boss") damageBoss(hit.entity, projectile.damage, "hunter-projectile");
+
+    if (!running || player.health <= 0) return;
+  }
+  hunterProjectiles = hunterProjectiles.filter((projectile) => projectile.active);
 
   for (const enemy of venatosauruses) {
     const targets = [
@@ -1757,7 +1806,10 @@ function update(delta) {
   handleAbilityImpact();
 
   for (const obstacle of world.obstacles) {
-    if (CollisionSystem.obstacleHit(player, obstacle)) {
+    if (
+      CollisionSystem.obstacleDamagesDinosaur(obstacle) &&
+      CollisionSystem.obstacleHit(player, obstacle)
+    ) {
       damagePlayer();
       if (player.health <= 0) return;
     }
@@ -1841,6 +1893,11 @@ function render() {
   }
   for (const hunter of hunters) {
     if (hunter.x + hunter.w >= cameraX - 90 && hunter.x <= cameraX + GAME.width + 90) drawHunter(hunter);
+  }
+  for (const projectile of hunterProjectiles) {
+    if (projectile.x >= cameraX - 30 && projectile.x <= cameraX + GAME.width + 30) {
+      drawHunterProjectile(projectile);
+    }
   }
   for (const ally of allies) {
     if (ally.x + ally.w >= cameraX - 100 && ally.x <= cameraX + GAME.width + 100) drawFerrucutus(ally);
@@ -2070,6 +2127,7 @@ function resetPlayer(worldSeed = undefined) {
   player.x = -155;
   world = new PlatformWorld(GAME.groundY, worldSeed === undefined ? {} : { seed: worldSeed });
   hunters = [];
+  hunterProjectiles = [];
   venatosauruses = [];
   foodSources = [];
   wildlife = [];

@@ -36,22 +36,22 @@ export class HunterEnemy {
     this.stateTimer = Math.max(0, this.stateTimer - delta);
     const targetCenter = target.x + target.w / 2;
     const ownCenter = this.x + this.w / 2;
-    const distance = targetCenter - ownCenter;
-    const absoluteDistance = Math.abs(distance);
+    const separation = targetCenter - ownCenter;
+    const distance = Math.abs(separation);
     const sameRoute = Math.abs((target.y + target.h) - this.groundY) < 125;
 
-    if (absoluteDistance < 340 && sameRoute) this.alerted = true;
+    if (distance < 340 && sameRoute) this.alerted = true;
 
     if (this.state === "stunned") {
-      if (this.stateTimer <= 0) this.state = absoluteDistance < 430 ? "pursuit" : "patrol";
+      if (this.stateTimer <= 0) this.state = distance < 430 ? "pursuit" : "patrol";
       return null;
     }
 
     if (this.state === "patrol") {
-      if (this.alerted && absoluteDistance < 340 && sameRoute) {
+      if (this.alerted && distance < 340 && sameRoute) {
         this.state = "investigate";
         this.stateTimer = 0.42;
-        this.direction = distance >= 0 ? 1 : -1;
+        this.direction = separation >= 0 ? 1 : -1;
         return "alert";
       }
 
@@ -64,7 +64,7 @@ export class HunterEnemy {
     }
 
     if (this.state === "investigate") {
-      if (absoluteDistance > 440 || !sameRoute) {
+      if (distance > 440 || !sameRoute) {
         this.state = "patrol";
         this.alerted = false;
       } else if (this.stateTimer <= 0) {
@@ -74,37 +74,45 @@ export class HunterEnemy {
     }
 
     if (this.state === "pursuit") {
-      if (absoluteDistance > 470 || !sameRoute) {
+      if (distance > 440 || !sameRoute) {
         this.state = "patrol";
         this.alerted = false;
         return null;
       }
-      this.direction = distance >= 0 ? 1 : -1;
-      if (absoluteDistance > 74) {
+      this.direction = separation >= 0 ? 1 : -1;
+      if (distance > 360) {
         this.x += this.direction * 128 * delta;
       } else if (this.attackCooldown <= 0) {
         this.state = "windup";
-        this.stateTimer = 0.48;
+        this.stateTimer = 0.42;
       }
       return null;
     }
 
     if (this.state === "windup") {
-      this.direction = distance >= 0 ? 1 : -1;
+      this.direction = separation >= 0 ? 1 : -1;
       if (this.stateTimer <= 0) {
         this.state = "attack";
-        this.stateTimer = 0.24;
-        this.attackCooldown = 1.15;
+        this.stateTimer = 0.16;
+        this.attackCooldown = 1.35;
+        return {
+          type: "shoot",
+          projectile: {
+            x: this.direction > 0 ? this.x + this.w + 7 : this.x - 7,
+            y: this.y + 30,
+            targetX: targetCenter,
+            targetY: target.y + target.h * 0.46,
+            shooterId: this.id,
+            damage: 1
+          }
+        };
       }
       return null;
     }
 
-    if (this.state === "attack") {
-      this.x += this.direction * 170 * delta;
-      if (this.stateTimer <= 0) {
-        this.state = "pursuit";
-        this.stateTimer = 0.2;
-      }
+    if (this.state === "attack" && this.stateTimer <= 0) {
+      this.state = "pursuit";
+      this.stateTimer = 0.2;
     }
 
     return null;
@@ -125,15 +133,5 @@ export class HunterEnemy {
     this.stateTimer = 0.72;
     this.attackCooldown = Math.max(this.attackCooldown, 0.8);
     return { hit: true, defeated: false, rescued: false };
-  }
-
-  get attackBox() {
-    if (this.state !== "attack") return null;
-    return {
-      x: this.direction > 0 ? this.x + this.w - 5 : this.x - 42,
-      y: this.y + 16,
-      w: 47,
-      h: 42
-    };
   }
 }
