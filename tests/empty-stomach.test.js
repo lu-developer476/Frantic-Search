@@ -87,6 +87,54 @@ test("Empty Stomach removes the Coral survival caption and keeps the death resul
   assert.doesNotMatch(source, /CORAL FUE DEVORADA · DISTANCIA|CORAL WAS EATEN · DISTANCE/);
 });
 
+test("Empty Stomach hides intro description and controls after death, then restores them on retry", () => {
+  const nodes = {
+    "[data-empty-subtitle]": { hidden: false },
+    "[data-empty-instructions]": { hidden: false },
+    "[data-empty-result]": { hidden: true, textContent: "" },
+    "[data-empty-retry]": { hidden: true },
+    "[data-empty-exit]": { hidden: true }
+  };
+  const classes = new Set(["playing"]);
+  const simulation = Object.create(EmptyStomach.prototype);
+  Object.assign(simulation, {
+    running: true,
+    paused: false,
+    frame: null,
+    distance: 850,
+    best: 1087,
+    locale: "es",
+    pauseOverlay: { hidden: true },
+    controlsStrip: { hidden: false },
+    pauseButton: {
+      textContent: "",
+      setAttribute(name, value) { this[name] = value; }
+    },
+    keys: new Set(),
+    root: {
+      querySelector(selector) { return nodes[selector]; },
+      classList: {
+        add(name) { classes.add(name); },
+        remove(name) { classes.delete(name); }
+      }
+    },
+    render() {}
+  });
+
+  simulation.finish();
+
+  assert.equal(nodes["[data-empty-subtitle]"].hidden, true);
+  assert.equal(nodes["[data-empty-instructions]"].hidden, true);
+  assert.equal(nodes["[data-empty-result]"].textContent, "CORAL FUE DEVORADA");
+  assert.equal(nodes["[data-empty-retry]"].hidden, false);
+  assert.equal(nodes["[data-empty-exit]"].hidden, false);
+
+  simulation.reset();
+
+  assert.equal(nodes["[data-empty-subtitle]"].hidden, false);
+  assert.equal(nodes["[data-empty-instructions]"].hidden, false);
+});
+
 test("Empty Stomach pauses and resumes its animation loop from the keyboard or pause button", () => {
   const classNames = new Set();
   const pauseOverlay = { hidden: true };

@@ -153,6 +153,8 @@ export class EmptyStomach {
     this.root.classList.remove("paused");
     this.pauseOverlay.hidden = true;
     this.controlsStrip.hidden = true;
+    this.root.querySelector("[data-empty-subtitle]").hidden = false;
+    this.root.querySelector("[data-empty-instructions]").hidden = false;
     this.updatePauseButton();
     this.last = 0;
     this.elapsed = 0;
@@ -385,6 +387,8 @@ export class EmptyStomach {
     const score = scoreForDistance(this.distance);
     this.best = Math.max(this.best, score);
     try { localStorage.setItem("frantic-empty-stomach-best", String(this.best)); } catch {}
+    this.root.querySelector("[data-empty-subtitle]").hidden = true;
+    this.root.querySelector("[data-empty-instructions]").hidden = true;
     this.root.querySelector("[data-empty-result]").textContent = this.text("CORAL FUE DEVORADA", "CORAL WAS EATEN");
     this.root.classList.remove("playing");
     this.root.querySelector("[data-empty-result]").hidden = false;
