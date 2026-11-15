@@ -29,6 +29,7 @@ import { Beta } from "./entities/Beta.js";
 import { FacilityConsole } from "./entities/FacilityConsole.js";
 import { SpriteRenderer } from "./rendering/SpriteRenderer.js";
 import { drawBackgroundScenery, drawGroundScenery } from "./rendering/SceneryRenderer.js";
+import { roundedRect } from "./rendering/CanvasUtils.js";
 import { t as uiText, translateText } from "./i18n.js";
 import { EmptyStomach } from "./minigames/EmptyStomach.js";
 import { TimeAttack } from "./minigames/TimeAttack.js";
