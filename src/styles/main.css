@@ -902,6 +902,9 @@ body.game-paused .brand,body.game-paused .navbar-separator{display:none!importan
   image-rendering:pixelated;
   filter:drop-shadow(0 18px 38px rgba(0,0,0,.34));
 }
+.start-screen-artwork.is-minigame-preview{
+  filter:drop-shadow(0 18px 38px rgba(0,0,0,.34)) drop-shadow(0 0 16px rgba(216,243,106,.12));
+}
 @keyframes startPing{0%,100%{transform:scale(.86);opacity:.78}50%{transform:scale(1.12);opacity:1}}
 @media(max-width:1200px) and (min-width:1024px){
   .start-screen{grid-template-columns:minmax(0,1.2fr) minmax(160px,.8fr);gap:12px;padding:clamp(18px,3vw,34px)}

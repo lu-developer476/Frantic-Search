@@ -80,6 +80,17 @@ const timeAttackButton = document.querySelector("#time-attack-button");
 const timeAttackPanel = document.querySelector("#time-attack-panel");
 const survivalButton = document.querySelector("#survival-button");
 const survivalPanel = document.querySelector("#survival-panel");
+const startScreenArtwork = document.querySelector(".start-screen-artwork");
+const defaultStartScreenArtwork = `${import.meta.env.BASE_URL}artwork/8bits.png`;
+// Keep one entry per minigame; null uses the default artwork until a preview is ready.
+const minigamePreviewSources = new Map([
+  [emptyStomachButton, `${import.meta.env.BASE_URL}artwork/coral-8bits.png`],
+  [timeAttackButton, null],
+  [survivalButton, null],
+  [freeRoamButton, `${import.meta.env.BASE_URL}minigame/empty-stomach/gif/parasaurolophus/parasaurolophus-idle.gif`]
+]);
+let hoveredMinigameButton = null;
+let focusedMinigameButton = null;
 const continueCampaignButton = document.querySelector("#continue-campaign-button");
 const deleteCampaignSaveButton = document.querySelector("#delete-campaign-save-button");
 const deleteCampaignConfirmation = document.querySelector("#delete-campaign-confirmation");
@@ -234,6 +245,17 @@ const currentMusicTheme = () => campaign.flags.completed ? "victory" : activeBos
 const best = () => Math.max(save.get("bestDistance"), Math.floor(distance));
 const ui = (key) => uiText(key, locale);
 const tr = (value) => translateText(value, locale);
+
+function updateMinigamePreview() {
+  const activeButton = hoveredMinigameButton || focusedMinigameButton;
+  const previewSrc = activeButton ? minigamePreviewSources.get(activeButton) : null;
+  const nextSrc = previewSrc || defaultStartScreenArtwork;
+
+  if (startScreenArtwork && startScreenArtwork.getAttribute("src") !== nextSrc) {
+    startScreenArtwork.src = nextSrc;
+  }
+  startScreenArtwork?.classList.toggle("is-minigame-preview", Boolean(previewSrc));
+}
 
 function advanceEnemyFades(delta) {
   for (const enemy of [...hunters, ...venatosauruses, ...bosses, ...foodSources.filter((food) => food.defeated)]) {
@@ -2690,6 +2712,28 @@ minigamesBackButton.addEventListener("click", () => {
   showStartMenuPage("options");
   minigamesButton.focus();
 });
+for (const button of minigamePreviewSources.keys()) {
+  button.addEventListener("pointerenter", () => {
+    hoveredMinigameButton = button;
+    updateMinigamePreview();
+  });
+  button.addEventListener("pointerleave", () => {
+    if (hoveredMinigameButton === button) {
+      hoveredMinigameButton = null;
+      updateMinigamePreview();
+    }
+  });
+  button.addEventListener("focus", () => {
+    focusedMinigameButton = button;
+    updateMinigamePreview();
+  });
+  button.addEventListener("blur", () => {
+    if (focusedMinigameButton === button) {
+      focusedMinigameButton = null;
+      updateMinigamePreview();
+    }
+  });
+}
 freeRoamButton.addEventListener("click", () => {
   if (!desktopPlayback.matches || desktopBlocked) return;
   openDinoModal("start", "free-roam");
@@ -2840,6 +2884,9 @@ function startFromDinoModal() {
 
 function showStartMenuPage(page = "home") {
   const nextPage = ["home", "options", "campaign", "minigames"].includes(page) ? page : "home";
+  hoveredMinigameButton = null;
+  focusedMinigameButton = null;
+  updateMinigamePreview();
   activeStartMenuPage = nextPage;
   startMenuHome.hidden = nextPage !== "home";
   startMenuOptions.hidden = nextPage !== "options";
