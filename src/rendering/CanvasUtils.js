@@ -23,3 +23,48 @@ export function roundedRect(context, x, y, width, height, radius = 0) {
   context.quadraticCurveTo(left, top, left + r, top);
   context.closePath();
 }
+
+
+/**
+ * Expands a 960×540 logical viewport to match wider containers without
+ * stretching sprites. Narrow stages retain the original world width.
+ */
+export function getCanvasViewportWidth(viewportWidth, viewportHeight, baseWidth = 960, baseHeight = 540) {
+  if (!Number.isFinite(viewportWidth) || !Number.isFinite(viewportHeight) || viewportWidth <= 0 || viewportHeight <= 0) {
+    return baseWidth;
+  }
+  return Math.max(baseWidth, Math.ceil((viewportWidth / viewportHeight) * baseHeight));
+}
+
+/**
+ * Synchronizes a canvas backing buffer with its visible stage. Call the returned
+ * resize function after revealing a hidden stage; disconnect() releases its observer.
+ */
+export function observeCanvasViewport(container, canvas, onResize = () => {}, baseWidth = 960, baseHeight = 540) {
+  const resize = () => {
+    const bounds = container?.getBoundingClientRect?.();
+    const width = getCanvasViewportWidth(bounds?.width, bounds?.height, baseWidth, baseHeight);
+    if (!canvas || (canvas.width === width && canvas.height === baseHeight)) return width;
+    canvas.width = width;
+    canvas.height = baseHeight;
+    onResize(width);
+    return width;
+  };
+
+  let observer = null;
+  let usesWindowResize = false;
+  if (container && typeof ResizeObserver !== "undefined") {
+    observer = new ResizeObserver(resize);
+    observer.observe(container);
+  } else if (typeof window !== "undefined") {
+    window.addEventListener("resize", resize);
+    usesWindowResize = true;
+  }
+
+  resize.disconnect = () => {
+    observer?.disconnect();
+    if (usesWindowResize) window.removeEventListener("resize", resize);
+  };
+  resize();
+  return resize;
+}

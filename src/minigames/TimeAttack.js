@@ -1,8 +1,9 @@
 import { HunterProjectile } from "../entities/HunterProjectile.js";
+import { observeCanvasViewport } from "../rendering/CanvasUtils.js";
 import { WildDinosaur } from "../entities/WildDinosaur.js";
 import { SpriteRenderer } from "../rendering/SpriteRenderer.js";
 
-const WIDTH = 960;
+let WIDTH = 960;
 const HEIGHT = 540;
 const FLOOR = 438;
 const SECTION_END = 3680;
@@ -84,6 +85,10 @@ export class TimeAttack {
     this.root = root;
     this.canvas = root.querySelector("canvas");
     this.ctx = this.canvas.getContext("2d");
+    this.canvasViewport = observeCanvasViewport(root.querySelector(".time-attack-stage"), this.canvas, (width) => {
+      WIDTH = width;
+      this.ctx.imageSmoothingEnabled = false;
+    });
     this.onExit = onExit;
     this.locale = "es";
     this.sprites = spriteRenderer ?? new SpriteRenderer(import.meta.env.BASE_URL);
@@ -159,6 +164,7 @@ export class TimeAttack {
 
   open() {
     this.root.classList.add("active");
+    this.canvasViewport();
     this.root.classList.remove("playing");
     this.root.setAttribute("aria-hidden", "false");
     this.reset();
@@ -666,6 +672,7 @@ export class TimeAttack {
 
   destroy() {
     this.exit();
+    this.canvasViewport.disconnect();
     window.removeEventListener("keydown", this.handleKeyDown);
     window.removeEventListener("keyup", this.handleKeyUp);
     window.removeEventListener("blur", this.handleBlur);

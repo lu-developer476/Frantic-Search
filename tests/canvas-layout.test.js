@@ -31,7 +31,9 @@ test("the full canvas scales into the available viewport without losing its 16:9
   assert.match(rules, /\.layout\s*\{[^}]*height:100%[^}]*min-height:0[^}]*overflow:hidden/s);
   assert.match(rules, /\.game-panel\s*\{[^}]*height:100%[^}]*grid-template-rows:auto minmax\(0,1fr\)/s);
   assert.match(rules, /\.canvas-wrap\s*\{[^}]*display:flex[^}]*height:100%[^}]*aspect-ratio:auto/s);
-  assert.match(rules, /\.canvas-wrap canvas#game\s*\{[^}]*width:auto[^}]*height:100%[^}]*max-width:100%[^}]*max-height:100%[^}]*aspect-ratio:16 \/ 9[^}]*object-fit:contain/s);
+  assert.match(rules, /\.canvas-wrap canvas#game\s*\{[^}]*width:auto[^}]*height:100%[^}]*max-width:100%[^}]*max-height:100%[^}]*aspect-ratio:auto[^}]*object-fit:contain/s);
+  const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
+  assert.match(main, /observeCanvasViewport/);
 });
 
 test("no yellow strip remains at the bottom edge of the canvas", async () => {
@@ -183,4 +185,18 @@ test("the upper operation HUD is hidden in non-campaign modes and restored on ex
   assert.match(main, /operationHeader\?\.classList\.add\("is-hidden"\);\s*campaignBriefHeader\?\.classList\.add\("is-hidden"\);\s*survival\.open\(\)/);
   assert.match(main, /operationHeader\?\.classList\.remove\("is-hidden"\)/);
   assert.match(main, /campaignBriefHeader\?\.classList\.remove\("is-hidden"\)/);
+});
+
+
+test("minigame canvases expand to match their active stage", async () => {
+  for (const [file, stage] of [
+    ["EmptyStomach.js", ".empty-stomach-stage"],
+    ["TimeAttack.js", ".time-attack-stage"],
+    ["Survival.js", ".survival-stage"]
+  ]) {
+    const source = await readFile(new URL("../src/minigames/" + file, import.meta.url), "utf8");
+    assert.ok(source.includes('observeCanvasViewport(root.querySelector("' + stage + '")'));
+    assert.match(source, /this\.canvasViewport\(\)/);
+    assert.match(source, /this\.canvasViewport\.disconnect\(\)/);
+  }
 });

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { roundedRect } from "../src/rendering/CanvasUtils.js";
+import { getCanvasViewportWidth, roundedRect } from "../src/rendering/CanvasUtils.js";
 
 function createPathContext() {
   const commands = [];
@@ -49,4 +49,16 @@ test("roundedRect normalizes negative dimensions and invalid radius", () => {
   assert.deepEqual(commands[1], ["moveTo", 10, 24]);
   assert.deepEqual(commands[2], ["lineTo", 10, 24]);
   assert.deepEqual(commands.at(-1), ["closePath"]);
+});
+
+
+test("canvas viewport width expands a 16:9 world to match a wider stage", () => {
+  assert.equal(getCanvasViewportWidth(1920, 810), 1280);
+  assert.equal(getCanvasViewportWidth(960, 540), 960);
+});
+
+test("canvas viewport width keeps the native size for narrow or unmeasured stages", () => {
+  assert.equal(getCanvasViewportWidth(1024, 800), 960);
+  assert.equal(getCanvasViewportWidth(0, 0), 960);
+  assert.equal(getCanvasViewportWidth(Number.NaN, 540), 960);
 });

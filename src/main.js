@@ -30,7 +30,7 @@ import { Beta } from "./entities/Beta.js";
 import { FacilityConsole } from "./entities/FacilityConsole.js";
 import { SpriteRenderer } from "./rendering/SpriteRenderer.js";
 import { drawBackgroundScenery, drawGroundScenery } from "./rendering/SceneryRenderer.js";
-import { roundedRect } from "./rendering/CanvasUtils.js";
+import { roundedRect, observeCanvasViewport } from "./rendering/CanvasUtils.js";
 import { t as uiText, translateText } from "./i18n.js";
 import { EmptyStomach } from "./minigames/EmptyStomach.js";
 import { TimeAttack } from "./minigames/TimeAttack.js";
@@ -49,6 +49,10 @@ const desktopPlayback = {
 // intermediate buffer discarded most sprite detail before it was enlarged again.
 const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
 ctx.imageSmoothingEnabled = false;
+const resizeMainCanvas = observeCanvasViewport(canvas.parentElement, canvas, (width) => {
+  GAME.width = width;
+  ctx.imageSmoothingEnabled = false;
+});
 let spriteRenderPending = false;
 const spriteRenderer = new SpriteRenderer(import.meta.env.BASE_URL, (_asset, _readiness, status) => {
   // Failed legacy assets must not trigger extra full-canvas redraws. The active game
@@ -343,8 +347,9 @@ function drawBackground() {
     ctx.fillRect(762, sunY + 8, sunSize + 16, sunSize - 16);
     ctx.fillStyle = scene.sunShade;
     ctx.fillRect(778, sunY + sunSize + 5, 22, 5);
-    for (let i = 0; i < 5; i += 1) {
-      const x = ((i * 248 - cameraX * 0.075) % 1180 + 1180) % 1180 - 100;
+    const skySpan = GAME.width + 200;
+    for (let i = 0; i < Math.ceil(skySpan / 248) + 1; i += 1) {
+      const x = ((i * 248 - cameraX * 0.075) % skySpan + skySpan) % skySpan - 100;
       const y = 52 + (i % 3) * 43;
       ctx.fillStyle = scene.cloudShadow;
       ctx.fillRect(x + 8, y + 8, 58, 12);
@@ -359,15 +364,16 @@ function drawBackground() {
     ctx.fillStyle = scene.ridge;
     ctx.fillRect(0, 328, GAME.width, 102);
     ctx.fillStyle = scene.mountain;
-    for (let i = -1; i < 5; i += 1) {
+    for (let i = -1; i < Math.ceil(GAME.width / 300) + 1; i += 1) {
       const x = i * 300 - scroll;
       ctx.beginPath();
       ctx.moveTo(x, 360); ctx.lineTo(x + 70, 314); ctx.lineTo(x + 144, 350);
       ctx.lineTo(x + 220, 306); ctx.lineTo(x + 300, 360); ctx.closePath(); ctx.fill();
     }
     ctx.fillStyle = scene.cloud;
-    for (let i = 0; i < 13; i += 1) {
-      const x = ((i * 91 - cameraX * 0.38) % 1040 + 1040) % 1040;
+    const coastalSpan = GAME.width + 80;
+    for (let i = 0; i < Math.ceil(coastalSpan / 91); i += 1) {
+      const x = ((i * 91 - cameraX * 0.38) % coastalSpan + coastalSpan) % coastalSpan;
       const y = 352 + (i % 4) * 15;
       ctx.fillRect(x, y, 38, 3); ctx.fillRect(x + 13, y + 7, 22, 2);
     }
@@ -375,14 +381,15 @@ function drawBackground() {
     ctx.fillRect(0, 388, GAME.width, 6);
     ctx.fillStyle = scene.buildingLight;
     ctx.fillRect(0, 385, GAME.width, 3);
-    for (let i = 0; i < 12; i += 1) {
-      const x = ((i * 96 - cameraX * 0.30) % 1080 + 1080) % 1080;
+    const coastalFenceSpan = GAME.width + 120;
+    for (let i = 0; i < Math.ceil(coastalFenceSpan / 96); i += 1) {
+      const x = ((i * 96 - cameraX * 0.30) % coastalFenceSpan + coastalFenceSpan) % coastalFenceSpan;
       ctx.fillStyle = scene.buildingShadow; ctx.fillRect(x, 386, 5, 34);
       ctx.fillStyle = scene.warning; ctx.fillRect(x - 2, 386, 9, 4);
     }
   } else if (environment === "redwood") {
     ctx.fillStyle = scene.ridge;
-    for (let i = -1; i < 6; i += 1) {
+    for (let i = -1; i < Math.ceil(GAME.width / 250) + 1; i += 1) {
       const x = i * 250 - fineScroll * 0.7;
       ctx.beginPath();
       ctx.moveTo(x, 430); ctx.lineTo(x + 54, 292); ctx.lineTo(x + 104, 340);
@@ -390,8 +397,9 @@ function drawBackground() {
     }
   } else if (environment === "black-site") {
     ctx.fillStyle = scene.ridge; ctx.fillRect(0, 350, GAME.width, 80);
-    for (let i = 0; i < 7; i += 1) {
-      const x = ((i * 218 - fineScroll) % 1520 + 1520) % 1520 - 180;
+    const blackSiteSpan = GAME.width + 360;
+    for (let i = 0; i < Math.ceil(blackSiteSpan / 218); i += 1) {
+      const x = ((i * 218 - fineScroll) % blackSiteSpan + blackSiteSpan) % blackSiteSpan - 180;
       const height = 104 + (i % 3) * 35;
       const width = 164 + (i % 2) * 42;
       ctx.fillStyle = scene.buildingShadow; ctx.fillRect(x + 8, 294 - height, width, height + 136);
@@ -406,16 +414,18 @@ function drawBackground() {
     }
     ctx.fillStyle = scene.buildingShadow; ctx.fillRect(0, 354, GAME.width, 5);
     ctx.fillStyle = scene.buildingLight; ctx.fillRect(0, 351, GAME.width, 3);
-    for (let i = 0; i < 16; i += 1) {
-      const x = ((i * 74 - cameraX * 0.42) % 1060 + 1060) % 1060;
+    const blackSiteFenceSpan = GAME.width + 80;
+    for (let i = 0; i < Math.ceil(blackSiteFenceSpan / 74); i += 1) {
+      const x = ((i * 74 - cameraX * 0.42) % blackSiteFenceSpan + blackSiteFenceSpan) % blackSiteFenceSpan;
       ctx.fillStyle = scene.buildingShadow; ctx.fillRect(x, 352, 4, 78);
       ctx.fillStyle = scene.warning; ctx.fillRect(x - 2, 350, 8, 3);
     }
   } else if (environment === "containment") {
     ctx.fillStyle = scene.ridge; ctx.fillRect(0, 286, GAME.width, 144);
     ctx.fillStyle = scene.buildingShadow; ctx.fillRect(0, 214, GAME.width, 216);
-    for (let i = 0; i < 7; i += 1) {
-      const x = ((i * 176 - scroll) % 1232 + 1232) % 1232 - 120;
+    const containmentSpan = GAME.width + 240;
+    for (let i = 0; i < Math.ceil(containmentSpan / 176); i += 1) {
+      const x = ((i * 176 - scroll) % containmentSpan + containmentSpan) % containmentSpan - 120;
       ctx.fillStyle = scene.building; ctx.fillRect(x, 250 - (i % 3) * 24, 150, 180);
       ctx.fillStyle = scene.buildingLight; ctx.fillRect(x + 8, 258 - (i % 3) * 24, 134, 8);
       ctx.fillStyle = scene.window; ctx.fillRect(x + 22, 280 - (i % 3) * 24, 34, 48);
@@ -424,14 +434,15 @@ function drawBackground() {
       ctx.fillStyle = scene.warning; ctx.fillRect(x + 5, 246 - (i % 3) * 24, 140, 5);
     }
     ctx.fillStyle = scene.warning; ctx.fillRect(0, 376, GAME.width, 8);
-    for (let i = -1; i < 25; i += 1) {
+    for (let i = -1; i < Math.ceil(GAME.width / 48) + 1; i += 1) {
       const x = i * 48 - ((cameraX * 0.55) % 48);
       ctx.fillStyle = scene.platformShadow;
       ctx.beginPath(); ctx.moveTo(x, 384); ctx.lineTo(x + 22, 376);
       ctx.lineTo(x + 43, 376); ctx.lineTo(x + 21, 384); ctx.closePath(); ctx.fill();
     }
-    for (let i = 0; i < 8; i += 1) {
-      const x = ((i * 142 - cameraX * 0.25) % 1120 + 1120) % 1120;
+    const containmentLightSpan = GAME.width + 100;
+    for (let i = 0; i < Math.ceil(containmentLightSpan / 142); i += 1) {
+      const x = ((i * 142 - cameraX * 0.25) % containmentLightSpan + containmentLightSpan) % containmentLightSpan;
       ctx.fillStyle = scene.buildingLight; ctx.fillRect(x, 120, 10, 118);
       ctx.fillStyle = scene.warning; ctx.fillRect(x - 5, 114, 20, 7);
     }
@@ -440,8 +451,9 @@ function drawBackground() {
     ctx.fillStyle = scene.building; ctx.fillRect(0, 64, GAME.width, 366);
     ctx.fillStyle = scene.buildingShadow; ctx.fillRect(0, 64, GAME.width, 16); ctx.fillRect(0, 344, GAME.width, 86);
     ctx.fillStyle = scene.buildingLight; ctx.fillRect(0, 78, GAME.width, 5);
-    for (let i = 0; i < 5; i += 1) {
-      const x = ((i * 220 - fineScroll) % 1100 + 1100) % 1100 - 90;
+    const rosaWindowSpan = GAME.width + 180;
+    for (let i = 0; i < Math.ceil(rosaWindowSpan / 220); i += 1) {
+      const x = ((i * 220 - fineScroll) % rosaWindowSpan + rosaWindowSpan) % rosaWindowSpan - 90;
       ctx.fillStyle = scene.buildingShadow; ctx.fillRect(x, 124, 164, 178);
       ctx.fillStyle = scene.buildingLight; ctx.fillRect(x + 8, 132, 148, 112);
       ctx.fillStyle = scene.sky; ctx.fillRect(x + 15, 139, 134, 98);
@@ -451,42 +463,46 @@ function drawBackground() {
       ctx.fillStyle = scene.warning; ctx.fillRect(x + 16, 266, 38, 5);
       ctx.fillStyle = scene.detail; ctx.fillRect(x + 119, 266, 27, 5);
     }
-    for (let i = 0; i < 7; i += 1) {
-      const x = ((i * 152 - cameraX * 0.18) % 1100 + 1100) % 1100;
+    const rosaLightSpan = GAME.width + 120;
+    for (let i = 0; i < Math.ceil(rosaLightSpan / 152); i += 1) {
+      const x = ((i * 152 - cameraX * 0.18) % rosaLightSpan + rosaLightSpan) % rosaLightSpan;
       ctx.fillStyle = scene.window; ctx.fillRect(x, 28, 68, 7);
       ctx.fillStyle = scene.buildingLight; ctx.fillRect(x + 8, 35, 52, 3);
     }
     ctx.fillStyle = scene.warning; ctx.fillRect(0, 396, GAME.width, 8);
-    for (let i = 0; i < 20; i += 1) {
+    for (let i = 0; i < Math.ceil(GAME.width / 52); i += 1) {
       const x = i * 52 - ((cameraX * 0.35) % 52);
       ctx.fillStyle = scene.platformShadow; ctx.fillRect(x, 396, 24, 8);
     }
   } else if (environment === "extraction") {
     ctx.fillStyle = scene.mountain;
-    for (let i = -1; i < 5; i += 1) {
+    for (let i = -1; i < Math.ceil(GAME.width / 310) + 1; i += 1) {
       const x = i * 310 - scroll;
       ctx.beginPath(); ctx.moveTo(x, 365); ctx.lineTo(x + 92, 292);
       ctx.lineTo(x + 158, 332); ctx.lineTo(x + 238, 278);
       ctx.lineTo(x + 310, 365); ctx.closePath(); ctx.fill();
     }
     ctx.fillStyle = scene.buildingShadow; ctx.fillRect(0, 328, GAME.width, 7);
-    for (let i = 0; i < 15; i += 1) {
-      const x = ((i * 86 - cameraX * 0.3) % 1120 + 1120) % 1120;
+    const extractionPylonSpan = GAME.width + 100;
+    for (let i = 0; i < Math.ceil(extractionPylonSpan / 86); i += 1) {
+      const x = ((i * 86 - cameraX * 0.3) % extractionPylonSpan + extractionPylonSpan) % extractionPylonSpan;
       ctx.fillStyle = scene.buildingLight; ctx.fillRect(x, 326, 4, 104);
       ctx.fillStyle = scene.warning; ctx.fillRect(x - 2, 322, 8, 4);
     }
-    ctx.fillStyle = scene.buildingShadow; ctx.fillRect(338, 238, 284, 138);
-    ctx.fillStyle = scene.building; ctx.fillRect(350, 214, 260, 162);
-    ctx.fillStyle = scene.buildingLight; ctx.fillRect(350, 214, 260, 9);
-    ctx.fillStyle = scene.buildingShadow; ctx.fillRect(396, 256, 168, 120);
-    ctx.fillStyle = scene.ridge; ctx.fillRect(411, 267, 138, 109);
-    ctx.fillStyle = scene.warning; ctx.fillRect(382, 198, 196, 8);
-    ctx.fillStyle = scene.window; ctx.fillRect(406, 232, 148, 20);
+    const gateX = Math.round((GAME.width - 260) / 2);
+    ctx.fillStyle = scene.buildingShadow; ctx.fillRect(gateX - 12, 238, 284, 138);
+    ctx.fillStyle = scene.building; ctx.fillRect(gateX, 214, 260, 162);
+    ctx.fillStyle = scene.buildingLight; ctx.fillRect(gateX, 214, 260, 9);
+    ctx.fillStyle = scene.buildingShadow; ctx.fillRect(gateX + 46, 256, 168, 120);
+    ctx.fillStyle = scene.ridge; ctx.fillRect(gateX + 61, 267, 138, 109);
+    ctx.fillStyle = scene.warning; ctx.fillRect(gateX + 32, 198, 196, 8);
+    ctx.fillStyle = scene.window; ctx.fillRect(gateX + 56, 232, 148, 20);
     ctx.fillStyle = scene.buildingShadow; ctx.font = "bold 11px monospace"; ctx.textAlign = "center";
-    ctx.fillText(tr("EAST GATE"), GAME.width / 2, 246); ctx.textAlign = "start";
+    ctx.fillText(tr("EAST GATE"), gateX + 130, 246); ctx.textAlign = "start";
     ctx.fillStyle = scene.buildingLight; ctx.fillRect(0, 390, GAME.width, 4);
-    for (let i = 0; i < 12; i += 1) {
-      const x = ((i * 104 - cameraX * 0.5) % 1120 + 1120) % 1120;
+    const extractionFloorSpan = GAME.width + 120;
+    for (let i = 0; i < Math.ceil(extractionFloorSpan / 104); i += 1) {
+      const x = ((i * 104 - cameraX * 0.5) % extractionFloorSpan + extractionFloorSpan) % extractionFloorSpan;
       ctx.fillStyle = scene.window; ctx.fillRect(x, 414, 42, 3);
     }
   }
@@ -501,8 +517,9 @@ function drawBackground() {
 
   ctx.fillStyle = scene.under; ctx.fillRect(0, 430, GAME.width, 110);
   ctx.fillStyle = scene.detail;
-  for (let i = 0; i < 24; i += 1) {
-    const x = ((i * 67 - cameraX * 0.48) % 1020 + 1020) % 1020;
+  const groundDetailSpan = GAME.width + 80;
+  for (let i = 0; i < Math.ceil(groundDetailSpan / 67); i += 1) {
+    const x = ((i * 67 - cameraX * 0.48) % groundDetailSpan + groundDetailSpan) % groundDetailSpan;
     const y = 408 + (i % 4) * 6;
     ctx.fillRect(x, y, 5, 3);
     if (i % 3 === 0) ctx.fillRect(x + 4, y - 4, 3, 5);

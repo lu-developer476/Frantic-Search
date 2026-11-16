@@ -1,5 +1,6 @@
 import { loadAnimatedGif, getAnimatedFrameIndex } from "./AnimatedGif.js";
-const WIDTH = 960;
+import { observeCanvasViewport } from "../rendering/CanvasUtils.js";
+let WIDTH = 960;
 const HEIGHT = 540;
 const FLOOR = 438;
 export const LANE_COUNT = 4;
@@ -150,6 +151,10 @@ export class EmptyStomach {
     this.root = root;
     this.canvas = root.querySelector("canvas");
     this.ctx = this.canvas.getContext("2d");
+    this.canvasViewport = observeCanvasViewport(root.querySelector(".empty-stomach-stage"), this.canvas, (width) => {
+      WIDTH = width;
+      this.ctx.imageSmoothingEnabled = false;
+    });
     this.onExit = onExit;
     this.locale = "es";
     this.pauseButton = root.querySelector("[data-empty-pause]");
@@ -305,6 +310,7 @@ export class EmptyStomach {
 
   open() {
     this.root.classList.add("active");
+    this.canvasViewport();
     this.root.classList.remove("playing");
     this.root.setAttribute("aria-hidden", "false");
     this.reset();
@@ -1188,6 +1194,7 @@ export class EmptyStomach {
 
   destroy() {
     this.exit();
+    this.canvasViewport.disconnect();
     window.removeEventListener("keydown", this.handleKeyDown);
     window.removeEventListener("keyup", this.handleKeyUp);
   }
