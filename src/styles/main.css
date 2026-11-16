@@ -3034,3 +3034,42 @@ body:has(#survival-panel.active:not(.playing)) .canvas-wrap {
 .survival-panel:not(.playing) .survival-intro {
   background: #000 !important;
 }
+
+/* Consistent typography for all primary start-screen menu actions. */
+#start-screen .start-screen-copy {
+  --start-menu-action-font-size: 10px;
+}
+
+#start-screen .start-screen-copy :is(
+  #start-button,
+  #campaign-button,
+  #minigames-button,
+  #start-menu-back-button,
+  #continue-campaign-button,
+  #new-campaign-button,
+  #delete-campaign-save-button,
+  #empty-stomach-button,
+  #time-attack-button,
+  #survival-button,
+  #free-roam-button,
+  #campaign-back-button,
+  #minigames-back-button
+),
+#start-screen .start-screen-copy :is(
+  #start-button,
+  #campaign-button,
+  #minigames-button,
+  #start-menu-back-button,
+  #continue-campaign-button,
+  #new-campaign-button,
+  #delete-campaign-save-button,
+  #empty-stomach-button,
+  #time-attack-button,
+  #survival-button,
+  #free-roam-button,
+  #campaign-back-button,
+  #minigames-back-button
+) * {
+  font-size: var(--start-menu-action-font-size) !important;
+  line-height: 1.35;
+}
