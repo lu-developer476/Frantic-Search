@@ -132,7 +132,7 @@ test("reference images are loaded from the Vite base path and cached", () => {
   }
 });
 
-test("the campaign prologue advances Rosa through decoded Abyssomirabilis GIF frames", () => {
+test("Rosa stays still while asleep and starts her decoded GIF animation on waking", () => {
   const renderer = Object.create(SpriteRenderer.prototype);
   const firstFrame = { image: { id: "rosa-frame-1" }, delay: 100, bottomPadding: 4 };
   const secondFrame = { image: { id: "rosa-frame-2" }, delay: 100, bottomPadding: 4 };
@@ -144,11 +144,18 @@ test("the campaign prologue advances Rosa through decoded Abyssomirabilis GIF fr
   }]]);
   renderer.animatedReferencePromises = new Map();
   const context = createRenderContext();
-  const actor = { id: "prologue-rosa", facing: -1, state: "running" };
+  const actor = { id: "prologue-rosa", facing: -1, state: "resting" };
 
-  assert.equal(renderer.drawPrologueRosa(context, 100, 200, 54, 54, actor, 0), true);
+  assert.equal(renderer.drawPrologueRosa(context, 100, 200, 54, 54, actor, 0.11, 1, true), true);
   assert.equal(context.calls.find(([name]) => name === "drawImage")?.[1], firstFrame.image);
+  const sleepingPosition = context.calls.find(([name]) => name === "translate");
 
+  context.calls.length = 0;
+  assert.equal(renderer.drawPrologueRosa(context, 100, 200, 54, 54, actor, 0.55, 1, true), true);
+  assert.equal(context.calls.find(([name]) => name === "drawImage")?.[1], firstFrame.image);
+  assert.deepEqual(context.calls.find(([name]) => name === "translate"), sleepingPosition);
+
+  actor.state = "running";
   context.calls.length = 0;
   assert.equal(renderer.drawPrologueRosa(context, 100, 200, 54, 54, actor, 0.11), true);
   assert.equal(context.calls.find(([name]) => name === "drawImage")?.[1], secondFrame.image);

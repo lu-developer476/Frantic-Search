@@ -1372,6 +1372,8 @@ function updateCampaignPrologue(delta) {
   if (prologue.phase === "rest") {
     const event = prologue.update(delta);
     if (event === "rest") {
+      // Start Rosa's wake-up animation at the exact moment the alert appears.
+      prologue.rosaAnimationStartedAt = elapsed;
       prologue.soundCueTimer = 3.2;
       campaign.objective = "INVESTIGATE THE NOISE";
       audio.collect();
@@ -2526,13 +2528,18 @@ function render() {
   }
   const blink = player.invulnerable > 0 && Math.floor(elapsed * 18) % 2 === 0;
   if (campaignPrologue?.active && ["rest", "explore", "capture", "capture-dialog"].includes(campaignPrologue.phase)) {
-    const rosaY = player.y + (campaignPrologue.phase === "rest" ? 5 : 0);
+    const rosaSleeping = campaignPrologue.phase === "rest";
+    const rosaY = player.y + (rosaSleeping ? 5 : 0);
+    const rosaAnimationElapsed = rosaSleeping
+      ? 0
+      : Math.max(0, elapsed - (campaignPrologue.rosaAnimationStartedAt ?? elapsed));
     const rosaDrawn = spriteRenderer.drawPrologueRosa(
-      ctx, player.x, rosaY, player.w, player.h, player, elapsed, blink ? 0.35 : 1
+      ctx, player.x, rosaY, player.w, player.h, player,
+      rosaAnimationElapsed, blink ? 0.35 : 1, rosaSleeping
     );
     if (!rosaDrawn) {
       drawDino(
-        player.x, rosaY, player.w, player.h, "#75a99b", "rosa", elapsed,
+        player.x, rosaY, player.w, player.h, "#75a99b", "rosa", rosaAnimationElapsed,
         blink ? 0.35 : 1, player.facing, player
       );
     }

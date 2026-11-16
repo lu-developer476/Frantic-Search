@@ -324,7 +324,7 @@ export class SpriteRenderer {
     }
   }
 
-  drawPrologueRosa(context, x, y, width, height, actor = {}, elapsed = 0, alpha = 1) {
+  drawPrologueRosa(context, x, y, width, height, actor = {}, elapsed = 0, alpha = 1, sleeping = false) {
     const animation = this.animatedReferences.get(PROLOGUE_ROSA_REFERENCE);
     if (!animation?.frames?.length) {
       // Decode once into composited frame canvases, exactly like Coral in Empty Stomach.
@@ -332,7 +332,10 @@ export class SpriteRenderer {
       return false;
     }
 
-    const frameIndex = getAnimatedFrameIndex(animation.frames, Math.max(0, elapsed) * 1000);
+    const frameIndex = getAnimatedFrameIndex(
+      animation.frames,
+      (sleeping ? 0 : Math.max(0, elapsed)) * 1000
+    );
     const frame = animation.frames[frameIndex];
     if (!frame?.image) return false;
 
@@ -341,7 +344,7 @@ export class SpriteRenderer {
     const bottomPadding = frame.bottomPadding ?? animation.bottomPadding ?? 0;
     const scaledBottomPadding = drawHeight * bottomPadding / animation.height;
     const phase = phaseOf(actor, "rosa");
-    const bob = actor?.state === "resting"
+    const bob = sleeping ? 0 : actor?.state === "resting"
       ? Math.sin(elapsed * 2.1 + phase) * 0.35
       : Math.abs(Math.sin(elapsed * 7.2 + phase)) * 0.65;
     const groundAlignedY = y + height - drawHeight + scaledBottomPadding + bob;
