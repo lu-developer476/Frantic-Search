@@ -2566,10 +2566,10 @@ html.site-mode-gray .story-card .story-actions span{
 .empty-stomach-actions button{padding:10px 14px;border:1px solid #8c9d77;background:#1d2b26;color:#e9f0dc;font:700 9px var(--font-mono);letter-spacing:.1em;cursor:pointer}
 .empty-stomach-stage{position:absolute;inset:0;min-width:0;min-height:0;display:block;overflow:hidden;border:1px solid #77866a;background:#b8d0c4}
 .empty-stomach-stage canvas{position:absolute;inset:0;display:block;width:100%;height:100%;max-width:none;max-height:none;aspect-ratio:auto;object-fit:fill;image-rendering:pixelated}
-.empty-stomach-bottom{position:absolute;z-index:4;left:0;right:0;bottom:0;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:14px;min-height:42px;margin:0;padding:8px 12px;border:1px solid #77866a;background:#182820;color:#e9f0dc}
+.empty-stomach-bottom{position:absolute;z-index:4;left:0;right:0;bottom:0;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:14px;min-height:42px;margin:0;padding:4px 12px;border:1px solid #77866a;background:#182820;color:#e9f0dc}
 .empty-stomach-bottom[hidden]{display:none}
 .empty-stomach-bottom span{font:700 9px var(--font-mono);letter-spacing:.04em;text-transform:uppercase}
-.empty-stomach-bottom button{grid-column:3;justify-self:end;flex:0 0 auto;padding:8px 12px;border:1px solid #e1a17f;background:#e1a17f;color:#1b211a;font:700 9px var(--font-mono);letter-spacing:.08em;cursor:pointer}
+.empty-stomach-bottom button{grid-column:3;justify-self:end;flex:0 0 auto;padding:5px 12px;border:1px solid #e1a17f;background:#e1a17f;color:#1b211a;font:700 9px var(--font-mono);letter-spacing:.08em;cursor:pointer}
 .empty-stomach-bottom button:hover{background:#efb392}
 .empty-stomach-pause-overlay{position:absolute;inset:0;z-index:3;display:grid;place-items:center;background:rgba(7,13,12,.55);pointer-events:none}
 .empty-stomach-pause-overlay[hidden]{display:none}
@@ -2586,14 +2586,14 @@ html.site-mode-gray .story-card .story-actions span{
 }
 .empty-stomach-bottom span{
   grid-column:2;min-width:0;white-space:nowrap;text-align:center;
-  font-size:clamp(5px,.82vw,9px);letter-spacing:0;
+  font-size:clamp(6px,.9vw,10px);letter-spacing:0;
 }
 .empty-stomach-actions [data-empty-start]{min-width:112px;white-space:nowrap;}
 .empty-stomach-result{padding:10px 16px;border:1px solid #d28d79;background:#1b2823;color:#ffd1b4;font:700 11px var(--font-mono)}
 .empty-stomach-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px}
 .empty-stomach-actions button:first-child,.empty-stomach-actions button:nth-child(2){border-color:#e1a17f;background:#e1a17f;color:#1b211a}
 .empty-stomach-actions button[hidden],.empty-stomach-intro [hidden]{display:none!important}
-@media(max-width:700px){.empty-stomach-panel{padding:8px}.empty-stomach-intro h2{font-size:40px}.empty-stomach-intro p{font-size:11px}.empty-stomach-bottom{align-items:stretch;grid-template-columns:minmax(0,1fr);gap:7px}.empty-stomach-bottom span{grid-column:1;text-align:center;font-size:clamp(4px,1.3vw,7px);white-space:nowrap}.empty-stomach-bottom button{grid-column:1;justify-self:stretch;width:100%}}
+@media(max-width:700px){.empty-stomach-panel{padding:8px}.empty-stomach-intro h2{font-size:40px}.empty-stomach-intro p{font-size:11px}.empty-stomach-bottom{align-items:stretch;grid-template-columns:minmax(0,1fr);gap:7px}.empty-stomach-bottom span{grid-column:1;text-align:center;font-size:clamp(5px,1.4vw,8px);white-space:nowrap}.empty-stomach-bottom button{grid-column:1;justify-self:stretch;width:100%}}
 
 
 /* Time Attack — a self-contained timed hunting section. */
