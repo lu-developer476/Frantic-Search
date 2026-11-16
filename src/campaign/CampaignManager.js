@@ -18,11 +18,16 @@ const INDOMINUS_ENCOUNTERS = [
   "indominus-second-generation-variant"
 ];
 
+const PROLOGUE_INTRO = [
+  "The forest clearing is quiet. Violeta rests beneath the trees, while Rosa, her young Abyssomirabilis velociraptor, curls up close beside her after a long day.",
+  "A metallic clank echoes from deeper in the woods. Rosa wakes first, listens carefully and slips away to investigate without disturbing Violeta."
+];
+
 const OPENING = [
-  "Rosa is aboard the poachers' jeep. It joins a convoy heading toward the coastal highway, leaving Violeta and Vasti with only the trail behind it.",
-  "The two follow the tire marks toward the coast. The first route ahead is exposed, and the poachers have a head start.",
-  "Their objective is clear: locate the convoy, discover where Rosa is being taken and bring her home.",
-  "The search begins on the Coastal Highway, where every clue may lead closer to the clandestine operation."
+  "The trail from the clearing joins a wider set of tire marks: a convoy has passed through the forest and is heading toward the coastal highway.",
+  "The poachers are not working alone. Their vehicles, supply crates and armed escorts point to a much larger operation moving captured dinosaurs.",
+  "Violeta and Vasti must follow the convoy, discover where it is taking the animals and reach Rosa before she is transferred again.",
+  "The first lead is the Coastal Highway. The search for Rosa begins."
 ];
 
 export class CampaignManager {
@@ -46,6 +51,10 @@ export class CampaignManager {
     this.objective = "FOLLOW THE CONVOY";
     this.chapter = "COASTAL HIGHWAY";
     this.facilityConsoles = [];
+  }
+
+  beginPrologue() {
+    this.queueScene("prologue-intro", "A QUIET MOMENT", PROLOGUE_INTRO);
   }
 
   begin() {

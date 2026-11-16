@@ -1259,6 +1259,8 @@ function beginCampaignPrologue() {
   player.vy = 0;
   player.onGround = true;
   player.facing = 1;
+  player.state = "resting";
+  player.motionSpeed = 0;
 
   prologue.violetaActor = new Player("blue", prologue.startX + 42, GAME.groundY);
   prologue.violetaActor.x = prologue.startX + 42;
@@ -1266,6 +1268,7 @@ function beginCampaignPrologue() {
   prologue.violetaActor.state = "resting";
   prologue.violetaActor.motionSpeed = 0;
   player.animationState = null;
+  campaign.beginPrologue();
 
   prologue.hunters = [
     {
@@ -1369,7 +1372,7 @@ function updateCampaignPrologue(delta) {
   if (prologue.phase === "rest") {
     const event = prologue.update(delta);
     if (event === "rest") {
-      prologue.soundCueTimer = 2.4;
+      prologue.soundCueTimer = 3.2;
       campaign.objective = "INVESTIGATE THE NOISE";
       audio.collect();
       updateCampaignHud();
@@ -1380,6 +1383,7 @@ function updateCampaignPrologue(delta) {
   if (prologue.phase === "explore") {
     prologue.soundCueTimer = Math.max(0, prologue.soundCueTimer - delta);
     player.update(delta, input);
+    player.state = Math.abs(player.vx) > 30 ? "running" : "resting";
     if (player.consumeJumpEvent()) audio.jump();
     const abilityEvent = player.consumeAbilityEvent();
     if (abilityEvent === "pounce") audio.collect();
@@ -1418,6 +1422,7 @@ function updateCampaignPrologue(delta) {
     player.facing = -1;
     player.vx = 0;
     player.animationState = progress < 0.64 ? "impact" : null;
+    player.state = progress < 0.64 ? "stunned" : "resting";
     if (progress > 0.42) {
       prologue.violetaActor.animationState = "impact";
       prologue.violetaActor.state = "stunned";
@@ -1473,21 +1478,21 @@ function updateCampaignPrologue(delta) {
   } else if (event === "capture") {
     prologue.violetaActor.state = "alert";
     prologue.violetaActor.animationState = null;
-    campaign.queueScene("prologue-capture", "ROSA TAKEN", [
-      "Two poachers emerge from the trees and block Rosa's path. They corner the young raptor, force her into the jeep and speed away before Violeta can react.",
-      "The engine fades into the forest. The sudden noise wakes Violeta, who finds the clearing empty."
+    campaign.queueScene("prologue-capture", "THE NOISE IN THE WOODS", [
+      "The sound leads Rosa to an old service track, where a poachers' jeep waits with its engine running. Before she can turn back, two hunters step out from behind the trees and cut off her way home.",
+      "Rosa fights to break free, but the hunters force her into the jeep and speed away. Violeta wakes to the engine, runs to the clearing and sees the vehicle disappear through the trees."
     ]);
     renderStoryPanel();
   } else if (event === "search") {
-    campaign.queueScene("prologue-tracks", "FOLLOWING THE TRACKS", [
-      "Violeta searches the clearing and spots broken branches and disturbed soil. Fresh tire marks cut through the undergrowth.",
-      "She follows the tracks deeper into the forest. They lead toward a clearing where another struggle is already underway."
+    campaign.queueScene("prologue-tracks", "THE TRAIL", [
+      "The clearing is empty. Violeta finds snapped branches, flattened ferns and fresh tire marks in the soil; the signs of a struggle point toward an old forest road.",
+      "She follows the trail, refusing to lose sight of it. A roar and the sound of heavy blows suddenly echo from a rocky opening ahead."
     ]);
     renderStoryPanel();
   } else if (event === "fight") {
     campaign.queueScene("prologue-alliance", "AN UNEXPECTED ALLY", [
-      "Violeta finds Vasti locked in a fight with a Venatosaurus. She joins the struggle and helps drive the predator away.",
-      "Once the threat is gone, Violeta asks Vasti to help her rescue Rosa. Vasti agrees, and the two set off together after the poachers."
+      "Violeta reaches the opening and finds Vasti holding off a Venatosaurus. She joins the fight, creating an opening for Vasti to land the final blow and drive the predator down.",
+      "Once the threat is gone, Violeta explains that Rosa has been taken by poachers. Vasti agrees to help follow the convoy and bring the young raptor home."
     ]);
     renderStoryPanel();
   }
@@ -2520,13 +2525,17 @@ function render() {
     drawReferenceHealthBar(actor);
   }
   const blink = player.invulnerable > 0 && Math.floor(elapsed * 18) % 2 === 0;
-  if (campaignPrologue?.active && ["rest", "explore", "capture"].includes(campaignPrologue.phase)) {
-    drawDino(
-      player.x,
-      player.y + (campaignPrologue.phase === "rest" ? 5 : 0),
-      player.w, player.h, "#75a99b", "rosa", elapsed,
-      blink ? 0.35 : 1, player.facing, player
+  if (campaignPrologue?.active && ["rest", "explore", "capture", "capture-dialog"].includes(campaignPrologue.phase)) {
+    const rosaY = player.y + (campaignPrologue.phase === "rest" ? 5 : 0);
+    const rosaDrawn = spriteRenderer.drawPrologueRosa(
+      ctx, player.x, rosaY, player.w, player.h, player, elapsed, blink ? 0.35 : 1
     );
+    if (!rosaDrawn) {
+      drawDino(
+        player.x, rosaY, player.w, player.h, "#75a99b", "rosa", elapsed,
+        blink ? 0.35 : 1, player.facing, player
+      );
+    }
   } else if (!campaignPrologue?.active) {
     drawDino(player.x, player.y, player.w, player.h, "#75a99b", selected, elapsed, blink ? 0.35 : 1, player.facing, player);
   }

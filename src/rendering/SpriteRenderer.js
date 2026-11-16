@@ -2,6 +2,8 @@ import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.j
 
 const REFERENCE_OUTLINE_WIDTH = 2;
 const REFERENCE_OUTLINE_COLOR = "#000000";
+export const PROLOGUE_ROSA_REFERENCE = "juvenile-velociraptor-abyssomirabilis.gif";
+const PROLOGUE_ROSA_SCALE = 1.8;
 
 export const DINOSAUR_REFERENCE_SCALES = Object.freeze({
   violeta: 1.6,
@@ -41,10 +43,11 @@ const REFERENCE_PRELOAD_FILES = [
   "ligocristus-innocens.png",
   "stegoceratops.png",
   "venatosaurus-impavidus.png",
-  "venatosaurus-saevidicus.png"
+  "venatosaurus-saevidicus.png",
+  PROLOGUE_ROSA_REFERENCE
 ];
 
-const SPRITE_ASSET_VERSION = "20261113-all-reference-dinosaurs-environments-3";
+const SPRITE_ASSET_VERSION = "20261116-prologue-rosa-abyssomirabilis-1";
 const ROSA_RIG_PARTS = [
   "rosa-rig-body",
   "rosa-rig-tail",
@@ -294,6 +297,38 @@ export class SpriteRenderer {
       // Browsers without an available offscreen 2D surface still render the source PNG.
       return null;
     }
+  }
+
+  drawPrologueRosa(context, x, y, width, height, actor = {}, elapsed = 0, alpha = 1) {
+    const image = this.getReferenceImage(PROLOGUE_ROSA_REFERENCE);
+    const bounds = this.referenceBounds.get(PROLOGUE_ROSA_REFERENCE);
+    if (!image?.complete || image.naturalWidth === 0 || !bounds?.width || !bounds?.height) return false;
+
+    // Draw the source GIF itself so its animation remains live on the canvas.
+    // The regular Rosa rig is intentionally left untouched outside the prologue.
+    const drawWidth = Math.max(1, Math.round(width * PROLOGUE_ROSA_SCALE));
+    const drawHeight = Math.max(1, Math.round(drawWidth * bounds.height / bounds.width));
+    const phase = phaseOf(actor, "rosa");
+    const bob = actor?.state === "resting"
+      ? Math.sin(elapsed * 2.1 + phase) * 0.35
+      : Math.abs(Math.sin(elapsed * 7.2 + phase)) * 0.65;
+    const facing = Math.sign(actor?.facing ?? 1) || 1;
+
+    context.save();
+    context.globalAlpha *= alpha;
+    context.imageSmoothingEnabled = false;
+    context.translate(
+      Math.round(x + width / 2),
+      Math.round(y + height - drawHeight / 2 + bob)
+    );
+    context.scale(facing < 0 ? -1 : 1, 1);
+    context.drawImage(
+      image,
+      bounds.x, bounds.y, bounds.width, bounds.height,
+      -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight
+    );
+    context.restore();
+    return true;
   }
 
   drawReferencePng(context, character, x, y, width, height, actor, elapsed, options = {}, poseOverride = null) {

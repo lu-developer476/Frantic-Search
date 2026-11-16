@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { AdaptiveMusic } from "../src/audio/AdaptiveMusic.js";
-import { DINOSAUR_REFERENCE_SCALES, REFERENCE_PNG_CHARACTERS, SpriteRenderer } from "../src/rendering/SpriteRenderer.js";
+import { DINOSAUR_REFERENCE_SCALES, PROLOGUE_ROSA_REFERENCE, REFERENCE_PNG_CHARACTERS, SpriteRenderer } from "../src/rendering/SpriteRenderer.js";
 import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "../src/rendering/AnimationProfiles.js";
 import { Player } from "../src/entities/Player.js";
 import { Beta } from "../src/entities/Beta.js";
@@ -121,14 +121,31 @@ test("reference images are loaded from the Vite base path and cached", () => {
     const first = renderer.getReferenceImage("adult-velociraptor-nublarensis.png");
     const second = renderer.getReferenceImage("adult-velociraptor-nublarensis.png");
     assert.equal(first, second);
-    assert.equal(first.src, "/game/references/adult-velociraptor-nublarensis.png?v=20261113-all-reference-dinosaurs-environments-3");
-    assert.equal(renderer.referenceImages.size, 14);
-    assert.ok([...renderer.referenceImages.values()].every((image) => /.png\?v=/.test(image.src)));
-    assert.equal(renderer.readiness().total, 14);
+    assert.equal(first.src, "/game/references/adult-velociraptor-nublarensis.png?v=20261116-prologue-rosa-abyssomirabilis-1");
+    assert.equal(renderer.referenceImages.size, 15);
+    assert.ok([...renderer.referenceImages.values()].every((image) => /\.(png|gif)\?v=/.test(image.src)));
+    assert.equal(renderer.readiness().total, 15);
+    assert.ok(renderer.referenceImages.has(PROLOGUE_ROSA_REFERENCE));
   } finally {
     if (previousImage === undefined) delete globalThis.Image;
     else globalThis.Image = previousImage;
   }
+});
+
+test("the campaign prologue renders Rosa with her Abyssomirabilis reference GIF", () => {
+  const { renderer, reference } = rendererWithReference(
+    PROLOGUE_ROSA_REFERENCE,
+    { naturalWidth: 160, naturalHeight: 56 }
+  );
+  renderer.referenceBounds.set(PROLOGUE_ROSA_REFERENCE, { x: 0, y: 0, width: 160, height: 56 });
+  const context = createRenderContext();
+  assert.equal(renderer.drawPrologueRosa(
+    context, 100, 200, 54, 54,
+    { id: "prologue-rosa", facing: -1, state: "running" }, 0.6
+  ), true);
+  assert.equal(context.calls.find(([name]) => name === "drawImage")?.[1], reference);
+  assert.ok(context.calls.some(([name, x]) => name === "scale" && x === -1));
+  assert.equal(context.imageSmoothingEnabled, false);
 });
 
 test("PNG drawing uses alpha-cropped source bounds, pixel sampling and character facing", () => {

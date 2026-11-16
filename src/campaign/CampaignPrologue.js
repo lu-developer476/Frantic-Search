@@ -1,8 +1,8 @@
 const PROLOGUE_DURATIONS = Object.freeze({
-  rest: 2.4,
-  capture: 3.8,
-  search: 5.2,
-  fight: 5.6
+  rest: 4.2,
+  capture: 4.8,
+  search: 6.2,
+  fight: 6.8
 });
 
 const DIALOGUE_TO_SEQUENCE = Object.freeze({

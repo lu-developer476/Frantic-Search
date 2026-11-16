@@ -100,6 +100,19 @@ test("complete narrative can only be queued after Beta is rescued", () => {
   assert.equal(campaign.complete(), false);
 });
 
+test("the campaign begins with an expanded prologue scene before its opening briefing", () => {
+  const campaign = new CampaignManager();
+  campaign.beginPrologue();
+  assert.equal(campaign.activeScene?.id, "prologue-intro");
+  assert.equal(campaign.activeScene?.title, "A QUIET MOMENT");
+  assert.equal(campaign.activeScene?.lines.length, 2);
+  assert.match(campaign.activeScene?.lines.join(" "), /Abyssomirabilis/);
+  drainScenes(campaign);
+  campaign.begin();
+  assert.equal(campaign.activeScene?.id, "opening");
+  assert.match(campaign.activeScene?.lines.join(" "), /convoy/);
+});
+
 test("opening and chapter narration is queued in order and can be advanced", () => {
   const campaign = new CampaignManager();
   campaign.begin();
