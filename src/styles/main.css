@@ -2904,7 +2904,61 @@ button.character-card {
 .panel-head:has(.mission-brief-header.is-hidden){grid-template-columns:minmax(245px,1.05fr) minmax(112px,.55fr) auto;min-height:40px;padding-block:4px}
 
 
-/* Pre-game navigation: black canvas only, with the site shell preserved. */
+/* Pre-game navigation: black staging screens with gameplay chrome removed. */
+body:has(#start-screen:not(.hidden)),
+body:has(#dino-modal:not(.hidden)),
+body:has(#character-confirmation:not(.hidden)),
+body:has(#empty-stomach-panel.active:not(.playing)),
+body:has(#time-attack-panel.active:not(.playing)),
+body:has(#survival-panel.active:not(.playing)) {
+  background: #000 !important;
+  color: #fff5cf;
+}
+
+body:has(#start-screen:not(.hidden)) #app,
+body:has(#dino-modal:not(.hidden)) #app,
+body:has(#character-confirmation:not(.hidden)) #app,
+body:has(#empty-stomach-panel.active:not(.playing)) #app,
+body:has(#time-attack-panel.active:not(.playing)) #app,
+body:has(#survival-panel.active:not(.playing)) #app {
+  grid-template-rows: minmax(0, 1fr) !important;
+}
+
+body:has(#start-screen:not(.hidden)) .topbar,
+body:has(#dino-modal:not(.hidden)) .topbar,
+body:has(#character-confirmation:not(.hidden)) .topbar,
+body:has(#empty-stomach-panel.active:not(.playing)) .topbar,
+body:has(#time-attack-panel.active:not(.playing)) .topbar,
+body:has(#survival-panel.active:not(.playing)) .topbar {
+  height: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+body:has(#start-screen:not(.hidden)) .navbar-identity,
+body:has(#dino-modal:not(.hidden)) .navbar-identity,
+body:has(#character-confirmation:not(.hidden)) .navbar-identity,
+body:has(#empty-stomach-panel.active:not(.playing)) .navbar-identity,
+body:has(#time-attack-panel.active:not(.playing)) .navbar-identity,
+body:has(#survival-panel.active:not(.playing)) .navbar-identity {
+  display: none !important;
+}
+
+body:has(#start-screen:not(.hidden)) .nav-actions,
+body:has(#dino-modal:not(.hidden)) .nav-actions,
+body:has(#character-confirmation:not(.hidden)) .nav-actions,
+body:has(#empty-stomach-panel.active:not(.playing)) .nav-actions,
+body:has(#time-attack-panel.active:not(.playing)) .nav-actions,
+body:has(#survival-panel.active:not(.playing)) .nav-actions {
+  position: fixed !important;
+  top: 12px;
+  right: 16px;
+  z-index: 60 !important;
+}
+
 body:has(#start-screen:not(.hidden)) .panel-head,
 body:has(#dino-modal:not(.hidden)) .panel-head,
 body:has(#character-confirmation:not(.hidden)) .panel-head,
@@ -2921,8 +2975,17 @@ body:has(#empty-stomach-panel.active:not(.playing)) .game-panel,
 body:has(#time-attack-panel.active:not(.playing)) .game-panel,
 body:has(#survival-panel.active:not(.playing)) .game-panel {
   grid-template-rows: minmax(0, 1fr) !important;
+  border-color: #000 !important;
+  background: #000 !important;
+  box-shadow: none !important;
 }
 
+body:has(#start-screen:not(.hidden)) .layout,
+body:has(#dino-modal:not(.hidden)) .layout,
+body:has(#character-confirmation:not(.hidden)) .layout,
+body:has(#empty-stomach-panel.active:not(.playing)) .layout,
+body:has(#time-attack-panel.active:not(.playing)) .layout,
+body:has(#survival-panel.active:not(.playing)) .layout,
 body:has(#start-screen:not(.hidden)) .canvas-wrap,
 body:has(#dino-modal:not(.hidden)) .canvas-wrap,
 body:has(#character-confirmation:not(.hidden)) .canvas-wrap,
@@ -2930,15 +2993,6 @@ body:has(#empty-stomach-panel.active:not(.playing)) .canvas-wrap,
 body:has(#time-attack-panel.active:not(.playing)) .canvas-wrap,
 body:has(#survival-panel.active:not(.playing)) .canvas-wrap {
   background: #000 !important;
-}
-
-body:has(#start-screen:not(.hidden)) .canvas-wrap canvas#game,
-body:has(#dino-modal:not(.hidden)) .canvas-wrap canvas#game,
-body:has(#character-confirmation:not(.hidden)) .canvas-wrap canvas#game,
-body:has(#empty-stomach-panel.active:not(.playing)) .canvas-wrap canvas#game,
-body:has(#time-attack-panel.active:not(.playing)) .canvas-wrap canvas#game,
-body:has(#survival-panel.active:not(.playing)) .canvas-wrap canvas#game {
-  visibility: hidden !important;
 }
 
 .start-screen {
@@ -2972,7 +3026,7 @@ body:has(#survival-panel.active:not(.playing)) .canvas-wrap canvas#game {
 .empty-stomach-panel:not(.playing) .empty-stomach-stage canvas,
 .time-attack-panel:not(.playing) .time-attack-stage canvas,
 .survival-panel:not(.playing) .survival-stage canvas {
-  visibility: hidden !important;
+  visibility: hidden;
 }
 
 .empty-stomach-panel:not(.playing) .empty-stomach-intro,
