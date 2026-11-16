@@ -19,8 +19,8 @@ const INDOMINUS_ENCOUNTERS = [
 ];
 
 const PROLOGUE_INTRO = [
-  "The forest clearing is quiet. Violeta rests beneath the trees, while Rosa, her young Abyssomirabilis velociraptor, curls up close beside her after a long day.",
-  "A metallic clank echoes from deeper in the woods. Rosa wakes first, listens carefully and slips away to investigate without disturbing Violeta."
+  "The forest clearing is quiet. Violeta rests beneath the trees, while Rosa, her young Abyssomirabilis velociraptor, settles beside her after a long day.",
+  "A metallic clank echoes from deeper in the woods. Rosa wakes first, slips away from Violeta and follows the sound through the forest, covering a long stretch of unfamiliar ground."
 ];
 
 const OPENING = [
