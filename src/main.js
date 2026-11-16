@@ -75,6 +75,9 @@ const survivalButton = document.querySelector("#survival-button");
 const survivalPanel = document.querySelector("#survival-panel");
 const continueCampaignButton = document.querySelector("#continue-campaign-button");
 const deleteCampaignSaveButton = document.querySelector("#delete-campaign-save-button");
+const deleteCampaignConfirmation = document.querySelector("#delete-campaign-confirmation");
+const confirmDeleteCampaignSaveButton = document.querySelector("#confirm-delete-campaign-save");
+const cancelDeleteCampaignSaveButton = document.querySelector("#cancel-delete-campaign-save");
 const overlayActionButton = document.querySelector("#overlay-action-button");
 const overlayContent = overlay.querySelector(".overlay-content");
 const overlayExitButton = document.querySelector("#overlay-exit-button");
@@ -93,6 +96,7 @@ const confirmPauseActionButton = document.querySelector("#confirm-pause-action")
 const cancelPauseActionButton = document.querySelector("#cancel-pause-action");
 let pendingPauseAction = null;
 let pauseActionTrigger = null;
+let deleteCampaignSaveTrigger = null;
 let failureScreenActive = false;
 let levelStartSnapshot = null;
 let latestLevelCheckpoint = null;
@@ -2715,14 +2719,56 @@ continueCampaignButton.addEventListener("click", () => {
   }
   restoreRestartSnapshot(progress.snapshot, progress);
 });
-deleteCampaignSaveButton.addEventListener("click", () => {
+function openDeleteCampaignSaveConfirmation() {
   if (!save.getCampaignProgress()) {
     refreshContinueCampaignButton();
     return;
   }
-  if (!window.confirm(ui("deleteCampaignSavePrompt"))) return;
+  deleteCampaignSaveTrigger = deleteCampaignSaveButton;
+  deleteCampaignConfirmation.classList.remove("hidden");
+  cancelDeleteCampaignSaveButton.focus();
+}
+
+function closeDeleteCampaignSaveConfirmation(restoreFocus = true) {
+  deleteCampaignConfirmation.classList.add("hidden");
+  if (restoreFocus && deleteCampaignSaveTrigger?.isConnected && !deleteCampaignSaveTrigger.hidden) {
+    deleteCampaignSaveTrigger.focus();
+  }
+  deleteCampaignSaveTrigger = null;
+}
+
+function confirmDeleteCampaignSave() {
+  if (!save.getCampaignProgress()) {
+    refreshContinueCampaignButton();
+    closeDeleteCampaignSaveConfirmation(false);
+    newCampaignButton.focus();
+    return;
+  }
   save.clearCampaignProgress();
   refreshContinueCampaignButton();
+  closeDeleteCampaignSaveConfirmation(false);
+  newCampaignButton.focus();
+}
+
+deleteCampaignSaveButton.addEventListener("click", openDeleteCampaignSaveConfirmation);
+confirmDeleteCampaignSaveButton.addEventListener("click", confirmDeleteCampaignSave);
+cancelDeleteCampaignSaveButton.addEventListener("click", () => closeDeleteCampaignSaveConfirmation());
+deleteCampaignConfirmation.addEventListener("click", (event) => {
+  if (event.target === deleteCampaignConfirmation) closeDeleteCampaignSaveConfirmation();
+});
+deleteCampaignConfirmation.addEventListener("keydown", (event) => {
+  if (event.key !== "Tab") return;
+  const focusable = [...deleteCampaignConfirmation.querySelectorAll("button:not([disabled]):not([hidden])")];
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
 });
 
 function openDinoModal(returnTo = "start", gameMode = "campaign") {
@@ -2904,7 +2950,8 @@ document.querySelector("#sound-toggle").addEventListener("click", () => {
 window.addEventListener("keydown", (event) => {
   if (!desktopPlayback.matches) return;
   if (event.code === "Escape" && !event.repeat) {
-    if (!pauseConfirmation.classList.contains("hidden")) closePauseConfirmation();
+    if (!deleteCampaignConfirmation.classList.contains("hidden")) closeDeleteCampaignSaveConfirmation();
+    else if (!pauseConfirmation.classList.contains("hidden")) closePauseConfirmation();
     else if (!characterConfirmation.classList.contains("hidden")) returnToCharacterSelection();
     else if (!dinoModal.classList.contains("hidden")) closeDinoModal();
     else if (!navMenu.classList.contains("hidden")) setMenuOpen(false);

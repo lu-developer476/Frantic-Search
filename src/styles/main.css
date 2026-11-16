@@ -875,13 +875,16 @@ body.game-paused .brand,body.game-paused .navbar-separator{display:none!importan
 }
 .start-screen-copy #continue-campaign-button:disabled,
 .start-screen-copy #start-button:disabled{opacity:.45;cursor:not-allowed;transform:none}
-.start-screen-copy #delete-campaign-save-button{
-  width:fit-content;margin:0;padding:8px 0;border:0;background:transparent;
-  color:#b6c3b5;font-family:var(--font-mono);font-size:8px;font-weight:700;
-  letter-spacing:.1em;text-decoration:underline;text-underline-offset:3px;cursor:pointer;
+.start-screen-copy .start-menu-view #delete-campaign-save-button{
+  display:flex;align-items:center;justify-content:center;
+  width:100%;min-width:0;min-height:48px;margin:0;padding:13px 15px;
+  border:1px solid #b96857;border-radius:2px;background:#342622;color:#f2c5a9;
+  font-family:var(--font-mono);font-size:9px;font-weight:800;letter-spacing:.12em;
+  text-decoration:none;cursor:pointer;
+  transition:background .18s ease,border-color .18s ease,transform .18s ease;
 }
-.start-screen-copy #delete-campaign-save-button:hover{color:#fff09a}
-.start-screen-copy #delete-campaign-save-button:focus-visible{outline:2px solid #d8f36a;outline-offset:4}
+.start-screen-copy .start-menu-view #delete-campaign-save-button:hover{background:#50352d;border-color:#f0b08e}
+.start-screen-copy .start-menu-view #delete-campaign-save-button:focus-visible{outline:2px solid #f0b08e;outline-offset:4}
 .start-screen-copy #start-button b{font-size:18px;line-height:1}
 .start-screen-copy #start-button:hover{background:#e8ff8a;transform:translateY(-2px);box-shadow:0 14px 34px rgba(0,0,0,.3)}
 .start-screen-copy #start-button:disabled{opacity:.45;cursor:not-allowed;transform:none}
@@ -2164,6 +2167,12 @@ html.site-mode-gray .story-card .story-actions span{
   border-color:#637f83;
   background:#24495a;
 }
+.pause-action.danger{
+  border-color:#e1a17f;
+  background:#e1a17f;
+  color:#1b211a;
+}
+.pause-action.danger:hover{filter:brightness(1.1)}
 .pause-action:hover{
   transform:translate(-1px,-1px);
   box-shadow:5px 5px 0 #081722;
@@ -2803,6 +2812,21 @@ button.character-card {
 .overlay-content .overlay-actions > button {
   min-width: 0;
   width: auto;
+}
+
+.empty-stomach-intro .empty-stomach-instructions{
+  width:100%;
+  max-width:none;
+  text-align:center;
+}
+.empty-stomach-actions{width:min(100%,420px)}
+.empty-stomach-actions > button{
+  flex:1 1 160px;
+  min-width:150px;
+  min-height:44px;
+  padding-inline:18px;
+  white-space:nowrap;
+  overflow-wrap:normal;
 }
 
 .retry-options .retry-back-button {
