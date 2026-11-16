@@ -223,3 +223,18 @@ test("Time Attack and Survival keep a fixed stage row beneath their mode header"
   assert.match(css, /\.survival-panel\.active\s*\{display:grid;grid-template-rows:auto minmax\(0,1fr\)/);
   assert.match(css, /\.time-attack-stage canvas,[\s\S]*?aspect-ratio:auto;object-fit:fill/);
 });
+
+
+test("free roam and minigames keep the canvas in one full-height track when the campaign HUD is hidden", async () => {
+  const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+  const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
+  const rules = css.slice(css.lastIndexOf("/* Preserve one full-height canvas track"));
+
+  assert.match(rules, /\.game-panel:has\(> \.panel-head\.is-hidden\)\s*\{[^}]*grid-template-rows:minmax\(0,1fr\)/s);
+  assert.match(rules, /\.game-panel:has\(> \.panel-head\.is-hidden\) > \.canvas-wrap\s*\{[^}]*grid-row:1[^}]*height:100%[^}]*min-height:0/s);
+  assert.match(css, /\.canvas-wrap \.hud-strip\s*\{[^}]*position:absolute[^}]*inset:auto 0 0/s);
+  assert.match(main, /operationHeader\?\.classList\.toggle\("is-hidden", freeRoamMode\)/);
+  assert.match(main, /operationHeader\?\.classList\.add\("is-hidden"\);\s*campaignBriefHeader\?\.classList\.add\("is-hidden"\);\s*emptyStomach\.open\(\)/);
+  assert.match(main, /operationHeader\?\.classList\.add\("is-hidden"\);\s*campaignBriefHeader\?\.classList\.add\("is-hidden"\);\s*timeAttack\.open\(\)/);
+  assert.match(main, /operationHeader\?\.classList\.add\("is-hidden"\);\s*campaignBriefHeader\?\.classList\.add\("is-hidden"\);\s*survival\.open\(\)/);
+});

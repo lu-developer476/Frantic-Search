@@ -3250,3 +3250,13 @@ body:has(#survival-panel.active:not(.playing)) .canvas-wrap {
   max-height:100%;
   object-fit:contain;
 }
+
+/* Preserve one full-height canvas track whenever the campaign HUD is hidden. */
+.game-panel:has(> .panel-head.is-hidden) {
+  grid-template-rows:minmax(0,1fr);
+}
+.game-panel:has(> .panel-head.is-hidden) > .canvas-wrap {
+  grid-row:1;
+  height:100%;
+  min-height:0;
+}
