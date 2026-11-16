@@ -3260,3 +3260,12 @@ body:has(#survival-panel.active:not(.playing)) .canvas-wrap {
   height:100%;
   min-height:0;
 }
+
+
+/* Campaign prologue character choice and combat tutorial */
+.dino-dialog .dialog-heading{margin:0 0 18px}
+.dino-dialog .dialog-heading .dialog-kicker{display:block;margin:0 0 8px}
+.dino-dialog .dialog-heading h2{margin:0;color:#f0f3e8;font-family:var(--font-condensed);font-size:clamp(28px,4vw,42px);line-height:.95}
+.dino-modal.prologue-selection #cancel-character{display:none!important}
+.dino-modal.prologue-selection .dialog-actions{justify-content:flex-end}
+.dino-modal.prologue-selection .dialog-confirm{min-width:170px}

@@ -1,22 +1,21 @@
 const PROLOGUE_DURATIONS = Object.freeze({
   rest: 4.2,
   capture: 5.4,
-  search: 6.2,
-  fight: 8.4,
-  advance: 5.4
+  search: 8.3,
+  advance: 13.75
 });
 
 const DIALOGUE_TO_SEQUENCE = Object.freeze({
   "capture-dialog": "search",
-  "tracks-dialog": "fight",
+  "tracks-dialog": "character-select",
   "alliance-dialog": "advance"
 });
 
 export const PROLOGUE_MILESTONES = Object.freeze({
-  capture: 1000,
-  encounter: 1200,
-  fightEnd: 1500,
-  levelOne: 1800
+  capture: 2000,
+  encounter: 2500,
+  fightEnd: 2800,
+  levelOne: 5000
 });
 
 export const PROLOGUE_VENATOSAURUS_KINDS = Object.freeze([
@@ -43,11 +42,14 @@ export class CampaignPrologue {
     this.elapsed = 0;
     this.violetaActor = null;
     this.vastiActor = null;
+    this.companionActor = null;
     this.venatosauruses = [];
     this.hunters = [];
     this.rosaCaptured = false;
     this.tracksFound = false;
     this.predatorsDefeated = false;
+    this.selectedCharacter = null;
+    this.tutorial = null;
     this.strikeShown = false;
     this.soundCueTimer = 0;
   }
@@ -57,18 +59,11 @@ export class CampaignPrologue {
     return duration ? Math.max(0, Math.min(1, this.elapsed / duration)) : 0;
   }
 
-  canInteract(player, radius = 52) {
+  captureAtMilestone(player) {
     if (!this.active || this.phase !== "explore" || !player ||
-        !Number.isFinite(player.x) || !Number.isFinite(player.w) ||
-        !Number.isFinite(radius) || radius < 0) return false;
-    const playerCenter = player.x + player.w / 2;
-    return Math.abs(playerCenter - this.captureX) <= radius;
-  }
+        !Number.isFinite(player.x) || !Number.isFinite(player.w)) return false;
+    if (player.x + player.w / 2 < this.captureX) return false;
 
-  interactWithJeep(player) {
-    if (!this.canInteract(player)) return false;
-    // Anchor the capture to the exact 1,000 m milestone, not to the edge of
-    // the interaction radius. The player is physically aligned with the jeep.
     player.x = this.captureX - player.w / 2;
     player.vx = 0;
     this.phase = "capture";
@@ -99,9 +94,7 @@ export class CampaignPrologue {
       return "advance";
     }
 
-    this.phase = completedPhase === "capture" ? "capture-dialog"
-      : completedPhase === "search" ? "tracks-dialog"
-        : completedPhase === "fight" ? "alliance-dialog" : "complete";
+    this.phase = completedPhase === "capture" ? "capture-dialog" : "tracks-dialog";
     this.elapsed = 0;
     return completedPhase;
   }
@@ -112,5 +105,24 @@ export class CampaignPrologue {
     this.phase = nextPhase;
     this.elapsed = 0;
     return nextPhase;
+  }
+
+  beginFight(character) {
+    if (!this.active || this.phase !== "character-select" ||
+        !["blue", "vasti"].includes(character)) return false;
+    this.selectedCharacter = character;
+    this.phase = "fight";
+    this.elapsed = 0;
+    return true;
+  }
+
+  completeFight(worldDistance, predatorsDefeated, tutorialComplete) {
+    if (!this.active || this.phase !== "fight" ||
+        !Number.isFinite(worldDistance) || worldDistance < PROLOGUE_MILESTONES.fightEnd ||
+        !predatorsDefeated || !tutorialComplete) return false;
+    this.predatorsDefeated = true;
+    this.phase = "alliance-dialog";
+    this.elapsed = 0;
+    return true;
   }
 }

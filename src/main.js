@@ -149,12 +149,14 @@ const dinoModal = document.querySelector("#dino-modal");
 const characterConfirmation = document.querySelector("#character-confirmation");
 const confirmationTitle = document.querySelector("#character-confirmation-title");
 const confirmCharacterButton = document.querySelector("#confirm-character");
+const cancelCharacterButton = document.querySelector("#cancel-character");
 const playCharacterButton = document.querySelector("#play-character");
 const backCharacterConfirmationButton = document.querySelector("#back-character-confirmation");
 let selectionReturn = "start";
 let activeStartMenuPage = "home";
 let selectionMenuPage = "home";
 let pendingGameMode = "campaign";
+let prologueCharacterSelectionPending = false;
 const menuToggle = document.querySelector("#menu-toggle");
 const navMenu = document.querySelector("#nav-menu");
 const soundIcon = document.querySelector("#sound-icon");
@@ -1147,17 +1149,20 @@ function updateStegoceratopsHud() {
 }
 
 function updatePlayerAbilityHud() {
+  const controlledCharacter = player.character;
   if (abilityLabel) {
     const ready = player.abilityCooldown <= 0;
-    const readyText = selected === "vasti" ? ui("stompReady") : ui("dashReady");
+    const readyText = controlledCharacter === "vasti" ? ui("stompReady") : ui("dashReady");
     abilityLabel.textContent = ready ? readyText : ui("cooldown") + " " + player.abilityCooldown.toFixed(1) + "s";
     abilityLabel.classList.toggle("ready", ready);
   }
   if (controlsLabel) {
     const base = ui("controls");
-    const action = selected === "vasti"
+    const action = controlledCharacter === "vasti"
       ? (locale === "es" ? "X: PISOTÓN" : "X: STOMP")
-      : (locale === "es" ? "X: EMBESTIR" : "X: DASH");
+      : controlledCharacter === "rosa"
+        ? (locale === "es" ? "X: ZARPAZO" : "X: POUNCE")
+        : (locale === "es" ? "X: EMBESTIR" : "X: DASH");
     controlsLabel.textContent = base.replace(locale === "es" ? "X: EMBESTIR" : "X: DASH", action);
   }
 }
@@ -1275,8 +1280,7 @@ function updatePrologueDistance(worldX) {
 }
 
 function beginCampaignPrologue() {
-  // The origin is Violeta's standing position, so every milestone is
-  // measured from the place where Rosa leaves her mother.
+  // Rosa starts at 0 m beside Violeta; the counter measures from their clearing.
   const prologue = new CampaignPrologue({ startX: GAME.playerX + 74 });
   campaignPrologue = prologue;
   campaign.chapter = "FOREST CLEARING";
@@ -1284,7 +1288,7 @@ function beginCampaignPrologue() {
   distance = 0;
 
   player.setCharacter("rosa");
-  player.x = prologue.startX + 40;
+  player.x = prologue.startX - player.w / 2;
   player.y = GAME.groundY - player.h;
   player.vx = 0;
   player.vy = 0;
@@ -1293,14 +1297,15 @@ function beginCampaignPrologue() {
   player.state = "resting";
   player.motionSpeed = 0;
 
-  prologue.violetaActor = new Player("blue", prologue.startX - 32, GAME.groundY);
-  prologue.violetaActor.x = prologue.startX - 32;
+  prologue.violetaActor = new Player("blue", prologue.startX - 70 - 32, GAME.groundY);
+  prologue.violetaActor.x = prologue.startX - 70 - prologue.violetaActor.w / 2;
   prologue.violetaActor.y = GAME.groundY - prologue.violetaActor.h + 5;
   prologue.violetaActor.state = "resting";
   prologue.violetaActor.motionSpeed = 0;
   player.animationState = null;
   campaign.beginPrologue();
 
+  // Hunters remain off-screen until the jeep ambush starts at 2,000 m.
   prologue.hunters = [
     {
       id: "prologue-poacher-left", x: prologue.jeepX - 190, y: GAME.groundY - 68,
@@ -1327,46 +1332,32 @@ function beginCampaignPrologue() {
   cameraX = 0;
   if (interactionHintLabel) interactionHintLabel.textContent = "";
   updateCampaignHud();
+  updatePlayerAbilityHud();
   updatePrologueDistance(prologue.startX);
 }
 
 function beginPrologueSearch() {
   const prologue = campaignPrologue;
   if (!prologue?.active) return;
-  const actor = prologue.violetaActor;
-  actor.x = prologue.startX - actor.w / 2;
-  actor.y = GAME.groundY - actor.h;
-  actor.state = "running";
-  actor.motionSpeed = 225;
-  actor.facing = 1;
-  actor.animationState = null;
-  prologue.searchStartX = prologue.startX;
-  campaign.chapter = "FOREST TRAIL";
-  campaign.objective = "FOLLOW ROSA'S TRAIL";
-  cameraX = 0;
-  updateCampaignHud();
-  audio.collect();
-}
 
-function beginPrologueFight() {
-  const prologue = campaignPrologue;
-  if (!prologue?.active) return;
-  const actor = prologue.violetaActor;
-  actor.x = prologue.encounterX - actor.w / 2;
-  actor.y = GAME.groundY - actor.h;
-  actor.state = "running";
-  actor.motionSpeed = 210;
-  actor.facing = 1;
-  actor.animationState = null;
+  const violeta = prologue.violetaActor;
+  violeta.x = prologue.captureX - violeta.w / 2;
+  violeta.y = GAME.groundY - violeta.h;
+  violeta.state = "running";
+  violeta.motionSpeed = 190;
+  violeta.facing = 1;
+  violeta.animationState = null;
+  prologue.searchStartX = prologue.captureX;
 
-  prologue.vastiActor = new Player("vasti", prologue.encounterX + 130 - 41, GAME.groundY);
-  prologue.vastiActor.x = prologue.encounterX + 130 - prologue.vastiActor.w / 2;
+  // Vasti and both predators are visible ahead while Violeta closes the gap.
+  prologue.vastiActor = new Player("vasti", prologue.encounterX + 105, GAME.groundY);
+  prologue.vastiActor.x = prologue.encounterX + 105 - prologue.vastiActor.w / 2;
   prologue.vastiActor.y = GAME.groundY - prologue.vastiActor.h;
   prologue.vastiActor.facing = -1;
   prologue.vastiActor.state = "attack";
   prologue.vastiActor.animationState = "stomp";
 
-  const predatorOffsets = [65, 250];
+  const predatorOffsets = [115, 275];
   prologue.venatosauruses = PROLOGUE_VENATOSAURUS_KINDS.map((kind, index) => {
     const x = prologue.encounterX + predatorOffsets[index] - 56;
     const enemy = new WildDinosaur({
@@ -1376,50 +1367,125 @@ function beginPrologueFight() {
       groundY: GAME.groundY,
       patrolStart: x - 80,
       patrolEnd: x + 200,
-      direction: index === 0 ? 1 : -1
+      direction: index === 0 ? -1 : 1
     });
     enemy.state = "attack";
-    enemy.stateTimer = 0.8;
+    enemy.stateTimer = 0.8 + index * 0.2;
     return enemy;
   });
 
+  campaign.chapter = "FOREST TRAIL";
+  campaign.objective = "FOLLOW ROSA'S TRAIL";
+  cameraX = Math.max(0, prologue.captureX - 360);
+  updateCampaignHud();
+  audio.collect();
+}
+
+function beginPrologueFight() {
+  const prologue = campaignPrologue;
+  if (!prologue?.active || !prologue.beginFight(selected)) return;
+
+  // The selection changes the player actor; the other protagonist becomes
+  // an autonomous partner for the remainder of the campaign.
+  player.setCharacter(selected);
+  player.x = prologue.encounterX - player.w / 2;
+  player.y = GAME.groundY - player.h;
+  player.vx = 0;
+  player.vy = 0;
+  player.onGround = true;
+  player.facing = 1;
+  player.state = "running";
+  player.motionSpeed = 0;
+  player.animationState = null;
+  player.health = Math.max(1, Math.min(player.maxHealth, player.health));
+  player.maxSpeed = Math.min(player.maxSpeed, 190);
+
+  const companionCharacter = selected === "blue" ? "vasti" : "blue";
+  const companion = new AutonomousCompanion(
+    companionCharacter,
+    prologue.encounterX - 120,
+    GAME.groundY,
+    0
+  );
+  companion.actor.x = prologue.encounterX - 120 - companion.actor.w / 2;
+  companion.actor.y = GAME.groundY - companion.actor.h;
+  companion.actor.facing = 1;
+  autonomousCompanions = [companion];
+
+  prologue.companionActor = companion.actor;
+  prologue.violetaActor = selected === "blue" ? player : companion.actor;
+  prologue.vastiActor = selected === "vasti" ? player : companion.actor;
+  prologue.fightStartX = prologue.encounterX;
   prologue.predatorsDefeated = false;
   prologue.strikeShown = false;
+  prologue.tutorial = {
+    moved: false,
+    jumped: false,
+    abilityUsed: false,
+    startCenter: prologue.encounterX
+  };
+
+  prologue.venatosauruses.forEach((enemy, index) => {
+    enemy.health = 3;
+    enemy.maxHealth = 3;
+    enemy.defeated = false;
+    enemy.state = "attack";
+    enemy.stateTimer = 0;
+    enemy.attackCooldown = 0.4 + index * 0.25;
+  });
+
+  dashHitIds = new Set();
+  prologueCharacterSelectionPending = false;
+  dinoModal.classList.remove("prologue-selection");
+  dinoModal.classList.add("hidden");
+  cancelCharacterButton.hidden = false;
+  characterConfirmation.classList.add("hidden");
+  music.setDucked(false);
   campaign.chapter = "ROCKY OPENING";
   campaign.objective = "HELP VASTI";
   cameraX = Math.max(0, prologue.encounterX - 360);
   updateCampaignHud();
+  updatePlayerHealthHud();
+  updatePlayerAbilityHud();
   audio.bossWarning();
 }
 
 function beginPrologueAdvance() {
   const prologue = campaignPrologue;
   if (!prologue?.active || !prologue.predatorsDefeated) return;
-  const actor = prologue.violetaActor;
-  const vasti = prologue.vastiActor;
 
-  actor.x = prologue.fightEndX - actor.w / 2;
-  actor.y = GAME.groundY - actor.h;
-  actor.state = "running";
-  actor.motionSpeed = 165;
-  actor.facing = 1;
-  actor.animationState = null;
+  player.x = prologue.fightEndX - player.w / 2;
+  player.y = GAME.groundY - player.h;
+  player.vx = 0;
+  player.vy = 0;
+  player.onGround = true;
+  player.facing = 1;
+  player.state = "running";
+  player.motionSpeed = 170;
+  player.animationState = null;
 
-  vasti.x = prologue.fightEndX + 80 - vasti.w / 2;
-  vasti.y = GAME.groundY - vasti.h;
-  vasti.state = "running";
-  vasti.motionSpeed = 165;
-  vasti.facing = 1;
-  vasti.animationState = null;
+  for (const companion of autonomousCompanions) {
+    companion.actor.x = prologue.fightEndX - 120 - companion.actor.w / 2;
+    companion.actor.y = GAME.groundY - companion.actor.h;
+    companion.actor.vx = 0;
+    companion.actor.vy = 0;
+    companion.actor.onGround = true;
+    companion.actor.facing = 1;
+    companion.actor.state = "running";
+    companion.actor.motionSpeed = 170;
+    companion.actor.animationState = null;
+  }
 
   campaign.chapter = "FOREST ROUTE";
   campaign.objective = "REACH THE COASTAL HIGHWAY";
   cameraX = Math.max(0, prologue.fightEndX - 360);
   updateCampaignHud();
 }
+
 function finishCampaignPrologue() {
   if (!campaignPrologue || campaignPrologue.phase !== "complete") return;
   campaignPrologue = null;
+  prologueCharacterSelectionPending = false;
   resetPlayer();
   campaign.begin();
   levelStartSnapshot = captureRestartSnapshot(0, 0);
@@ -1437,15 +1503,141 @@ function finishCampaignPrologue() {
   render();
 }
 
+function damageProloguePredator(enemy, amount = 1) {
+  if (!enemy || enemy.defeated) return false;
+  const result = enemy.takeDamage(amount);
+  if (!result.hit) return false;
+  audio.hit();
+  burst(
+    enemy.x + enemy.w / 2,
+    enemy.y + enemy.h * 0.55,
+    result.defeated ? "#9bd48a" : "#e8a77d",
+    result.defeated ? 22 : 10
+  );
+  return true;
+}
+
+function applyPrologueShockwave(originX, originY, radius, amount) {
+  const prologue = campaignPrologue;
+  if (!prologue) return;
+  for (const enemy of prologue.venatosauruses) {
+    if (enemy.defeated) continue;
+    const dx = Math.abs(enemy.x + enemy.w / 2 - originX);
+    const dy = Math.abs(enemy.y + enemy.h - originY);
+    if (dx <= radius && dy <= 112) damageProloguePredator(enemy, amount);
+  }
+}
+
+function updatePrologueFight(delta) {
+  const prologue = campaignPrologue;
+  if (!prologue || prologue.phase !== "fight") return;
+
+  player.update(delta, input);
+  if (player.consumeJumpEvent()) {
+    audio.jump();
+    prologue.tutorial.jumped = true;
+  }
+  const abilityEvent = player.consumeAbilityEvent();
+  if (abilityEvent) {
+    prologue.tutorial.abilityUsed = true;
+    if (abilityEvent === "dash" || abilityEvent === "stomp") audio.collect();
+    else if (abilityEvent === "slam") audio.hit();
+  }
+
+  const physicsResult = physics.step(player, delta, world.platformsNear(player.x));
+  if (physicsResult.fell) {
+    endGame();
+    return;
+  }
+
+  const minimumX = prologue.fightStartX - player.w / 2;
+  const maximumX = prologue.fightEndX - player.w / 2;
+  player.x = Math.max(minimumX, Math.min(maximumX, player.x));
+  const playerCenter = player.x + player.w / 2;
+  if (Math.abs(playerCenter - prologue.tutorial.startCenter) >= 40) {
+    prologue.tutorial.moved = true;
+  }
+
+  if (player.dashTimer > 0) {
+    for (const enemy of prologue.venatosauruses) {
+      if (!enemy.defeated && !dashHitIds.has(enemy.id) && CollisionSystem.bodyHit(player, enemy)) {
+        damageProloguePredator(enemy, 1);
+        dashHitIds.add(enemy.id);
+      }
+    }
+  } else {
+    dashHitIds.clear();
+  }
+
+  if (player.consumeShockwave()) {
+    applyPrologueShockwave(player.x + player.w / 2, player.y + player.h, 190, 2);
+  }
+
+  for (const companion of autonomousCompanions) {
+    const event = companion.update(
+      delta,
+      player,
+      world,
+      physics,
+      prologue.venatosauruses
+    );
+    if (event?.type === "companion-strike" && !event.hunter.defeated) {
+      damageProloguePredator(event.hunter, 1);
+    } else if (event?.type === "companion-shockwave") {
+      applyPrologueShockwave(event.x, event.y, event.radius, 1);
+    }
+  }
+
+  const targets = [
+    { target: player, kind: "protagonist" },
+    ...autonomousCompanions.map((companion) => ({
+      target: companion.actor,
+      kind: "protagonist"
+    }))
+  ];
+  for (const enemy of prologue.venatosauruses) {
+    if (enemy.defeated) continue;
+    const event = enemy.update(delta, targets);
+    if (event?.type === "attack") {
+      if (event.target === player) {
+        damagePlayer();
+        if (!running || player.health <= 0) return;
+      } else if (event.target && autonomousCompanions.some(
+        (companion) => companion.actor === event.target
+      )) {
+        damageCompanion(event.target);
+      }
+    }
+  }
+
+  prologue.predatorsDefeated = prologue.venatosauruses.every((enemy) => enemy.defeated);
+  updatePrologueDistance(playerCenter);
+  cameraX = Math.max(0, playerCenter - 360);
+  updatePlayerHealthHud();
+  updatePlayerAbilityHud();
+
+  const tutorialComplete = prologue.tutorial.moved &&
+    prologue.tutorial.jumped && prologue.tutorial.abilityUsed;
+  if (prologue.completeFight(distance, prologue.predatorsDefeated, tutorialComplete)) {
+    campaign.chapter = "FOREST ROUTE";
+    campaign.objective = "REACH THE COASTAL HIGHWAY";
+    campaign.queueScene("prologue-alliance", "AN UNEXPECTED ALLY", [
+      "The fight carries across the rocky clearing. Violeta and Vasti work together against the Venatosaurus impavidus and Venatosaurus saevidicus, using their different strengths to keep the predators at bay.",
+      "At 2,800 meters, both predators are defeated. Vasti agrees to help Violeta follow the poachers' trail and bring Rosa home."
+    ]);
+    updateCampaignHud();
+    renderStoryPanel();
+  }
+}
+
 function updateCampaignPrologue(delta) {
   const prologue = campaignPrologue;
-  if (!prologue?.active) return;
+  if (!prologue?.active || prologueCharacterSelectionPending) return;
   elapsed += delta;
 
   if (prologue.phase === "rest") {
     const event = prologue.update(delta);
     if (event === "rest") {
-      // Start Rosa's wake-up animation at the exact moment the alert appears.
       prologue.rosaAnimationStartedAt = elapsed;
       prologue.soundCueTimer = 3.2;
       campaign.objective = "INVESTIGATE THE NOISE";
@@ -1473,23 +1665,25 @@ function updateCampaignPrologue(delta) {
       Math.min(prologue.captureX + player.w / 2, player.x)
     );
     player.vx = Math.max(-player.maxSpeed, Math.min(player.maxSpeed, player.vx));
-    cameraX = Math.max(0, player.x - 330);
-    updatePrologueDistance(player.x + player.w / 2);
+    const playerCenter = player.x + player.w / 2;
+    cameraX = Math.max(0, playerCenter - 330);
+    updatePrologueDistance(playerCenter);
 
-    if (input.consume("interact") && prologue.interactWithJeep(player)) {
-      updatePrologueDistance(prologue.captureX);
+    // Crossing 2,000 m starts the jeep cinematic automatically.
+    if (prologue.captureAtMilestone(player)) {
       player.animationState = "impact";
       player.animationTimer = 0.4;
+      player.state = "stunned";
       cameraX = Math.max(0, prologue.jeepX - 330);
+      updatePrologueDistance(prologue.captureX);
       audio.hit();
     }
-    if (interactionHintLabel) interactionHintLabel.textContent = prologue.canInteract(player) ? ui("jeepInteract") : "";
+    if (interactionHintLabel) interactionHintLabel.textContent = "";
     return;
   }
 
-  const phase = prologue.phase;
-  const progress = prologue.progress;
-  if (phase === "capture") {
+  if (prologue.phase === "capture") {
+    const progress = prologue.progress;
     const center = prologue.captureX;
     prologue.hunters[0].x = prologue.jeepX - 190 + progress * 170;
     prologue.hunters[1].x = prologue.jeepX + 210 - progress * 138;
@@ -1497,7 +1691,7 @@ function updateCampaignPrologue(delta) {
       hunter.state = progress > 0.25 ? "investigate" : "patrol";
       hunter.direction = hunter.x < center ? 1 : -1;
     });
-    player.x = prologue.jeepX + 12 + Math.min(42, progress * 64);
+    player.x = prologue.captureX - player.w / 2;
     player.facing = -1;
     player.vx = 0;
     player.animationState = progress < 0.64 ? "impact" : null;
@@ -1507,109 +1701,104 @@ function updateCampaignPrologue(delta) {
       prologue.violetaActor.state = "stunned";
     }
     if (progress > 0.72) prologue.rosaCaptured = true;
-    prologue.violetaActor.x = prologue.startX - 32 + Math.max(0, progress - 0.68) * 74;
+    prologue.violetaActor.x = prologue.startX - 70 - prologue.violetaActor.w / 2 +
+      Math.max(0, progress - 0.68) * 74;
     prologue.violetaActor.motionSpeed = progress > 0.68 ? 90 : 0;
     prologue.jeepVisualX = prologue.jeepX + Math.max(0, progress - 0.7) * 250;
     cameraX = Math.max(0, prologue.jeepVisualX - 330);
-    updatePrologueDistance(prologue.captureX);
-  } else if (phase === "search") {
-    const actor = prologue.violetaActor;
-    const center = prologue.searchStartX + (prologue.trackX - prologue.searchStartX) * progress;
-    actor.state = "running";
-    actor.animationState = null;
-    actor.motionSpeed = 225;
-    actor.x = center - actor.w / 2;
-    actor.facing = 1;
-    cameraX = Math.max(0, center - 360);
-    updatePrologueDistance(center);
-    if (progress >= 0.72) prologue.tracksFound = true;
-  } else if (phase === "fight") {
-    const actor = prologue.violetaActor;
-    const vasti = prologue.vastiActor;
-    const travel = (prologue.fightEndX - prologue.encounterX) * progress;
-    const leaderCenter = prologue.encounterX + travel;
-    actor.state = "running";
-    actor.motionSpeed = 210;
-    actor.x = leaderCenter - actor.w / 2;
-    actor.facing = 1;
-    actor.animationState = progress >= 0.56 && progress <= 0.88 ? "attack" : null;
-
-    vasti.state = progress < 0.92 ? "attack" : "recovering";
-    vasti.animationState = progress < 0.34 ? "stomp" : progress < 0.92 ? "attack" : "recovery";
-    vasti.motionSpeed = 0;
-    vasti.x = leaderCenter + 130 - vasti.w / 2;
-
-    const predatorOffsets = [65, 250];
-    prologue.venatosauruses.forEach((enemy, index) => {
-      enemy.x = leaderCenter + predatorOffsets[index] - enemy.w / 2;
-      enemy.direction = index === 0 ? 1 : -1;
-      enemy.motionSpeed = index === 0 ? 42 : -42;
-      enemy.state = progress < 0.72 ? "attack" : progress < 0.92 ? "stunned" : "defeated";
-    });
-
-    if (progress >= 0.92 && !prologue.predatorsDefeated) {
-      prologue.predatorsDefeated = true;
-      for (const enemy of prologue.venatosauruses) {
-        enemy.takeDamage(999);
-        burst(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, "#d8f36a", 18);
-      }
-      audio.hit();
+    const event = prologue.update(delta);
+    if (event === "capture") {
+      prologue.violetaActor.state = "alert";
+      prologue.violetaActor.animationState = null;
+      campaign.objective = "FOLLOW ROSA'S TRAIL";
+      campaign.queueScene("prologue-capture", "THE NOISE IN THE WOODS", [
+        "At 2,000 meters, Rosa reaches a narrow service track and spots a lone poachers' jeep. No hunters are visible; the vehicle appears abandoned.",
+        "As she approaches, two hunters burst from cover and cut off her way home. Rosa struggles, but they force her into the jeep and speed away. Violeta wakes to the engine and follows the tracks."
+      ]);
+      updateCampaignHud();
+      renderStoryPanel();
     }
-    if (progress >= 0.56 && !prologue.strikeShown) {
-      prologue.strikeShown = true;
-      audio.collect();
-      burst(vasti.x + vasti.w / 2, vasti.y + vasti.h / 2, "#8ed8c0", 15);
-    }
-    cameraX = Math.max(0, leaderCenter - 360);
-    updatePrologueDistance(leaderCenter);
-  } else if (phase === "advance") {
-    const actor = prologue.violetaActor;
-    const vasti = prologue.vastiActor;
-    const travel = (prologue.levelOneX - prologue.fightEndX) * progress;
-    const leaderCenter = prologue.fightEndX + travel;
-    actor.state = "running";
-    actor.motionSpeed = 165;
-    actor.animationState = null;
-    actor.x = leaderCenter - actor.w / 2;
-    actor.facing = 1;
-    vasti.state = "running";
-    vasti.motionSpeed = 165;
-    vasti.animationState = null;
-    vasti.x = leaderCenter + 80 - vasti.w / 2;
-    vasti.facing = 1;
-    cameraX = Math.max(0, leaderCenter - 360);
-    updatePrologueDistance(leaderCenter);
-  }
-
-  const event = prologue.update(delta);
-  if (event === "capture") {
-    prologue.violetaActor.state = "alert";
-    prologue.violetaActor.animationState = null;
-    campaign.objective = "FOLLOW ROSA'S TRAIL";
-    campaign.queueScene("prologue-capture", "THE NOISE IN THE WOODS", [
-      "After crossing a full kilometer from the clearing, Rosa reaches a narrow service track and spots a lone poachers' jeep. No hunters are visible; the vehicle appears abandoned.",
-      "As she approaches, two hunters burst from cover and cut off her way home. Rosa struggles, but they force her into the jeep and speed away. Violeta wakes to the engine and sees the vehicle disappear through the trees."
-    ]);
-    updateCampaignHud();
-    renderStoryPanel();
-  } else if (event === "search") {
-    campaign.queueScene("prologue-tracks", "THE TRAIL", [
-      "Violeta wakes to an empty clearing and follows the signs Rosa left behind: snapped branches, flattened ferns and fresh tire marks. She keeps to the trail instead of guessing where the poachers went.",
-      "At 1,200 meters from the clearing, the tracks lead to a rocky opening. A struggle is already underway there; the sound of heavy impacts comes from just beyond the trees."
-    ]);
-    renderStoryPanel();
-  } else if (event === "fight") {
-    campaign.queueScene("prologue-alliance", "AN UNEXPECTED ALLY", [
-      "At the 1,200-meter mark, Violeta finds Vasti fighting two Venatosaurus: one Venatosaurus impavidus and one Venatosaurus saevidicus. She joins him, and the three dinosaurs move through another 300 meters of forest while the fight continues.",
-      "At 1,500 meters, both predators are defeated. Violeta explains that poachers have taken Rosa; Vasti agrees to help her follow the convoy and bring the young raptor home."
-    ]);
-    renderStoryPanel();
-  } else if (event === "advance") {
-    finishCampaignPrologue();
+    if (interactionHintLabel) interactionHintLabel.textContent = "";
     return;
   }
 
-  if (interactionHintLabel) interactionHintLabel.textContent = "";
+  if (prologue.phase === "search") {
+    const progress = prologue.progress;
+    const violeta = prologue.violetaActor;
+    const center = prologue.searchStartX +
+      (prologue.trackX - prologue.searchStartX) * progress;
+    violeta.state = "running";
+    violeta.animationState = null;
+    violeta.motionSpeed = 190;
+    violeta.x = center - violeta.w / 2;
+    violeta.facing = 1;
+
+    if (prologue.vastiActor) {
+      prologue.vastiActor.state = "attack";
+      prologue.vastiActor.animationState = progress < 0.55 ? "stomp" : "attack";
+      prologue.vastiActor.facing = -1;
+    }
+    prologue.venatosauruses.forEach((enemy, index) => {
+      enemy.state = "attack";
+      enemy.direction = index === 0 ? -1 : 1;
+      enemy.x = prologue.encounterX + (index === 0 ? 115 : 275) - enemy.w / 2;
+      enemy.motionSpeed = index === 0 ? -52 : 52;
+    });
+
+    cameraX = Math.max(0, center - 360);
+    updatePrologueDistance(center);
+    if (progress >= 0.7) prologue.tracksFound = true;
+
+    const event = prologue.update(delta);
+    if (event === "search") {
+      campaign.chapter = "ROCKY OPENING";
+      campaign.objective = "CHOOSE YOUR DINOSAUR";
+      campaign.queueScene("prologue-tracks", "A FIGHT IN THE UNDERGROWTH", [
+        "Violeta follows Rosa's tracks for 500 meters and reaches a rocky opening. Vasti is already fighting two predators: a Venatosaurus impavidus and a Venatosaurus saevidicus.",
+        "The two animals attack from different angles. Violeta closes in to help Vasti, and the struggle spreads across the clearing."
+      ]);
+      updateCampaignHud();
+      renderStoryPanel();
+    }
+    return;
+  }
+
+  if (prologue.phase === "fight") {
+    updatePrologueFight(delta);
+    return;
+  }
+
+  if (prologue.phase === "advance") {
+    const progress = prologue.progress;
+    const leaderCenter = prologue.fightEndX +
+      (prologue.levelOneX - prologue.fightEndX) * progress;
+    player.x = leaderCenter - player.w / 2;
+    player.y = GAME.groundY - player.h;
+    player.vx = 170;
+    player.vy = 0;
+    player.onGround = true;
+    player.state = "running";
+    player.motionSpeed = 170;
+    player.facing = 1;
+    player.animationState = null;
+
+    for (const companion of autonomousCompanions) {
+      companion.actor.x = leaderCenter - 120 - companion.actor.w / 2;
+      companion.actor.y = GAME.groundY - companion.actor.h;
+      companion.actor.vx = 170;
+      companion.actor.vy = 0;
+      companion.actor.onGround = true;
+      companion.actor.state = "running";
+      companion.actor.motionSpeed = 170;
+      companion.actor.facing = 1;
+      companion.actor.animationState = null;
+    }
+
+    cameraX = Math.max(0, leaderCenter - 360);
+    updatePrologueDistance(leaderCenter);
+    const event = prologue.update(delta);
+    if (event === "advance") finishCampaignPrologue();
+  }
 }
 
 function drawPrologueJeep(x) {
@@ -1644,8 +1833,8 @@ function drawPrologueJeep(x) {
 }
 
 function drawPrologueTracks(prologue) {
-  if (!["search", "tracks-dialog", "fight", "alliance-dialog", "advance"].includes(prologue.phase)) return;
-  const start = prologue.startX + 18;
+  if (!["search", "tracks-dialog", "character-select", "fight", "alliance-dialog", "advance"].includes(prologue.phase)) return;
+  const start = prologue.captureX + 10;
   const end = prologue.trackX + 28;
   ctx.save();
   ctx.strokeStyle = "#332d26";
@@ -1674,7 +1863,11 @@ function drawCampaignPrologueActors() {
   if (!prologue?.active) return;
 
   if (["rest", "explore", "capture", "capture-dialog"].includes(prologue.phase)) {
-    drawPrologueJeep(prologue.jeepVisualX ?? prologue.jeepX);
+    // Keep the jeep completely out of view until Rosa reaches the 2,000 m
+    // milestone. The hunters are revealed later during the ambush animation.
+    if (["capture", "capture-dialog"].includes(prologue.phase)) {
+      drawPrologueJeep(prologue.jeepVisualX ?? prologue.jeepX);
+    }
     drawDino(
       prologue.violetaActor.x, prologue.violetaActor.y,
       prologue.violetaActor.w, prologue.violetaActor.h,
@@ -1691,18 +1884,34 @@ function drawCampaignPrologueActors() {
       ctx.font = "bold 22px monospace";
       ctx.fillText("!", player.x + 48, player.y - 12);
     }
-    if (prologue.phase === "capture" || prologue.phase === "capture-dialog") {
+    const ambushIsVisible = prologue.phase === "capture-dialog" ||
+      (prologue.phase === "capture" && prologue.progress >= 0.28);
+    if (ambushIsVisible) {
       prologue.hunters.forEach((hunter) => drawHunter(hunter));
     }
   }
 
   drawPrologueTracks(prologue);
-  if (["search", "tracks-dialog", "fight", "alliance-dialog", "advance"].includes(prologue.phase)) {
+  if (["search", "tracks-dialog", "character-select"].includes(prologue.phase)) {
     const actor = prologue.violetaActor;
     drawDino(actor.x, actor.y, actor.w, actor.h, "#75a99b", "blue", elapsed, 1, actor.facing, actor);
+    if (prologue.vastiActor) {
+      const vasti = prologue.vastiActor;
+      drawDino(vasti.x, vasti.y, vasti.w, vasti.h, "#68784e", "vasti", elapsed, 1, vasti.facing, vasti);
+    }
+    for (const enemy of prologue.venatosauruses) {
+      spriteRenderer.drawAnimated(
+        ctx, enemy.kind, enemy.x, enemy.y, enemy.w, enemy.h,
+        enemy, elapsed, { facing: enemy.direction, alpha: enemy.defeated ? 0.38 : 1 }
+      );
+      if (!enemy.defeated) drawReferenceHealthBar(enemy);
+    }
   }
+
   if (["fight", "alliance-dialog", "advance"].includes(prologue.phase)) {
+    const violeta = prologue.violetaActor;
     const vasti = prologue.vastiActor;
+    drawDino(violeta.x, violeta.y, violeta.w, violeta.h, "#75a99b", "blue", elapsed, 1, violeta.facing, violeta);
     drawDino(vasti.x, vasti.y, vasti.w, vasti.h, "#68784e", "vasti", elapsed, 1, vasti.facing, vasti);
     if (prologue.phase !== "advance") {
       for (const enemy of prologue.venatosauruses) {
@@ -1710,6 +1919,7 @@ function drawCampaignPrologueActors() {
           ctx, enemy.kind, enemy.x, enemy.y, enemy.w, enemy.h,
           enemy, elapsed, { facing: enemy.direction, alpha: enemy.defeated ? 0.38 : 1 }
         );
+        if (!enemy.defeated) drawReferenceHealthBar(enemy);
       }
     }
   }
@@ -1740,6 +1950,26 @@ function drawCampaignPrologueCaption() {
   ctx.fillText(ui(key), GAME.width / 2, 41);
   ctx.textAlign = "start";
   ctx.restore();
+
+  if (prologue.phase === "fight" && prologue.tutorial) {
+    const tutorial = prologue.tutorial;
+    const hint = !tutorial.moved ? ui("prologueTutorialMove")
+      : !tutorial.jumped ? ui("prologueTutorialJump")
+        : !tutorial.abilityUsed ? ui(selected === "vasti" ? "prologueTutorialStomp" : "prologueTutorialDash")
+          : ui("prologueTutorialDefeat");
+    ctx.save();
+    ctx.fillStyle = "#0d191be8";
+    ctx.fillRect(110, GAME.height - 58, GAME.width - 220, 34);
+    ctx.strokeStyle = "#d8f36a";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(110, GAME.height - 58, GAME.width - 220, 34);
+    ctx.fillStyle = "#edf3e5";
+    ctx.font = "bold 10px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText(hint, GAME.width / 2, GAME.height - 37);
+    ctx.textAlign = "start";
+    ctx.restore();
+  }
 }
 
 function renderStoryPanel({ syncAudio = true } = {}) {
@@ -1779,14 +2009,16 @@ function showCampaignEnding() {
 
 function advanceStory() {
   campaign.advanceScene();
+  let requestPrologueCharacterSelection = false;
   if (!campaign.sceneOpen && campaignPrologue?.active) {
     const nextPhase = campaignPrologue.continueAfterNarration();
     if (nextPhase === "search") beginPrologueSearch();
-    else if (nextPhase === "fight") beginPrologueFight();
+    else if (nextPhase === "character-select") requestPrologueCharacterSelection = true;
     else if (nextPhase === "advance") beginPrologueAdvance();
     else if (nextPhase === "complete") finishCampaignPrologue();
   }
   renderStoryPanel();
+  if (requestPrologueCharacterSelection) openPrologueCharacterSelection();
   if (!campaign.sceneOpen && campaign.flags.completed) {
     finalDeparture = true;
     finalDepartureDone = false;
@@ -2237,7 +2469,7 @@ function updateStegoceratops(delta) {
 }
 
 function update(delta) {
-  if (!running || paused || (!freeRoamMode && campaign.sceneOpen)) return;
+  if (!running || paused || prologueCharacterSelectionPending || (!freeRoamMode && campaign.sceneOpen)) return;
   if (campaignPrologue?.active) {
     updateCampaignPrologue(delta);
     return;
@@ -2633,11 +2865,13 @@ function render() {
   }
   ctx.globalAlpha = 1;
 
-  for (const companion of autonomousCompanions) {
-    const actor = companion.actor;
-    if (actor.x + actor.w < cameraX - 90 || actor.x > cameraX + GAME.width + 90) continue;
-    drawDino(actor.x, actor.y, actor.w, actor.h, "#75a99b", actor.character, elapsed + companion.slot * 0.21, 0.96, actor.facing, actor);
-    drawReferenceHealthBar(actor);
+  if (!campaignPrologue?.active) {
+    for (const companion of autonomousCompanions) {
+      const actor = companion.actor;
+      if (actor.x + actor.w < cameraX - 90 || actor.x > cameraX + GAME.width + 90) continue;
+      drawDino(actor.x, actor.y, actor.w, actor.h, "#75a99b", actor.character, elapsed + companion.slot * 0.21, 0.96, actor.facing, actor);
+      drawReferenceHealthBar(actor);
+    }
   }
   const blink = player.invulnerable > 0 && Math.floor(elapsed * 18) % 2 === 0;
   if (campaignPrologue?.active && ["rest", "explore", "capture", "capture-dialog"].includes(campaignPrologue.phase)) {
@@ -2963,6 +3197,8 @@ function resetPlayer(worldSeed = undefined) {
   pickupCueMessage = "";
   campaign = new CampaignManager();
   campaignPrologue = null;
+  prologueCharacterSelectionPending = false;
+  dinoModal?.classList.remove("prologue-selection");
   beta = null;
   facilityConsoles = [];
   extractionX = null;
@@ -3012,6 +3248,9 @@ function start(mode = "campaign") {
   cancelScheduledFrame();
   audio.unlock();
   startScreen.classList.add("hidden");
+  prologueCharacterSelectionPending = false;
+  dinoModal.classList.remove("prologue-selection");
+  cancelCharacterButton.hidden = false;
   dinoModal.classList.add("hidden");
   overlayActionButton.hidden = true;
   overlayContent.hidden = false;
@@ -3146,6 +3385,9 @@ function returnToMainMenu() {
   pauseConfirmation.classList.add("hidden");
   overlay.classList.remove("pause-mode");
   overlay.classList.add("hidden");
+  prologueCharacterSelectionPending = false;
+  dinoModal.classList.remove("prologue-selection");
+  cancelCharacterButton.hidden = false;
   dinoModal.classList.add("hidden");
   storyPanel.classList.add("hidden");
   startScreenMessage.textContent = "";
@@ -3376,10 +3618,28 @@ deleteCampaignConfirmation.addEventListener("keydown", (event) => {
   }
 });
 
+function openPrologueCharacterSelection() {
+  const prologue = campaignPrologue;
+  if (!prologue?.active || prologue.phase !== "character-select" || !desktopPlayback.matches) return;
+  prologueCharacterSelectionPending = true;
+  selectionReturn = "prologue";
+  pendingGameMode = "campaign";
+  characterConfirmation.classList.add("hidden");
+  dinoModal.classList.add("prologue-selection");
+  cancelCharacterButton.hidden = true;
+  selectCharacter(selected);
+  dinoModal.classList.remove("hidden");
+  music.setDucked(true);
+  document.querySelector(".character-card.active")?.focus();
+}
+
 function openDinoModal(returnTo = "start", gameMode = "campaign") {
   if (!desktopPlayback.matches || running || desktopBlocked) return;
   selectionReturn = returnTo;
   pendingGameMode = gameMode;
+  prologueCharacterSelectionPending = false;
+  dinoModal.classList.remove("prologue-selection");
+  cancelCharacterButton.hidden = false;
   selectionMenuPage = activeStartMenuPage;
   characterConfirmation.classList.add("hidden");
   if (returnTo === "start") startScreen.classList.add("hidden");
@@ -3389,6 +3649,9 @@ function openDinoModal(returnTo = "start", gameMode = "campaign") {
 }
 
 function closeDinoModal() {
+  if (prologueCharacterSelectionPending) return;
+  dinoModal.classList.remove("prologue-selection");
+  cancelCharacterButton.hidden = false;
   dinoModal.classList.add("hidden");
   characterConfirmation.classList.add("hidden");
   if (selectionReturn === "start") {
@@ -3402,6 +3665,10 @@ function closeDinoModal() {
 
 function openCharacterConfirmation() {
   if (dinoModal.classList.contains("hidden") || !desktopPlayback.matches) return;
+  if (prologueCharacterSelectionPending) {
+    beginPrologueFight();
+    return;
+  }
   updateCharacterConfirmationCopy();
   dinoModal.classList.add("hidden");
   characterConfirmation.classList.remove("hidden");
@@ -3573,7 +3840,8 @@ window.addEventListener("keydown", (event) => {
     return;
   }
   if (event.code === "Enter" && event.target instanceof Element && event.target.closest("button, a, input, select, textarea, [role='button']")) return;
-  if (event.code === "KeyP" && !event.repeat && !campaign.sceneOpen && pauseConfirmation.classList.contains("hidden")) togglePause();
+  if (event.code === "KeyP" && !event.repeat && !campaign.sceneOpen &&
+      !prologueCharacterSelectionPending && pauseConfirmation.classList.contains("hidden")) togglePause();
   if (event.code === "Enter" && !event.repeat && campaign.sceneOpen) advanceStory();
   else if (event.code === "Enter" && !event.repeat && !running && !paused && !desktopBlocked && dinoModal.classList.contains("hidden") && navMenu.classList.contains("hidden")) {
     if (!overlay.classList.contains("hidden")) openDinoModal("overlay", freeRoamMode ? "free-roam" : "campaign");

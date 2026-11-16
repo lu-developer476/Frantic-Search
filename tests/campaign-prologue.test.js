@@ -9,65 +9,77 @@ import {
 test("the prologue fixes the capture, encounter, battle-end and Level 1 milestones", () => {
   const prologue = new CampaignPrologue({ startX: 100 });
 
-  assert.equal(prologue.captureX - prologue.startX, 1000);
+  assert.equal(prologue.captureX - prologue.startX, 2000);
   assert.equal(prologue.jeepX + 78, prologue.captureX);
-  assert.equal(prologue.trackX - prologue.startX, 1200);
-  assert.equal(prologue.encounterX - prologue.startX, 1200);
-  assert.equal(prologue.fightEndX - prologue.startX, 1500);
-  assert.equal(prologue.levelOneX - prologue.startX, 1800);
+  assert.equal(prologue.trackX - prologue.startX, 2500);
+  assert.equal(prologue.encounterX - prologue.startX, 2500);
+  assert.equal(prologue.fightEndX - prologue.encounterX, 300);
+  assert.equal(prologue.fightEndX - prologue.startX, 2800);
+  assert.equal(prologue.levelOneX - prologue.startX, 5000);
   assert.deepEqual(PROLOGUE_MILESTONES, {
-    capture: 1000,
-    encounter: 1200,
-    fightEnd: 1500,
-    levelOne: 1800
+    capture: 2000,
+    encounter: 2500,
+    fightEnd: 2800,
+    levelOne: 5000
   });
 });
 
-test("Rosa rests beside Violeta, explores under player control and is captured at 1,000 m", () => {
+test("Rosa remains playable through 2,000 m, where the jeep cinematic starts automatically", () => {
   const prologue = new CampaignPrologue({ startX: 100 });
   assert.equal(prologue.phase, "rest");
-
-  const player = { x: prologue.captureX - 27, w: 54, vx: 20 };
-  assert.equal(prologue.canInteract(player), false);
   assert.equal(prologue.update(4.19), null);
   assert.equal(prologue.update(0.02), "rest");
   assert.equal(prologue.phase, "explore");
-  assert.equal(prologue.canInteract(player), true);
-  assert.equal(prologue.interactWithJeep(player), true);
+
+  const player = { x: prologue.captureX - 28, w: 54, vx: 80 };
+  assert.equal(prologue.captureAtMilestone(player), false);
+  player.x = prologue.captureX - player.w / 2 + 1;
+  assert.equal(prologue.captureAtMilestone(player), true);
   assert.equal(player.x + player.w / 2, prologue.captureX);
   assert.equal(player.vx, 0);
   assert.equal(prologue.phase, "capture");
 });
 
-test("Violeta follows the trail to 1,200 m, finds Vasti with both Venatosaurus species, then reaches 1,800 m", () => {
+test("Violeta follows the trail to 2,500 m, then the player must choose Violeta or Vasti", () => {
   const prologue = new CampaignPrologue({ startX: 145 });
   assert.equal(prologue.update(4.2), "rest");
+  const player = { x: prologue.captureX - 27, w: 54, vx: 0 };
+  player.x = prologue.captureX - player.w / 2;
+  assert.equal(prologue.captureAtMilestone(player), true);
 
-  const player = { x: prologue.captureX - 27, w: 54 };
-  assert.equal(prologue.interactWithJeep(player), true);
   assert.equal(prologue.update(5.4), "capture");
   assert.equal(prologue.phase, "capture-dialog");
   assert.equal(prologue.continueAfterNarration(), "search");
-
-  assert.equal(prologue.update(6.2), "search");
+  assert.equal(prologue.update(8.3), "search");
   assert.equal(prologue.phase, "tracks-dialog");
-  assert.equal(prologue.trackX - prologue.startX, 1200);
-  assert.equal(prologue.continueAfterNarration(), "fight");
-
-  assert.equal(prologue.update(8.4), "fight");
-  assert.equal(prologue.phase, "alliance-dialog");
-  assert.equal(prologue.fightEndX - prologue.encounterX, 300);
-  assert.equal(PROLOGUE_VENATOSAURUS_KINDS.length, 2);
+  assert.equal(prologue.trackX - prologue.startX, 2500);
   assert.deepEqual([...PROLOGUE_VENATOSAURUS_KINDS].sort(), [
     "venatosaurus-impavidus",
     "venatosaurus-saevidicus"
   ]);
-  assert.equal(prologue.continueAfterNarration(), "advance");
+  assert.equal(prologue.continueAfterNarration(), "character-select");
+  assert.equal(prologue.beginFight("rosa"), false);
+  assert.equal(prologue.beginFight("blue"), true);
+  assert.equal(prologue.selectedCharacter, "blue");
+  assert.equal(prologue.phase, "fight");
+});
 
-  assert.equal(prologue.update(5.4), "advance");
+test("the tutorial requires the full 300 m fight, both predators and all three control actions", () => {
+  const prologue = new CampaignPrologue({ startX: 145 });
+  prologue.phase = "character-select";
+  assert.equal(prologue.beginFight("vasti"), true);
+  assert.equal(prologue.fightEndX - prologue.encounterX, 300);
+  assert.equal(prologue.completeFight(2799, true, true), false);
+  assert.equal(prologue.completeFight(2800, false, true), false);
+  assert.equal(prologue.completeFight(2800, true, false), false);
+  assert.equal(prologue.completeFight(2800, true, true), true);
+  assert.equal(prologue.phase, "alliance-dialog");
+  assert.equal(prologue.continueAfterNarration(), "advance");
+  assert.equal(prologue.levelOneX - prologue.fightEndX, 2200);
+  assert.equal(prologue.update(13.74), null);
+  assert.equal(prologue.update(0.02), "advance");
   assert.equal(prologue.phase, "complete");
   assert.equal(prologue.active, false);
-  assert.equal(prologue.levelOneX - prologue.startX, 1800);
   assert.equal(prologue.update(1), null);
 });
 
