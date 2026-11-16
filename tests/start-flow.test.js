@@ -97,3 +97,17 @@ test("campaign actions are grouped under the campaign menu", async () => {
   assert.match(i18n, /newCampaign:\s*"NUEVA CAMPAÑA"/);
   assert.match(i18n, /newCampaign:\s*"NEW CAMPAIGN"/);
 });
+
+
+test("the title screen and menu previews use the canonical artwork filenames", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
+
+  assert.ok(html.includes("%BASE_URL%artwork/8bits-artwork.png"));
+  assert.ok(html.includes("https://franticsearch.vercel.app/artwork/8bits-artwork.png"));
+  assert.ok(main.includes("${import.meta.env.BASE_URL}artwork/8bits-artwork.png"));
+  assert.ok(main.includes("${import.meta.env.BASE_URL}artwork/coral-8bits-artwork.png"));
+  assert.ok(main.includes("${import.meta.env.BASE_URL}artwork/survival-artwork.png"));
+  assert.ok(main.includes("${import.meta.env.BASE_URL}artwork/free-roam-artwork.png"));
+  assert.ok(main.includes('activeStartMenuPage === "minigames"'));
+});

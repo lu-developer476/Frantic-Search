@@ -86,13 +86,14 @@ const timeAttackPanel = document.querySelector("#time-attack-panel");
 const survivalButton = document.querySelector("#survival-button");
 const survivalPanel = document.querySelector("#survival-panel");
 const startScreenArtwork = document.querySelector(".start-screen-artwork");
-const defaultStartScreenArtwork = `${import.meta.env.BASE_URL}artwork/8bits.png`;
+const defaultStartScreenArtwork = `${import.meta.env.BASE_URL}artwork/8bits-artwork.png`;
+const minigamesStartScreenArtwork = `${import.meta.env.BASE_URL}artwork/coral-8bits-artwork.png`;
 // Keep one entry per minigame; null uses the default artwork until a preview is ready.
 const minigamePreviewSources = new Map([
-  [emptyStomachButton, `${import.meta.env.BASE_URL}artwork/coral-8bits.png`],
+  [emptyStomachButton, minigamesStartScreenArtwork],
   [timeAttackButton, null],
-  [survivalButton, null],
-  [freeRoamButton, `${import.meta.env.BASE_URL}minigame/empty-stomach/gif/parasaurolophus/parasaurolophus-idle.gif`]
+  [survivalButton, `${import.meta.env.BASE_URL}artwork/survival-artwork.png`],
+  [freeRoamButton, `${import.meta.env.BASE_URL}artwork/free-roam-artwork.png`]
 ]);
 let hoveredMinigameButton = null;
 let focusedMinigameButton = null;
@@ -257,7 +258,10 @@ const tr = (value) => translateText(value, locale);
 function updateMinigamePreview() {
   const activeButton = hoveredMinigameButton || focusedMinigameButton;
   const previewSrc = activeButton ? minigamePreviewSources.get(activeButton) : null;
-  const nextSrc = previewSrc || defaultStartScreenArtwork;
+  const pageArtwork = activeStartMenuPage === "minigames"
+    ? minigamesStartScreenArtwork
+    : defaultStartScreenArtwork;
+  const nextSrc = previewSrc || pageArtwork;
 
   if (startScreenArtwork && startScreenArtwork.getAttribute("src") !== nextSrc) {
     startScreenArtwork.src = nextSrc;
@@ -3329,8 +3333,8 @@ function showStartMenuPage(page = "home") {
   const nextPage = ["home", "options", "campaign", "minigames"].includes(page) ? page : "home";
   hoveredMinigameButton = null;
   focusedMinigameButton = null;
-  updateMinigamePreview();
   activeStartMenuPage = nextPage;
+  updateMinigamePreview();
   startMenuHome.hidden = nextPage !== "home";
   startMenuOptions.hidden = nextPage !== "options";
   campaignMenu.hidden = nextPage !== "campaign";
