@@ -1340,16 +1340,25 @@ function beginPrologueSearch() {
   const prologue = campaignPrologue;
   if (!prologue?.active) return;
 
-  const violeta = prologue.violetaActor;
-  violeta.x = prologue.captureX - violeta.w / 2;
-  violeta.y = GAME.groundY - violeta.h;
-  violeta.state = "running";
-  violeta.motionSpeed = 190;
-  violeta.facing = 1;
-  violeta.animationState = null;
+  // Rosa is now inside the poachers' jeep. Violeta becomes the controlled
+  // protagonist and follows the tracks from 2,000 m to the 2,500 m encounter.
+  player = prologue.violetaActor;
+  player.setCharacter("blue");
+  player.x = prologue.captureX - player.w / 2;
+  player.y = GAME.groundY - player.h;
+  player.vx = 0;
+  player.vy = 0;
+  player.onGround = true;
+  player.facing = 1;
+  player.state = "running";
+  player.motionSpeed = 0;
+  player.animationState = null;
+  player.animationTimer = 0;
+  prologue.violetaActor = player;
   prologue.searchStartX = prologue.captureX;
+  prologue.tracksFound = true;
 
-  // Vasti and both predators are visible ahead while Violeta closes the gap.
+  // Vasti is already locked in combat when Violeta reaches the rocky opening.
   prologue.vastiActor = new Player("vasti", prologue.encounterX + 105, GAME.groundY);
   prologue.vastiActor.x = prologue.encounterX + 105 - prologue.vastiActor.w / 2;
   prologue.vastiActor.y = GAME.groundY - prologue.vastiActor.h;
@@ -1357,7 +1366,7 @@ function beginPrologueSearch() {
   prologue.vastiActor.state = "attack";
   prologue.vastiActor.animationState = "stomp";
 
-  const predatorOffsets = [115, 275];
+  const predatorOffsets = [85, 245];
   prologue.venatosauruses = PROLOGUE_VENATOSAURUS_KINDS.map((kind, index) => {
     const x = prologue.encounterX + predatorOffsets[index] - 56;
     const enemy = new WildDinosaur({
@@ -1365,8 +1374,8 @@ function beginPrologueSearch() {
       kind,
       x,
       groundY: GAME.groundY,
-      patrolStart: x - 80,
-      patrolEnd: x + 200,
+      patrolStart: Math.max(prologue.fightStartX, x - 80),
+      patrolEnd: Math.min(prologue.fightEndX, x + 150),
       direction: index === 0 ? -1 : 1
     });
     enemy.state = "attack";
@@ -1378,6 +1387,8 @@ function beginPrologueSearch() {
   campaign.objective = "FOLLOW ROSA'S TRAIL";
   cameraX = Math.max(0, prologue.captureX - 360);
   updateCampaignHud();
+  updatePlayerHealthHud();
+  updatePlayerAbilityHud();
   audio.collect();
 }
 
@@ -1415,7 +1426,6 @@ function beginPrologueFight() {
   prologue.companionActor = companion.actor;
   prologue.violetaActor = selected === "blue" ? player : companion.actor;
   prologue.vastiActor = selected === "vasti" ? player : companion.actor;
-  prologue.fightStartX = prologue.encounterX;
   prologue.predatorsDefeated = false;
   prologue.strikeShown = false;
   prologue.tutorial = {
@@ -1581,6 +1591,9 @@ function updatePrologueFight(delta) {
       physics,
       prologue.venatosauruses
     );
+    const companionMinX = prologue.fightStartX - companion.actor.w / 2;
+    const companionMaxX = prologue.fightEndX - companion.actor.w / 2;
+    companion.actor.x = Math.max(companionMinX, Math.min(companionMaxX, companion.actor.x));
     if (event?.type === "companion-strike" && !event.hunter.defeated) {
       damageProloguePredator(event.hunter, 1);
     } else if (event?.type === "companion-shockwave") {
@@ -1598,6 +1611,10 @@ function updatePrologueFight(delta) {
   for (const enemy of prologue.venatosauruses) {
     if (enemy.defeated) continue;
     const event = enemy.update(delta, targets);
+    enemy.x = Math.max(
+      prologue.fightStartX,
+      Math.min(prologue.fightEndX - enemy.w, enemy.x)
+    );
     if (event?.type === "attack") {
       if (event.target === player) {
         damagePlayer();
@@ -1723,43 +1740,52 @@ function updateCampaignPrologue(delta) {
   }
 
   if (prologue.phase === "search") {
-    const progress = prologue.progress;
-    const violeta = prologue.violetaActor;
-    const center = prologue.searchStartX +
-      (prologue.trackX - prologue.searchStartX) * progress;
-    violeta.state = "running";
-    violeta.animationState = null;
-    violeta.motionSpeed = 190;
-    violeta.x = center - violeta.w / 2;
-    violeta.facing = 1;
+    // This 500 m section is fully playable: Violeta follows the tracks herself.
+    player.update(delta, input);
+    player.state = Math.abs(player.vx) > 30 ? "running" : "alert";
+    if (player.consumeJumpEvent()) audio.jump();
+    const abilityEvent = player.consumeAbilityEvent();
+    if (abilityEvent === "dash") audio.collect();
 
-    if (prologue.vastiActor) {
-      prologue.vastiActor.state = "attack";
-      prologue.vastiActor.animationState = progress < 0.55 ? "stomp" : "attack";
-      prologue.vastiActor.facing = -1;
+    const result = physics.step(player, delta, world.platformsNear(player.x));
+    if (result.fell) {
+      endGame();
+      return;
     }
-    prologue.venatosauruses.forEach((enemy, index) => {
-      enemy.state = "attack";
-      enemy.direction = index === 0 ? -1 : 1;
-      enemy.x = prologue.encounterX + (index === 0 ? 115 : 275) - enemy.w / 2;
-      enemy.motionSpeed = index === 0 ? -52 : 52;
-    });
 
-    cameraX = Math.max(0, center - 360);
-    updatePrologueDistance(center);
-    if (progress >= 0.7) prologue.tracksFound = true;
+    player.x = Math.max(
+      prologue.searchStartX - player.w / 2,
+      Math.min(prologue.trackX - player.w / 2, player.x)
+    );
+    player.motionSpeed = player.vx;
+    player.facing = player.vx === 0 ? player.facing : Math.sign(player.vx);
+    const playerCenter = player.x + player.w / 2;
+    cameraX = Math.max(0, playerCenter - 330);
+    updatePrologueDistance(playerCenter);
 
-    const event = prologue.update(delta);
-    if (event === "search") {
+    if (prologue.reachEncounter(player)) {
+      player.y = GAME.groundY - player.h;
+      player.vx = 0;
+      player.vy = 0;
+      player.onGround = true;
+      player.jumpCount = 0;
+      player.state = "alert";
+      player.motionSpeed = 0;
+      player.animationState = null;
+      player.animationTimer = 0;
+      cameraX = Math.max(0, prologue.trackX - 360);
+      updatePrologueDistance(prologue.trackX);
+
       campaign.chapter = "ROCKY OPENING";
       campaign.objective = "CHOOSE YOUR DINOSAUR";
       campaign.queueScene("prologue-tracks", "A FIGHT IN THE UNDERGROWTH", [
-        "Violeta follows Rosa's tracks for 500 meters and reaches a rocky opening. Vasti is already fighting two predators: a Venatosaurus impavidus and a Venatosaurus saevidicus.",
-        "The two animals attack from different angles. Violeta closes in to help Vasti, and the struggle spreads across the clearing."
+        "After following Rosa's tracks for 500 meters, Violeta reaches a rocky opening at 2,500 meters. Vasti is already fighting two predators: a Venatosaurus impavidus and a Venatosaurus saevidicus.",
+        "The two animals attack from different angles. Violeta closes in to help Vasti, and the struggle spreads across the 2,200–2,800 meter clearing."
       ]);
       updateCampaignHud();
       renderStoryPanel();
     }
+    if (interactionHintLabel) interactionHintLabel.textContent = "";
     return;
   }
 
@@ -1893,6 +1919,9 @@ function drawCampaignPrologueActors() {
 
   drawPrologueTracks(prologue);
   if (["search", "tracks-dialog", "character-select"].includes(prologue.phase)) {
+    if (prologue.rosaCaptured) {
+      drawPrologueJeep(prologue.jeepVisualX ?? prologue.jeepX);
+    }
     const actor = prologue.violetaActor;
     drawDino(actor.x, actor.y, actor.w, actor.h, "#75a99b", "blue", elapsed, 1, actor.facing, actor);
     if (prologue.vastiActor) {

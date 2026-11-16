@@ -13,11 +13,13 @@ test("the prologue fixes the capture, encounter, battle-end and Level 1 mileston
   assert.equal(prologue.jeepX + 78, prologue.captureX);
   assert.equal(prologue.trackX - prologue.startX, 2500);
   assert.equal(prologue.encounterX - prologue.startX, 2500);
-  assert.equal(prologue.fightEndX - prologue.encounterX, 300);
+  assert.equal(prologue.fightStartX - prologue.startX, 2200);
+  assert.equal(prologue.fightEndX - prologue.fightStartX, 600);
   assert.equal(prologue.fightEndX - prologue.startX, 2800);
   assert.equal(prologue.levelOneX - prologue.startX, 5000);
   assert.deepEqual(PROLOGUE_MILESTONES, {
     capture: 2000,
+    fightStart: 2200,
     encounter: 2500,
     fightEnd: 2800,
     levelOne: 5000
@@ -40,17 +42,24 @@ test("Rosa remains playable through 2,000 m, where the jeep cinematic starts aut
   assert.equal(prologue.phase, "capture");
 });
 
-test("Violeta follows the trail to 2,500 m, then the player must choose Violeta or Vasti", () => {
+test("Violeta follows the 500 m trail under player control before the character choice", () => {
   const prologue = new CampaignPrologue({ startX: 145 });
   assert.equal(prologue.update(4.2), "rest");
-  const player = { x: prologue.captureX - 27, w: 54, vx: 0 };
-  player.x = prologue.captureX - player.w / 2;
-  assert.equal(prologue.captureAtMilestone(player), true);
+  const rosa = { x: prologue.captureX - 27, w: 54, vx: 0 };
+  assert.equal(prologue.captureAtMilestone(rosa), true);
 
   assert.equal(prologue.update(5.4), "capture");
   assert.equal(prologue.phase, "capture-dialog");
   assert.equal(prologue.continueAfterNarration(), "search");
-  assert.equal(prologue.update(8.3), "search");
+  assert.equal(prologue.update(8.3), null);
+  assert.equal(prologue.phase, "search");
+
+  const violeta = { x: prologue.trackX - 30, w: 54, vx: 190 };
+  assert.equal(prologue.reachEncounter(violeta), false);
+  violeta.x = prologue.trackX - violeta.w / 2 + 1;
+  assert.equal(prologue.reachEncounter(violeta), true);
+  assert.equal(violeta.x + violeta.w / 2, prologue.trackX);
+  assert.equal(violeta.vx, 0);
   assert.equal(prologue.phase, "tracks-dialog");
   assert.equal(prologue.trackX - prologue.startX, 2500);
   assert.deepEqual([...PROLOGUE_VENATOSAURUS_KINDS].sort(), [
@@ -64,11 +73,11 @@ test("Violeta follows the trail to 2,500 m, then the player must choose Violeta 
   assert.equal(prologue.phase, "fight");
 });
 
-test("the tutorial requires the full 300 m fight, both predators and all three control actions", () => {
+test("the tutorial requires the full 600 m fight, both predators and all three control actions", () => {
   const prologue = new CampaignPrologue({ startX: 145 });
   prologue.phase = "character-select";
   assert.equal(prologue.beginFight("vasti"), true);
-  assert.equal(prologue.fightEndX - prologue.encounterX, 300);
+  assert.equal(prologue.fightEndX - prologue.fightStartX, 600);
   assert.equal(prologue.completeFight(2799, true, true), false);
   assert.equal(prologue.completeFight(2800, false, true), false);
   assert.equal(prologue.completeFight(2800, true, false), false);

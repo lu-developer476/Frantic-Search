@@ -1,7 +1,6 @@
 const PROLOGUE_DURATIONS = Object.freeze({
   rest: 4.2,
   capture: 5.4,
-  search: 8.3,
   advance: 13.75
 });
 
@@ -13,6 +12,7 @@ const DIALOGUE_TO_SEQUENCE = Object.freeze({
 
 export const PROLOGUE_MILESTONES = Object.freeze({
   capture: 2000,
+  fightStart: 2200,
   encounter: 2500,
   fightEnd: 2800,
   levelOne: 5000
@@ -33,6 +33,7 @@ export class CampaignPrologue {
     this.captureX = startX + PROLOGUE_MILESTONES.capture;
     this.jeepX = this.captureX - 78;
     this.jeepVisualX = this.jeepX;
+    this.fightStartX = startX + PROLOGUE_MILESTONES.fightStart;
     this.trackX = startX + PROLOGUE_MILESTONES.encounter;
     this.encounterX = this.trackX;
     this.fightEndX = startX + PROLOGUE_MILESTONES.fightEnd;
@@ -105,6 +106,19 @@ export class CampaignPrologue {
     this.phase = nextPhase;
     this.elapsed = 0;
     return nextPhase;
+  }
+
+  reachEncounter(player) {
+    if (!this.active || this.phase !== "search" || !player ||
+        !Number.isFinite(player.x) || !Number.isFinite(player.w) || player.w <= 0) return false;
+    if (player.x + player.w / 2 < this.trackX) return false;
+
+    player.x = this.trackX - player.w / 2;
+    player.vx = 0;
+    this.tracksFound = true;
+    this.phase = "tracks-dialog";
+    this.elapsed = 0;
+    return true;
   }
 
   beginFight(character) {
