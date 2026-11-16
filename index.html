@@ -42,6 +42,13 @@
         "playMode": "SinglePlayer"
       }
     </script>
+    <script>
+      (() => {
+        const hostname = window.location.hostname.toLowerCase();
+        const isVercelPreview = /^franticsearch-[a-z0-9]{6,12}-.+\.vercel\.app$/.test(hostname);
+        if (isVercelPreview) document.documentElement.classList.add("vercel-preview");
+      })();
+    </script>
   </head>
   <body>
     <div id="app">
