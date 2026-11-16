@@ -12,18 +12,19 @@ const PRAIRIE_HERD = [
   { x: 610, y: 366, w: 78, h: 56 },
   { x: 905, y: 354, w: 92, h: 66 }
 ];
-const ASSETS = {
+export const ASSETS = {
   coral: "minigame/empty-stomach/gif/main/miniraptor-run.gif",
-  xenoraptorRun: "minigame/empty-stomach/gif/enemies/xenoraptor/xenoraptor-crypticus-run.gif",
-  xenoraptorJump: "minigame/empty-stomach/gif/enemies/xenoraptor/xenoraptor-crypticus-jump.gif",
-  xenoraptorAttack: "minigame/empty-stomach/gif/enemies/xenoraptor/xenoraptor-crypticus-attack.gif",
-  velociraptorWalk: "minigame/empty-stomach/gif/enemies/velociraptor/velociraptor-walk.gif",
-  velociraptorJump: "minigame/empty-stomach/gif/enemies/velociraptor/velociraptor-jump.gif",
-  velociraptorEat: "minigame/empty-stomach/gif/enemies/velociraptor/velociraptor-eat.gif",
-  velociraptorIdle: "minigame/empty-stomach/gif/enemies/velociraptor/velociraptor-idle.gif",
-  parasaurRun: "minigame/empty-stomach/gif/enviroment/parasaurolophus/run.gif",
-  parasaurIdle: "minigame/empty-stomach/gif/enviroment/parasaurolophus/idle.gif",
-  parasaurPerturbed: "minigame/empty-stomach/gif/enviroment/parasaurolophus/perturbed.gif"
+  xenoraptorRun: "minigame/empty-stomach/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-run.gif",
+  xenoraptorJump: "minigame/empty-stomach/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-jump.gif",
+  xenoraptorAttack: "minigame/empty-stomach/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-attack.gif",
+  umbraraptorWalk: "minigame/empty-stomach/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-walk.gif",
+  umbraraptorJump: "minigame/empty-stomach/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-jump.gif",
+  umbraraptorEat: "minigame/empty-stomach/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-eat.gif",
+  umbraraptorIdle: "minigame/empty-stomach/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-idle.gif",
+  parasaurRun: "minigame/empty-stomach/gif/parasaurolophus/parasaurolophus-run.gif",
+  parasaurWalk: "minigame/empty-stomach/gif/parasaurolophus/parasaurolophus-walk.gif",
+  parasaurIdle: "minigame/empty-stomach/gif/parasaurolophus/parasaurolophus-idle.gif",
+  parasaurPerturbed: "minigame/empty-stomach/gif/parasaurolophus/parasaurolophus-attack.gif"
 };
 
 export function overlaps(a, b) {
@@ -58,7 +59,7 @@ export function createPredator(kind, phase = 0) {
   const h = isXenoraptor ? 104 : 86;
   // Spawn fully outside the canvas; the predator enters from its left edge.
   return {
-    kind: isXenoraptor ? "xenoraptor" : "velociraptor",
+    kind: isXenoraptor ? "xenoraptor" : "umbraraptor",
     x: -w,
     y: FLOOR - h,
     w,
@@ -74,15 +75,15 @@ export function createPredator(kind, phase = 0) {
 
 export function enemyAnimationKey(enemy, elapsed = 0) {
   const isXenoraptor = enemy.kind === "xenoraptor";
-  if (enemy.state === "stunned" || enemy.state === "fading") return isXenoraptor ? "xenoraptorJump" : "velociraptorIdle";
-  if (enemy.state === "eating") return isXenoraptor ? "xenoraptorAttack" : "velociraptorEat";
+  if (enemy.state === "stunned" || enemy.state === "fading") return isXenoraptor ? "xenoraptorJump" : "umbraraptorIdle";
+  if (enemy.state === "eating") return isXenoraptor ? "xenoraptorAttack" : "umbraraptorEat";
   if (enemy.state === "departing" || (enemy.state === "hunting" && !enemy.preyTarget)) {
-    return isXenoraptor ? "xenoraptorJump" : "velociraptorIdle";
+    return isXenoraptor ? "xenoraptorJump" : "umbraraptorIdle";
   }
 
   const jumping = Math.sin(elapsed * 3.8 + (enemy.phase ?? 0)) > 0.92;
   if (isXenoraptor) return jumping ? "xenoraptorJump" : "xenoraptorRun";
-  return jumping ? "velociraptorJump" : "velociraptorWalk";
+  return jumping ? "umbraraptorJump" : "umbraraptorWalk";
 }
 
 export class EmptyStomach {
@@ -398,7 +399,7 @@ export class EmptyStomach {
 
     this.spawnTimer -= delta;
     if (this.spawnTimer <= 0) {
-      const kind = Math.random() < 0.46 ? "xenoraptor" : "velociraptor";
+      const kind = Math.random() < 0.46 ? "xenoraptor" : "umbraraptor";
       this.enemies.push(createPredator(kind, Math.random() * 6));
       this.spawnTimer = Math.max(0.95, 2.6 - this.elapsed * 0.018) + Math.random() * 0.7;
     }
@@ -739,8 +740,9 @@ export class EmptyStomach {
     for (let i = 0; i < PRAIRIE_HERD.length; i += 1) {
       const animal = PRAIRIE_HERD[i];
       const x = ((animal.x - scroll * 0.12) % (WIDTH + 180) + (WIDTH + 180)) % (WIDTH + 180) - 90;
+      const pose = i % 2 === 0 ? "parasaurIdle" : "parasaurWalk";
       this.drawSprite(
-        "parasaurIdle",
+        pose,
         x,
         animal.y,
         animal.w,

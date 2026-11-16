@@ -1,12 +1,21 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  overlaps, scoreForDistance, getGroundAlignedY, createPredator, enemyAnimationKey,
+  overlaps, scoreForDistance, getGroundAlignedY, createPredator, enemyAnimationKey, ASSETS,
   EmptyStomach, ENEMY_CHASE_DURATION, INTRO_DURATION, PLAYER_WIDTH, PLAYER_HEIGHT,
   DASH_DURATION, DASH_COOLDOWN, DASH_SPEED_MULTIPLIER, ENEMY_STUN_DURATION,
   EGG_INVULNERABILITY_DURATION, ENEMY_TRIP_FADE_DURATION
 } from "../src/minigames/EmptyStomach.js";
 import { removeEdgeBackground, getBottomTransparentPadding } from "../src/minigames/AnimatedGif.js";
+
+test("Empty Stomach resolves every animation from the current GIF asset directory", async () => {
+  const { access } = await import("node:fs/promises");
+  await Promise.all(Object.entries(ASSETS).map(([key, path]) =>
+    access(new URL(`../public/${path}`, import.meta.url)).catch(() => {
+      throw new Error(`Missing Empty Stomach asset for ${key}: public/${path}`);
+    })
+  ));
+});
 
 test("Empty Stomach uses rectangle overlap for predator contact", () => {
   assert.equal(overlaps({ x: 0, y: 0, w: 20, h: 20 }, { x: 19, y: 5, w: 20, h: 20 }), true);
@@ -306,7 +315,7 @@ test("Empty Stomach starts the intro with Coral fully outside the left edge", ()
 
 test("Empty Stomach spawns every predator just beyond the canvas left edge", () => {
   assert.equal(ENEMY_CHASE_DURATION, 2);
-  for (const kind of ["xenoraptor", "velociraptor"]) {
+  for (const kind of ["xenoraptor", "umbraraptor"]) {
     const enemy = createPredator(kind, 0);
     assert.equal(enemy.x, -enemy.w);
     assert.equal(enemy.x + enemy.w, 0);
@@ -331,7 +340,7 @@ test("Empty Stomach ends the two-second player chase and switches to prey huntin
 
 test("Empty Stomach predators eat Parasaurolophus, then get carried left while frozen", () => {
   const player = { x: 820, y: 366, w: 88, h: 72 };
-  const enemy = createPredator("velociraptor", 0);
+  const enemy = createPredator("umbraraptor", 0);
   enemy.x = 100;
   enemy.state = "hunting";
   enemy.stateTimer = 0;
@@ -379,16 +388,16 @@ test("Empty Stomach changes predator GIFs for running, jumping, eating, and depa
   assert.equal(enemyAnimationKey({ ...xenoraptor, state: "eating" }, 0), "xenoraptorAttack");
   assert.equal(enemyAnimationKey({ ...xenoraptor, state: "departing" }, 0), "xenoraptorJump");
 
-  const velociraptor = { kind: "velociraptor", phase: 0, state: "chasing" };
-  assert.equal(enemyAnimationKey(velociraptor, 0), "velociraptorWalk");
-  assert.equal(enemyAnimationKey(velociraptor, Math.PI / (2 * 3.8)), "velociraptorJump");
-  assert.equal(enemyAnimationKey({ ...velociraptor, state: "eating" }, 0), "velociraptorEat");
-  assert.equal(enemyAnimationKey({ ...velociraptor, state: "departing" }, 0), "velociraptorIdle");
+  const umbraraptor = { kind: "umbraraptor", phase: 0, state: "chasing" };
+  assert.equal(enemyAnimationKey(umbraraptor, 0), "umbraraptorWalk");
+  assert.equal(enemyAnimationKey(umbraraptor, Math.PI / (2 * 3.8)), "umbraraptorJump");
+  assert.equal(enemyAnimationKey({ ...umbraraptor, state: "eating" }, 0), "umbraraptorEat");
+  assert.equal(enemyAnimationKey({ ...umbraraptor, state: "departing" }, 0), "umbraraptorIdle");
 });
 
 test("Empty Stomach ends the run when Coral collides with a departing predator", () => {
   const player = { x: 250, y: 366, w: 88, h: 72 };
-  const enemy = createPredator("velociraptor", 0);
+  const enemy = createPredator("umbraraptor", 0);
   enemy.x = 230;
   enemy.state = "departing";
   enemy.stateTimer = 1;
@@ -411,7 +420,7 @@ test("Empty Stomach grounds every Parasaurolophus animation frame independently"
   Object.assign(simulation, {
     elapsed: 0,
     animations: Object.fromEntries(
-      ["parasaurRun", "parasaurIdle", "parasaurPerturbed"].map((key) => [
+      ["parasaurRun", "parasaurWalk", "parasaurIdle", "parasaurPerturbed"].map((key) => [
         key,
         { height: 100, bottomPadding: 0, frames }
       ])
@@ -421,7 +430,7 @@ test("Empty Stomach grounds every Parasaurolophus animation frame independently"
     }
   });
 
-  for (const key of ["parasaurRun", "parasaurIdle", "parasaurPerturbed"]) {
+  for (const key of ["parasaurRun", "parasaurWalk", "parasaurIdle", "parasaurPerturbed"]) {
     simulation.drawSprite(key, 10, 366, 100, 72, "#8e9b72", 0);
     simulation.drawSprite(key, 10, 366, 100, 72, "#8e9b72", 100);
   }
@@ -587,7 +596,7 @@ test("Empty Stomach gives Coral Violeta's short directional dash and cooldown", 
 });
 
 test("Empty Stomach's dash dust stuns predators in place and lets Coral pass safely", () => {
-  const enemy = createPredator("velociraptor", 0);
+  const enemy = createPredator("umbraraptor", 0);
   enemy.x = 100;
   enemy.direction = 1;
   enemy.stateTimer = 1.4;
@@ -602,7 +611,7 @@ test("Empty Stomach's dash dust stuns predators in place and lets Coral pass saf
   assert.equal(enemy.state, "stunned");
   assert.equal(enemy.stateTimer, ENEMY_STUN_DURATION);
   assert.equal(enemy.x, enemyStartX, "a stunned predator remains stationary");
-  assert.equal(enemyAnimationKey(enemy, simulation.elapsed), "velociraptorIdle");
+  assert.equal(enemyAnimationKey(enemy, simulation.elapsed), "umbraraptorIdle");
   assert.ok(simulation.player.x > 250, "Coral keeps moving through the dash");
   assert.equal(simulation.running, true, "contact during the dash must not end the run");
   simulation.update(1.9);
@@ -639,7 +648,7 @@ test("the miniraptor can pick up and drop a black stone", () => {
 });
 
 test("a dropped black stone makes predators fade out and frees the path", () => {
-  const enemy=createPredator("velociraptor",0);enemy.x=300;enemy.y=352;
+  const enemy=createPredator("umbraraptor",0);enemy.x=300;enemy.y=352;
   const simulation=makeSimulation({player:{x:100,y:366,w:80,h:66},enemies:[enemy]});
   simulation.phase="playing";simulation.rocks=[{kind:"rock",x:330,y:413,w:34,h:25,vx:0}];
   simulation.update(.04);assert.equal(enemy.state,"fading");assert.ok(enemy.fadeTimer<ENEMY_TRIP_FADE_DURATION);
@@ -647,7 +656,7 @@ test("a dropped black stone makes predators fade out and frees the path", () => 
 });
 
 test("predators can target and eat cream eggs", () => {
-  const enemy=createPredator("velociraptor",0);enemy.x=280;enemy.state="hunting";enemy.stateTimer=0;
+  const enemy=createPredator("umbraraptor",0);enemy.x=280;enemy.state="hunting";enemy.stateTimer=0;
   const egg={kind:"egg",x:340,y:415,w:28,h:23,vx:0};
   const simulation=makeSimulation({player:{x:80,y:366,w:80,h:66},enemies:[enemy]});
   simulation.phase="playing";simulation.eggs=[egg];simulation.update(.04);
@@ -657,7 +666,7 @@ test("predators can target and eat cream eggs", () => {
 
 
 test("egg invulnerability lets Coral pass through predators without ending the run", () => {
-  const enemy=createPredator("velociraptor",0);enemy.x=200;enemy.y=352;
+  const enemy=createPredator("umbraraptor",0);enemy.x=200;enemy.y=352;
   const simulation=makeSimulation({player:{x:200,y:366,w:80,h:66},enemies:[enemy]});
   simulation.phase="playing";simulation.carriedItem={kind:"egg",w:28,h:23};
   assert.equal(simulation.consumeCarriedEgg(),true);
