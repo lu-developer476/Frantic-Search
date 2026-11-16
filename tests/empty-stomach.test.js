@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import {
   overlaps, scoreForDistance, getGroundAlignedY, createPredator, enemyAnimationKey,
   EmptyStomach, ENEMY_CHASE_DURATION, INTRO_DURATION, PLAYER_WIDTH, PLAYER_HEIGHT,
-  DASH_DURATION, DASH_COOLDOWN, DASH_SPEED_MULTIPLIER, ENEMY_STUN_DURATION
+  DASH_DURATION, DASH_COOLDOWN, DASH_SPEED_MULTIPLIER, ENEMY_STUN_DURATION,
+  EGG_INVULNERABILITY_DURATION, ENEMY_TRIP_FADE_DURATION
 } from "../src/minigames/EmptyStomach.js";
 import { removeEdgeBackground, getBottomTransparentPadding } from "../src/minigames/AnimatedGif.js";
 
@@ -209,6 +210,12 @@ function makeSimulation({ player, enemies = [], herd = [] }) {
     preyTimer: 60,
     enemies,
     herd,
+    eggs: [],
+    rocks: [],
+    carriedItem: null,
+    invulnerabilityTimer: 0,
+    eggSpawnTimer: 60,
+    rockSpawnTimer: 60,
     player: { facing: 1, dashDirection: 1, dashTimer: 0, dashCooldown: 0, ...player, vy: 0, grounded: true },
     dashDustClouds: [],
     keys: new Set(),
@@ -474,8 +481,8 @@ test("Empty Stomach includes the pause key in both instruction labels for Spanis
   });
 
   simulation.setLocale("es");
-  const spanishInstructions = "A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · X: EMBESTIR · P: PAUSAR · ESC: SALIR";
-  const spanishControls = "A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · X: EMBESTIR · ESC: SALIR";
+  const spanishInstructions = "A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · X: EMBESTIR · E: TOMAR / SOLTAR · Q: COMER HUEVO · P: PAUSAR · ESC: SALIR";
+  const spanishControls = "A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · X: EMBESTIR · E: TOMAR / SOLTAR · Q: COMER HUEVO · ESC: SALIR";
   assert.equal(nodes.get("[data-empty-instructions]").textContent, spanishInstructions);
   assert.equal(nodes.get("[data-empty-controls-text]").textContent, spanishControls);
   assert.equal(simulation.pauseButton.textContent, "P: PAUSAR");
@@ -484,8 +491,8 @@ test("Empty Stomach includes the pause key in both instruction labels for Spanis
   assert.equal(nodes.get("[data-empty-exit]").textContent, "SALIR");
 
   simulation.setLocale("en");
-  const englishInstructions = "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · X: DASH · P: PAUSE · ESC: EXIT";
-  const englishControls = "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · X: DASH · ESC: EXIT";
+  const englishInstructions = "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · X: DASH · E: PICK UP / DROP · Q: EAT EGG · P: PAUSE · ESC: EXIT";
+  const englishControls = "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · X: DASH · E: PICK UP / DROP · Q: EAT EGG · ESC: EXIT";
   assert.equal(nodes.get("[data-empty-instructions]").textContent, englishInstructions);
   assert.equal(nodes.get("[data-empty-controls-text]").textContent, englishControls);
   assert.equal(simulation.pauseButton.textContent, "P: PAUSE");
@@ -612,4 +619,49 @@ test("Empty Stomach keeps both instruction labels on a single line", async () =>
   assert.ok(source.includes("white-space:nowrap"));
   assert.ok(source.includes("grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)"));
   assert.ok(source.includes("grid-column:2;min-width:0;white-space:nowrap;text-align:center"));
+});
+
+
+test("cream eggs grant four seconds of invulnerability when consumed", () => {
+  const simulation=makeSimulation({player:{x:200,y:366,w:80,h:66}});
+  simulation.phase="playing";simulation.carriedItem={kind:"egg",w:28,h:23};
+  assert.equal(simulation.consumeCarriedEgg(),true);assert.equal(simulation.carriedItem,null);
+  assert.equal(simulation.invulnerabilityTimer,4);simulation.update(1);assert.equal(simulation.invulnerabilityTimer,3);
+  assert.equal(EGG_INVULNERABILITY_DURATION,4);
+});
+
+test("the miniraptor can pick up and drop a black stone", () => {
+  const simulation=makeSimulation({player:{x:200,y:366,w:80,h:66}});
+  simulation.phase="playing";const stone={kind:"rock",x:285,y:413,w:34,h:25,vx:0};simulation.rocks=[stone];
+  assert.equal(simulation.interactWithItem(),true);assert.equal(simulation.carriedItem,stone);
+  assert.equal(simulation.rocks.length,0);assert.equal(simulation.interactWithItem(),true);
+  assert.equal(simulation.carriedItem,null);assert.equal(simulation.rocks.length,1);assert.ok(simulation.rocks[0].vx>0);
+});
+
+test("a dropped black stone makes predators fade out and frees the path", () => {
+  const enemy=createPredator("velociraptor",0);enemy.x=300;enemy.y=352;
+  const simulation=makeSimulation({player:{x:100,y:366,w:80,h:66},enemies:[enemy]});
+  simulation.phase="playing";simulation.rocks=[{kind:"rock",x:330,y:413,w:34,h:25,vx:0}];
+  simulation.update(.04);assert.equal(enemy.state,"fading");assert.ok(enemy.fadeTimer<ENEMY_TRIP_FADE_DURATION);
+  simulation.update(1);assert.equal(simulation.enemies.includes(enemy),false);
+});
+
+test("predators can target and eat cream eggs", () => {
+  const enemy=createPredator("velociraptor",0);enemy.x=280;enemy.state="hunting";enemy.stateTimer=0;
+  const egg={kind:"egg",x:340,y:415,w:28,h:23,vx:0};
+  const simulation=makeSimulation({player:{x:80,y:366,w:80,h:66},enemies:[enemy]});
+  simulation.phase="playing";simulation.eggs=[egg];simulation.update(.04);
+  assert.equal(enemy.state,"eating");assert.equal(enemy.eatTargetType,"egg");
+  simulation.update(1.4);assert.equal(simulation.eggs.includes(egg),false);
+});
+
+
+test("egg invulnerability lets Coral pass through predators without ending the run", () => {
+  const enemy=createPredator("velociraptor",0);enemy.x=200;enemy.y=352;
+  const simulation=makeSimulation({player:{x:200,y:366,w:80,h:66},enemies:[enemy]});
+  simulation.phase="playing";simulation.carriedItem={kind:"egg",w:28,h:23};
+  assert.equal(simulation.consumeCarriedEgg(),true);
+  simulation.update(.04);
+  assert.equal(simulation.running,true);
+  assert.ok(simulation.invulnerabilityTimer>0);
 });

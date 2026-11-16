@@ -170,3 +170,17 @@ test("the six README campaign chapters each have a dedicated Canvas environment"
     assert.ok(background.includes('environment === "' + environment + '"'), "missing Canvas scene: " + environment);
   }
 });
+
+
+test("the upper operation HUD is hidden in non-campaign modes and restored on exit", async () => {
+  const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+  const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
+
+  assert.match(css, /\.panel-head\.is-hidden\{display:none !important\}/);
+  assert.match(main, /operationHeader\?\.classList\.toggle\("is-hidden", freeRoamMode\)/);
+  assert.match(main, /operationHeader\?\.classList\.add\("is-hidden"\);\s*campaignBriefHeader\?\.classList\.add\("is-hidden"\);\s*emptyStomach\.open\(\)/);
+  assert.match(main, /operationHeader\?\.classList\.add\("is-hidden"\);\s*campaignBriefHeader\?\.classList\.add\("is-hidden"\);\s*timeAttack\.open\(\)/);
+  assert.match(main, /operationHeader\?\.classList\.add\("is-hidden"\);\s*campaignBriefHeader\?\.classList\.add\("is-hidden"\);\s*survival\.open\(\)/);
+  assert.match(main, /operationHeader\?\.classList\.remove\("is-hidden"\)/);
+  assert.match(main, /campaignBriefHeader\?\.classList\.remove\("is-hidden"\)/);
+});

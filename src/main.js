@@ -111,6 +111,8 @@ const abilityLabel = document.querySelector("#ability-status");
 const controlsLabel = document.querySelector(".hud-controls");
 const stegoceratopsStatusLabel = document.querySelector("#stegoceratops-status");
 const campaignObjectiveLabel = document.querySelector("#campaign-objective");
+const campaignBriefHeader = document.querySelector(".mission-brief-header");
+const operationHeader = document.querySelector(".panel-head");
 const campaignChapterLabel = document.querySelector("#campaign-chapter");
 const secondaryObjectivesLabel = document.querySelector("#secondary-objectives");
 const interactionHintLabel = document.querySelector("#interaction-hint");
@@ -135,15 +137,16 @@ const soundIcon = document.querySelector("#sound-icon");
 const soundLabel = document.querySelector("#sound-label");
 
 const save = new SaveManager();
-const emptyStomach = new EmptyStomach(emptyStomachPanel, () => {
-  if (!running && !desktopBlocked) showStartMenuPage("minigames");
-});
-const timeAttack = new TimeAttack(timeAttackPanel, () => {
-  if (!running && !desktopBlocked) showStartMenuPage("minigames");
-}, spriteRenderer);
-const survival = new Survival(survivalPanel, () => {
-  if (!running && !desktopBlocked) showStartMenuPage("minigames");
-}, spriteRenderer);
+const returnFromMinigame = () => {
+  if (!running && !desktopBlocked) {
+    operationHeader?.classList.remove("is-hidden");
+    campaignBriefHeader?.classList.remove("is-hidden");
+    showStartMenuPage("minigames");
+  }
+};
+const emptyStomach = new EmptyStomach(emptyStomachPanel, returnFromMinigame);
+const timeAttack = new TimeAttack(timeAttackPanel, returnFromMinigame, spriteRenderer);
+const survival = new Survival(survivalPanel, returnFromMinigame, spriteRenderer);
 const audio = new AudioManager();
 const music = new AdaptiveMusic();
 let locale = save.get("language") || "es";
@@ -2235,6 +2238,8 @@ function updateLevelCheckpoint() {
 function restoreRestartSnapshot(snapshot, savedProgress = null) {
   if (!snapshot || !desktopPlayback.matches) return false;
   freeRoamMode = Boolean(snapshot.freeRoamMode);
+  operationHeader?.classList.toggle("is-hidden", freeRoamMode);
+  campaignBriefHeader?.classList.toggle("is-hidden", freeRoamMode);
   if (snapshot.selectedCharacter === "blue" || snapshot.selectedCharacter === "vasti") {
     selected = snapshot.selectedCharacter;
     save.update({ selectedCharacter: selected });
@@ -2436,6 +2441,8 @@ function resetPlayer(worldSeed = undefined) {
 function start(mode = "campaign") {
   if (!desktopPlayback.matches) return;
   freeRoamMode = mode === "free-roam";
+  operationHeader?.classList.toggle("is-hidden", freeRoamMode);
+  campaignBriefHeader?.classList.toggle("is-hidden", freeRoamMode);
   cancelScheduledFrame();
   audio.unlock();
   startScreen.classList.add("hidden");
@@ -2576,6 +2583,8 @@ function returnToMainMenu() {
   startScreenMessage.textContent = "";
   startScreenMessage.hidden = true;
   freeRoamMode = false;
+  operationHeader?.classList.remove("is-hidden");
+  campaignBriefHeader?.classList.remove("is-hidden");
   pendingGameMode = "campaign";
   showStartMenuPage("home");
   startButton.hidden = false;
@@ -2682,18 +2691,24 @@ emptyStomachButton.addEventListener("click", () => {
   if (!desktopPlayback.matches || desktopBlocked) return;
   startScreen.classList.add("hidden");
   setMenuOpen(false);
+  operationHeader?.classList.add("is-hidden");
+  campaignBriefHeader?.classList.add("is-hidden");
   emptyStomach.open();
 });
 timeAttackButton.addEventListener("click", () => {
   if (!desktopPlayback.matches || desktopBlocked) return;
   startScreen.classList.add("hidden");
   setMenuOpen(false);
+  operationHeader?.classList.add("is-hidden");
+  campaignBriefHeader?.classList.add("is-hidden");
   timeAttack.open();
 });
 survivalButton.addEventListener("click", () => {
   if (!desktopPlayback.matches || desktopBlocked) return;
   startScreen.classList.add("hidden");
   setMenuOpen(false);
+  operationHeader?.classList.add("is-hidden");
+  campaignBriefHeader?.classList.add("is-hidden");
   survival.open();
 });
 overlayActionButton.addEventListener("click", () => {

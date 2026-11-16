@@ -48,6 +48,9 @@ export const DASH_SPEED_MULTIPLIER = 2.2;
 export const DASH_DUST_DURATION = 0.72;
 export const ENEMY_STUN_DURATION = 2;
 export const PLAYER_RIGHT_MARGIN = 120;
+export const EGG_INVULNERABILITY_DURATION = 4;
+export const ITEM_INTERACTION_RADIUS = 112;
+export const ENEMY_TRIP_FADE_DURATION = 0.9;
 
 export function createPredator(kind, phase = 0) {
   const isXenoraptor = kind === "xenoraptor";
@@ -71,7 +74,7 @@ export function createPredator(kind, phase = 0) {
 
 export function enemyAnimationKey(enemy, elapsed = 0) {
   const isXenoraptor = enemy.kind === "xenoraptor";
-  if (enemy.state === "stunned") return isXenoraptor ? "xenoraptorJump" : "velociraptorIdle";
+  if (enemy.state === "stunned" || enemy.state === "fading") return isXenoraptor ? "xenoraptorJump" : "velociraptorIdle";
   if (enemy.state === "eating") return isXenoraptor ? "xenoraptorAttack" : "velociraptorEat";
   if (enemy.state === "departing" || (enemy.state === "hunting" && !enemy.preyTarget)) {
     return isXenoraptor ? "xenoraptorJump" : "velociraptorIdle";
@@ -117,6 +120,12 @@ export class EmptyStomach {
     this.herd = [];
     this.particles = [];
     this.dashDustClouds = [];
+    this.eggs = [];
+    this.rocks = [];
+    this.carriedItem = null;
+    this.invulnerabilityTimer = 0;
+    this.eggSpawnTimer = 2.2;
+    this.rockSpawnTimer = 3.4;
     this.player = {
       x: INTRO_END_X, y: FLOOR - PLAYER_HEIGHT, w: PLAYER_WIDTH, h: PLAYER_HEIGHT,
       vy: 0, grounded: true, facing: 1, dashDirection: 1, dashTimer: 0, dashCooldown: 0
@@ -125,11 +134,13 @@ export class EmptyStomach {
     try { this.best = Number(localStorage.getItem("frantic-empty-stomach-best")) || 0; } catch {}
     this.handleKeyDown = (event) => {
       if (!this.root.classList.contains("active")) return;
-      if (["ArrowLeft", "ArrowRight", "ArrowUp", "Space", "KeyP", "KeyX"].includes(event.code)) event.preventDefault();
+      if (["ArrowLeft", "ArrowRight", "ArrowUp", "Space", "KeyP", "KeyX", "KeyE", "KeyQ"].includes(event.code)) event.preventDefault();
       if (event.code === "Escape" && !event.repeat) { this.exit(); return; }
       if (event.code === "KeyP" && !event.repeat) { this.togglePause(); return; }
       if (this.phase === "intro" || this.paused) return;
       if (event.code === "KeyX" && !event.repeat) { this.activateDash(); return; }
+      if (event.code === "KeyE" && !event.repeat) { this.interactWithItem(); return; }
+      if (event.code === "KeyQ" && !event.repeat) { this.consumeCarriedEgg(); return; }
       if (["ArrowLeft", "ArrowRight", "ArrowUp", "Space", "KeyA", "KeyD", "KeyW"].includes(event.code)) this.keys.add(event.code);
       if (["Space", "ArrowUp", "KeyW"].includes(event.code) && !event.repeat && !this.running && !this.paused) this.start();
     };
@@ -150,8 +161,8 @@ export class EmptyStomach {
       ? this.text("PARTIDA FINALIZADA", "GAME OVER")
       : this.text("ESTÓMAGO VACÍO", "EMPTY STOMACH");
     this.root.querySelector("[data-empty-subtitle]").textContent = this.text("Coral corre por su vida. Los depredadores no van a detenerse.", "Coral is running for her life. The predators won't stop.");
-    this.root.querySelector("[data-empty-instructions]").textContent = this.text("A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · X: EMBESTIR · P: PAUSAR · ESC: SALIR", "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · X: DASH · P: PAUSE · ESC: EXIT");
-    this.root.querySelector("[data-empty-controls-text]").textContent = this.text("A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · X: EMBESTIR · ESC: SALIR", "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · X: DASH · ESC: EXIT");
+    this.root.querySelector("[data-empty-instructions]").textContent = this.text("A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · X: EMBESTIR · E: TOMAR / SOLTAR · Q: COMER HUEVO · P: PAUSAR · ESC: SALIR", "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · X: DASH · E: PICK UP / DROP · Q: EAT EGG · P: PAUSE · ESC: EXIT");
+    this.root.querySelector("[data-empty-controls-text]").textContent = this.text("A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · X: EMBESTIR · E: TOMAR / SOLTAR · Q: COMER HUEVO · ESC: SALIR", "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · X: DASH · E: PICK UP / DROP · Q: EAT EGG · ESC: EXIT");
     this.root.querySelector("[data-empty-pause-label]").textContent = this.text("PAUSA", "PAUSED");
     this.root.querySelector("[data-empty-result]").textContent = this.text("CORAL FUE DEVORADA", "CORAL WAS EATEN");
     this.updatePauseButton();
@@ -199,6 +210,12 @@ export class EmptyStomach {
     this.herd = [];
     this.particles = [];
     this.dashDustClouds = [];
+    this.eggs = [];
+    this.rocks = [];
+    this.carriedItem = null;
+    this.invulnerabilityTimer = 0;
+    this.eggSpawnTimer = 2.2;
+    this.rockSpawnTimer = 3.4;
     this.player = {
       x: INTRO_END_X, y: FLOOR - PLAYER_HEIGHT, w: PLAYER_WIDTH, h: PLAYER_HEIGHT,
       vy: 0, grounded: true, facing: 1, dashDirection: 1, dashTimer: 0, dashCooldown: 0
@@ -352,6 +369,7 @@ export class EmptyStomach {
 
   update(delta) {
     this.elapsed += delta;
+    this.invulnerabilityTimer = Math.max(0, (this.invulnerabilityTimer || 0) - delta);
     const speed = Math.min(310, 150 + this.elapsed * 2.2);
     this.distance += speed * delta;
     this.sceneryOffset = (this.sceneryOffset ?? 0) + speed * delta;
@@ -384,6 +402,8 @@ export class EmptyStomach {
       this.enemies.push(createPredator(kind, Math.random() * 6));
       this.spawnTimer = Math.max(0.95, 2.6 - this.elapsed * 0.018) + Math.random() * 0.7;
     }
+
+    this.updateGroundItems(delta, speed);
 
     this.preyTimer -= delta;
     if (this.preyTimer <= 0) {
@@ -446,40 +466,42 @@ export class EmptyStomach {
           enemy.preyTarget = null;
         }
       } else if (enemy.state === "hunting") {
-        const preyTarget = this.herd
-          .filter((prey) => !prey.beingEaten)
-          .reduce((nearest, prey) => {
-            if (!nearest) return prey;
-            const preyDistance = Math.abs(prey.x + prey.w / 2 - (enemy.x + enemy.w / 2));
-            const nearestDistance = Math.abs(nearest.x + nearest.w / 2 - (enemy.x + enemy.w / 2));
-            return preyDistance < nearestDistance ? prey : nearest;
-          }, null);
-
-        enemy.preyTarget = preyTarget;
-        if (preyTarget) {
-          const targetX = preyTarget.x + preyTarget.w / 2;
+        const targets = [
+          ...this.herd.filter((prey) => !prey.beingEaten).map((prey) => ({ item: prey, type: "prey" })),
+          ...this.eggs.map((egg) => ({ item: egg, type: "egg" }))
+        ];
+        const target = targets.reduce((nearest, candidate) => {
+          if (!nearest) return candidate;
+          const candidateDistance = Math.abs(candidate.item.x + candidate.item.w / 2 - (enemy.x + enemy.w / 2));
+          const nearestDistance = Math.abs(nearest.item.x + nearest.item.w / 2 - (enemy.x + enemy.w / 2));
+          return candidateDistance < nearestDistance ? candidate : nearest;
+        }, null);
+        enemy.preyTarget = target?.type === "prey" ? target.item : null;
+        if (target) {
+          const targetX = target.item.x + target.item.w / 2;
           const distance = Math.abs(targetX - (enemy.x + enemy.w / 2));
           if (distance <= 58) {
-            preyTarget.beingEaten = true;
-            preyTarget.beingEatenElapsed = 0;
-            enemy.eatTarget = preyTarget;
+            if (target.type === "prey") {
+              target.item.beingEaten = true;
+              target.item.beingEatenElapsed = 0;
+            }
+            enemy.eatTarget = target.item;
+            enemy.eatTargetType = target.type;
             enemy.preyTarget = null;
             enemy.state = "eating";
             enemy.stateTimer = ENEMY_EAT_DURATION;
             enemy.y = FLOOR - enemy.h;
-          } else {
-            this.moveEnemyTowards(enemy, targetX, chaseSpeed + 24, delta);
-          }
-        } else {
-          enemy.y = FLOOR - enemy.h;
-        }
+          } else this.moveEnemyTowards(enemy, targetX, chaseSpeed + 24, delta);
+        } else enemy.y = FLOOR - enemy.h;
       } else if (enemy.state === "eating") {
         enemy.stateTimer = Math.max(0, enemy.stateTimer - delta);
         enemy.y = FLOOR - enemy.h;
         if (enemy.stateTimer <= 0) {
-          const eatenPrey = enemy.eatTarget;
-          this.herd = this.herd.filter((prey) => prey !== eatenPrey);
+          const eatenTarget = enemy.eatTarget;
+          if (enemy.eatTargetType === "egg") this.eggs = this.eggs.filter((egg) => egg !== eatenTarget);
+          else this.herd = this.herd.filter((prey) => prey !== eatenTarget);
           enemy.eatTarget = null;
+          enemy.eatTargetType = null;
           // The predator stops animating and is carried off-screen by the scrolling ground.
           enemy.state = "departing";
           enemy.stateTimer = 0;
@@ -487,6 +509,9 @@ export class EmptyStomach {
       } else if (enemy.state === "departing") {
         // Like a treadmill belt: the predator holds its pose while the world scrolls left.
         enemy.x -= speed * delta;
+        enemy.y = FLOOR - enemy.h;
+      } else if (enemy.state === "fading") {
+        enemy.fadeTimer = Math.max(0, enemy.fadeTimer - delta);
         enemy.y = FLOOR - enemy.h;
       }
 
@@ -496,17 +521,70 @@ export class EmptyStomach {
         w: enemy.w - 40,
         h: enemy.h - 18
       };
-      const playerContact = overlaps(playerHitbox, enemyHitbox);
-      if (dashing && playerContact && enemy.state !== "stunned") {
-        this.stunPredator(enemy, delta);
-      } else if (playerContact && enemy.state !== "stunned") {
-        this.finish();
-        return;
+      for (const rock of this.rocks) {
+        if (overlaps(rock, enemyHitbox) && this.tripEnemy(enemy)) { rock.consumed = true; break; }
       }
+      const playerContact = overlaps(playerHitbox, enemyHitbox);
+      if (this.invulnerabilityTimer > 0) continue;
+      if (dashing && playerContact && enemy.state !== "stunned") this.stunPredator(enemy, delta);
+      else if (playerContact && !["stunned", "fading"].includes(enemy.state)) { this.finish(); return; }
     }
-
-    this.enemies = this.enemies.filter((enemy) => enemy.x + enemy.w > 0 && enemy.x < WIDTH + 240);
+    this.rocks = this.rocks.filter((rock) => !rock.consumed);
+    this.enemies = this.enemies.filter((enemy) => enemy.x + enemy.w > 0 && enemy.x < WIDTH + 240 && (enemy.state !== "fading" || enemy.fadeTimer > 0));
   }
+
+  interactWithItem() {
+    if (!this.running || this.phase !== "playing") return false;
+    if (this.carriedItem) {
+      const item=this.carriedItem, direction=this.player.facing||1;
+      item.x=Math.max(12,Math.min(WIDTH-item.w-12,this.player.x+direction*(this.player.w+18)));
+      item.y=FLOOR-item.h; item.vx=direction*(item.kind==="rock"?185:115);
+      (item.kind==="rock"?this.rocks:this.eggs).push(item); this.carriedItem=null; return true;
+    }
+    const candidates=[...this.eggs,...this.rocks].filter(item=>Math.abs(item.x+item.w/2-(this.player.x+this.player.w/2))<=ITEM_INTERACTION_RADIUS)
+      .sort((a,b)=>Math.abs(a.x-this.player.x)-Math.abs(b.x-this.player.x));
+    const item=candidates[0]; if(!item)return false;
+    const collection=item.kind==="egg"?this.eggs:this.rocks;
+    collection.splice(collection.indexOf(item),1); item.vx=0; this.carriedItem=item; return true;
+  }
+
+  consumeCarriedEgg() {
+    if(!this.running||this.phase!=="playing"||this.carriedItem?.kind!=="egg")return false;
+    this.carriedItem=null; this.invulnerabilityTimer=EGG_INVULNERABILITY_DURATION; return true;
+  }
+
+  updateGroundItems(delta,speed) {
+    this.eggSpawnTimer-=delta;
+    if(this.eggSpawnTimer<=0){this.eggs.push({kind:"egg",x:WIDTH+20,y:FLOOR-23,w:28,h:23,vx:0});this.eggSpawnTimer=4.8+Math.random()*3.2;}
+    this.rockSpawnTimer-=delta;
+    if(this.rockSpawnTimer<=0){this.rocks.push({kind:"rock",x:WIDTH+30,y:FLOOR-25,w:34,h:25,vx:0});this.rockSpawnTimer=6.2+Math.random()*3.8;}
+    for(const item of [...this.eggs,...this.rocks]){item.x+=((item.vx||0)-speed*.72)*delta;item.vx=(item.vx||0)*Math.max(0,1-delta*2.6);item.y=FLOOR-item.h;}
+    this.eggs=this.eggs.filter(item=>item.x+item.w>-40);this.rocks=this.rocks.filter(item=>item.x+item.w>-50);
+  }
+
+  tripEnemy(enemy) {
+    if(["fading","departing","eating"].includes(enemy.state))return false;
+    enemy.state="fading";enemy.fadeTimer=ENEMY_TRIP_FADE_DURATION;enemy.preyTarget=null;enemy.eatTarget=null;return true;
+  }
+
+  drawEgg(egg) {
+    const c=this.ctx;c.save();c.fillStyle="#e9dfc2";c.strokeStyle="#9f8c68";c.lineWidth=2;c.beginPath();
+    c.ellipse(egg.x+egg.w/2,egg.y+egg.h/2,egg.w*.42,egg.h*.48,-.18,0,Math.PI*2);c.fill();c.stroke();
+    c.fillStyle="rgba(255,255,255,.62)";c.beginPath();c.ellipse(egg.x+egg.w*.36,egg.y+egg.h*.3,3,5,-.3,0,Math.PI*2);c.fill();c.restore();
+  }
+
+  drawRock(rock) {
+    const c=this.ctx;c.save();c.fillStyle="#171a19";c.strokeStyle="#555b55";c.lineWidth=2;c.beginPath();
+    c.moveTo(rock.x+3,rock.y+rock.h);c.lineTo(rock.x+1,rock.y+11);c.lineTo(rock.x+11,rock.y+2);
+    c.lineTo(rock.x+24,rock.y+4);c.lineTo(rock.x+rock.w-1,rock.y+15);c.lineTo(rock.x+rock.w-5,rock.y+rock.h);
+    c.closePath();c.fill();c.stroke();c.restore();
+  }
+
+  drawCarriedItem(item) {
+    const x=this.player.x+this.player.w/2-item.w/2,y=this.player.y-item.h+8;
+    if(item.kind==="egg")this.drawEgg({...item,x,y});else this.drawRock({...item,x,y});
+  }
+
   finish() {
     if (!this.running) return;
     this.running = false;
@@ -697,6 +775,8 @@ export class EmptyStomach {
       }
     }
 
+    for (const egg of this.eggs) this.drawEgg(egg);
+    for (const rock of this.rocks) this.drawRock(rock);
     for (const prey of this.herd) {
       const pose = prey.beingEaten
         ? (prey.beingEatenElapsed < 0.65 ? "parasaurPerturbed" : "parasaurIdle")
@@ -707,6 +787,8 @@ export class EmptyStomach {
       const pose = enemyAnimationKey(enemy, this.elapsed);
       const frozenPose = enemy.state === "departing" || enemy.state === "stunned" ||
         (enemy.kind === "xenoraptor" && enemy.state === "hunting" && !enemy.preyTarget);
+      ctx.save();
+      if (enemy.state === "fading") ctx.globalAlpha = Math.max(0, enemy.fadeTimer / ENEMY_TRIP_FADE_DURATION);
       this.drawSprite(
         pose,
         enemy.x,
@@ -716,6 +798,7 @@ export class EmptyStomach {
         enemy.kind === "xenoraptor" ? "#6c524b" : "#34433c",
         frozenPose ? 0 : this.animationClock * 1000
       );
+      ctx.restore();
       if (enemy.state === "stunned") {
         ctx.fillStyle = "#fff2a8";
         ctx.font = "bold 20px monospace";
@@ -723,7 +806,12 @@ export class EmptyStomach {
       }
     }
     for (const cloud of this.dashDustClouds ?? []) this.drawDashDustCloud(cloud);
+    if (this.carriedItem) this.drawCarriedItem(this.carriedItem);
+    ctx.save();
+    if (this.invulnerabilityTimer > 0) ctx.globalAlpha = Math.floor(this.invulnerabilityTimer * 12) % 2 ? 0.42 : 1;
     this.drawSprite("coral", this.player.x, this.player.y, this.player.w, this.player.h, "#e7a7a0");
+    ctx.restore();
+    if (this.invulnerabilityTimer > 0) { ctx.fillStyle="#fff0bd";ctx.font="bold 13px monospace";ctx.fillText("INVULNERABLE "+this.invulnerabilityTimer.toFixed(1)+"s",26,56); }
     if (this.phase === "playing" || this.phase === "finished") {
       ctx.fillStyle = "#30452a";
       ctx.font = "bold 16px monospace";

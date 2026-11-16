@@ -2912,3 +2912,10 @@ button.character-card {
     white-space: nowrap;
   }
 }
+
+/* Non-campaign modes hide the entire upper operation HUD to reclaim canvas height. */
+.panel-head.is-hidden{display:none !important}
+
+/* Campaign-only context strip: non-campaign modes reclaim its vertical space. */
+.panel-head .mission-brief-header.is-hidden{display:none !important}
+.panel-head:has(.mission-brief-header.is-hidden){grid-template-columns:minmax(245px,1.05fr) minmax(112px,.55fr) auto;min-height:40px;padding-block:4px}
