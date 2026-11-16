@@ -91,7 +91,7 @@ const minigamesStartScreenArtwork = `${import.meta.env.BASE_URL}artwork/coral-8b
 // Keep one entry per minigame; null falls back to the current menu page artwork.
 const minigamePreviewSources = new Map([
   [emptyStomachButton, minigamesStartScreenArtwork],
-  [timeAttackButton, null],
+  [timeAttackButton, `${import.meta.env.BASE_URL}artwork/time-attack-artwork.png`],
   [survivalButton, `${import.meta.env.BASE_URL}artwork/survival-artwork.png`],
   [freeRoamButton, `${import.meta.env.BASE_URL}artwork/free-roam-artwork.png`]
 ]);
