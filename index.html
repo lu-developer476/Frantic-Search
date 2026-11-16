@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#101a1b" />
     <link rel="icon" href="/favicon/favicon.png" type="image/png" />
-    <meta name="description" content="Frantic Search — una aventura arcade pixelada de plataformas y supervivencia. Rescatá a Rosa junto a Violeta y Vasti." />
-    <title>Operation: Lost Hatchling</title>
+    <meta name="description" content="Frantic Search: una aventura arcade pixelada de plataformas y supervivencia. Rescatá a Rosa junto a Violeta y Vasti." />
+    <title>Frantic Search — Operación: cría perdida</title>
   </head>
   <body>
     <div id="app">
       <header class="topbar">
         <div class="navbar-identity">
-          <a class="brand" href="https://franticsearch.vercel.app/#" aria-label="Frantic Search inicio"><strong><em>FRANTIC SEARCH</em></strong></a>
+          <a class="brand" href="https://franticsearch.vercel.app/#" aria-label="Inicio de Frantic Search" data-i18n-aria="brandHome"><strong><em>FRANTIC SEARCH</em></strong></a>
         </div>
         <div class="nav-actions">
           <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav-menu" data-i18n-aria="openMenu">
@@ -51,14 +51,14 @@
         </section>
         <section class="game-panel">
           <div class="panel-head">
-            <div class="panel-metrics" aria-label="Estadísticas de la operación">
+            <div class="panel-metrics" aria-label="Estadísticas de la operación" data-i18n-aria="operationStats">
               <div class="panel-metric"><small data-i18n="distance">DISTANCIA</small><b id="distance">0000 m</b></div>
               <div class="panel-metric"><small data-i18n="rescues">RESCATOS</small><b id="rescues">00</b></div>
               <div class="panel-metric"><small data-i18n="record">RÉCORD</small><b id="best">0000 m</b></div>
             </div>
             <div class="panel-health">
               <span class="panel-health-label" data-i18n="health">VIDA</span>
-              <div id="player-health-meter" class="panel-health-meter" role="meter" aria-label="Salud del personaje" aria-valuemin="0" aria-valuemax="5" aria-valuenow="5">
+              <div id="player-health-meter" class="panel-health-meter" role="meter" aria-label="Salud del personaje" data-i18n-aria="characterHealth" aria-valuemin="0" aria-valuemax="5" aria-valuenow="5">
                 <span id="player-health-fill" class="panel-health-fill"></span>
               </div>
             </div>
@@ -71,7 +71,7 @@
           </div>
           
           <div class="canvas-wrap">
-            <canvas id="game" width="960" height="540" aria-label="Juego de plataformas Frantic Search"></canvas>
+            <canvas id="game" width="960" height="540" aria-label="Juego de plataformas Frantic Search" data-i18n-aria="mainGameCanvas"></canvas>
             <div id="overlay" class="game-overlay hidden" aria-live="polite">
               <div class="overlay-content">
                 <span class="overlay-kicker">FRANTIC SEARCH // OPERATION 01</span>
@@ -118,7 +118,7 @@
                     
                   </button>
                 </div>
-                <div id="start-menu-options" class="start-menu-view" hidden aria-label="Opciones de inicio">
+                <div id="start-menu-options" class="start-menu-view" hidden aria-label="Opciones de inicio" data-i18n-aria="startMenuOptions">
                   <button id="campaign-button" class="menu-primary" type="button" aria-expanded="false" aria-controls="campaign-menu">
                     <span data-i18n="campaign">CAMPAÑA</span>
                   </button>
@@ -139,8 +139,8 @@
                   </button>
                   <button id="campaign-back-button" class="menu-back" type="button" data-i18n="back">VOLVER</button>
                 </div>
-                <div id="minigames-menu" class="start-menu-view" hidden aria-label="Minijuegos">
-                  <button id="empty-stomach-button" type="button" data-i18n="emptyStomach">EMPTY STOMACH</button>
+                <div id="minigames-menu" class="start-menu-view" hidden aria-label="Minijuegos" data-i18n-aria="minigames">
+                  <button id="empty-stomach-button" type="button" data-i18n="emptyStomach">ESTÓMAGO VACÍO</button>
                   <button id="time-attack-button" type="button"><span data-i18n="timeAttack">HORA DE ATACAR</span></button>
                   <button id="survival-button" type="button"><span data-i18n="survival">SUPERVIVENCIA</span></button>
                   <button id="free-roam-button" type="button">
@@ -159,38 +159,38 @@
                 </div>
               </div>
             </section>
-            <section id="empty-stomach-panel" class="empty-stomach-panel" aria-label="Empty Stomach" aria-hidden="true">
+            <section id="empty-stomach-panel" class="empty-stomach-panel" aria-label="Estómago vacío" data-i18n-aria="emptyStomach" aria-hidden="true">
               <div class="empty-stomach-stage">
-                <canvas width="960" height="540" aria-label="Empty Stomach endless survival minigame"></canvas>
+                <canvas width="960" height="540" aria-label="Minijuego de supervivencia: Estómago vacío" data-i18n-aria="emptyStomachCanvas"></canvas>
                 <div class="empty-stomach-pause-overlay" data-empty-pause-overlay hidden>
                   <span data-empty-pause-label>PAUSA</span>
                 </div>
                 <div class="empty-stomach-intro">
-                  <h2 data-empty-title>EMPTY STOMACH</h2>
+                  <h2 data-empty-title>ESTÓMAGO VACÍO</h2>
                   <p data-empty-subtitle>Coral corre por su vida. Los depredadores no van a detenerse.</p>
                   <p class="empty-stomach-instructions" data-empty-instructions></p>
                   <p class="empty-stomach-result" data-empty-result hidden></p>
                   <div class="empty-stomach-actions">
                     <button type="button" data-empty-start>COMENZAR</button>
-                    <button type="button" data-empty-retry hidden>VOLVER A CORRER</button>
-                    <button type="button" data-empty-exit>VOLVER AL MENÚ</button>
+                    <button type="button" data-empty-retry hidden>REINTENTAR</button>
+                    <button type="button" data-empty-exit>SALIR</button>
                   </div>
                 </div>
               </div>
               <div class="empty-stomach-bottom" data-empty-controls hidden>
-                <span data-empty-controls-text>A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · P: PAUSAR · ESC: SALIR</span>
+                <span data-empty-controls-text>A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · ESC: SALIR</span>
                 <button type="button" data-empty-pause>P: PAUSAR</button>
               </div>
             </section>
-            <section id="time-attack-panel" class="time-attack-panel" aria-label="Time Attack" aria-hidden="true">
+            <section id="time-attack-panel" class="time-attack-panel" aria-label="Time Attack" data-i18n-aria="timeAttack" aria-hidden="true">
               <div class="time-attack-top">
-                <span>FRANTIC SEARCH // HUNTING MODE</span>
+                <span data-i18n="huntingMode">FRANTIC SEARCH // MODO DE CAZA</span>
                 <span data-ta-status>SECTION 01 // EXTRACTION</span>
               </div>
               <div class="time-attack-stage">
-                <canvas width="960" height="540" aria-label="Time Attack four-hunter dinosaur hunting minigame"></canvas>
+                <canvas width="960" height="540" aria-label="Minijuego de caza Time Attack" data-i18n-aria="timeAttackCanvas"></canvas>
                 <div class="time-attack-intro">
-                  <small>TIME TRIAL // FOUR-HUNTER SQUAD</small>
+                  <small data-i18n="timeTrialSquad">CONTRARRELOJ // ESCUADRA DE CUATRO CAZADORES</small>
                   <h2 data-ta-title>TIME ATTACK</h2>
                   <p data-ta-subtitle>Una escuadra de cuatro cazadores. Catorce dinosaurios. Despejá la ruta y llegá a la extracción lo más rápido posible.</p>
                   <p class="time-attack-instructions" data-ta-instructions></p>
@@ -203,15 +203,15 @@
                 </div>
               </div>
             </section>
-            <section id="survival-panel" class="survival-panel" aria-label="Survival" aria-hidden="true">
+            <section id="survival-panel" class="survival-panel" aria-label="Supervivencia" data-i18n-aria="survival" aria-hidden="true">
               <div class="survival-top">
-                <span>FRANTIC SEARCH // ENDLESS WAVES</span>
+                <span data-i18n="endlessWavesMode">FRANTIC SEARCH // OLEADAS INFINITAS</span>
                 <span data-survival-status>SURVIVAL // WAVE 01</span>
               </div>
               <div class="survival-stage">
-                <canvas width="960" height="540" aria-label="Survival endless progressive waves minigame"></canvas>
+                <canvas width="960" height="540" aria-label="Minijuego de supervivencia por oleadas" data-i18n-aria="survivalCanvas"></canvas>
                 <div class="survival-intro">
-                  <small>ENDLESS COMBAT // PICK YOUR SIDE</small>
+                  <small data-i18n="endlessCombat">COMBATE INFINITO // ELEGÍ TU BANDO</small>
                   <h2 data-survival-title>SURVIVAL</h2>
                   <p data-survival-subtitle>Elegí tu bando y aguantá todas las oleadas que puedas. Cada ronda trae más enemigos y más resistencia.</p>
                   <p class="survival-instructions" data-survival-instructions></p>
@@ -228,7 +228,7 @@
                 </div>
               </div>
             </section>
-            <section id="dino-modal" class="dino-modal hidden" role="dialog" aria-modal="true" aria-label="Selección de personaje">
+            <section id="dino-modal" class="dino-modal hidden" role="dialog" aria-modal="true" aria-label="Elegir personaje" data-i18n-aria="chooseCharacter">
               <div class="dino-dialog">
                 <div class="character-picker" aria-label="Elegir personaje" data-i18n-aria="chooseCharacter">
                   <button class="character-card active" data-character="blue" type="button" aria-label="Seleccionar a Violeta" data-i18n-aria="selectVioleta" aria-pressed="true">
@@ -238,7 +238,7 @@
                     <span class="character-art vasti-art"><img src="%BASE_URL%references/vastatosaurus-rex.png" data-idle-src="%BASE_URL%references/vastatosaurus-rex.png" data-run-a-src="%BASE_URL%references/vastatosaurus-rex.png" data-run-b-src="%BASE_URL%references/vastatosaurus-rex.png" alt="" /></span>
                   </button>
                 </div>
-                <div class="character-info-grid" aria-label="Información de los personajes">
+                <div class="character-info-grid" aria-label="Información de los personajes" data-i18n-aria="characterInfo">
                   <div class="character-info">
                     <span class="character-species" data-i18n="raptor">Velociraptor nublarensis</span>
                     <span class="character-name">VIOLETA</span>
@@ -272,7 +272,7 @@
                 <div class="story-actions"><span id="story-progress">1 / 1</span><button id="story-next" type="button" data-i18n="continue">CONTINUAR</button></div>
               </div>
             </section>
-                    <div class="hud-strip" role="region" aria-label="Estado de la operación">
+                    <div class="hud-strip" role="region" aria-label="Estado de la operación" data-i18n-aria="operationStatus">
             <div class="hud-summary">
               <div class="hud-status-stack">
                 <small id="ability-status" class="ability-readout" data-i18n="dashReady">EMBESTIDA LISTA</small>

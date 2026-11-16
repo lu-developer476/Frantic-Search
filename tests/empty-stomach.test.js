@@ -89,7 +89,7 @@ test("Empty Stomach removes the Coral survival caption and keeps the death resul
 
 test("Empty Stomach hides intro description and controls after death, then restores them on retry", () => {
   const nodes = {
-    "[data-empty-title]": { hidden: false, textContent: "HAMBRE INSACIABLE" },
+    "[data-empty-title]": { hidden: false, textContent: "ESTÓMAGO VACÍO" },
     "[data-empty-subtitle]": { hidden: false },
     "[data-empty-instructions]": { hidden: false },
     "[data-empty-result]": { hidden: true, textContent: "" },
@@ -133,7 +133,7 @@ test("Empty Stomach hides intro description and controls after death, then resto
 
   simulation.reset();
 
-  assert.equal(nodes["[data-empty-title]"].textContent, "HAMBRE INSACIABLE");
+  assert.equal(nodes["[data-empty-title]"].textContent, "ESTÓMAGO VACÍO");
   assert.equal(nodes["[data-empty-subtitle]"].hidden, false);
   assert.equal(nodes["[data-empty-instructions]"].hidden, false);
 });
@@ -468,22 +468,31 @@ test("Empty Stomach includes the pause key in both instruction labels for Spanis
   });
 
   simulation.setLocale("es");
-  const spanish = "A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · P: PAUSAR · ESC: SALIR";
-  assert.equal(nodes.get("[data-empty-instructions]").textContent, spanish);
-  assert.equal(nodes.get("[data-empty-controls-text]").textContent, spanish);
+  const spanishInstructions = "A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · P: PAUSAR · ESC: SALIR";
+  const spanishControls = "A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · ESC: SALIR";
+  assert.equal(nodes.get("[data-empty-instructions]").textContent, spanishInstructions);
+  assert.equal(nodes.get("[data-empty-controls-text]").textContent, spanishControls);
+  assert.equal(simulation.pauseButton.textContent, "P: PAUSAR");
+  assert.equal(nodes.get("[data-empty-retry]").textContent, "REINTENTAR");
+  assert.equal(nodes.get("[data-empty-exit]").textContent, "SALIR");
 
   simulation.setLocale("en");
-  const english = "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · P: PAUSE · ESC: EXIT";
-  assert.equal(nodes.get("[data-empty-instructions]").textContent, english);
-  assert.equal(nodes.get("[data-empty-controls-text]").textContent, english);
+  const englishInstructions = "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · P: PAUSE · ESC: EXIT";
+  const englishControls = "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · ESC: EXIT";
+  assert.equal(nodes.get("[data-empty-instructions]").textContent, englishInstructions);
+  assert.equal(nodes.get("[data-empty-controls-text]").textContent, englishControls);
+  assert.equal(simulation.pauseButton.textContent, "P: PAUSE");
+  assert.equal(nodes.get("[data-empty-retry]").textContent, "RETRY");
+  assert.equal(nodes.get("[data-empty-exit]").textContent, "EXIT");
 });
 
-test("Empty Stomach static gameplay controls include the pause key", async () => {
+test("Empty Stomach keeps the pause shortcut only in the right-side control", async () => {
   const { readFile } = await import("node:fs/promises");
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
   assert.ok(html.includes(
-    '<span data-empty-controls-text>A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · P: PAUSAR · ESC: SALIR</span>'
+    '<span data-empty-controls-text>A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · ESC: SALIR</span>'
   ));
+  assert.ok(html.includes('<button type="button" data-empty-pause>P: PAUSAR</button>'));
 });
 
 

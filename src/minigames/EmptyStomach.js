@@ -134,15 +134,15 @@ export class EmptyStomach {
   text(es, en) { return this.locale === "es" ? es : en; }
   setLocale(locale) {
     this.locale = locale === "en" ? "en" : "es";
-    this.root.querySelector("[data-empty-title]").textContent = this.text("HAMBRE INSACIABLE", "EMPTY STOMACH");
+    this.root.querySelector("[data-empty-title]").textContent = this.text("ESTÓMAGO VACÍO", "EMPTY STOMACH");
     this.root.querySelector("[data-empty-subtitle]").textContent = this.text("Coral corre por su vida. Los depredadores no van a detenerse.", "Coral is running for her life. The predators won't stop.");
     this.root.querySelector("[data-empty-instructions]").textContent = this.text("A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · P: PAUSAR · ESC: SALIR", "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · P: PAUSE · ESC: EXIT");
-    this.root.querySelector("[data-empty-controls-text]").textContent = this.text("A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · P: PAUSAR · ESC: SALIR", "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · P: PAUSE · ESC: EXIT");
+    this.root.querySelector("[data-empty-controls-text]").textContent = this.text("A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · ESC: SALIR", "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · ESC: EXIT");
     this.root.querySelector("[data-empty-pause-label]").textContent = this.text("PAUSA", "PAUSED");
     this.updatePauseButton();
     this.root.querySelector("[data-empty-start]").textContent = this.text("COMENZAR", "START RUN");
-    this.root.querySelector("[data-empty-retry]").textContent = this.text("VOLVER A CORRER", "RUN AGAIN");
-    this.root.querySelector("[data-empty-exit]").textContent = this.text("VOLVER AL MENÚ", "BACK TO MENU");
+    this.root.querySelector("[data-empty-retry]").textContent = this.text("REINTENTAR", "RETRY");
+    this.root.querySelector("[data-empty-exit]").textContent = this.text("SALIR", "EXIT");
     this.render();
   }
 
@@ -167,7 +167,7 @@ export class EmptyStomach {
     this.root.classList.remove("paused");
     this.pauseOverlay.hidden = true;
     this.controlsStrip.hidden = true;
-    this.root.querySelector("[data-empty-title]").textContent = this.text("HAMBRE INSACIABLE", "EMPTY STOMACH");
+    this.root.querySelector("[data-empty-title]").textContent = this.text("ESTÓMAGO VACÍO", "EMPTY STOMACH");
     this.root.querySelector("[data-empty-subtitle]").hidden = false;
     this.root.querySelector("[data-empty-instructions]").hidden = false;
     this.updatePauseButton();

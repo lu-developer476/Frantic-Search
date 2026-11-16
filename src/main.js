@@ -2812,6 +2812,8 @@ function applyLanguage() {
   timeAttack.setLocale(locale);
   survival.setLocale(locale);
   document.documentElement.lang = locale;
+  document.title = ui("documentTitle");
+  document.querySelector('meta[name="description"]')?.setAttribute("content", ui("metaDescription"));
   document.querySelectorAll("[data-i18n]").forEach((element) => {
     element.textContent = ui(element.dataset.i18n);
   });

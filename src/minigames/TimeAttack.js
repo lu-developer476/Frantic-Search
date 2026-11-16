@@ -33,6 +33,11 @@ export function createWavePlan() {
   return WAVES.map(wave => ({ at: wave.at, kinds: [...wave.kinds] }));
 }
 
+export function formatHunterLabel(index, isPlayer, locale = "es") {
+  if (isPlayer) return locale === "en" ? "YOU" : "VOS";
+  return (locale === "en" ? "AI " : "IA ") + index;
+}
+
 export function nearestTarget(hunter, dinosaurs, maxDistance = Infinity) {
   const center = hunter.x + hunter.w / 2;
   let nearest = null;
@@ -66,7 +71,7 @@ function hunterActor(index, x) {
   const isPlayer = index === 0;
   return {
     id: isPlayer ? "time-attack-player" : "time-attack-ai-" + index,
-    label: isPlayer ? "YOU" : "AI " + index,
+    squadIndex: index,
     x, y: FLOOR - 64, w: 38, h: 64, direction: 1,
     health: isPlayer ? 4 : 3, maxHealth: isPlayer ? 4 : 3,
     invulnerable: 0, downTimer: 0, fireCooldown: 0.12 + index * 0.18,
@@ -527,7 +532,7 @@ export class TimeAttack {
     ctx.fillStyle = hunter.isPlayer ? "#e9f3bd" : "#d4dfd2";
     ctx.font = "bold 9px monospace";
     ctx.textAlign = "center";
-    ctx.fillText(hunter.label, screenX, y - 11);
+    ctx.fillText(formatHunterLabel(hunter.squadIndex, hunter.isPlayer, this.locale), screenX, y - 11);
     ctx.textAlign = "left";
     if (hunter.health > 0) {
       ctx.fillStyle = "#18221d";

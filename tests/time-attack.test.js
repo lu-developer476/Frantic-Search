@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { canCompleteSection, createWavePlan, formatTime, nearestTarget } from "../src/minigames/TimeAttack.js";
+import { canCompleteSection, createWavePlan, formatHunterLabel, formatTime, nearestTarget } from "../src/minigames/TimeAttack.js";
 
 test("Time Attack plans four ordered waves containing fourteen dinosaurs", () => {
   const waves = createWavePlan();
@@ -37,4 +37,12 @@ test("Time Attack AI selects the nearest living dinosaur inside its firing range
   ];
   assert.equal(nearestTarget(hunter, dinosaurs, 500), dinosaurs[2]);
   assert.equal(nearestTarget(hunter, dinosaurs, 100), null);
+});
+
+
+test("Time Attack localizes the player and AI squad labels", () => {
+  assert.equal(formatHunterLabel(0, true, "es"), "VOS");
+  assert.equal(formatHunterLabel(0, true, "en"), "YOU");
+  assert.equal(formatHunterLabel(1, false, "es"), "IA 1");
+  assert.equal(formatHunterLabel(3, false, "en"), "AI 3");
 });
