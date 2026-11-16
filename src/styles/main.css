@@ -2922,7 +2922,7 @@ body:has(#character-confirmation:not(.hidden)) #app,
 body:has(#empty-stomach-panel.active:not(.playing)) #app,
 body:has(#time-attack-panel.active:not(.playing)) #app,
 body:has(#survival-panel.active:not(.playing)) #app {
-  grid-template-rows: minmax(0, 1fr) !important;
+  grid-template-rows: 0 minmax(0, 1fr) !important;
 }
 
 body:has(#start-screen:not(.hidden)) .topbar,
