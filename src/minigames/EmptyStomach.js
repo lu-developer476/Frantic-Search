@@ -146,14 +146,17 @@ export class EmptyStomach {
   text(es, en) { return this.locale === "es" ? es : en; }
   setLocale(locale) {
     this.locale = locale === "en" ? "en" : "es";
-    this.root.querySelector("[data-empty-title]").textContent = this.text("ESTÓMAGO VACÍO", "EMPTY STOMACH");
+    this.root.querySelector("[data-empty-title]").textContent = this.phase === "finished"
+      ? this.text("PARTIDA FINALIZADA", "GAME OVER")
+      : this.text("ESTÓMAGO VACÍO", "EMPTY STOMACH");
     this.root.querySelector("[data-empty-subtitle]").textContent = this.text("Coral corre por su vida. Los depredadores no van a detenerse.", "Coral is running for her life. The predators won't stop.");
     this.root.querySelector("[data-empty-instructions]").textContent = this.text("A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · X: EMBESTIR · P: PAUSAR · ESC: SALIR", "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · X: DASH · P: PAUSE · ESC: EXIT");
     this.root.querySelector("[data-empty-controls-text]").textContent = this.text("A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · X: EMBESTIR · ESC: SALIR", "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · X: DASH · ESC: EXIT");
     this.root.querySelector("[data-empty-pause-label]").textContent = this.text("PAUSA", "PAUSED");
+    this.root.querySelector("[data-empty-result]").textContent = this.text("CORAL FUE DEVORADA", "CORAL WAS EATEN");
     this.updatePauseButton();
     this.root.querySelector("[data-empty-start]").textContent = this.text("INICIAR", "START RUN");
-    this.root.querySelector("[data-empty-retry]").textContent = this.text("REINTENTAR", "RETRY");
+    this.root.querySelector("[data-empty-retry]").textContent = this.text("RETOMAR", "RETRY");
     this.root.querySelector("[data-empty-exit]").textContent = this.text("SALIR", "EXIT");
     this.render();
   }

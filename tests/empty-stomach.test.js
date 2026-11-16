@@ -452,6 +452,7 @@ test("Empty Stomach includes the pause key in both instruction labels for Spanis
     "[data-empty-title]",
     "[data-empty-subtitle]",
     "[data-empty-instructions]",
+    "[data-empty-result]",
     "[data-empty-controls-text]",
     "[data-empty-pause-label]",
     "[data-empty-start]",
@@ -479,7 +480,7 @@ test("Empty Stomach includes the pause key in both instruction labels for Spanis
   assert.equal(nodes.get("[data-empty-controls-text]").textContent, spanishControls);
   assert.equal(simulation.pauseButton.textContent, "P: PAUSAR");
   assert.equal(nodes.get("[data-empty-start]").textContent, "INICIAR");
-  assert.equal(nodes.get("[data-empty-retry]").textContent, "REINTENTAR");
+  assert.equal(nodes.get("[data-empty-retry]").textContent, "RETOMAR");
   assert.equal(nodes.get("[data-empty-exit]").textContent, "SALIR");
 
   simulation.setLocale("en");
@@ -493,6 +494,38 @@ test("Empty Stomach includes the pause key in both instruction labels for Spanis
   assert.equal(nodes.get("[data-empty-exit]").textContent, "EXIT");
 });
 
+test("Empty Stomach updates the game-over message when the locale changes after Coral is eaten", () => {
+  const selectors = [
+    "[data-empty-title]", "[data-empty-subtitle]", "[data-empty-instructions]",
+    "[data-empty-result]", "[data-empty-controls-text]", "[data-empty-pause-label]",
+    "[data-empty-start]", "[data-empty-retry]", "[data-empty-exit]"
+  ];
+  const nodes = new Map(selectors.map((selector) => [selector, { textContent: "", hidden: false }]));
+  const simulation = Object.create(EmptyStomach.prototype);
+  Object.assign(simulation, {
+    locale: "es",
+    phase: "finished",
+    pauseButton: {
+      textContent: "",
+      setAttribute(name, value) { this[name] = value; }
+    },
+    root: {
+      querySelector(selector) { return nodes.get(selector); }
+    },
+    render() {}
+  });
+
+  simulation.setLocale("es");
+  assert.equal(nodes.get("[data-empty-title]").textContent, "PARTIDA FINALIZADA");
+  assert.equal(nodes.get("[data-empty-result]").textContent, "CORAL FUE DEVORADA");
+  assert.equal(nodes.get("[data-empty-retry]").textContent, "RETOMAR");
+
+  simulation.setLocale("en");
+  assert.equal(nodes.get("[data-empty-title]").textContent, "GAME OVER");
+  assert.equal(nodes.get("[data-empty-result]").textContent, "CORAL WAS EATEN");
+  assert.equal(nodes.get("[data-empty-retry]").textContent, "RETRY");
+});
+
 test("Empty Stomach keeps the pause shortcut only in the right-side control", async () => {
   const { readFile } = await import("node:fs/promises");
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
@@ -500,6 +533,7 @@ test("Empty Stomach keeps the pause shortcut only in the right-side control", as
     '<span data-empty-controls-text>A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · X: EMBESTIR · ESC: SALIR</span>'
   ));
   assert.ok(html.includes('<button type="button" data-empty-pause>P: PAUSAR</button>'));
+  assert.ok(html.includes('<button type="button" data-empty-retry hidden>RETOMAR</button>'));
 });
 
 
@@ -576,4 +610,6 @@ test("Empty Stomach keeps both instruction labels on a single line", async () =>
   assert.ok(source.includes(".empty-stomach-instructions{"));
   assert.ok(source.includes(".empty-stomach-bottom span{"));
   assert.ok(source.includes("white-space:nowrap"));
+  assert.ok(source.includes("grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)"));
+  assert.ok(source.includes("grid-column:2;min-width:0;white-space:nowrap;text-align:center"));
 });
