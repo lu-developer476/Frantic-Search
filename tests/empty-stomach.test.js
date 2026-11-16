@@ -1,6 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { overlaps, scoreForDistance, getGroundAlignedY, createPredator, enemyAnimationKey, EmptyStomach, ENEMY_CHASE_DURATION, INTRO_DURATION, PLAYER_WIDTH, PLAYER_HEIGHT } from "../src/minigames/EmptyStomach.js";
+import {
+  overlaps, scoreForDistance, getGroundAlignedY, createPredator, enemyAnimationKey,
+  EmptyStomach, ENEMY_CHASE_DURATION, INTRO_DURATION, PLAYER_WIDTH, PLAYER_HEIGHT,
+  DASH_DURATION, DASH_COOLDOWN, DASH_SPEED_MULTIPLIER, ENEMY_STUN_DURATION
+} from "../src/minigames/EmptyStomach.js";
 import { removeEdgeBackground, getBottomTransparentPadding } from "../src/minigames/AnimatedGif.js";
 
 test("Empty Stomach uses rectangle overlap for predator contact", () => {
@@ -205,7 +209,8 @@ function makeSimulation({ player, enemies = [], herd = [] }) {
     preyTimer: 60,
     enemies,
     herd,
-    player: { ...player, vy: 0, grounded: true },
+    player: { facing: 1, dashDirection: 1, dashTimer: 0, dashCooldown: 0, ...player, vy: 0, grounded: true },
+    dashDustClouds: [],
     keys: new Set(),
     running: true,
     frame: null
@@ -468,20 +473,22 @@ test("Empty Stomach includes the pause key in both instruction labels for Spanis
   });
 
   simulation.setLocale("es");
-  const spanishInstructions = "A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · P: PAUSAR · ESC: SALIR";
-  const spanishControls = "A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · ESC: SALIR";
+  const spanishInstructions = "A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · X: EMBESTIR · P: PAUSAR · ESC: SALIR";
+  const spanishControls = "A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · X: EMBESTIR · ESC: SALIR";
   assert.equal(nodes.get("[data-empty-instructions]").textContent, spanishInstructions);
   assert.equal(nodes.get("[data-empty-controls-text]").textContent, spanishControls);
   assert.equal(simulation.pauseButton.textContent, "P: PAUSAR");
+  assert.equal(nodes.get("[data-empty-start]").textContent, "INICIAR");
   assert.equal(nodes.get("[data-empty-retry]").textContent, "REINTENTAR");
   assert.equal(nodes.get("[data-empty-exit]").textContent, "SALIR");
 
   simulation.setLocale("en");
-  const englishInstructions = "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · P: PAUSE · ESC: EXIT";
-  const englishControls = "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · ESC: EXIT";
+  const englishInstructions = "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · X: DASH · P: PAUSE · ESC: EXIT";
+  const englishControls = "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · X: DASH · ESC: EXIT";
   assert.equal(nodes.get("[data-empty-instructions]").textContent, englishInstructions);
   assert.equal(nodes.get("[data-empty-controls-text]").textContent, englishControls);
   assert.equal(simulation.pauseButton.textContent, "P: PAUSE");
+  assert.equal(nodes.get("[data-empty-start]").textContent, "START RUN");
   assert.equal(nodes.get("[data-empty-retry]").textContent, "RETRY");
   assert.equal(nodes.get("[data-empty-exit]").textContent, "EXIT");
 });
@@ -490,7 +497,7 @@ test("Empty Stomach keeps the pause shortcut only in the right-side control", as
   const { readFile } = await import("node:fs/promises");
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
   assert.ok(html.includes(
-    '<span data-empty-controls-text>A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · ESC: SALIR</span>'
+    '<span data-empty-controls-text>A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · X: EMBESTIR · ESC: SALIR</span>'
   ));
   assert.ok(html.includes('<button type="button" data-empty-pause>P: PAUSAR</button>'));
 });
@@ -516,4 +523,57 @@ test("Empty Stomach keeps Parasaurolophus entity coordinates fixed on the floor"
     simulation.update(0.04);
     assert.equal(prey.y, 366, "the Parasaurolophus base stays on the floor while moving");
   }
+});
+
+
+test("Empty Stomach gives Coral Violeta's short directional dash and cooldown", () => {
+  const simulation = makeSimulation({ player: { x: 400, y: 366, w: 80, h: 66, facing: -1 } });
+  simulation.phase = "playing";
+  assert.equal(DASH_DURATION, 0.2);
+  assert.equal(DASH_COOLDOWN, 1.65);
+  assert.equal(DASH_SPEED_MULTIPLIER, 2.2);
+  assert.equal(simulation.activateDash(), true);
+  assert.equal(simulation.player.dashDirection, -1);
+  assert.equal(simulation.player.dashTimer, DASH_DURATION);
+  assert.equal(simulation.player.dashCooldown, DASH_COOLDOWN);
+  assert.equal(simulation.dashDustClouds.length, 1);
+  assert.equal(simulation.activateDash(), false, "the dash cannot be repeated during its cooldown");
+  const startX = simulation.player.x;
+  simulation.update(0.04);
+  assert.ok(simulation.player.x < startX, "Coral dashes in the direction she is facing");
+  assert.equal(simulation.player.dashTimer, DASH_DURATION - 0.04);
+  assert.equal(simulation.player.dashCooldown, DASH_COOLDOWN - 0.04);
+});
+
+test("Empty Stomach's dash dust stuns predators in place and lets Coral pass safely", () => {
+  const enemy = createPredator("velociraptor", 0);
+  enemy.x = 100;
+  enemy.direction = 1;
+  enemy.stateTimer = 1.4;
+  const simulation = makeSimulation({
+    player: { x: 250, y: 366, w: 80, h: 66 },
+    enemies: [enemy]
+  });
+  simulation.phase = "playing";
+  assert.equal(simulation.activateDash(), true);
+  const enemyStartX = enemy.x;
+  simulation.update(0.04);
+  assert.equal(enemy.state, "stunned");
+  assert.equal(enemy.stateTimer, ENEMY_STUN_DURATION);
+  assert.equal(enemy.x, enemyStartX, "a stunned predator remains stationary");
+  assert.equal(enemyAnimationKey(enemy, simulation.elapsed), "velociraptorIdle");
+  assert.ok(simulation.player.x > 250, "Coral keeps moving through the dash");
+  assert.equal(simulation.running, true, "contact during the dash must not end the run");
+  simulation.update(1.9);
+  assert.equal(enemy.state, "stunned", "the predator stays stunned for about two seconds");
+  simulation.update(0.11);
+  assert.equal(enemy.state, "chasing", "the predator resumes its previous behavior after recovery");
+});
+
+test("Empty Stomach keeps both instruction labels on a single line", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const source = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+  assert.ok(source.includes(".empty-stomach-instructions{"));
+  assert.ok(source.includes(".empty-stomach-bottom span{"));
+  assert.ok(source.includes("white-space:nowrap"));
 });

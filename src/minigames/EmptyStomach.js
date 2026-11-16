@@ -42,6 +42,12 @@ export function getGroundAlignedY(y, renderedHeight, sourceHeight, bottomPadding
 
 export const ENEMY_CHASE_DURATION = 2;
 export const ENEMY_EAT_DURATION = 1.35;
+export const DASH_DURATION = 0.2;
+export const DASH_COOLDOWN = 1.65;
+export const DASH_SPEED_MULTIPLIER = 2.2;
+export const DASH_DUST_DURATION = 0.72;
+export const ENEMY_STUN_DURATION = 2;
+export const PLAYER_RIGHT_MARGIN = 120;
 
 export function createPredator(kind, phase = 0) {
   const isXenoraptor = kind === "xenoraptor";
@@ -65,6 +71,7 @@ export function createPredator(kind, phase = 0) {
 
 export function enemyAnimationKey(enemy, elapsed = 0) {
   const isXenoraptor = enemy.kind === "xenoraptor";
+  if (enemy.state === "stunned") return isXenoraptor ? "xenoraptorJump" : "velociraptorIdle";
   if (enemy.state === "eating") return isXenoraptor ? "xenoraptorAttack" : "velociraptorEat";
   if (enemy.state === "departing" || (enemy.state === "hunting" && !enemy.preyTarget)) {
     return isXenoraptor ? "xenoraptorJump" : "velociraptorIdle";
@@ -109,15 +116,20 @@ export class EmptyStomach {
     this.enemies = [];
     this.herd = [];
     this.particles = [];
-    this.player = { x: INTRO_END_X, y: FLOOR - PLAYER_HEIGHT, w: PLAYER_WIDTH, h: PLAYER_HEIGHT, vy: 0, grounded: true };
+    this.dashDustClouds = [];
+    this.player = {
+      x: INTRO_END_X, y: FLOOR - PLAYER_HEIGHT, w: PLAYER_WIDTH, h: PLAYER_HEIGHT,
+      vy: 0, grounded: true, facing: 1, dashDirection: 1, dashTimer: 0, dashCooldown: 0
+    };
     this.best = 0;
     try { this.best = Number(localStorage.getItem("frantic-empty-stomach-best")) || 0; } catch {}
     this.handleKeyDown = (event) => {
       if (!this.root.classList.contains("active")) return;
-      if (["ArrowLeft", "ArrowRight", "ArrowUp", "Space", "KeyP"].includes(event.code)) event.preventDefault();
+      if (["ArrowLeft", "ArrowRight", "ArrowUp", "Space", "KeyP", "KeyX"].includes(event.code)) event.preventDefault();
       if (event.code === "Escape" && !event.repeat) { this.exit(); return; }
       if (event.code === "KeyP" && !event.repeat) { this.togglePause(); return; }
       if (this.phase === "intro" || this.paused) return;
+      if (event.code === "KeyX" && !event.repeat) { this.activateDash(); return; }
       if (["ArrowLeft", "ArrowRight", "ArrowUp", "Space", "KeyA", "KeyD", "KeyW"].includes(event.code)) this.keys.add(event.code);
       if (["Space", "ArrowUp", "KeyW"].includes(event.code) && !event.repeat && !this.running && !this.paused) this.start();
     };
@@ -136,11 +148,11 @@ export class EmptyStomach {
     this.locale = locale === "en" ? "en" : "es";
     this.root.querySelector("[data-empty-title]").textContent = this.text("ESTÓMAGO VACÍO", "EMPTY STOMACH");
     this.root.querySelector("[data-empty-subtitle]").textContent = this.text("Coral corre por su vida. Los depredadores no van a detenerse.", "Coral is running for her life. The predators won't stop.");
-    this.root.querySelector("[data-empty-instructions]").textContent = this.text("A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · P: PAUSAR · ESC: SALIR", "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · P: PAUSE · ESC: EXIT");
-    this.root.querySelector("[data-empty-controls-text]").textContent = this.text("A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · ESC: SALIR", "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · ESC: EXIT");
+    this.root.querySelector("[data-empty-instructions]").textContent = this.text("A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · X: EMBESTIR · P: PAUSAR · ESC: SALIR", "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · X: DASH · P: PAUSE · ESC: EXIT");
+    this.root.querySelector("[data-empty-controls-text]").textContent = this.text("A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · X: EMBESTIR · ESC: SALIR", "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · X: DASH · ESC: EXIT");
     this.root.querySelector("[data-empty-pause-label]").textContent = this.text("PAUSA", "PAUSED");
     this.updatePauseButton();
-    this.root.querySelector("[data-empty-start]").textContent = this.text("COMENZAR", "START RUN");
+    this.root.querySelector("[data-empty-start]").textContent = this.text("INICIAR", "START RUN");
     this.root.querySelector("[data-empty-retry]").textContent = this.text("REINTENTAR", "RETRY");
     this.root.querySelector("[data-empty-exit]").textContent = this.text("SALIR", "EXIT");
     this.render();
@@ -183,7 +195,11 @@ export class EmptyStomach {
     this.enemies = [];
     this.herd = [];
     this.particles = [];
-    this.player = { x: INTRO_END_X, y: FLOOR - PLAYER_HEIGHT, w: PLAYER_WIDTH, h: PLAYER_HEIGHT, vy: 0, grounded: true };
+    this.dashDustClouds = [];
+    this.player = {
+      x: INTRO_END_X, y: FLOOR - PLAYER_HEIGHT, w: PLAYER_WIDTH, h: PLAYER_HEIGHT,
+      vy: 0, grounded: true, facing: 1, dashDirection: 1, dashTimer: 0, dashCooldown: 0
+    };
     this.keys.clear();
   }
 
@@ -271,6 +287,55 @@ export class EmptyStomach {
     this.frame = requestAnimationFrame((now) => this.tick(now));
   }
 
+  activateDash() {
+    if (!this.running || this.phase !== "playing") return false;
+    const p = this.player;
+    if ((p.dashCooldown ?? 0) > 0 || (p.dashTimer ?? 0) > 0) return false;
+
+    p.dashDirection = Math.sign(p.facing) || 1;
+    p.dashTimer = DASH_DURATION;
+    p.dashCooldown = DASH_COOLDOWN;
+
+    const width = 205;
+    const height = p.h + 14;
+    const x = p.dashDirection > 0 ? p.x - 135 : p.x + p.w - 70;
+    this.dashDustClouds ??= [];
+    this.dashDustClouds.push({
+      x, y: p.y - 6, w: width, h: height,
+      life: DASH_DUST_DURATION, max: DASH_DUST_DURATION, hitIds: new Set()
+    });
+    return true;
+  }
+
+  stunPredator(enemy, delta = 0) {
+    if (!["chasing", "hunting"].includes(enemy.state)) return false;
+    enemy.stunnedState = enemy.state;
+    enemy.stunnedStateTimer = enemy.stateTimer;
+    enemy.state = "stunned";
+    enemy.stateTimer = ENEMY_STUN_DURATION + delta;
+    enemy.preyTarget = null;
+    return true;
+  }
+
+  updateDashDust(delta) {
+    const clouds = this.dashDustClouds ?? [];
+    for (const cloud of clouds) {
+      cloud.life = Math.max(0, cloud.life - delta);
+      if (cloud.life <= 0) continue;
+      for (const enemy of this.enemies) {
+        if (cloud.hitIds.has(enemy) || !["chasing", "hunting"].includes(enemy.state)) continue;
+        const faceX = enemy.x + enemy.w * (enemy.direction > 0 ? 0.82 : 0.18);
+        const faceY = enemy.y + enemy.h * 0.34;
+        const hitFace = faceX >= cloud.x && faceX <= cloud.x + cloud.w &&
+          faceY >= cloud.y && faceY <= cloud.y + cloud.h;
+        if (!hitFace) continue;
+        cloud.hitIds.add(enemy);
+        this.stunPredator(enemy, delta);
+      }
+    }
+    this.dashDustClouds = clouds.filter((cloud) => cloud.life > 0);
+  }
+
   moveEnemyTowards(enemy, targetX, chaseSpeed, delta) {
     const center = enemy.x + enemy.w / 2;
     const difference = targetX - center;
@@ -290,9 +355,18 @@ export class EmptyStomach {
     const p = this.player;
     const left = this.keys.has("ArrowLeft") || this.keys.has("KeyA");
     const right = this.keys.has("ArrowRight") || this.keys.has("KeyD");
-    if (left) p.x -= 245 * delta;
-    if (right) p.x += 245 * delta;
-    p.x = Math.max(22, Math.min(850, p.x));
+    if (left && !right) p.facing = -1;
+    else if (right && !left) p.facing = 1;
+    const dashing = (p.dashTimer ?? 0) > 0;
+    if (dashing) {
+      p.x += (p.dashDirection || p.facing || 1) * 245 * DASH_SPEED_MULTIPLIER * delta;
+      p.dashTimer = Math.max(0, p.dashTimer - delta);
+    } else {
+      if (left) p.x -= 245 * delta;
+      if (right) p.x += 245 * delta;
+    }
+    p.dashCooldown = Math.max(0, (p.dashCooldown ?? 0) - delta);
+    p.x = Math.max(22, Math.min(WIDTH - p.w - PLAYER_RIGHT_MARGIN, p.x));
     if ((this.keys.has("Space") || this.keys.has("ArrowUp") || this.keys.has("KeyW")) && p.grounded) {
       p.vy = -590;
       p.grounded = false;
@@ -348,10 +422,20 @@ export class EmptyStomach {
       h: p.h - 12
     };
 
+    this.updateDashDust(delta);
     for (const enemy of this.enemies) {
       const chaseSpeed = enemy.kind === "xenoraptor" ? 168 : 138;
 
-      if (enemy.state === "chasing") {
+      if (enemy.state === "stunned") {
+        enemy.stateTimer = Math.max(0, enemy.stateTimer - delta);
+        enemy.y = FLOOR - enemy.h;
+        if (enemy.stateTimer <= 0) {
+          enemy.state = enemy.stunnedState ?? "hunting";
+          enemy.stateTimer = enemy.stunnedStateTimer ?? 0;
+          delete enemy.stunnedState;
+          delete enemy.stunnedStateTimer;
+        }
+      } else if (enemy.state === "chasing") {
         enemy.stateTimer = Math.max(0, enemy.stateTimer - delta);
         this.moveEnemyTowards(enemy, p.x + p.w / 2, chaseSpeed + this.elapsed * 1.4, delta);
         if (enemy.stateTimer <= 0) {
@@ -409,7 +493,10 @@ export class EmptyStomach {
         w: enemy.w - 40,
         h: enemy.h - 18
       };
-      if (overlaps(playerHitbox, enemyHitbox)) {
+      const playerContact = overlaps(playerHitbox, enemyHitbox);
+      if (dashing && playerContact && enemy.state !== "stunned") {
+        this.stunPredator(enemy, delta);
+      } else if (playerContact && enemy.state !== "stunned") {
         this.finish();
         return;
       }
@@ -472,6 +559,32 @@ export class EmptyStomach {
       this.ctx.fillStyle = fallback;
       this.ctx.fillRect(x + 10, y + 20, w - 20, h - 24);
     }
+  }
+
+  drawDashDustCloud(cloud) {
+    const fade = Math.max(0, Math.min(1, cloud.life / cloud.max));
+    if (fade <= 0) return;
+    const puffs = [
+      [0.10, 0.72, 0.15, 0.23], [0.27, 0.48, 0.17, 0.28],
+      [0.46, 0.64, 0.19, 0.25], [0.63, 0.42, 0.16, 0.28],
+      [0.80, 0.65, 0.16, 0.23], [0.94, 0.77, 0.10, 0.18]
+    ];
+    const rise = (1 - fade) * 12;
+    this.ctx.save();
+    this.ctx.globalAlpha = fade * 0.68;
+    puffs.forEach(([px, py, rx, ry], index) => {
+      this.ctx.fillStyle = index % 2 ? "#c0b397" : "#d9ccb0";
+      this.ctx.beginPath();
+      this.ctx.ellipse(
+        cloud.x + cloud.w * px,
+        cloud.y + cloud.h * py + rise,
+        cloud.w * rx / 2,
+        cloud.h * ry / 2,
+        0, 0, Math.PI * 2
+      );
+      this.ctx.fill();
+    });
+    this.ctx.restore();
   }
 
   render() {
@@ -589,7 +702,7 @@ export class EmptyStomach {
     }
     for (const enemy of this.enemies) {
       const pose = enemyAnimationKey(enemy, this.elapsed);
-      const frozenPose = enemy.state === "departing" ||
+      const frozenPose = enemy.state === "departing" || enemy.state === "stunned" ||
         (enemy.kind === "xenoraptor" && enemy.state === "hunting" && !enemy.preyTarget);
       this.drawSprite(
         pose,
@@ -600,7 +713,13 @@ export class EmptyStomach {
         enemy.kind === "xenoraptor" ? "#6c524b" : "#34433c",
         frozenPose ? 0 : this.animationClock * 1000
       );
+      if (enemy.state === "stunned") {
+        ctx.fillStyle = "#fff2a8";
+        ctx.font = "bold 20px monospace";
+        ctx.fillText("✳", enemy.x + enemy.w / 2 - 7, enemy.y - 5);
+      }
     }
+    for (const cloud of this.dashDustClouds ?? []) this.drawDashDustCloud(cloud);
     this.drawSprite("coral", this.player.x, this.player.y, this.player.w, this.player.h, "#e7a7a0");
     if (this.phase === "playing" || this.phase === "finished") {
       ctx.fillStyle = "#30452a";
