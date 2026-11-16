@@ -88,7 +88,7 @@ const survivalPanel = document.querySelector("#survival-panel");
 const startScreenArtwork = document.querySelector(".start-screen-artwork");
 const defaultStartScreenArtwork = `${import.meta.env.BASE_URL}artwork/8bits-artwork.png`;
 const minigamesStartScreenArtwork = `${import.meta.env.BASE_URL}artwork/coral-8bits-artwork.png`;
-// Keep one entry per minigame; null uses the default artwork until a preview is ready.
+// Keep one entry per minigame; null falls back to the current menu page artwork.
 const minigamePreviewSources = new Map([
   [emptyStomachButton, minigamesStartScreenArtwork],
   [timeAttackButton, null],
