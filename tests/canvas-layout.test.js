@@ -25,13 +25,13 @@ test("the mission brief shares the top panel bar with distance, rescues, record,
   assert.doesNotMatch(html.slice(canvasStart), /mission-banner|campaign-chapter|campaign-objective/);
 });
 
-test("the full canvas scales into the available viewport without losing its 16:9 ratio", async () => {
+test("the full canvas fills the available viewport using responsive backing dimensions", async () => {
   const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
   const rules = css.slice(css.lastIndexOf("/* Full-width gameplay stage"));
   assert.match(rules, /\.layout\s*\{[^}]*height:100%[^}]*min-height:0[^}]*overflow:hidden/s);
   assert.match(rules, /\.game-panel\s*\{[^}]*height:100%[^}]*grid-template-rows:auto minmax\(0,1fr\)/s);
-  assert.match(rules, /\.canvas-wrap\s*\{[^}]*display:flex[^}]*height:100%[^}]*aspect-ratio:auto/s);
-  assert.match(rules, /\.canvas-wrap canvas#game\s*\{[^}]*width:auto[^}]*height:100%[^}]*max-width:100%[^}]*max-height:100%[^}]*aspect-ratio:auto[^}]*object-fit:contain/s);
+  assert.match(rules, /\.canvas-wrap\s*\{[^}]*display:block[^}]*height:100%[^}]*aspect-ratio:auto/s);
+  assert.match(rules, /\.canvas-wrap canvas#game\s*\{[^}]*position:absolute[^}]*inset:0[^}]*width:100%[^}]*height:100%[^}]*aspect-ratio:auto[^}]*object-fit:fill/s);
   const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
   assert.match(main, /observeCanvasViewport/);
 });
@@ -199,4 +199,27 @@ test("minigame canvases expand to match their active stage", async () => {
     assert.match(source, /this\.canvasViewport\(\)/);
     assert.match(source, /this\.canvasViewport\.disconnect\(\)/);
   }
+});
+
+
+test("main screens and dialogs fill the active canvas frame", async () => {
+  const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+  const rules = css.slice(css.lastIndexOf("/* Every screen and notice"));
+  assert.match(rules, /\.canvas-wrap > #start-screen,[\s\S]*?width:100%[^}]*height:100%[^}]*aspect-ratio:auto/s);
+  assert.match(rules, /\.canvas-wrap > #dino-modal,[\s\S]*?width:100%[^}]*aspect-ratio:auto/s);
+});
+
+test("Empty Stomach keeps its playfield fixed while the lower controls strip appears", async () => {
+  const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+  const rules = css.slice(css.indexOf("/* Empty Stomach:"));
+  assert.match(rules, /\.empty-stomach-panel\.active\s*\{display:block\}/);
+  assert.match(rules, /\.empty-stomach-stage\s*\{position:absolute;inset:0/);
+  assert.match(rules, /\.empty-stomach-bottom\s*\{position:absolute;z-index:4;left:0;right:0;bottom:0/);
+});
+
+test("Time Attack and Survival keep a fixed stage row beneath their mode header", async () => {
+  const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+  assert.match(css, /\.time-attack-panel\.active\s*\{display:grid;grid-template-rows:auto minmax\(0,1fr\)/);
+  assert.match(css, /\.survival-panel\.active\s*\{display:grid;grid-template-rows:auto minmax\(0,1fr\)/);
+  assert.match(css, /\.time-attack-stage canvas,[\s\S]*?aspect-ratio:auto;object-fit:fill/);
 });
