@@ -3230,3 +3230,23 @@ body:has(#survival-panel.active:not(.playing)) .canvas-wrap {
   max-height:none;
   aspect-ratio:auto;
 }
+
+/* Keep the main canvas in document flow so its live bitmap dimensions establish
+   the stage height. Absolute sizing here collapses the containing layout on some
+   viewport configurations and clips the start-menu controls and artwork. */
+.canvas-wrap {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.canvas-wrap > canvas#game {
+  position:relative;
+  z-index:auto;
+  inset:auto;
+  flex:0 1 auto;
+  width:auto;
+  height:100%;
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+}
