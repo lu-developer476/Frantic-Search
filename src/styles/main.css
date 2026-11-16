@@ -902,8 +902,18 @@ body.game-paused .brand,body.game-paused .navbar-separator{display:none!importan
   image-rendering:pixelated;
   filter:drop-shadow(0 18px 38px rgba(0,0,0,.34));
 }
+/* Highlight the shared menu artwork while any visible menu action is hovered
+   or keyboard-focused, across the main menu and every nested menu page. */
+#start-screen:has(.start-screen-copy button:hover, .start-screen-copy button:focus-visible) .start-screen-artwork,
 .start-screen-artwork.is-minigame-preview{
   filter:drop-shadow(0 18px 38px rgba(0,0,0,.34)) drop-shadow(0 0 16px rgba(216,243,106,.12));
+}
+
+/* Character illustrations are also menu artwork: give each portrait the same
+   yellow halo while its selection card is hovered or keyboard-focused. */
+.character-card:hover .character-art img,
+.character-card:focus-visible .character-art img{
+  filter:drop-shadow(0 0 16px rgba(216,243,106,.12));
 }
 @keyframes startPing{0%,100%{transform:scale(.86);opacity:.78}50%{transform:scale(1.12);opacity:1}}
 @media(max-width:1200px) and (min-width:1024px){
