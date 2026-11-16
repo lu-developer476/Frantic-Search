@@ -24,6 +24,7 @@ import { beginEnemyFade, advanceEnemyFade, getEnemyOpacity, isEnemyFadeComplete 
 import { BOSS_ARENA_HALF_WIDTH, PlatformWorld } from "./world/PlatformWorld.js";
 import { COLLECTIBLE_TOTALS } from "./world/CollectibleGenerator.js";
 import { CampaignManager, BOSS_ENCOUNTER_FLAGS } from "./campaign/CampaignManager.js";
+import { CampaignPrologue } from "./campaign/CampaignPrologue.js";
 import { getLevelCheckpointDistance, canActivateLevelCheckpoint } from "./campaign/CheckpointManager.js";
 import { Beta } from "./entities/Beta.js";
 import { FacilityConsole } from "./entities/FacilityConsole.js";
@@ -226,6 +227,7 @@ let dashHitIds = new Set();
 let dashDustClouds = [];
 let particles = [];
 let campaign = new CampaignManager();
+let campaignPrologue = null;
 let beta = null;
 let autonomousCompanions = [];
 let facilityConsoles = [];
@@ -238,10 +240,12 @@ const INTEL_STEGOCERATOPS_COOLDOWN = 24;
 const AMBER_MAX_HEALTH_MILESTONE = 6;
 const AMBER_BONUS_HEALTH = 1;
 const rand = (min, max) => min + Math.random() * (max - min);
-const level = () => levelTransition?.phase === "exit"
-  ? LEVELS[levelTransition.fromIndex]
-  : [...LEVELS].reverse().find((item) => distance >= item.distance) || LEVELS[0];
-const currentMusicTheme = () => campaign.flags.completed ? "victory" : activeBoss ? "boss" : beta?.state === "following" ? "extraction" : level().musicTheme;
+const level = () => campaignPrologue?.active
+  ? LEVELS[1]
+  : levelTransition?.phase === "exit"
+    ? LEVELS[levelTransition.fromIndex]
+    : [...LEVELS].reverse().find((item) => distance >= item.distance) || LEVELS[0];
+const currentMusicTheme = () => campaignPrologue?.active ? "forest" : campaign.flags.completed ? "victory" : activeBoss ? "boss" : beta?.state === "following" ? "extraction" : level().musicTheme;
 const best = () => Math.max(save.get("bestDistance"), Math.floor(distance));
 const ui = (key) => uiText(key, locale);
 const tr = (value) => translateText(value, locale);
@@ -1241,6 +1245,384 @@ function updateCampaignHud() {
   if (rescuesLabel) rescuesLabel.textContent = String(rescues).padStart(2, "0");
 }
 
+
+function beginCampaignPrologue() {
+  const prologue = new CampaignPrologue({ startX: GAME.playerX });
+  campaignPrologue = prologue;
+  campaign.chapter = "FOREST CLEARING";
+  campaign.objective = "INVESTIGATE THE NOISE";
+
+  player.setCharacter("rosa");
+  player.x = prologue.startX + 160;
+  player.y = GAME.groundY - player.h;
+  player.vx = 0;
+  player.vy = 0;
+  player.onGround = true;
+  player.facing = 1;
+
+  prologue.violetaActor = new Player("blue", prologue.startX + 42, GAME.groundY);
+  prologue.violetaActor.x = prologue.startX + 42;
+  prologue.violetaActor.y = GAME.groundY - prologue.violetaActor.h + 5;
+  prologue.violetaActor.state = "resting";
+  prologue.violetaActor.motionSpeed = 0;
+  player.animationState = null;
+
+  prologue.hunters = [
+    {
+      id: "prologue-poacher-left", x: prologue.jeepX - 190, y: GAME.groundY - 68,
+      w: 44, h: 68, health: 1, maxHealth: 1, state: "patrol", direction: 1, defeated: false
+    },
+    {
+      id: "prologue-poacher-right", x: prologue.jeepX + 210, y: GAME.groundY - 68,
+      w: 44, h: 68, health: 1, maxHealth: 1, state: "patrol", direction: -1, defeated: false
+    }
+  ];
+
+  hunters = [];
+  hunterProjectiles = [];
+  venatosauruses = [];
+  foodSources = [];
+  wildlife = [];
+  ferrucutusCaptives = [];
+  allies = [];
+  collectibles = [];
+  bosses = [];
+  activeBoss = null;
+  stegoceratops = null;
+  cameraX = 0;
+  if (interactionHintLabel) interactionHintLabel.textContent = "";
+  updateCampaignHud();
+}
+
+function beginPrologueSearch() {
+  const prologue = campaignPrologue;
+  if (!prologue?.active) return;
+  const actor = prologue.violetaActor;
+  actor.x = prologue.startX + 42;
+  actor.y = GAME.groundY - actor.h;
+  actor.state = "running";
+  actor.motionSpeed = 220;
+  actor.facing = 1;
+  actor.animationState = null;
+  prologue.searchStartX = actor.x;
+  cameraX = 0;
+  audio.collect();
+}
+
+function beginPrologueFight() {
+  const prologue = campaignPrologue;
+  if (!prologue?.active) return;
+  const actor = prologue.violetaActor;
+  actor.x = prologue.encounterX - 300;
+  actor.y = GAME.groundY - actor.h;
+  actor.state = "running";
+  actor.motionSpeed = 220;
+  actor.facing = 1;
+  actor.animationState = null;
+
+  prologue.vastiActor = new Player("vasti", prologue.encounterX + 55, GAME.groundY);
+  prologue.vastiActor.x = prologue.encounterX + 55;
+  prologue.vastiActor.y = GAME.groundY - prologue.vastiActor.h;
+  prologue.vastiActor.facing = -1;
+  prologue.vastiActor.state = "attack";
+  prologue.vastiActor.animationState = "stomp";
+
+  prologue.venatosaurus = new WildDinosaur({
+    id: "prologue-venatosaurus",
+    kind: "venatosaurus-impavidus",
+    x: prologue.encounterX + 330,
+    groundY: GAME.groundY,
+    patrolStart: prologue.encounterX + 180,
+    patrolEnd: prologue.encounterX + 470,
+    direction: -1
+  });
+  prologue.venatosaurus.state = "attack";
+  prologue.predatorDefeated = false;
+  prologue.strikeShown = false;
+  cameraX = Math.max(0, prologue.encounterX - 360);
+  audio.bossWarning();
+}
+
+function finishCampaignPrologue() {
+  if (!campaignPrologue || campaignPrologue.phase !== "complete") return;
+  campaignPrologue = null;
+  resetPlayer();
+  campaign.begin();
+  levelStartSnapshot = captureRestartSnapshot(0, 0);
+  latestLevelCheckpoint = levelStartSnapshot;
+  persistCampaignProgressSnapshot(levelStartSnapshot);
+  distance = 0;
+  cameraX = 0;
+  updatePlayerHealthHud();
+  updatePlayerAbilityHud();
+  updateCampaignHud();
+  renderStoryPanel();
+  music.setTheme(currentMusicTheme());
+  render();
+}
+
+function updateCampaignPrologue(delta) {
+  const prologue = campaignPrologue;
+  if (!prologue?.active) return;
+  elapsed += delta;
+
+  if (prologue.phase === "rest") {
+    const event = prologue.update(delta);
+    if (event === "rest") {
+      prologue.soundCueTimer = 2.4;
+      campaign.objective = "INVESTIGATE THE NOISE";
+      audio.collect();
+      updateCampaignHud();
+    }
+    return;
+  }
+
+  if (prologue.phase === "explore") {
+    prologue.soundCueTimer = Math.max(0, prologue.soundCueTimer - delta);
+    player.update(delta, input);
+    if (player.consumeJumpEvent()) audio.jump();
+    const abilityEvent = player.consumeAbilityEvent();
+    if (abilityEvent === "pounce") audio.collect();
+    const result = physics.step(player, delta, world.platformsNear(player.x));
+    if (result.fell) {
+      endGame();
+      return;
+    }
+
+    player.x = Math.max(prologue.startX + 40, Math.min(prologue.jeepX + 86, player.x));
+    player.vx = Math.max(-player.maxSpeed, Math.min(player.maxSpeed, player.vx));
+    cameraX = Math.max(0, player.x - 330);
+
+    if (input.consume("interact") && prologue.interactWithJeep(player)) {
+      player.vx = 0;
+      player.animationState = "impact";
+      player.animationTimer = 0.4;
+      cameraX = 0;
+      audio.hit();
+    }
+    if (interactionHintLabel) interactionHintLabel.textContent = prologue.canInteract(player) ? ui("jeepInteract") : "";
+    return;
+  }
+
+  const phase = prologue.phase;
+  const progress = prologue.progress;
+  if (phase === "capture") {
+    const center = prologue.jeepX + 66;
+    prologue.hunters[0].x = prologue.jeepX - 190 + progress * 170;
+    prologue.hunters[1].x = prologue.jeepX + 210 - progress * 138;
+    prologue.hunters.forEach((hunter) => {
+      hunter.state = progress > 0.25 ? "investigate" : "patrol";
+      hunter.direction = hunter.x < center ? 1 : -1;
+    });
+    player.x = prologue.jeepX + 12 + Math.min(42, progress * 64);
+    player.facing = -1;
+    player.vx = 0;
+    player.animationState = progress < 0.64 ? "impact" : null;
+    if (progress > 0.42) {
+      prologue.violetaActor.animationState = "impact";
+      prologue.violetaActor.state = "stunned";
+    }
+    if (progress > 0.72) prologue.rosaCaptured = true;
+    prologue.violetaActor.x = prologue.startX + 42 + Math.max(0, progress - 0.68) * 74;
+    prologue.violetaActor.motionSpeed = progress > 0.68 ? 90 : 0;
+    prologue.jeepVisualX = prologue.jeepX + Math.max(0, progress - 0.7) * 250;
+    cameraX = 0;
+  } else if (phase === "search") {
+    const actor = prologue.violetaActor;
+    actor.state = "running";
+    actor.animationState = null;
+    actor.motionSpeed = 225;
+    actor.x = prologue.searchStartX + (prologue.trackX - prologue.searchStartX) * progress;
+    actor.facing = 1;
+    cameraX = Math.max(0, actor.x - 330);
+    if (progress >= 0.72) prologue.tracksFound = true;
+  } else if (phase === "fight") {
+    const actor = prologue.violetaActor;
+    const enemy = prologue.venatosaurus;
+    const vasti = prologue.vastiActor;
+    actor.state = "running";
+    actor.motionSpeed = 210;
+    actor.x = prologue.encounterX - 300 + Math.min(235, progress * 320);
+    actor.facing = 1;
+    actor.animationState = progress >= 0.56 && progress <= 0.76 ? "attack" : null;
+
+    vasti.state = progress < 0.68 ? "attack" : "recovering";
+    vasti.animationState = progress < 0.33 ? "stomp" : progress < 0.68 ? "attack" : "recovery";
+    vasti.motionSpeed = 0;
+    enemy.x = prologue.encounterX + 330 - Math.min(110, progress * 150);
+    enemy.direction = -1;
+    enemy.motionSpeed = -75;
+    enemy.state = progress < 0.7 ? "attack" : progress < 0.86 ? "stunned" : "defeated";
+    if (progress >= 0.70 && !prologue.predatorDefeated) {
+      prologue.predatorDefeated = true;
+      enemy.takeDamage(999);
+      audio.hit();
+      burst(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, "#d8f36a", 24);
+    }
+    if (progress >= 0.56 && !prologue.strikeShown) {
+      prologue.strikeShown = true;
+      audio.collect();
+      burst(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, "#8ed8c0", 15);
+    }
+    cameraX = Math.max(0, prologue.encounterX - 360);
+  }
+
+  const event = prologue.update(delta);
+  if (event === "rest") {
+    // The engine noise breaks the quiet before the player takes control of Rosa.
+  } else if (event === "capture") {
+    prologue.violetaActor.state = "alert";
+    prologue.violetaActor.animationState = null;
+    campaign.queueScene("prologue-capture", "ROSA TAKEN", [
+      "Two poachers emerge from the trees and block Rosa's path. They corner the young raptor, force her into the jeep and speed away before Violeta can react.",
+      "The engine fades into the forest. The sudden noise wakes Violeta, who finds the clearing empty."
+    ]);
+    renderStoryPanel();
+  } else if (event === "search") {
+    campaign.queueScene("prologue-tracks", "FOLLOWING THE TRACKS", [
+      "Violeta searches the clearing and spots broken branches and disturbed soil. Fresh tire marks cut through the undergrowth.",
+      "She follows the tracks deeper into the forest. They lead toward a clearing where another struggle is already underway."
+    ]);
+    renderStoryPanel();
+  } else if (event === "fight") {
+    campaign.queueScene("prologue-alliance", "AN UNEXPECTED ALLY", [
+      "Violeta finds Vasti locked in a fight with a Venatosaurus. She joins the struggle and helps drive the predator away.",
+      "Once the threat is gone, Violeta asks Vasti to help her rescue Rosa. Vasti agrees, and the two set off together after the poachers."
+    ]);
+    renderStoryPanel();
+  }
+
+  if (interactionHintLabel) interactionHintLabel.textContent = "";
+}
+
+function drawPrologueJeep(x) {
+  const y = GAME.groundY - 78;
+  ctx.save();
+  ctx.fillStyle = "#172323";
+  ctx.fillRect(x + 4, y + 25, 154, 43);
+  ctx.fillStyle = "#5d694f";
+  ctx.fillRect(x + 18, y + 6, 96, 34);
+  ctx.fillStyle = "#8b9670";
+  ctx.fillRect(x + 25, y + 11, 38, 22);
+  ctx.fillRect(x + 68, y + 11, 37, 22);
+  ctx.fillStyle = "#283d3b";
+  ctx.fillRect(x + 65, y + 8, 5, 32);
+  ctx.fillStyle = "#c69b5d";
+  ctx.fillRect(x + 110, y + 25, 42, 43);
+  ctx.fillStyle = "#e5bd73";
+  ctx.fillRect(x + 121, y + 32, 24, 5);
+  ctx.fillStyle = "#d8b36d";
+  ctx.fillRect(x + 8, y + 41, 12, 8);
+  ctx.fillRect(x + 147, y + 41, 12, 8);
+  for (const wheelX of [x + 27, x + 119]) {
+    ctx.fillStyle = "#101719";
+    ctx.beginPath(); ctx.arc(wheelX, y + 68, 14, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#718078";
+    ctx.beginPath(); ctx.arc(wheelX, y + 68, 6, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.fillStyle = "#e6d5a1";
+  ctx.font = "bold 9px monospace";
+  ctx.fillText("POACHER // 04", x + 27, y - 5);
+  ctx.restore();
+}
+
+function drawPrologueTracks(prologue) {
+  if (!["search", "tracks-dialog", "fight", "alliance-dialog"].includes(prologue.phase)) return;
+  const start = prologue.jeepX + 118;
+  const end = prologue.trackX + 28;
+  ctx.save();
+  ctx.strokeStyle = "#332d26";
+  ctx.lineWidth = 7;
+  ctx.globalAlpha = prologue.tracksFound ? 0.84 : 0.35;
+  for (const offset of [-19, 19]) {
+    ctx.beginPath();
+    ctx.moveTo(start, GAME.groundY - 5 + offset);
+    ctx.lineTo(end, GAME.groundY - 5 + offset);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = "#b5a17b";
+  ctx.lineWidth = 2;
+  ctx.globalAlpha = 0.36;
+  for (let x = start + 14; x < end; x += 45) {
+    ctx.beginPath();
+    ctx.moveTo(x, GAME.groundY - 11);
+    ctx.lineTo(x + 15, GAME.groundY + 1);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawCampaignPrologueActors() {
+  const prologue = campaignPrologue;
+  if (!prologue?.active) return;
+
+  if (["rest", "explore", "capture", "capture-dialog"].includes(prologue.phase)) {
+    drawPrologueJeep(prologue.jeepVisualX ?? prologue.jeepX);
+    drawDino(
+      prologue.violetaActor.x, prologue.violetaActor.y,
+      prologue.violetaActor.w, prologue.violetaActor.h,
+      "#75a99b", "blue", elapsed, 0.98, prologue.violetaActor.facing, prologue.violetaActor
+    );
+    if (prologue.phase === "rest") {
+      ctx.fillStyle = "#f2e8c2";
+      ctx.font = "bold 12px monospace";
+      ctx.fillText("Z", prologue.violetaActor.x + 65, prologue.violetaActor.y - 12);
+      ctx.fillText("z", prologue.violetaActor.x + 77, prologue.violetaActor.y - 21);
+      ctx.fillText("Z", player.x + 48, player.y - 10);
+    } else if (prologue.phase === "explore" && prologue.soundCueTimer > 0) {
+      ctx.fillStyle = "#f3c36b";
+      ctx.font = "bold 22px monospace";
+      ctx.fillText("!", player.x + 48, player.y - 12);
+    }
+    if (prologue.phase === "capture" || prologue.phase === "capture-dialog") {
+      prologue.hunters.forEach((hunter) => drawHunter(hunter));
+    }
+  }
+
+  drawPrologueTracks(prologue);
+  if (["search", "tracks-dialog", "fight", "alliance-dialog"].includes(prologue.phase)) {
+    const actor = prologue.violetaActor;
+    drawDino(actor.x, actor.y, actor.w, actor.h, "#75a99b", "blue", elapsed, 1, actor.facing, actor);
+  }
+  if (["fight", "alliance-dialog"].includes(prologue.phase)) {
+    const vasti = prologue.vastiActor;
+    const enemy = prologue.venatosaurus;
+    drawDino(vasti.x, vasti.y, vasti.w, vasti.h, "#68784e", "vasti", elapsed, 1, vasti.facing, vasti);
+    if (enemy) {
+      spriteRenderer.drawAnimated(
+        ctx, enemy.kind, enemy.x, enemy.y, enemy.w, enemy.h,
+        enemy, elapsed, { facing: enemy.direction, alpha: prologue.predatorDefeated ? 0.38 : 1 }
+      );
+    }
+  }
+}
+
+function drawCampaignPrologueCaption() {
+  const prologue = campaignPrologue;
+  if (!prologue?.active || campaign.sceneOpen) return;
+  const captions = {
+    rest: "prologueRest",
+    explore: "prologueExplore",
+    capture: "prologueCapture",
+    search: "prologueSearch",
+    fight: "prologueFight"
+  };
+  const key = captions[prologue.phase];
+  if (!key) return;
+  ctx.save();
+  ctx.fillStyle = "#0d191be8";
+  ctx.fillRect(294, 22, 372, 30);
+  ctx.strokeStyle = "#d8f36a";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(294, 22, 372, 30);
+  ctx.fillStyle = "#edf3e5";
+  ctx.font = "bold 10px monospace";
+  ctx.textAlign = "center";
+  ctx.fillText(ui(key), GAME.width / 2, 41);
+  ctx.textAlign = "start";
+  ctx.restore();
+}
+
 function renderStoryPanel({ syncAudio = true } = {}) {
   if (!campaign.sceneOpen) {
     storyPanel?.classList.add("hidden");
@@ -1278,6 +1660,12 @@ function showCampaignEnding() {
 
 function advanceStory() {
   campaign.advanceScene();
+  if (!campaign.sceneOpen && campaignPrologue?.active) {
+    const nextPhase = campaignPrologue.continueAfterNarration();
+    if (nextPhase === "search") beginPrologueSearch();
+    else if (nextPhase === "fight") beginPrologueFight();
+    else if (nextPhase === "complete") finishCampaignPrologue();
+  }
   renderStoryPanel();
   if (!campaign.sceneOpen && campaign.flags.completed) {
     finalDeparture = true;
@@ -1730,6 +2118,10 @@ function updateStegoceratops(delta) {
 
 function update(delta) {
   if (!running || paused || (!freeRoamMode && campaign.sceneOpen)) return;
+  if (campaignPrologue?.active) {
+    updateCampaignPrologue(delta);
+    return;
+  }
   elapsed += delta;
   bossCueTimer = Math.max(0, bossCueTimer - delta);
   pickupCueTimer = Math.max(0, pickupCueTimer - delta);
@@ -2113,6 +2505,7 @@ function render() {
   }
   if (beta) drawBeta(beta);
   if (stegoceratops) spriteRenderer.drawAnimated(ctx, "stegoceratops", stegoceratops.x, stegoceratops.y, stegoceratops.w, stegoceratops.h, stegoceratops, elapsed, { facing: 1 });
+  drawCampaignPrologueActors();
   for (const particle of particles) {
     ctx.globalAlpha = Math.max(0, particle.life / particle.max);
     ctx.fillStyle = particle.color;
@@ -2127,7 +2520,16 @@ function render() {
     drawReferenceHealthBar(actor);
   }
   const blink = player.invulnerable > 0 && Math.floor(elapsed * 18) % 2 === 0;
-  drawDino(player.x, player.y, player.w, player.h, "#75a99b", selected, elapsed, blink ? 0.35 : 1, player.facing, player);
+  if (campaignPrologue?.active && ["rest", "explore", "capture"].includes(campaignPrologue.phase)) {
+    drawDino(
+      player.x,
+      player.y + (campaignPrologue.phase === "rest" ? 5 : 0),
+      player.w, player.h, "#75a99b", "rosa", elapsed,
+      blink ? 0.35 : 1, player.facing, player
+    );
+  } else if (!campaignPrologue?.active) {
+    drawDino(player.x, player.y, player.w, player.h, "#75a99b", selected, elapsed, blink ? 0.35 : 1, player.facing, player);
+  }
   if (player.dashTimer > 0) {
     ctx.fillStyle = "#d8f36a66";
     ctx.fillRect(player.x - 20, player.y + player.h * 0.48, player.w + 8, 4);
@@ -2141,11 +2543,14 @@ function render() {
   }
   ctx.restore();
 
-  ctx.fillStyle = "#d2a27d";
-  ctx.font = "10px monospace";
-  ctx.fillText(tr(selected === "blue" ? "VIOLETA // DOUBLE JUMP + DASH" : selected === "rosa" ? "ROSA // JUVENILE RAPTOR" : "VASTI // HEAVY STOMP"), 24, GAME.height - 18);
-  ctx.fillStyle = "#d8f36a";
-  ctx.fillText(tr("FERRUCUTUS RESCUE // SUPPORT ACTIVE"), GAME.width - 314, GAME.height - 18);
+  if (!campaignPrologue?.active) {
+    ctx.fillStyle = "#d2a27d";
+    ctx.font = "10px monospace";
+    ctx.fillText(tr(selected === "blue" ? "VIOLETA // DOUBLE JUMP + DASH" : selected === "rosa" ? "ROSA // JUVENILE RAPTOR" : "VASTI // HEAVY STOMP"), 24, GAME.height - 18);
+    ctx.fillStyle = "#d8f36a";
+    ctx.fillText(tr("FERRUCUTUS RESCUE // SUPPORT ACTIVE"), GAME.width - 314, GAME.height - 18);
+  }
+  drawCampaignPrologueCaption();
   drawBossHud();
   drawPickupNotice();
 
@@ -2217,6 +2622,7 @@ function saveCurrentCampaignSafely({ allowNarration = false } = {}) {
   if (
     !running ||
     freeRoamMode ||
+    campaignPrologue?.active ||
     campaign.flags.completed ||
     !player.onGround ||
     activeBoss ||
@@ -2231,6 +2637,7 @@ function updateCampaignAutosave(delta) {
   if (
     !running ||
     freeRoamMode ||
+    campaignPrologue?.active ||
     campaign.flags.completed ||
     campaign.sceneOpen ||
     activeBoss ||
@@ -2426,6 +2833,7 @@ function resetPlayer(worldSeed = undefined) {
   pickupCueTitle = "";
   pickupCueMessage = "";
   campaign = new CampaignManager();
+  campaignPrologue = null;
   beta = null;
   facilityConsoles = [];
   extractionX = null;
@@ -2487,6 +2895,7 @@ function start(mode = "campaign") {
   pendingPauseAction = null;
   pauseActionTrigger = null;
   resetPlayer();
+  if (!freeRoamMode) beginCampaignPrologue();
   updatePlayerHealthHud();
   music.start(audio.context, currentMusicTheme());
   music.setPaused(false);
@@ -2502,12 +2911,13 @@ function start(mode = "campaign") {
   campaignAutosaveElapsed = 0;
   stateLabel.textContent = ui("inProgress");
   rescuesLabel.textContent = "00";
-  if (!freeRoamMode) {
+  if (!freeRoamMode && !campaignPrologue) {
     campaign.begin();
     levelStartSnapshot = captureRestartSnapshot(0, 0);
     latestLevelCheckpoint = levelStartSnapshot;
     persistCampaignProgressSnapshot(levelStartSnapshot);
   } else {
+    // Do not persist a campaign snapshot until the playable prologue is complete.
     levelStartSnapshot = null;
     latestLevelCheckpoint = null;
   }

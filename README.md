@@ -14,6 +14,8 @@ Frantic Search is an unofficial fan-made dinosaur survival-platformer. Play as V
 
 ## Campaign
 
+Before Chapter 1, a playable forest prologue lets the player control Rosa as she explores toward a poachers' jeep. Her capture triggers a short cinematic: Violeta wakes, follows the tire tracks and helps Vasti defeat a Venatosaurus. Violeta and Vasti then agree to rescue Rosa together.
+
 The finite campaign runs through six chapters:
 
 1. **Coastal Highway** — follow the poacher convoy.

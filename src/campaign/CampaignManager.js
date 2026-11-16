@@ -19,10 +19,10 @@ const INDOMINUS_ENCOUNTERS = [
 ];
 
 const OPENING = [
-  "A poacher convoy crosses the coastal highway, carrying a young Velociraptor toward an unregistered research facility.",
-  "An intercepted signal identifies the captive as Rosa, Violeta's daughter. The mission is to locate the containment wing, disable its security systems and bring her back alive.",
-  "Violeta and Vasti set out together, following the convoy's trail and watching over one another.",
-  "The trail leads beyond the highway, into territory controlled by armed poachers and predators held inside the same operation."
+  "Rosa is aboard the poachers' jeep. It joins a convoy heading toward the coastal highway, leaving Violeta and Vasti with only the trail behind it.",
+  "The two follow the tire marks toward the coast. The first route ahead is exposed, and the poachers have a head start.",
+  "Their objective is clear: locate the convoy, discover where Rosa is being taken and bring her home.",
+  "The search begins on the Coastal Highway, where every clue may lead closer to the clandestine operation."
 ];
 
 export class CampaignManager {
