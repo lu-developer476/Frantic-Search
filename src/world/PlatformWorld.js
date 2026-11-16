@@ -1,4 +1,6 @@
 import { GAME, LEVELS, WORLD } from "../config/GameConfig.js";
+
+export const BOSS_ARENA_HALF_WIDTH = 780;
 import { generateSectionScenery } from "./SceneryGenerator.js";
 import { generateSectionCollectibles } from "./CollectibleGenerator.js";
 
@@ -80,6 +82,11 @@ const BOSS_ENCOUNTERS_BY_SECTION = [
   [],
   []
 ];
+const BOSS_ARENA_PLATFORM_LAYOUT = [
+  { offset: -520, rise: 72, width: 200 },
+  { offset: -230, rise: 96, width: 190 },
+  { offset: 250, rise: 82, width: 210 }
+];
 const BOSS_RATIOS_BY_SECTION = BOSS_ENCOUNTERS_BY_SECTION.map((encounters) =>
   encounters.map(({ ratio }) => ratio)
 );
@@ -155,7 +162,8 @@ export class PlatformWorld {
     const random = seededRandom(sectionSeed);
     this.sectionSeeds[index] = sectionSeed;
 
-    const isBossArena = index === 4;
+    const bossEncounters = BOSS_ENCOUNTERS_BY_SECTION[index] ?? [];
+    const isBossArena = bossEncounters.length > 0;
     const isFacilityArea = index === 5;
     const isFinalArea = index === 6;
     const levelIndex = CHAPTER_BY_SECTION[index] ?? LEVELS.length - 1;
@@ -277,8 +285,21 @@ export class PlatformWorld {
       });
     });
 
-    (BOSS_ENCOUNTERS_BY_SECTION[index] ?? []).forEach(({ ratio, ...encounter }) => {
-      this.bossSpawns.push({ ...encounter, x: at(ratio) });
+    bossEncounters.forEach(({ ratio, ...encounter }) => {
+      const bossX = at(ratio);
+      this.bossSpawns.push({ ...encounter, x: bossX });
+
+      BOSS_ARENA_PLATFORM_LAYOUT.forEach((platform, platformIndex) => {
+        this.platforms.push({
+          id: encounter.id + "-platform-" + (platformIndex + 1),
+          bossId: encounter.id,
+          x: bossX + platform.offset,
+          y: this.groundY - platform.rise,
+          w: platform.width,
+          h: 18,
+          kind: "boss-platform"
+        });
+      });
     });
 
     if (isFacilityArea) {

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { PlatformWorld } from "../src/world/PlatformWorld.js";
+import { BOSS_ARENA_HALF_WIDTH, PlatformWorld } from "../src/world/PlatformWorld.js";
 import { GAME, LEVELS, WORLD } from "../src/config/GameConfig.js";
 import { FerrucutusCaptive } from "../src/entities/FerrucutusCaptive.js";
 import { WildDinosaur } from "../src/entities/WildDinosaur.js";
@@ -104,12 +104,34 @@ test("a Venatosaurus spawned over the opening pit visibly falls before dying", (
   assert.ok(enemy.y > GAME.groundY + 240);
 });
 
+test("every miniboss arena has three elevated traversal platforms and wider boundaries", () => {
+  const world = new PlatformWorld(GAME.groundY, { seed: 20261116 });
+  world.extendTo(WORLD.totalLength + 1);
+
+  assert.equal(world.bossSpawns.length, 5);
+  for (const boss of world.bossSpawns) {
+    const platforms = world.platforms.filter((platform) => platform.bossId === boss.id);
+    assert.equal(platforms.length, 3, boss.id);
+    assert.equal(new Set(platforms.map((platform) => platform.id)).size, 3);
+    assert.ok(platforms.every((platform) => platform.kind === "boss-platform"));
+    assert.ok(platforms.every((platform) => platform.y < GAME.groundY));
+    assert.ok(platforms.every((platform) =>
+      platform.x >= boss.x - BOSS_ARENA_HALF_WIDTH &&
+      platform.x + platform.w <= boss.x + BOSS_ARENA_HALF_WIDTH
+    ));
+    assert.deepEqual(
+      platforms.map((platform) => platform.y).sort((a, b) => a - b),
+      [GAME.groundY - 96, GAME.groundY - 82, GAME.groundY - 72].sort((a, b) => a - b)
+    );
+  }
+});
+
 test("boss arenas have continuous local floors and no poacher patrol inside the fight", () => {
   const world = new PlatformWorld(430);
   world.extendTo(WORLD.totalLength + 5000);
   for (const boss of world.bossSpawns) {
-    const arenaStart = boss.x - 570;
-    const arenaEnd = boss.x + 560;
+    const arenaStart = boss.x - BOSS_ARENA_HALF_WIDTH;
+    const arenaEnd = boss.x + BOSS_ARENA_HALF_WIDTH;
     const grounds = world.platforms
       .filter((platform) => platform.kind === "ground" && platform.x <= arenaEnd && platform.x + platform.w >= arenaStart)
       .sort((a, b) => a.x - b.x);

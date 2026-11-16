@@ -21,7 +21,7 @@ import { IndominusRexBoss } from "./entities/IndominusRexBoss.js";
 import { PhysicsSystem } from "./systems/PhysicsSystem.js";
 import { CollisionSystem } from "./systems/CollisionSystem.js";
 import { beginEnemyFade, advanceEnemyFade, getEnemyOpacity, isEnemyFadeComplete } from "./systems/EnemyFadeSystem.js";
-import { PlatformWorld } from "./world/PlatformWorld.js";
+import { BOSS_ARENA_HALF_WIDTH, PlatformWorld } from "./world/PlatformWorld.js";
 import { COLLECTIBLE_TOTALS } from "./world/CollectibleGenerator.js";
 import { CampaignManager, BOSS_ENCOUNTER_FLAGS } from "./campaign/CampaignManager.js";
 import { getLevelCheckpointDistance, canActivateLevelCheckpoint } from "./campaign/CheckpointManager.js";
@@ -1541,7 +1541,7 @@ function syncBossEncounter() {
   if (activeBoss) return;
 
   for (const spawn of world.bossSpawns) {
-    if (seenBossSpawns.has(spawn.id) || player.x < spawn.x - 620) continue;
+    if (seenBossSpawns.has(spawn.id) || player.x < spawn.x - BOSS_ARENA_HALF_WIDTH - 20) continue;
 
     seenBossSpawns.add(spawn.id);
     const BossType = spawn.kind === "indoraptor" ? IndoraptorBoss : IndominusRexBoss;
@@ -1549,8 +1549,8 @@ function syncBossEncounter() {
       ...spawn,
       x: spawn.x + (spawn.kind === "indominus" ? 90 : 45),
       groundY: GAME.groundY,
-      arenaMinX: spawn.x - 570,
-      arenaMaxX: spawn.x + 560
+      arenaMinX: spawn.x - BOSS_ARENA_HALF_WIDTH,
+      arenaMaxX: spawn.x + BOSS_ARENA_HALF_WIDTH
     });
     boss.activate();
     bosses.push(boss);
