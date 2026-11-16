@@ -43,9 +43,9 @@ function makeSimulation({
     invulnerabilityTimer: 0,
     player: {
       x: 200,
-      y: 372,
-      w: 80,
-      h: 66,
+      y: LANE_BASELINES[DEFAULT_LANE] - 66 * LANE_SCALES[DEFAULT_LANE],
+      w: 80 * LANE_SCALES[DEFAULT_LANE],
+      h: 66 * LANE_SCALES[DEFAULT_LANE],
       baseW: 80,
       baseH: 66,
       lane: DEFAULT_LANE,
@@ -74,8 +74,12 @@ function makeSimulation({
 test("Empty Stomach exposes four depth lanes with increasing scale toward the foreground", () => {
   assert.equal(LANE_COUNT, 4);
   assert.equal(DEFAULT_LANE, 3);
-  assert.deepEqual(LANE_SCALES, [0.76, 0.84, 0.92, 1]);
-  assert.deepEqual(LANE_BASELINES, [390, 406, 422, 438]);
+  assert.deepEqual(LANE_SCALES, [0.82, 0.94, 1.06, 1.18]);
+  assert.deepEqual(LANE_BASELINES, [448, 474, 500, 526]);
+  assert.ok(LANE_BASELINES.every((baseline) => baseline >= 438), "all lanes must sit on the foreground grass band");
+  assert.ok(LANE_SCALES[3] > 1, "the closest lane must visibly enlarge dinosaurs beyond their base size");
+  assert.ok(LANE_BASELINES.every((baseline, index) => index === 0 || baseline > LANE_BASELINES[index - 1]));
+  assert.ok(LANE_SCALES.every((scale, index) => index === 0 || scale > LANE_SCALES[index - 1]));
 });
 
 test("Coral can move between all four lanes and cannot leave the playfield", () => {

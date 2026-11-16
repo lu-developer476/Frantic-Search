@@ -4,8 +4,9 @@ const HEIGHT = 540;
 const FLOOR = 438;
 export const LANE_COUNT = 4;
 export const DEFAULT_LANE = LANE_COUNT - 1;
-export const LANE_BASELINES = Object.freeze([390, 406, 422, FLOOR]);
-export const LANE_SCALES = Object.freeze([0.76, 0.84, 0.92, 1]);
+// Keep every lane on the foreground grass; each lower lane moves closer to the viewer.
+export const LANE_BASELINES = Object.freeze([448, 474, 500, 526]);
+export const LANE_SCALES = Object.freeze([0.82, 0.94, 1.06, 1.18]);
 export const MUD_SPEED_MULTIPLIER = 0.55;
 export const PIT_TRAP_DURATION = 1.25;
 export const INTRO_DURATION = 5;
