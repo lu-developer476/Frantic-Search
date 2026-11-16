@@ -1,9 +1,11 @@
 import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.js";
+import { getAnimatedFrameIndex, loadAnimatedGif } from "../minigames/AnimatedGif.js";
 
 const REFERENCE_OUTLINE_WIDTH = 2;
 const REFERENCE_OUTLINE_COLOR = "#000000";
 export const PROLOGUE_ROSA_REFERENCE = "juvenile-velociraptor-abyssomirabilis.gif";
 const PROLOGUE_ROSA_SCALE = 1.8;
+const ANIMATED_REFERENCE_VERSION = "20261116-rosa-frame-playback-1";
 
 export const DINOSAUR_REFERENCE_SCALES = Object.freeze({
   violeta: 1.6,
@@ -43,8 +45,7 @@ const REFERENCE_PRELOAD_FILES = [
   "ligocristus-innocens.png",
   "stegoceratops.png",
   "venatosaurus-impavidus.png",
-  "venatosaurus-saevidicus.png",
-  PROLOGUE_ROSA_REFERENCE
+  "venatosaurus-saevidicus.png"
 ];
 
 const SPRITE_ASSET_VERSION = "20261116-prologue-rosa-abyssomirabilis-1";
@@ -145,12 +146,36 @@ export class SpriteRenderer {
     this.outlinedReferenceImages = new Map();
     this.referenceLoaded = new Set();
     this.referenceFailed = new Set();
+    this.animatedReferences = new Map();
+    this.animatedReferencePromises = new Map();
     this.onAssetChange = typeof onAssetChange === "function" ? onAssetChange : null;
     this.preload();
   }
 
   preload() {
     for (const file of REFERENCE_PRELOAD_FILES) this.getReferenceImage(file);
+  }
+
+  loadAnimatedReference(file) {
+    if (this.animatedReferences.has(file)) {
+      return Promise.resolve(this.animatedReferences.get(file));
+    }
+    if (this.animatedReferencePromises.has(file)) {
+      return this.animatedReferencePromises.get(file);
+    }
+
+    const url = this.baseUrl + "references/" + file + "?v=" + ANIMATED_REFERENCE_VERSION;
+    const promise = loadAnimatedGif(url).then((animation) => {
+      this.animatedReferences.set(file, animation);
+      this.onAssetChange?.(file, this.readiness(), "loaded");
+      return animation;
+    }).catch((error) => {
+      this.onAssetChange?.(file, this.readiness(), "error");
+      console.error("[SpriteRenderer] Failed to decode " + file + " GIF:", error);
+      return null;
+    });
+    this.animatedReferencePromises.set(file, promise);
+    return promise;
   }
 
   getReferenceConfig(character, actor = {}) {
@@ -300,18 +325,26 @@ export class SpriteRenderer {
   }
 
   drawPrologueRosa(context, x, y, width, height, actor = {}, elapsed = 0, alpha = 1) {
-    const image = this.getReferenceImage(PROLOGUE_ROSA_REFERENCE);
-    const bounds = this.referenceBounds.get(PROLOGUE_ROSA_REFERENCE);
-    if (!image?.complete || image.naturalWidth === 0 || !bounds?.width || !bounds?.height) return false;
+    const animation = this.animatedReferences.get(PROLOGUE_ROSA_REFERENCE);
+    if (!animation?.frames?.length) {
+      // Decode once into composited frame canvases, exactly like Coral in Empty Stomach.
+      this.loadAnimatedReference(PROLOGUE_ROSA_REFERENCE);
+      return false;
+    }
 
-    // Draw the source GIF itself so its animation remains live on the canvas.
-    // The regular Rosa rig is intentionally left untouched outside the prologue.
+    const frameIndex = getAnimatedFrameIndex(animation.frames, Math.max(0, elapsed) * 1000);
+    const frame = animation.frames[frameIndex];
+    if (!frame?.image) return false;
+
     const drawWidth = Math.max(1, Math.round(width * PROLOGUE_ROSA_SCALE));
-    const drawHeight = Math.max(1, Math.round(drawWidth * bounds.height / bounds.width));
+    const drawHeight = Math.max(1, Math.round(drawWidth * animation.height / animation.width));
+    const bottomPadding = frame.bottomPadding ?? animation.bottomPadding ?? 0;
+    const scaledBottomPadding = drawHeight * bottomPadding / animation.height;
     const phase = phaseOf(actor, "rosa");
     const bob = actor?.state === "resting"
       ? Math.sin(elapsed * 2.1 + phase) * 0.35
       : Math.abs(Math.sin(elapsed * 7.2 + phase)) * 0.65;
+    const groundAlignedY = y + height - drawHeight + scaledBottomPadding + bob;
     const facing = Math.sign(actor?.facing ?? 1) || 1;
 
     context.save();
@@ -319,14 +352,10 @@ export class SpriteRenderer {
     context.imageSmoothingEnabled = false;
     context.translate(
       Math.round(x + width / 2),
-      Math.round(y + height - drawHeight / 2 + bob)
+      Math.round(groundAlignedY)
     );
     context.scale(facing < 0 ? -1 : 1, 1);
-    context.drawImage(
-      image,
-      bounds.x, bounds.y, bounds.width, bounds.height,
-      -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight
-    );
+    context.drawImage(frame.image, -drawWidth / 2, 0, drawWidth, drawHeight);
     context.restore();
     return true;
   }

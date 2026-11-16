@@ -122,28 +122,40 @@ test("reference images are loaded from the Vite base path and cached", () => {
     const second = renderer.getReferenceImage("adult-velociraptor-nublarensis.png");
     assert.equal(first, second);
     assert.equal(first.src, "/game/references/adult-velociraptor-nublarensis.png?v=20261116-prologue-rosa-abyssomirabilis-1");
-    assert.equal(renderer.referenceImages.size, 15);
-    assert.ok([...renderer.referenceImages.values()].every((image) => /\.(png|gif)\?v=/.test(image.src)));
-    assert.equal(renderer.readiness().total, 15);
-    assert.ok(renderer.referenceImages.has(PROLOGUE_ROSA_REFERENCE));
+    assert.equal(renderer.referenceImages.size, 14);
+    assert.ok([...renderer.referenceImages.values()].every((image) => /\.png\?v=/.test(image.src)));
+    assert.equal(renderer.readiness().total, 14);
+    assert.equal(renderer.referenceImages.has(PROLOGUE_ROSA_REFERENCE), false);
   } finally {
     if (previousImage === undefined) delete globalThis.Image;
     else globalThis.Image = previousImage;
   }
 });
 
-test("the campaign prologue renders Rosa with her Abyssomirabilis reference GIF", () => {
-  const { renderer, reference } = rendererWithReference(
-    PROLOGUE_ROSA_REFERENCE,
-    { naturalWidth: 160, naturalHeight: 56 }
-  );
-  renderer.referenceBounds.set(PROLOGUE_ROSA_REFERENCE, { x: 0, y: 0, width: 160, height: 56 });
+test("the campaign prologue advances Rosa through decoded Abyssomirabilis GIF frames", () => {
+  const renderer = Object.create(SpriteRenderer.prototype);
+  const firstFrame = { image: { id: "rosa-frame-1" }, delay: 100, bottomPadding: 4 };
+  const secondFrame = { image: { id: "rosa-frame-2" }, delay: 100, bottomPadding: 4 };
+  renderer.animatedReferences = new Map([[PROLOGUE_ROSA_REFERENCE, {
+    width: 160,
+    height: 56,
+    bottomPadding: 4,
+    frames: [firstFrame, secondFrame]
+  }]]);
+  renderer.animatedReferencePromises = new Map();
   const context = createRenderContext();
-  assert.equal(renderer.drawPrologueRosa(
-    context, 100, 200, 54, 54,
-    { id: "prologue-rosa", facing: -1, state: "running" }, 0.6
-  ), true);
-  assert.equal(context.calls.find(([name]) => name === "drawImage")?.[1], reference);
+  const actor = { id: "prologue-rosa", facing: -1, state: "running" };
+
+  assert.equal(renderer.drawPrologueRosa(context, 100, 200, 54, 54, actor, 0), true);
+  assert.equal(context.calls.find(([name]) => name === "drawImage")?.[1], firstFrame.image);
+
+  context.calls.length = 0;
+  assert.equal(renderer.drawPrologueRosa(context, 100, 200, 54, 54, actor, 0.11), true);
+  assert.equal(context.calls.find(([name]) => name === "drawImage")?.[1], secondFrame.image);
+
+  context.calls.length = 0;
+  assert.equal(renderer.drawPrologueRosa(context, 100, 200, 54, 54, actor, 0.21), true);
+  assert.equal(context.calls.find(([name]) => name === "drawImage")?.[1], firstFrame.image);
   assert.ok(context.calls.some(([name, x]) => name === "scale" && x === -1));
   assert.equal(context.imageSmoothingEnabled, false);
 });
