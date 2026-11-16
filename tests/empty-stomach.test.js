@@ -490,8 +490,8 @@ test("Empty Stomach includes the pause key in both instruction labels for Spanis
   });
 
   simulation.setLocale("es");
-  const spanishInstructions = "A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · X: EMBESTIR · E: TOMAR / SOLTAR · Q: COMER HUEVO · P: PAUSAR · ESC: SALIR";
-  const spanishControls = "A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · X: EMBESTIR · E: TOMAR / SOLTAR · Q: COMER HUEVO · ESC: SALIR";
+  const spanishInstructions = "A / D O ← / →: MOVERSE · W / S O ↑ / ↓: CAMBIAR CARRIL · ESPACIO: SALTAR · X: EMBESTIR · E: TOMAR / SOLTAR · Q: COMER HUEVO · P: PAUSAR · ESC: SALIR";
+  const spanishControls = "A / D O ← / →: MOVERSE · W / S O ↑ / ↓: CARRILES · ESPACIO: SALTAR · X: EMBESTIR · E: OBJETO · Q: HUEVO · ESC: SALIR";
   assert.equal(nodes.get("[data-empty-instructions]").textContent, spanishInstructions);
   assert.equal(nodes.get("[data-empty-controls-text]").textContent, spanishControls);
   assert.equal(simulation.pauseButton.textContent, "P: PAUSAR");
@@ -500,8 +500,8 @@ test("Empty Stomach includes the pause key in both instruction labels for Spanis
   assert.equal(nodes.get("[data-empty-exit]").textContent, "SALIR");
 
   simulation.setLocale("en");
-  const englishInstructions = "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · X: DASH · E: PICK UP / DROP · Q: EAT EGG · P: PAUSE · ESC: EXIT";
-  const englishControls = "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · X: DASH · E: PICK UP / DROP · Q: EAT EGG · ESC: EXIT";
+  const englishInstructions = "A / D OR ← / →: MOVE · W / S OR ↑ / ↓: CHANGE LANE · SPACE: JUMP · X: DASH · E: PICK UP / DROP · Q: EAT EGG · P: PAUSE · ESC: EXIT";
+  const englishControls = "A / D OR ← / →: MOVE · W / S OR ↑ / ↓: LANES · SPACE: JUMP · X: DASH · E: ITEM · Q: EGG · ESC: EXIT";
   assert.equal(nodes.get("[data-empty-instructions]").textContent, englishInstructions);
   assert.equal(nodes.get("[data-empty-controls-text]").textContent, englishControls);
   assert.equal(simulation.pauseButton.textContent, "P: PAUSE");
@@ -546,7 +546,7 @@ test("Empty Stomach keeps the pause shortcut only in the right-side control", as
   const { readFile } = await import("node:fs/promises");
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
   assert.ok(html.includes(
-    '<span data-empty-controls-text>A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · X: EMBESTIR · ESC: SALIR</span>'
+    '<span data-empty-controls-text>A / D O ← / →: MOVERSE · W / S O ↑ / ↓: CARRILES · ESPACIO: SALTAR · X: EMBESTIR · E: OBJETO · Q: HUEVO · ESC: SALIR</span>'
   ));
   assert.ok(html.includes('<button type="button" data-empty-pause>P: PAUSAR</button>'));
   assert.ok(html.includes('<button type="button" data-empty-retry hidden>RETOMAR</button>'));

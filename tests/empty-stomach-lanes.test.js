@@ -1,0 +1,188 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {
+  EmptyStomach,
+  createPredator,
+  DEFAULT_LANE,
+  LANE_COUNT,
+  LANE_SCALES,
+  LANE_BASELINES,
+  MUD_SPEED_MULTIPLIER,
+  PIT_TRAP_DURATION
+} from "../src/minigames/EmptyStomach.js";
+
+function makeSimulation({
+  player = {},
+  enemies = [],
+  herd = [],
+  eggs = [],
+  rocks = [],
+  pits = [],
+  mudPuddles = [],
+  bushes = []
+} = {}) {
+  const simulation = Object.create(EmptyStomach.prototype);
+  Object.assign(simulation, {
+    elapsed: 0,
+    distance: 0,
+    spawnTimer: 60,
+    preyTimer: 60,
+    eggSpawnTimer: 60,
+    rockSpawnTimer: 60,
+    pitSpawnTimer: 60,
+    mudSpawnTimer: 60,
+    bushSpawnTimer: 60,
+    enemies,
+    herd,
+    eggs,
+    rocks,
+    pits,
+    mudPuddles,
+    bushes,
+    carriedItem: null,
+    invulnerabilityTimer: 0,
+    player: {
+      x: 200,
+      y: 372,
+      w: 80,
+      h: 66,
+      baseW: 80,
+      baseH: 66,
+      lane: DEFAULT_LANE,
+      vy: 0,
+      grounded: true,
+      facing: 1,
+      dashDirection: 1,
+      dashTimer: 0,
+      dashCooldown: 0,
+      trappedTimer: 0,
+      ...player
+    },
+    dashDustClouds: [],
+    keys: new Set(),
+    running: true,
+    phase: "playing",
+    sceneryOffset: 0
+  });
+  simulation.finish = () => {
+    simulation.running = false;
+    simulation.finished = true;
+  };
+  return simulation;
+}
+
+test("Empty Stomach exposes four depth lanes with increasing scale toward the foreground", () => {
+  assert.equal(LANE_COUNT, 4);
+  assert.equal(DEFAULT_LANE, 3);
+  assert.deepEqual(LANE_SCALES, [0.76, 0.84, 0.92, 1]);
+  assert.deepEqual(LANE_BASELINES, [390, 406, 422, 438]);
+});
+
+test("Coral can move between all four lanes and cannot leave the playfield", () => {
+  const simulation = makeSimulation();
+  const originalWidth = simulation.player.w;
+
+  assert.equal(simulation.changeLane(-1), true);
+  assert.equal(simulation.player.lane, 2);
+  assert.ok(simulation.player.w < originalWidth);
+  assert.equal(simulation.player.y + simulation.player.h, LANE_BASELINES[2]);
+
+  assert.equal(simulation.changeLane(-1), true);
+  assert.equal(simulation.changeLane(-1), true);
+  assert.equal(simulation.player.lane, 0);
+  assert.equal(simulation.changeLane(-1), false);
+  assert.equal(simulation.changeLane(1), true);
+  assert.equal(simulation.player.lane, 1);
+});
+
+test("Predators only collide with Coral while they occupy the same lane", () => {
+  const enemy = createPredator("xenoraptor", 0, 2);
+  enemy.x = 200;
+  enemy.laneShiftTimer = 30;
+  enemy.stateTimer = 30;
+  const simulation = makeSimulation({ enemies: [enemy] });
+
+  simulation.update(0.04);
+
+  assert.equal(simulation.running, true);
+  assert.equal(simulation.finished, undefined);
+  assert.equal(simulation.player.lane, 3);
+  assert.equal(enemy.lane, 2);
+});
+
+test("A pit traps Coral temporarily and prevents lane changes until she gets free", () => {
+  const pit = { x: 180, w: 112, lane: DEFAULT_LANE, life: 8, triggered: false };
+  const simulation = makeSimulation({ pits: [pit] });
+
+  simulation.update(0.04);
+
+  assert.equal(pit.triggered, true);
+  assert.equal(simulation.player.trappedTimer, PIT_TRAP_DURATION);
+  assert.equal(simulation.changeLane(-1), false);
+  simulation.update(PIT_TRAP_DURATION + 0.1);
+  assert.equal(simulation.player.trappedTimer, 0);
+  assert.equal(simulation.changeLane(-1), true);
+});
+
+test("A pit also traps a predator in its own lane", () => {
+  const enemy = createPredator("umbraraptor", 0, 3);
+  enemy.x = 200;
+  enemy.laneShiftTimer = 30;
+  enemy.stateTimer = 30;
+  const pit = { x: 180, w: 130, lane: 3, life: 8, triggered: false };
+  const simulation = makeSimulation({
+    player: { x: 700, lane: 2 },
+    enemies: [enemy],
+    pits: [pit]
+  });
+
+  simulation.update(0.04);
+
+  assert.equal(pit.triggered, true);
+  assert.equal(enemy.state, "trapped");
+  assert.equal(enemy.trappedTimer, PIT_TRAP_DURATION);
+});
+
+test("Mud slows Coral and predators while they cross a puddle", () => {
+  const enemy = createPredator("xenoraptor", 0, 3);
+  enemy.x = 300;
+  enemy.laneShiftTimer = 30;
+  enemy.stateTimer = 30;
+  const mud = { x: 170, w: 170, lane: 3, life: 8 };
+  const simulation = makeSimulation({ enemies: [enemy], mudPuddles: [mud] });
+  simulation.keys.add("KeyD");
+  const playerStart = simulation.player.x;
+  const enemyStart = enemy.x;
+
+  simulation.update(0.04);
+
+  assert.equal(MUD_SPEED_MULTIPLIER, 0.55);
+  assert.ok(simulation.player.x - playerStart < 245 * 0.04);
+  assert.ok(Math.abs(enemy.x - enemyStart) < 168 * 0.04);
+});
+
+test("Bushes conceal Coral and break a predator's direct chase", () => {
+  const enemy = createPredator("umbraraptor", 0, 3);
+  enemy.x = 200;
+  enemy.laneShiftTimer = 30;
+  enemy.stateTimer = 30;
+  const bush = { x: 170, w: 130, h: 48, lane: 3, life: 8 };
+  const simulation = makeSimulation({ enemies: [enemy], bushes: [bush] });
+
+  assert.equal(simulation.isPlayerHidden(), true);
+  simulation.update(0.04);
+
+  assert.equal(simulation.running, true);
+  assert.equal(enemy.state, "hunting");
+  assert.equal(simulation.isPlayerHidden(), true);
+});
+
+test("Eggs and stones can only be picked up from Coral's current lane", () => {
+  const differentLaneEgg = { kind: "egg", x: 220, y: 415, w: 28, h: 23, vx: 0, lane: 2 };
+  const sameLaneRock = { kind: "rock", x: 220, y: 413, w: 34, h: 25, vx: 0, lane: 3 };
+  const simulation = makeSimulation({ eggs: [differentLaneEgg], rocks: [sameLaneRock] });
+
+  assert.equal(simulation.interactWithItem(), true);
+  assert.equal(simulation.carriedItem, sameLaneRock);
+  assert.equal(simulation.eggs.includes(differentLaneEgg), true);
+});

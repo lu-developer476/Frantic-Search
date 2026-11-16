@@ -2,6 +2,12 @@ import { loadAnimatedGif, getAnimatedFrameIndex } from "./AnimatedGif.js";
 const WIDTH = 960;
 const HEIGHT = 540;
 const FLOOR = 438;
+export const LANE_COUNT = 4;
+export const DEFAULT_LANE = LANE_COUNT - 1;
+export const LANE_BASELINES = Object.freeze([390, 406, 422, FLOOR]);
+export const LANE_SCALES = Object.freeze([0.76, 0.84, 0.92, 1]);
+export const MUD_SPEED_MULTIPLIER = 0.55;
+export const PIT_TRAP_DURATION = 1.25;
 export const INTRO_DURATION = 5;
 export const PLAYER_WIDTH = 80;
 export const PLAYER_HEIGHT = 66;
@@ -41,6 +47,53 @@ export function getGroundAlignedY(y, renderedHeight, sourceHeight, bottomPadding
   return y + renderedHeight * padding / sourceHeight;
 }
 
+export function normalizeLane(lane = DEFAULT_LANE) {
+  const value = Number.isFinite(Number(lane)) ? Math.round(Number(lane)) : DEFAULT_LANE;
+  return Math.max(0, Math.min(LANE_COUNT - 1, value));
+}
+
+export function getLaneBaseline(lane = DEFAULT_LANE) {
+  return LANE_BASELINES[normalizeLane(lane)];
+}
+
+export function getLaneScale(lane = DEFAULT_LANE) {
+  return LANE_SCALES[normalizeLane(lane)];
+}
+
+function applyLane(entity, lane, baseWidth = entity.baseW ?? entity.w, baseHeight = entity.baseH ?? entity.h) {
+  const normalizedLane = normalizeLane(lane);
+  entity.baseW ??= baseWidth;
+  entity.baseH ??= baseHeight;
+  entity.lane = normalizedLane;
+  const scale = getLaneScale(normalizedLane);
+  entity.w = entity.baseW * scale;
+  entity.h = entity.baseH * scale;
+  entity.y = getLaneBaseline(normalizedLane) - entity.h;
+  return entity;
+}
+
+function randomLane() {
+  return Math.floor(Math.random() * LANE_COUNT);
+}
+
+function createPlayer(lane = DEFAULT_LANE) {
+  return applyLane({
+    x: INTRO_END_X,
+    y: 0,
+    w: PLAYER_WIDTH,
+    h: PLAYER_HEIGHT,
+    baseW: PLAYER_WIDTH,
+    baseH: PLAYER_HEIGHT,
+    vy: 0,
+    grounded: true,
+    facing: 1,
+    dashDirection: 1,
+    dashTimer: 0,
+    dashCooldown: 0,
+    trappedTimer: 0
+  }, lane);
+}
+
 export const ENEMY_CHASE_DURATION = 2;
 export const ENEMY_EAT_DURATION = 1.35;
 export const DASH_DURATION = 0.2;
@@ -53,29 +106,34 @@ export const EGG_INVULNERABILITY_DURATION = 4;
 export const ITEM_INTERACTION_RADIUS = 112;
 export const ENEMY_TRIP_FADE_DURATION = 0.9;
 
-export function createPredator(kind, phase = 0) {
+export function createPredator(kind, phase = 0, lane = DEFAULT_LANE) {
   const isXenoraptor = kind === "xenoraptor";
   const w = isXenoraptor ? 148 : 126;
   const h = isXenoraptor ? 104 : 86;
-  // Spawn fully outside the canvas; the predator enters from its left edge.
-  return {
+  const enemy = applyLane({
     kind: isXenoraptor ? "xenoraptor" : "umbraraptor",
-    x: -w,
-    y: FLOOR - h,
+    x: 0,
+    y: 0,
     w,
     h,
+    baseW: w,
+    baseH: h,
     phase,
     direction: 1,
     state: "chasing",
     stateTimer: ENEMY_CHASE_DURATION,
+    laneShiftTimer: 0.55 + Math.random() * 0.35,
     preyTarget: null,
     eatTarget: null
-  };
+  }, lane);
+  // Spawn fully outside the canvas; the predator enters from its left edge.
+  enemy.x = -enemy.w;
+  return enemy;
 }
 
 export function enemyAnimationKey(enemy, elapsed = 0) {
   const isXenoraptor = enemy.kind === "xenoraptor";
-  if (enemy.state === "stunned" || enemy.state === "fading") return isXenoraptor ? "xenoraptorJump" : "umbraraptorIdle";
+  if (enemy.state === "stunned" || enemy.state === "trapped" || enemy.state === "fading") return isXenoraptor ? "xenoraptorJump" : "umbraraptorIdle";
   if (enemy.state === "eating") return isXenoraptor ? "xenoraptorAttack" : "umbraraptorEat";
   if (enemy.state === "departing" || (enemy.state === "hunting" && !enemy.preyTarget)) {
     return isXenoraptor ? "xenoraptorJump" : "umbraraptorIdle";
@@ -123,27 +181,32 @@ export class EmptyStomach {
     this.dashDustClouds = [];
     this.eggs = [];
     this.rocks = [];
+    this.pits = [];
+    this.mudPuddles = [];
+    this.bushes = [];
     this.carriedItem = null;
     this.invulnerabilityTimer = 0;
     this.eggSpawnTimer = 2.2;
     this.rockSpawnTimer = 3.4;
-    this.player = {
-      x: INTRO_END_X, y: FLOOR - PLAYER_HEIGHT, w: PLAYER_WIDTH, h: PLAYER_HEIGHT,
-      vy: 0, grounded: true, facing: 1, dashDirection: 1, dashTimer: 0, dashCooldown: 0
-    };
+    this.pitSpawnTimer = 5.8;
+    this.mudSpawnTimer = 3.8;
+    this.bushSpawnTimer = 5.1;
+    this.player = createPlayer();
     this.best = 0;
     try { this.best = Number(localStorage.getItem("frantic-empty-stomach-best")) || 0; } catch {}
     this.handleKeyDown = (event) => {
       if (!this.root.classList.contains("active")) return;
-      if (["ArrowLeft", "ArrowRight", "ArrowUp", "Space", "KeyP", "KeyX", "KeyE", "KeyQ"].includes(event.code)) event.preventDefault();
+      if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Space", "KeyP", "KeyX", "KeyE", "KeyQ", "KeyW", "KeyS"].includes(event.code)) event.preventDefault();
       if (event.code === "Escape" && !event.repeat) { this.exit(); return; }
       if (event.code === "KeyP" && !event.repeat) { this.togglePause(); return; }
       if (this.phase === "intro" || this.paused) return;
       if (event.code === "KeyX" && !event.repeat) { this.activateDash(); return; }
       if (event.code === "KeyE" && !event.repeat) { this.interactWithItem(); return; }
       if (event.code === "KeyQ" && !event.repeat) { this.consumeCarriedEgg(); return; }
-      if (["ArrowLeft", "ArrowRight", "ArrowUp", "Space", "KeyA", "KeyD", "KeyW"].includes(event.code)) this.keys.add(event.code);
-      if (["Space", "ArrowUp", "KeyW"].includes(event.code) && !event.repeat && !this.running && !this.paused) this.start();
+      if (!this.running && event.code === "Space" && !event.repeat) { this.start(); return; }
+      if ((event.code === "ArrowUp" || event.code === "KeyW") && !event.repeat) { this.changeLane(-1); return; }
+      if ((event.code === "ArrowDown" || event.code === "KeyS") && !event.repeat) { this.changeLane(1); return; }
+      if (["ArrowLeft", "ArrowRight", "Space", "KeyA", "KeyD"].includes(event.code)) this.keys.add(event.code);
     };
     this.handleKeyUp = (event) => this.keys.delete(event.code);
     window.addEventListener("keydown", this.handleKeyDown);
@@ -156,14 +219,80 @@ export class EmptyStomach {
   }
 
   text(es, en) { return this.locale === "es" ? es : en; }
+
+  getEntityLane(entity) {
+    return normalizeLane(entity?.lane ?? DEFAULT_LANE);
+  }
+
+  setEntityLane(entity, lane) {
+    return applyLane(entity, lane);
+  }
+
+  changeLane(direction) {
+    if (!this.running || this.phase !== "playing") return false;
+    const player = this.player;
+    if ((player.trappedTimer ?? 0) > 0) return false;
+    const nextLane = normalizeLane(this.getEntityLane(player) + Math.sign(direction));
+    if (nextLane === this.getEntityLane(player)) return false;
+    this.setEntityLane(player, nextLane);
+    player.vy = 0;
+    player.grounded = true;
+    player.x = Math.max(22, Math.min(WIDTH - player.w - PLAYER_RIGHT_MARGIN, player.x));
+    if (this.carriedItem) this.setEntityLane(this.carriedItem, nextLane);
+    return true;
+  }
+
+  isInMud(entity) {
+    const lane = this.getEntityLane(entity);
+    return (this.mudPuddles ?? []).some((mud) =>
+      mud.lane === lane &&
+      entity.x + entity.w * 0.82 > mud.x &&
+      entity.x + entity.w * 0.18 < mud.x + mud.w
+    );
+  }
+
+  movementMultiplier(entity) {
+    return this.isInMud(entity) ? MUD_SPEED_MULTIPLIER : 1;
+  }
+
+  isPlayerHidden() {
+    const player = this.player;
+    const lane = this.getEntityLane(player);
+    return (this.bushes ?? []).some((bush) =>
+      bush.lane === lane &&
+      player.x + player.w * 0.72 > bush.x &&
+      player.x + player.w * 0.28 < bush.x + bush.w
+    );
+  }
+
+  tryTrapDinosaur(entity, isPredator = false) {
+    if ((entity.trappedTimer ?? 0) > 0) return false;
+    const lane = this.getEntityLane(entity);
+    const pit = (this.pits ?? []).find((candidate) =>
+      !candidate.triggered &&
+      candidate.lane === lane &&
+      entity.x + entity.w * 0.86 > candidate.x &&
+      entity.x + entity.w * 0.14 < candidate.x + candidate.w
+    );
+    if (!pit) return false;
+    pit.triggered = true;
+    entity.trappedTimer = PIT_TRAP_DURATION;
+    if (isPredator) {
+      entity.trappedState = entity.state;
+      entity.state = "trapped";
+      entity.stateTimer = PIT_TRAP_DURATION;
+    }
+    return true;
+  }
+
   setLocale(locale) {
     this.locale = locale === "en" ? "en" : "es";
     this.root.querySelector("[data-empty-title]").textContent = this.phase === "finished"
       ? this.text("PARTIDA FINALIZADA", "GAME OVER")
       : this.text("ESTÓMAGO VACÍO", "EMPTY STOMACH");
     this.root.querySelector("[data-empty-subtitle]").textContent = this.text("Coral corre por su vida. Los depredadores no van a detenerse.", "Coral is running for her life. The predators won't stop.");
-    this.root.querySelector("[data-empty-instructions]").textContent = this.text("A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · X: EMBESTIR · E: TOMAR / SOLTAR · Q: COMER HUEVO · P: PAUSAR · ESC: SALIR", "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · X: DASH · E: PICK UP / DROP · Q: EAT EGG · P: PAUSE · ESC: EXIT");
-    this.root.querySelector("[data-empty-controls-text]").textContent = this.text("A / D O ← / →: MOVERSE · ESPACIO / ↑: SALTAR · X: EMBESTIR · E: TOMAR / SOLTAR · Q: COMER HUEVO · ESC: SALIR", "A / D OR ← / →: MOVE · SPACE / ↑: JUMP · X: DASH · E: PICK UP / DROP · Q: EAT EGG · ESC: EXIT");
+    this.root.querySelector("[data-empty-instructions]").textContent = this.text("A / D O ← / →: MOVERSE · W / S O ↑ / ↓: CAMBIAR CARRIL · ESPACIO: SALTAR · X: EMBESTIR · E: TOMAR / SOLTAR · Q: COMER HUEVO · P: PAUSAR · ESC: SALIR", "A / D OR ← / →: MOVE · W / S OR ↑ / ↓: CHANGE LANE · SPACE: JUMP · X: DASH · E: PICK UP / DROP · Q: EAT EGG · P: PAUSE · ESC: EXIT");
+    this.root.querySelector("[data-empty-controls-text]").textContent = this.text("A / D O ← / →: MOVERSE · W / S O ↑ / ↓: CARRILES · ESPACIO: SALTAR · X: EMBESTIR · E: OBJETO · Q: HUEVO · ESC: SALIR", "A / D OR ← / →: MOVE · W / S OR ↑ / ↓: LANES · SPACE: JUMP · X: DASH · E: ITEM · Q: EGG · ESC: EXIT");
     this.root.querySelector("[data-empty-pause-label]").textContent = this.text("PAUSA", "PAUSED");
     this.root.querySelector("[data-empty-result]").textContent = this.text("CORAL FUE DEVORADA", "CORAL WAS EATEN");
     this.updatePauseButton();
@@ -213,14 +342,17 @@ export class EmptyStomach {
     this.dashDustClouds = [];
     this.eggs = [];
     this.rocks = [];
+    this.pits = [];
+    this.mudPuddles = [];
+    this.bushes = [];
     this.carriedItem = null;
     this.invulnerabilityTimer = 0;
     this.eggSpawnTimer = 2.2;
     this.rockSpawnTimer = 3.4;
-    this.player = {
-      x: INTRO_END_X, y: FLOOR - PLAYER_HEIGHT, w: PLAYER_WIDTH, h: PLAYER_HEIGHT,
-      vy: 0, grounded: true, facing: 1, dashDirection: 1, dashTimer: 0, dashCooldown: 0
-    };
+    this.pitSpawnTimer = 5.8;
+    this.mudSpawnTimer = 3.8;
+    this.bushSpawnTimer = 5.1;
+    this.player = createPlayer();
     this.keys.clear();
   }
 
@@ -317,12 +449,13 @@ export class EmptyStomach {
     p.dashTimer = DASH_DURATION;
     p.dashCooldown = DASH_COOLDOWN;
 
-    const width = 205;
-    const height = p.h + 14;
-    const x = p.dashDirection > 0 ? p.x - 135 : p.x + p.w - 70;
+    const scale = getLaneScale(this.getEntityLane(p));
+    const width = 205 * scale;
+    const height = p.h + 14 * scale;
+    const x = p.dashDirection > 0 ? p.x - 135 * scale : p.x + p.w - 70 * scale;
     this.dashDustClouds ??= [];
     this.dashDustClouds.push({
-      x, y: p.y - 6, w: width, h: height,
+      x, y: p.y - 6 * scale, w: width, h: height, lane: this.getEntityLane(p),
       life: DASH_DUST_DURATION, max: DASH_DUST_DURATION, hitIds: new Set()
     });
     return true;
@@ -344,7 +477,7 @@ export class EmptyStomach {
       cloud.life = Math.max(0, cloud.life - delta);
       if (cloud.life <= 0) continue;
       for (const enemy of this.enemies) {
-        if (cloud.hitIds.has(enemy) || !["chasing", "hunting"].includes(enemy.state)) continue;
+        if (cloud.hitIds.has(enemy) || this.getEntityLane(enemy) !== cloud.lane || !["chasing", "hunting"].includes(enemy.state)) continue;
         const faceX = enemy.x + enemy.w * (enemy.direction > 0 ? 0.82 : 0.18);
         const faceY = enemy.y + enemy.h * 0.34;
         const hitFace = faceX >= cloud.x && faceX <= cloud.x + cloud.w &&
@@ -360,12 +493,48 @@ export class EmptyStomach {
   moveEnemyTowards(enemy, targetX, chaseSpeed, delta) {
     const center = enemy.x + enemy.w / 2;
     const difference = targetX - center;
-    const step = Math.min(Math.abs(difference), chaseSpeed * delta);
+    const step = Math.min(Math.abs(difference), chaseSpeed * this.movementMultiplier(enemy) * delta);
     if (step > 0) {
       enemy.direction = Math.sign(difference);
       enemy.x += enemy.direction * step;
     }
-    enemy.y = FLOOR - enemy.h + Math.sin(this.elapsed * 8 + enemy.phase) * 2;
+    enemy.y = getLaneBaseline(this.getEntityLane(enemy)) - enemy.h + Math.sin(this.elapsed * 8 + enemy.phase) * 2;
+  }
+
+  updateTerrain(delta, speed) {
+    this.pits ??= [];
+    this.mudPuddles ??= [];
+    this.bushes ??= [];
+    this.pitSpawnTimer = (this.pitSpawnTimer ?? 5.8) - delta;
+    this.mudSpawnTimer = (this.mudSpawnTimer ?? 3.8) - delta;
+    this.bushSpawnTimer = (this.bushSpawnTimer ?? 5.1) - delta;
+
+    if (this.pitSpawnTimer <= 0) {
+      const lane = randomLane();
+      const scale = getLaneScale(lane);
+      this.pits.push({ x: WIDTH + 34, lane, w: 108 * scale, h: 24 * scale, life: 9, triggered: false });
+      this.pitSpawnTimer = 6.8 + Math.random() * 3.8;
+    }
+    if (this.mudSpawnTimer <= 0) {
+      const lane = randomLane();
+      const scale = getLaneScale(lane);
+      this.mudPuddles.push({ x: WIDTH + 42, lane, w: 154 * scale, h: 25 * scale, life: 9 });
+      this.mudSpawnTimer = 5.5 + Math.random() * 3.4;
+    }
+    if (this.bushSpawnTimer <= 0) {
+      const lane = randomLane();
+      const scale = getLaneScale(lane);
+      this.bushes.push({ x: WIDTH + 48, lane, w: 98 * scale, h: 48 * scale, life: 9 });
+      this.bushSpawnTimer = 6 + Math.random() * 4;
+    }
+
+    const scroll = speed * 0.72 * delta;
+    for (const pit of this.pits) { pit.x -= scroll; pit.life -= delta; }
+    for (const mud of this.mudPuddles) { mud.x -= scroll; mud.life -= delta; }
+    for (const bush of this.bushes) { bush.x -= scroll; bush.life -= delta; }
+    this.pits = this.pits.filter((pit) => pit.life > 0 && pit.x + pit.w > -40);
+    this.mudPuddles = this.mudPuddles.filter((mud) => mud.life > 0 && mud.x + mud.w > -60);
+    this.bushes = this.bushes.filter((bush) => bush.life > 0 && bush.x + bush.w > -60);
   }
 
   update(delta) {
@@ -375,32 +544,46 @@ export class EmptyStomach {
     this.distance += speed * delta;
     this.sceneryOffset = (this.sceneryOffset ?? 0) + speed * delta;
     const p = this.player;
+    p.trappedTimer = Math.max(0, (p.trappedTimer ?? 0) - delta);
     const left = this.keys.has("ArrowLeft") || this.keys.has("KeyA");
     const right = this.keys.has("ArrowRight") || this.keys.has("KeyD");
     if (left && !right) p.facing = -1;
     else if (right && !left) p.facing = 1;
     const dashing = (p.dashTimer ?? 0) > 0;
-    if (dashing) {
-      p.x += (p.dashDirection || p.facing || 1) * 245 * DASH_SPEED_MULTIPLIER * delta;
-      p.dashTimer = Math.max(0, p.dashTimer - delta);
-    } else {
-      if (left) p.x -= 245 * delta;
-      if (right) p.x += 245 * delta;
+    const playerSpeed = this.movementMultiplier(p);
+    if (p.trappedTimer <= 0) {
+      if (dashing) {
+        p.x += (p.dashDirection || p.facing || 1) * 245 * DASH_SPEED_MULTIPLIER * playerSpeed * delta;
+      } else {
+        if (left) p.x -= 245 * playerSpeed * delta;
+        if (right) p.x += 245 * playerSpeed * delta;
+      }
     }
+    if (dashing) p.dashTimer = Math.max(0, p.dashTimer - delta);
     p.dashCooldown = Math.max(0, (p.dashCooldown ?? 0) - delta);
     p.x = Math.max(22, Math.min(WIDTH - p.w - PLAYER_RIGHT_MARGIN, p.x));
-    if ((this.keys.has("Space") || this.keys.has("ArrowUp") || this.keys.has("KeyW")) && p.grounded) {
-      p.vy = -590;
-      p.grounded = false;
+    const playerFloor = getLaneBaseline(this.getEntityLane(p));
+    if (p.trappedTimer > 0) {
+      p.vy = 0;
+      p.grounded = true;
+      p.y = playerFloor - p.h;
+    } else {
+      if (this.keys.has("Space") && p.grounded) {
+        p.vy = -590 * getLaneScale(this.getEntityLane(p));
+        p.grounded = false;
+      }
+      p.vy += 1500 * delta;
+      p.y += p.vy * delta;
+      if (p.y + p.h >= playerFloor) { p.y = playerFloor - p.h; p.vy = 0; p.grounded = true; }
     }
-    p.vy += 1500 * delta;
-    p.y += p.vy * delta;
-    if (p.y + p.h >= FLOOR) { p.y = FLOOR - p.h; p.vy = 0; p.grounded = true; }
+
+    this.updateTerrain(delta, speed);
+    this.tryTrapDinosaur(p);
 
     this.spawnTimer -= delta;
     if (this.spawnTimer <= 0) {
       const kind = Math.random() < 0.46 ? "xenoraptor" : "umbraraptor";
-      this.enemies.push(createPredator(kind, Math.random() * 6));
+      this.enemies.push(createPredator(kind, Math.random() * 6, randomLane()));
       this.spawnTimer = Math.max(0.95, 2.6 - this.elapsed * 0.018) + Math.random() * 0.7;
     }
 
@@ -410,32 +593,45 @@ export class EmptyStomach {
     if (this.preyTimer <= 0) {
       const count = 1 + (Math.random() < 0.42 ? 1 : 0);
       for (let i = 0; i < count; i += 1) {
-        this.herd.push({
+        const lane = randomLane();
+        this.herd.push(applyLane({
           x: WIDTH + i * 94,
-          y: FLOOR - 72,
+          y: 0,
           w: 100,
           h: 72,
+          baseW: 100,
+          baseH: 72,
           phase: Math.random() * 6,
           beingEaten: false,
           beingEatenElapsed: 0,
-          animationState: "running"
-        });
+          animationState: "running",
+          trappedTimer: 0
+        }, lane));
       }
       this.preyTimer = 3.5 + Math.random() * 3.5;
     }
 
     for (const prey of this.herd) {
+      prey.trappedTimer = Math.max(0, (prey.trappedTimer ?? 0) - delta);
+      const floor = getLaneBaseline(this.getEntityLane(prey));
       if (prey.beingEaten) {
         prey.beingEatenElapsed += delta;
-        prey.y = FLOOR - prey.h;
+        prey.y = floor - prey.h;
+        continue;
+      }
+      if (prey.trappedTimer > 0) {
+        prey.y = floor - prey.h + 9;
         continue;
       }
       const threatened = this.enemies.some((enemy) =>
+        this.getEntityLane(enemy) === this.getEntityLane(prey) &&
         Math.abs((enemy.x + enemy.w / 2) - (prey.x + prey.w / 2)) < 190
       );
       prey.animationState = threatened ? "perturbed" : "running";
-      prey.x -= (speed * 0.72) * delta;
-      prey.y = FLOOR - prey.h;
+      prey.x -= (speed * 0.72 * this.movementMultiplier(prey)) * delta;
+      prey.y = floor - prey.h;
+      this.tryTrapDinosaur(prey);
+      if (prey.trappedTimer > 0) prey.y = floor - prey.h + 9;
     }
     this.herd = this.herd.filter((prey) => prey.beingEaten || prey.x > -140);
 
@@ -449,10 +645,19 @@ export class EmptyStomach {
     this.updateDashDust(delta);
     for (const enemy of this.enemies) {
       const chaseSpeed = enemy.kind === "xenoraptor" ? 168 : 138;
+      const enemyFloor = getLaneBaseline(this.getEntityLane(enemy));
 
-      if (enemy.state === "stunned") {
+      if (enemy.state === "trapped") {
+        enemy.trappedTimer = Math.max(0, (enemy.trappedTimer ?? 0) - delta);
+        enemy.y = enemyFloor - enemy.h + 10;
+        if (enemy.trappedTimer <= 0) {
+          enemy.state = ["chasing", "hunting"].includes(enemy.trappedState) ? enemy.trappedState : "hunting";
+          enemy.stateTimer = enemy.state === "chasing" ? ENEMY_CHASE_DURATION * 0.5 : 0;
+          delete enemy.trappedState;
+        }
+      } else if (enemy.state === "stunned") {
         enemy.stateTimer = Math.max(0, enemy.stateTimer - delta);
-        enemy.y = FLOOR - enemy.h;
+        enemy.y = enemyFloor - enemy.h;
         if (enemy.stateTimer <= 0) {
           enemy.state = enemy.stunnedState ?? "hunting";
           enemy.stateTimer = enemy.stunnedStateTimer ?? 0;
@@ -460,16 +665,29 @@ export class EmptyStomach {
           delete enemy.stunnedStateTimer;
         }
       } else if (enemy.state === "chasing") {
-        enemy.stateTimer = Math.max(0, enemy.stateTimer - delta);
-        this.moveEnemyTowards(enemy, p.x + p.w / 2, chaseSpeed + this.elapsed * 1.4, delta);
-        if (enemy.stateTimer <= 0) {
+        if (this.isPlayerHidden()) {
           enemy.state = "hunting";
           enemy.preyTarget = null;
+          enemy.y = enemyFloor - enemy.h;
+        } else {
+          enemy.stateTimer = Math.max(0, enemy.stateTimer - delta);
+          enemy.laneShiftTimer = (enemy.laneShiftTimer ?? 0) - delta;
+          if (enemy.laneShiftTimer <= 0 && this.getEntityLane(enemy) !== this.getEntityLane(p)) {
+            const nextLane = this.getEntityLane(enemy) + Math.sign(this.getEntityLane(p) - this.getEntityLane(enemy));
+            this.setEntityLane(enemy, nextLane);
+            enemy.laneShiftTimer = 0.72;
+          }
+          this.moveEnemyTowards(enemy, p.x + p.w / 2, chaseSpeed + this.elapsed * 1.4, delta);
+          if (enemy.stateTimer <= 0) {
+            enemy.state = "hunting";
+            enemy.preyTarget = null;
+          }
         }
       } else if (enemy.state === "hunting") {
+        const lane = this.getEntityLane(enemy);
         const targets = [
-          ...this.herd.filter((prey) => !prey.beingEaten).map((prey) => ({ item: prey, type: "prey" })),
-          ...this.eggs.map((egg) => ({ item: egg, type: "egg" }))
+          ...this.herd.filter((prey) => !prey.beingEaten && this.getEntityLane(prey) === lane).map((prey) => ({ item: prey, type: "prey" })),
+          ...this.eggs.filter((egg) => this.getEntityLane(egg) === lane).map((egg) => ({ item: egg, type: "egg" }))
         ];
         const target = targets.reduce((nearest, candidate) => {
           if (!nearest) return candidate;
@@ -481,7 +699,7 @@ export class EmptyStomach {
         if (target) {
           const targetX = target.item.x + target.item.w / 2;
           const distance = Math.abs(targetX - (enemy.x + enemy.w / 2));
-          if (distance <= 58) {
+          if (distance <= 58 * getLaneScale(lane)) {
             if (target.type === "prey") {
               target.item.beingEaten = true;
               target.item.beingEatenElapsed = 0;
@@ -491,62 +709,86 @@ export class EmptyStomach {
             enemy.preyTarget = null;
             enemy.state = "eating";
             enemy.stateTimer = ENEMY_EAT_DURATION;
-            enemy.y = FLOOR - enemy.h;
+            enemy.y = enemyFloor - enemy.h;
           } else this.moveEnemyTowards(enemy, targetX, chaseSpeed + 24, delta);
-        } else enemy.y = FLOOR - enemy.h;
+        } else enemy.y = enemyFloor - enemy.h;
       } else if (enemy.state === "eating") {
         enemy.stateTimer = Math.max(0, enemy.stateTimer - delta);
-        enemy.y = FLOOR - enemy.h;
+        enemy.y = enemyFloor - enemy.h;
         if (enemy.stateTimer <= 0) {
           const eatenTarget = enemy.eatTarget;
           if (enemy.eatTargetType === "egg") this.eggs = this.eggs.filter((egg) => egg !== eatenTarget);
           else this.herd = this.herd.filter((prey) => prey !== eatenTarget);
           enemy.eatTarget = null;
           enemy.eatTargetType = null;
-          // The predator stops animating and is carried off-screen by the scrolling ground.
           enemy.state = "departing";
           enemy.stateTimer = 0;
         }
       } else if (enemy.state === "departing") {
-        // Like a treadmill belt: the predator holds its pose while the world scrolls left.
-        enemy.x -= speed * delta;
-        enemy.y = FLOOR - enemy.h;
+        enemy.x -= speed * this.movementMultiplier(enemy) * delta;
+        enemy.y = enemyFloor - enemy.h;
       } else if (enemy.state === "fading") {
         enemy.fadeTimer = Math.max(0, enemy.fadeTimer - delta);
-        enemy.y = FLOOR - enemy.h;
+        enemy.y = enemyFloor - enemy.h;
       }
 
+      this.tryTrapDinosaur(enemy, true);
+      if (enemy.state === "trapped") enemy.y = getLaneBaseline(this.getEntityLane(enemy)) - enemy.h + 10;
+
       const enemyHitbox = {
-        x: enemy.x + 20,
-        y: enemy.y + 16,
-        w: enemy.w - 40,
-        h: enemy.h - 18
+        x: enemy.x + 20 * getLaneScale(this.getEntityLane(enemy)),
+        y: enemy.y + 16 * getLaneScale(this.getEntityLane(enemy)),
+        w: enemy.w - 40 * getLaneScale(this.getEntityLane(enemy)),
+        h: enemy.h - 18 * getLaneScale(this.getEntityLane(enemy))
       };
       for (const rock of this.rocks) {
-        if (overlaps(rock, enemyHitbox) && this.tripEnemy(enemy)) { rock.consumed = true; break; }
+        if (this.getEntityLane(rock) === this.getEntityLane(enemy) && overlaps(rock, enemyHitbox) && this.tripEnemy(enemy)) {
+          rock.consumed = true;
+          break;
+        }
       }
-      const playerContact = overlaps(playerHitbox, enemyHitbox);
-      if (this.invulnerabilityTimer > 0) continue;
+      const sameLane = this.getEntityLane(p) === this.getEntityLane(enemy);
+      const playerContact = sameLane && overlaps(playerHitbox, enemyHitbox);
+      if (this.invulnerabilityTimer > 0 || this.isPlayerHidden() || enemy.state === "trapped") continue;
       if (dashing && playerContact && enemy.state !== "stunned") this.stunPredator(enemy, delta);
       else if (playerContact && !["stunned", "fading"].includes(enemy.state)) { this.finish(); return; }
     }
     this.rocks = this.rocks.filter((rock) => !rock.consumed);
-    this.enemies = this.enemies.filter((enemy) => enemy.x + enemy.w > 0 && enemy.x < WIDTH + 240 && (enemy.state !== "fading" || enemy.fadeTimer > 0));
+    this.enemies = this.enemies.filter((enemy) =>
+      enemy.x + enemy.w > 0 &&
+      enemy.x < WIDTH + 240 &&
+      (enemy.state !== "fading" || enemy.fadeTimer > 0)
+    );
   }
 
   interactWithItem() {
     if (!this.running || this.phase !== "playing") return false;
+    const player = this.player;
+    const lane = this.getEntityLane(player);
     if (this.carriedItem) {
-      const item=this.carriedItem, direction=this.player.facing||1;
-      item.x=Math.max(12,Math.min(WIDTH-item.w-12,this.player.x+direction*(this.player.w+18)));
-      item.y=FLOOR-item.h; item.vx=direction*(item.kind==="rock"?185:115);
-      (item.kind==="rock"?this.rocks:this.eggs).push(item); this.carriedItem=null; return true;
+      const item = this.carriedItem;
+      this.setEntityLane(item, lane);
+      const direction = player.facing || 1;
+      item.x = Math.max(12, Math.min(WIDTH - item.w - 12, player.x + direction * (player.w + 18)));
+      item.y = getLaneBaseline(lane) - item.h;
+      item.vx = direction * (item.kind === "rock" ? 185 : 115);
+      (item.kind === "rock" ? this.rocks : this.eggs).push(item);
+      this.carriedItem = null;
+      return true;
     }
-    const candidates=[...this.eggs,...this.rocks].filter(item=>Math.abs(item.x+item.w/2-(this.player.x+this.player.w/2))<=ITEM_INTERACTION_RADIUS)
-      .sort((a,b)=>Math.abs(a.x-this.player.x)-Math.abs(b.x-this.player.x));
-    const item=candidates[0]; if(!item)return false;
-    const collection=item.kind==="egg"?this.eggs:this.rocks;
-    collection.splice(collection.indexOf(item),1); item.vx=0; this.carriedItem=item; return true;
+    const candidates = [...this.eggs, ...this.rocks]
+      .filter((item) =>
+        this.getEntityLane(item) === lane &&
+        Math.abs(item.x + item.w / 2 - (player.x + player.w / 2)) <= ITEM_INTERACTION_RADIUS
+      )
+      .sort((a, b) => Math.abs(a.x - player.x) - Math.abs(b.x - player.x));
+    const item = candidates[0];
+    if (!item) return false;
+    const collection = item.kind === "egg" ? this.eggs : this.rocks;
+    collection.splice(collection.indexOf(item), 1);
+    item.vx = 0;
+    this.carriedItem = item;
+    return true;
   }
 
   consumeCarriedEgg() {
@@ -554,13 +796,26 @@ export class EmptyStomach {
     this.carriedItem=null; this.invulnerabilityTimer=EGG_INVULNERABILITY_DURATION; return true;
   }
 
-  updateGroundItems(delta,speed) {
-    this.eggSpawnTimer-=delta;
-    if(this.eggSpawnTimer<=0){this.eggs.push({kind:"egg",x:WIDTH+20,y:FLOOR-23,w:28,h:23,vx:0});this.eggSpawnTimer=4.8+Math.random()*3.2;}
-    this.rockSpawnTimer-=delta;
-    if(this.rockSpawnTimer<=0){this.rocks.push({kind:"rock",x:WIDTH+30,y:FLOOR-25,w:34,h:25,vx:0});this.rockSpawnTimer=6.2+Math.random()*3.8;}
-    for(const item of [...this.eggs,...this.rocks]){item.x+=((item.vx||0)-speed*.72)*delta;item.vx=(item.vx||0)*Math.max(0,1-delta*2.6);item.y=FLOOR-item.h;}
-    this.eggs=this.eggs.filter(item=>item.x+item.w>-40);this.rocks=this.rocks.filter(item=>item.x+item.w>-50);
+  updateGroundItems(delta, speed) {
+    this.eggSpawnTimer -= delta;
+    if (this.eggSpawnTimer <= 0) {
+      const lane = randomLane();
+      this.eggs.push(applyLane({ kind: "egg", x: WIDTH + 20, y: 0, w: 28, h: 23, baseW: 28, baseH: 23, vx: 0 }, lane));
+      this.eggSpawnTimer = 4.8 + Math.random() * 3.2;
+    }
+    this.rockSpawnTimer -= delta;
+    if (this.rockSpawnTimer <= 0) {
+      const lane = randomLane();
+      this.rocks.push(applyLane({ kind: "rock", x: WIDTH + 30, y: 0, w: 34, h: 25, baseW: 34, baseH: 25, vx: 0 }, lane));
+      this.rockSpawnTimer = 6.2 + Math.random() * 3.8;
+    }
+    for (const item of [...this.eggs, ...this.rocks]) {
+      item.x += ((item.vx || 0) - speed * 0.72) * delta;
+      item.vx = (item.vx || 0) * Math.max(0, 1 - delta * 2.6);
+      item.y = getLaneBaseline(this.getEntityLane(item)) - item.h;
+    }
+    this.eggs = this.eggs.filter((item) => item.x + item.w > -40);
+    this.rocks = this.rocks.filter((item) => item.x + item.w > -50);
   }
 
   tripEnemy(enemy) {
@@ -579,6 +834,79 @@ export class EmptyStomach {
     c.moveTo(rock.x+3,rock.y+rock.h);c.lineTo(rock.x+1,rock.y+11);c.lineTo(rock.x+11,rock.y+2);
     c.lineTo(rock.x+24,rock.y+4);c.lineTo(rock.x+rock.w-1,rock.y+15);c.lineTo(rock.x+rock.w-5,rock.y+rock.h);
     c.closePath();c.fill();c.stroke();c.restore();
+  }
+
+  drawPit(pit) {
+    const c = this.ctx;
+    const floor = getLaneBaseline(pit.lane);
+    c.save();
+    c.fillStyle = "rgba(28, 30, 22, 0.34)";
+    c.beginPath();
+    c.ellipse(pit.x + pit.w / 2, floor - 3, pit.w / 2, pit.h / 2, 0, 0, Math.PI * 2);
+    c.fill();
+    c.fillStyle = "#30291f";
+    c.beginPath();
+    c.ellipse(pit.x + pit.w / 2, floor - 5, pit.w * 0.42, pit.h * 0.38, 0, 0, Math.PI * 2);
+    c.fill();
+    c.strokeStyle = "#b0a276";
+    c.lineWidth = Math.max(1, 2 * getLaneScale(pit.lane));
+    c.beginPath();
+    c.ellipse(pit.x + pit.w / 2, floor - 7, pit.w * 0.48, pit.h * 0.42, 0, Math.PI, Math.PI * 2);
+    c.stroke();
+    c.restore();
+  }
+
+  drawMud(mud) {
+    const c = this.ctx;
+    const floor = getLaneBaseline(mud.lane);
+    c.save();
+    c.fillStyle = "#59452e";
+    c.beginPath();
+    c.ellipse(mud.x + mud.w / 2, floor - 4, mud.w / 2, mud.h / 2, 0, 0, Math.PI * 2);
+    c.fill();
+    c.fillStyle = "rgba(164, 129, 82, 0.78)";
+    for (let index = 0; index < 3; index += 1) {
+      c.beginPath();
+      c.ellipse(mud.x + mud.w * (0.22 + index * 0.27), floor - 7, mud.w * 0.11, mud.h * 0.17, -0.2, 0, Math.PI * 2);
+      c.fill();
+    }
+    c.strokeStyle = "rgba(211, 180, 126, 0.6)";
+    c.lineWidth = 1;
+    c.beginPath();
+    c.ellipse(mud.x + mud.w * 0.5, floor - 5, mud.w * 0.39, mud.h * 0.3, 0, 0, Math.PI * 2);
+    c.stroke();
+    c.restore();
+  }
+
+  drawBush(bush) {
+    const c = this.ctx;
+    const floor = getLaneBaseline(bush.lane);
+    const x = bush.x;
+    const y = floor - bush.h;
+    c.save();
+    c.fillStyle = "#456b35";
+    c.beginPath();
+    c.ellipse(x + bush.w * 0.5, y + bush.h * 0.72, bush.w * 0.46, bush.h * 0.31, 0, 0, Math.PI * 2);
+    c.fill();
+    const leaves = [
+      [0.16, 0.55, 0.25], [0.34, 0.36, 0.29], [0.56, 0.31, 0.31],
+      [0.79, 0.52, 0.25], [0.48, 0.63, 0.32]
+    ];
+    leaves.forEach(([lx, ly, radius], index) => {
+      c.fillStyle = ["#4f843c", "#62984a", "#76a953", "#568c41", "#6b9d4d"][index];
+      c.beginPath();
+      c.arc(x + bush.w * lx, y + bush.h * ly, bush.h * radius, 0, Math.PI * 2);
+      c.fill();
+    });
+    c.strokeStyle = "rgba(183, 211, 127, 0.6)";
+    c.lineWidth = Math.max(1, getLaneScale(bush.lane));
+    c.beginPath();
+    c.moveTo(x + bush.w * 0.27, y + bush.h * 0.56);
+    c.lineTo(x + bush.w * 0.42, y + bush.h * 0.22);
+    c.moveTo(x + bush.w * 0.62, y + bush.h * 0.61);
+    c.lineTo(x + bush.w * 0.78, y + bush.h * 0.34);
+    c.stroke();
+    c.restore();
   }
 
   drawCarriedItem(item) {
@@ -777,47 +1105,79 @@ export class EmptyStomach {
       }
     }
 
+    for (const pit of this.pits ?? []) this.drawPit(pit);
+    for (const mud of this.mudPuddles ?? []) this.drawMud(mud);
     for (const egg of this.eggs) this.drawEgg(egg);
     for (const rock of this.rocks) this.drawRock(rock);
-    for (const prey of this.herd) {
-      const pose = prey.beingEaten
-        ? (prey.beingEatenElapsed < 0.65 ? "parasaurPerturbed" : "parasaurIdle")
-        : prey.animationState === "perturbed" ? "parasaurPerturbed" : "parasaurRun";
-      this.drawSprite(pose, prey.x, prey.y, prey.w, prey.h, "#8e9b72");
-    }
-    for (const enemy of this.enemies) {
-      const pose = enemyAnimationKey(enemy, this.elapsed);
-      const frozenPose = enemy.state === "departing" || enemy.state === "stunned" ||
-        (enemy.kind === "xenoraptor" && enemy.state === "hunting" && !enemy.preyTarget);
-      ctx.save();
-      if (enemy.state === "fading") ctx.globalAlpha = Math.max(0, enemy.fadeTimer / ENEMY_TRIP_FADE_DURATION);
-      this.drawSprite(
-        pose,
-        enemy.x,
-        enemy.y,
-        enemy.w,
-        enemy.h,
-        enemy.kind === "xenoraptor" ? "#6c524b" : "#34433c",
-        frozenPose ? 0 : this.animationClock * 1000
-      );
-      ctx.restore();
-      if (enemy.state === "stunned") {
-        ctx.fillStyle = "#fff2a8";
-        ctx.font = "bold 20px monospace";
-        ctx.fillText("✳", enemy.x + enemy.w / 2 - 7, enemy.y - 5);
+
+    for (let lane = 0; lane < LANE_COUNT; lane += 1) {
+      for (const prey of this.herd.filter((item) => this.getEntityLane(item) === lane)) {
+        const pose = prey.beingEaten
+          ? (prey.beingEatenElapsed < 0.65 ? "parasaurPerturbed" : "parasaurIdle")
+          : prey.animationState === "perturbed" ? "parasaurPerturbed" : "parasaurRun";
+        const sink = (prey.trappedTimer ?? 0) > 0 ? 9 * getLaneScale(lane) : 0;
+        this.drawSprite(pose, prey.x, prey.y + sink, prey.w, prey.h, "#8e9b72");
       }
+      for (const enemy of this.enemies.filter((item) => this.getEntityLane(item) === lane)) {
+        const pose = enemyAnimationKey(enemy, this.elapsed);
+        const frozenPose = ["departing", "stunned", "trapped"].includes(enemy.state) ||
+          (enemy.kind === "xenoraptor" && enemy.state === "hunting" && !enemy.preyTarget);
+        ctx.save();
+        if (enemy.state === "fading") ctx.globalAlpha = Math.max(0, enemy.fadeTimer / ENEMY_TRIP_FADE_DURATION);
+        this.drawSprite(
+          pose,
+          enemy.x,
+          enemy.y,
+          enemy.w,
+          enemy.h,
+          enemy.kind === "xenoraptor" ? "#6c524b" : "#34433c",
+          frozenPose ? 0 : this.animationClock * 1000
+        );
+        ctx.restore();
+        if (enemy.state === "stunned") {
+          ctx.fillStyle = "#fff2a8";
+          ctx.font = "bold 20px monospace";
+          ctx.fillText("✳", enemy.x + enemy.w / 2 - 7, enemy.y - 5);
+        }
+      }
+      for (const cloud of (this.dashDustClouds ?? []).filter((item) => item.lane === lane)) this.drawDashDustCloud(cloud);
+      if (this.getEntityLane(this.player) === lane) {
+        const playerY = this.player.y + ((this.player.trappedTimer ?? 0) > 0 ? 10 * getLaneScale(lane) : 0);
+        ctx.save();
+        if (this.invulnerabilityTimer > 0) ctx.globalAlpha = Math.floor(this.invulnerabilityTimer * 12) % 2 ? 0.42 : 1;
+        if (this.isPlayerHidden()) ctx.globalAlpha *= 0.78;
+        this.drawSprite("coral", this.player.x, playerY, this.player.w, this.player.h, "#e7a7a0");
+        ctx.restore();
+        if (this.carriedItem) this.drawCarriedItem(this.carriedItem);
+      }
+      for (const bush of (this.bushes ?? []).filter((item) => item.lane === lane)) this.drawBush(bush);
     }
-    for (const cloud of this.dashDustClouds ?? []) this.drawDashDustCloud(cloud);
-    if (this.carriedItem) this.drawCarriedItem(this.carriedItem);
-    ctx.save();
-    if (this.invulnerabilityTimer > 0) ctx.globalAlpha = Math.floor(this.invulnerabilityTimer * 12) % 2 ? 0.42 : 1;
-    this.drawSprite("coral", this.player.x, this.player.y, this.player.w, this.player.h, "#e7a7a0");
-    ctx.restore();
-    if (this.invulnerabilityTimer > 0) { ctx.fillStyle="#fff0bd";ctx.font="bold 13px monospace";ctx.fillText("INVULNERABLE "+this.invulnerabilityTimer.toFixed(1)+"s",26,56); }
+
+    if (this.isPlayerHidden()) {
+      ctx.fillStyle = "#f4efc2";
+      ctx.font = "bold 13px monospace";
+      ctx.fillText(this.text("OCULTA", "HIDDEN"), 26, 56);
+    } else if ((this.player.trappedTimer ?? 0) > 0) {
+      ctx.fillStyle = "#f4efc2";
+      ctx.font = "bold 13px monospace";
+      ctx.fillText(this.text("ATRAPADA ", "TRAPPED ") + this.player.trappedTimer.toFixed(1) + "s", 26, 56);
+    } else if (this.isInMud(this.player)) {
+      ctx.fillStyle = "#f4efc2";
+      ctx.font = "bold 13px monospace";
+      ctx.fillText(this.text("LODO · LENTO", "MUD · SLOWED"), 26, 56);
+    }
+    if (this.invulnerabilityTimer > 0) {
+      ctx.fillStyle = "#fff0bd";
+      ctx.font = "bold 13px monospace";
+      ctx.fillText("INVULNERABLE " + this.invulnerabilityTimer.toFixed(1) + "s", 26, 74);
+    }
     if (this.phase === "playing" || this.phase === "finished") {
       ctx.fillStyle = "#30452a";
       ctx.font = "bold 16px monospace";
       ctx.fillText(this.text("DISTANCIA", "DISTANCE") + "  " + scoreForDistance(this.distance) + " M", 26, 34);
+      ctx.textAlign = "right";
+      ctx.fillText(this.text("CARRIL", "LANE") + " " + (this.getEntityLane(this.player) + 1) + "/4", WIDTH - 26, 34);
+      ctx.textAlign = "left";
     }
     if (!this.running && !this.root.querySelector("[data-empty-result]").hidden) {
       ctx.fillStyle = "rgba(7,13,12,.45)";
