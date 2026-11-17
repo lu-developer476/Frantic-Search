@@ -4,7 +4,8 @@ import {
   overlaps, scoreForDistance, getGroundAlignedY, createPredator, enemyAnimationKey, ASSETS,
   EmptyStomach, ENEMY_CHASE_DURATION, INTRO_DURATION, PLAYER_WIDTH, PLAYER_HEIGHT,
   DASH_DURATION, DASH_COOLDOWN, DASH_SPEED_MULTIPLIER, ENEMY_STUN_DURATION,
-  EGG_INVULNERABILITY_DURATION, ENEMY_TRIP_FADE_DURATION, createEgg
+  EGG_INVULNERABILITY_DURATION, ENEMY_TRIP_FADE_DURATION, createEgg,
+  CHECKPOINT_INTERVAL_METERS, CHECKPOINT_INTERVAL_DISTANCE, EGGS_PER_CHECKPOINT_CONTINUE
 } from "../src/minigames/EmptyStomach.js";
 import { removeEdgeBackground, getBottomTransparentPadding } from "../src/minigames/AnimatedGif.js";
 
@@ -97,7 +98,8 @@ test("Empty Stomach removes the Coral survival caption and keeps the death resul
   const { readFile } = await import("node:fs/promises");
   const source = await readFile(new URL("../src/minigames/EmptyStomach.js", import.meta.url), "utf8");
   assert.doesNotMatch(source, /CORAL \/\/ SUPERVIVENCIA|CORAL \/\/ SURVIVAL/);
-  assert.match(source, /textContent = this\.text\("CORAL FUE DEVORADA", "CORAL WAS EATEN"\)/);
+  assert.match(source, /"CORAL FUE DEVORADA", "CORAL WAS EATEN"/);
+  assert.match(source, /"CORAL CAYÓ AL POZO", "CORAL FELL INTO THE PIT"/);
   assert.doesNotMatch(source, /CORAL FUE DEVORADA · DISTANCIA|CORAL WAS EATEN · DISTANCE/);
 });
 
@@ -108,6 +110,7 @@ test("Empty Stomach hides intro description and controls after death, then resto
     "[data-empty-instructions]": { hidden: false },
     "[data-empty-result]": { hidden: true, textContent: "" },
     "[data-empty-retry]": { hidden: true },
+    "[data-empty-checkpoint]": { hidden: true, textContent: "" },
     "[data-empty-exit]": { hidden: true }
   };
   const classes = new Set(["playing"]);
@@ -117,6 +120,9 @@ test("Empty Stomach hides intro description and controls after death, then resto
     paused: false,
     frame: null,
     distance: 850,
+    checkpoint: null,
+    checkpointCharges: 0,
+    eggsEaten: 0,
     best: 1087,
     locale: "es",
     pauseOverlay: { hidden: true },
@@ -143,7 +149,14 @@ test("Empty Stomach hides intro description and controls after death, then resto
   assert.equal(nodes["[data-empty-instructions]"].hidden, true);
   assert.equal(nodes["[data-empty-result]"].textContent, "CORAL FUE DEVORADA");
   assert.equal(nodes["[data-empty-retry]"].hidden, false);
+  assert.equal(nodes["[data-empty-checkpoint]"].hidden, true);
   assert.equal(nodes["[data-empty-exit]"].hidden, false);
+
+  simulation.reset();
+  simulation.running = true;
+  simulation.finish("pit");
+  assert.equal(nodes["[data-empty-result]"].textContent, "CORAL CAYÓ AL POZO");
+  assert.equal(nodes["[data-empty-checkpoint]"].hidden, true);
 
   simulation.reset();
 
@@ -550,6 +563,7 @@ test("Empty Stomach keeps the pause shortcut only in the right-side control", as
   ));
   assert.ok(html.includes('<button type="button" data-empty-pause>P: PAUSAR</button>'));
   assert.ok(html.includes('<button type="button" data-empty-retry hidden>RETOMAR</button>'));
+  assert.ok(html.includes('<button type="button" data-empty-checkpoint hidden>USAR CHECKPOINT</button>'));
 });
 
 
@@ -631,12 +645,105 @@ test("Empty Stomach keeps both instruction labels on a single line", async () =>
 });
 
 
-test("cream eggs grant four seconds of invulnerability when consumed", () => {
-  const simulation=makeSimulation({player:{x:200,y:366,w:80,h:66}});
-  simulation.phase="playing";simulation.carriedItem={kind:"egg",w:28,h:23};
-  assert.equal(simulation.consumeCarriedEgg(),true);assert.equal(simulation.carriedItem,null);
-  assert.equal(simulation.invulnerabilityTimer,4);simulation.update(1);assert.equal(simulation.invulnerabilityTimer,3);
-  assert.equal(EGG_INVULNERABILITY_DURATION,4);
+test("four eggs consumed across the run earn one checkpoint continuation", () => {
+  const simulation = makeSimulation({ player: { x: 200, y: 366, w: 80, h: 66 } });
+  simulation.phase = "playing";
+
+  for (let index = 0; index < EGGS_PER_CHECKPOINT_CONTINUE - 1; index += 1) {
+    simulation.carriedItem = { kind: "egg", w: 28, h: 33 };
+    assert.equal(simulation.consumeCarriedEgg(), true);
+    assert.equal(simulation.checkpointCharges ?? 0, 0);
+  }
+
+  simulation.carriedItem = { kind: "rock", w: 34, h: 25 };
+  assert.equal(simulation.consumeCarriedEgg(), false);
+  assert.equal(simulation.eggsEaten ?? 0, EGGS_PER_CHECKPOINT_CONTINUE - 1);
+
+  simulation.carriedItem = { kind: "egg", w: 28, h: 33 };
+  assert.equal(simulation.consumeCarriedEgg(), true);
+  assert.equal(simulation.carriedItem, null);
+  assert.equal(simulation.invulnerabilityTimer, EGG_INVULNERABILITY_DURATION);
+  assert.equal(simulation.eggsEaten, EGGS_PER_CHECKPOINT_CONTINUE);
+  assert.equal(simulation.checkpointCharges, 1);
+  assert.equal(EGGS_PER_CHECKPOINT_CONTINUE, 4);
+
+  simulation.carriedItem = { kind: "egg", w: 28, h: 33 };
+  assert.equal(simulation.consumeCarriedEgg(), true);
+  assert.equal(simulation.checkpointCharges, 1, "the next continuation requires four more eggs");
+  simulation.update(1);
+  assert.equal(simulation.invulnerabilityTimer, 3);
+  assert.equal(EGG_INVULNERABILITY_DURATION, 4);
+});
+
+test("a checkpoint continuation resumes at the saved 250-meter state and spends one charge", () => {
+  const nodes = new Map([
+    ["[data-empty-title]", { textContent: "", hidden: false }],
+    ["[data-empty-subtitle]", { hidden: false }],
+    ["[data-empty-instructions]", { hidden: false }],
+    ["[data-empty-result]", { hidden: false }],
+    ["[data-empty-start]", { hidden: false }],
+    ["[data-empty-retry]", { hidden: false }],
+    ["[data-empty-checkpoint]", { hidden: false, textContent: "USE CHECKPOINT" }]
+  ]);
+  const classes = new Set(["active"]);
+  const simulation = makeSimulation({
+    player: { x: 700, y: 366, w: 80, h: 66 },
+    enemies: [createPredator("umbraraptor", 0)],
+    herd: [{ x: 500, y: 366, w: 100, h: 72 }]
+  });
+  Object.assign(simulation, {
+    running: false,
+    phase: "finished",
+    distance: CHECKPOINT_INTERVAL_DISTANCE + 300,
+    elapsed: 22,
+    sceneryOffset: 3100,
+    checkpoint: {
+      milestone: 1,
+      distance: CHECKPOINT_INTERVAL_DISTANCE,
+      elapsed: 16,
+      sceneryOffset: 2600,
+      playerX: 340,
+      playerLane: 2
+    },
+    checkpointCharges: 1,
+    eggsEaten: 4,
+    frame: null,
+    controlsStrip: { hidden: true },
+    pauseOverlay: { hidden: false },
+    keys: new Set(),
+    root: {
+      querySelector(selector) { return nodes.get(selector); },
+      classList: {
+        add(name) { classes.add(name); },
+        remove(name) { classes.delete(name); }
+      }
+    },
+    render() {}
+  });
+
+  const previousRequest = globalThis.requestAnimationFrame;
+  globalThis.requestAnimationFrame = () => 17;
+  try {
+    assert.equal(simulation.continueFromCheckpoint(), true);
+    assert.equal(simulation.running, true);
+    assert.equal(simulation.phase, "playing");
+    assert.equal(simulation.distance, CHECKPOINT_INTERVAL_DISTANCE);
+    assert.equal(simulation.elapsed, 16);
+    assert.equal(simulation.sceneryOffset, 2600);
+    assert.equal(simulation.player.x, 340);
+    assert.equal(simulation.player.lane, 2);
+    assert.equal(simulation.invulnerabilityTimer, 2);
+    assert.equal(simulation.checkpointCharges, 0);
+    assert.equal(simulation.eggsEaten, 4, "the egg count is preserved after continuing");
+    assert.equal(simulation.enemies.length, 0);
+    assert.equal(simulation.herd.length, 0);
+    assert.equal(nodes.get("[data-empty-checkpoint]").hidden, true);
+    assert.equal(nodes.get("[data-empty-result]").hidden, true);
+    assert.equal(simulation.controlsStrip.hidden, false);
+  } finally {
+    if (previousRequest === undefined) delete globalThis.requestAnimationFrame;
+    else globalThis.requestAnimationFrame = previousRequest;
+  }
 });
 
 test("the miniraptor can pick up and drop a black stone", () => {

@@ -43,6 +43,10 @@ export function scoreForDistance(distance) {
   return Math.max(0, Math.floor(distance / 10));
 }
 
+export const CHECKPOINT_INTERVAL_METERS = 250;
+export const CHECKPOINT_INTERVAL_DISTANCE = CHECKPOINT_INTERVAL_METERS * 10;
+export const EGGS_PER_CHECKPOINT_CONTINUE = 4;
+
 export function getGroundAlignedY(y, renderedHeight, sourceHeight, bottomPadding = 0) {
   if (![y, renderedHeight, sourceHeight].every(Number.isFinite) || sourceHeight <= 0) return y;
   const padding = Math.max(0, Math.min(sourceHeight, Number(bottomPadding) || 0));
@@ -191,6 +195,7 @@ export class EmptyStomach {
     this.onExit = onExit;
     this.locale = "es";
     this.pauseButton = root.querySelector("[data-empty-pause]");
+    this.checkpointButton = root.querySelector("[data-empty-checkpoint]");
     this.pauseOverlay = root.querySelector("[data-empty-pause-overlay]");
     this.controlsStrip = root.querySelector("[data-empty-controls]");
     this.paused = false;
@@ -212,6 +217,11 @@ export class EmptyStomach {
     this.last = 0;
     this.elapsed = 0;
     this.distance = 0;
+    this.checkpoint = null;
+    this.checkpointCharges = 0;
+    this.eggsEaten = 0;
+    this.checkpointNoticeTimer = 0;
+    this.deathCause = null;
     this.spawnTimer = 0;
     this.preyTimer = 1.5;
     this.enemies = [];
@@ -254,6 +264,7 @@ export class EmptyStomach {
     root.querySelector("[data-empty-retry]").addEventListener("click", () => this.start());
     root.querySelector("[data-empty-exit]").addEventListener("click", () => this.exit());
     this.pauseButton.addEventListener("click", () => this.togglePause());
+    this.checkpointButton.addEventListener("click", () => this.continueFromCheckpoint());
     this.render();
   }
 
@@ -324,7 +335,7 @@ export class EmptyStomach {
     entity.fellIntoPit = true;
 
     if (kind === "player") {
-      this.finish();
+      this.finish("pit");
       return true;
     }
 
@@ -351,11 +362,12 @@ export class EmptyStomach {
     this.root.querySelector("[data-empty-instructions]").textContent = this.text("A / D O ← / →: MOVERSE · W / S O ↑ / ↓: CAMBIAR CARRIL · ESPACIO: SALTAR · X: EMBESTIR · E: TOMAR / SOLTAR · Q: COMER HUEVO · P: PAUSAR · ESC: SALIR", "A / D OR ← / →: MOVE · W / S OR ↑ / ↓: CHANGE LANE · SPACE: JUMP · X: DASH · E: PICK UP / DROP · Q: EAT EGG · P: PAUSE · ESC: EXIT");
     this.root.querySelector("[data-empty-controls-text]").textContent = this.text("A / D O ← / →: MOVERSE · W / S O ↑ / ↓: CARRILES · ESPACIO: SALTAR · X: EMBESTIR · E: OBJETO · Q: HUEVO · ESC: SALIR", "A / D OR ← / →: MOVE · W / S OR ↑ / ↓: LANES · SPACE: JUMP · X: DASH · E: ITEM · Q: EGG · ESC: EXIT");
     this.root.querySelector("[data-empty-pause-label]").textContent = this.text("PAUSA", "PAUSED");
-    this.root.querySelector("[data-empty-result]").textContent = this.text("CORAL FUE DEVORADA", "CORAL WAS EATEN");
+    this.root.querySelector("[data-empty-result]").textContent = this.getDeathMessage();
     this.updatePauseButton();
     this.root.querySelector("[data-empty-start]").textContent = this.text("INICIAR", "START RUN");
     this.root.querySelector("[data-empty-retry]").textContent = this.text("RETOMAR", "RETRY");
     this.root.querySelector("[data-empty-exit]").textContent = this.text("SALIR", "EXIT");
+    this.updateCheckpointButton();
     this.render();
   }
 
@@ -367,6 +379,7 @@ export class EmptyStomach {
     this.reset();
     this.root.querySelector("[data-empty-start]").hidden = false;
     this.root.querySelector("[data-empty-retry]").hidden = true;
+    this.root.querySelector("[data-empty-checkpoint]").hidden = true;
     this.root.querySelector("[data-empty-exit]").hidden = false;
     this.root.querySelector("[data-empty-result]").hidden = true;
     this.root.querySelector("[data-empty-start]").focus();
@@ -384,6 +397,10 @@ export class EmptyStomach {
     this.root.querySelector("[data-empty-title]").textContent = this.text("ESTÓMAGO VACÍO", "EMPTY STOMACH");
     this.root.querySelector("[data-empty-subtitle]").hidden = false;
     this.root.querySelector("[data-empty-instructions]").hidden = false;
+    const checkpointButton = this.root.querySelector("[data-empty-checkpoint]");
+    if (checkpointButton) checkpointButton.hidden = true;
+    this.root.querySelector("[data-empty-retry]").hidden = true;
+    this.root.querySelector("[data-empty-result]").hidden = true;
     this.updatePauseButton();
     this.phase = "idle";
     this.introElapsed = 0;
@@ -392,6 +409,11 @@ export class EmptyStomach {
     this.last = 0;
     this.elapsed = 0;
     this.distance = 0;
+    this.checkpoint = null;
+    this.checkpointCharges = 0;
+    this.eggsEaten = 0;
+    this.checkpointNoticeTimer = 0;
+    this.deathCause = null;
     this.spawnTimer = 1.2;
     this.preyTimer = 0.8;
     this.enemies = [];
@@ -595,8 +617,25 @@ export class EmptyStomach {
     this.bushes = this.bushes.filter((bush) => bush.life > 0 && bush.x + bush.w > -60);
   }
 
+  updateCheckpointProgress() {
+    const milestone = Math.floor(this.distance / CHECKPOINT_INTERVAL_DISTANCE);
+    if (milestone <= (this.checkpoint?.milestone ?? 0)) return false;
+
+    this.checkpoint = {
+      milestone,
+      distance: milestone * CHECKPOINT_INTERVAL_DISTANCE,
+      elapsed: this.elapsed,
+      sceneryOffset: this.sceneryOffset,
+      playerX: this.player.x,
+      playerLane: this.getEntityLane(this.player)
+    };
+    this.checkpointNoticeTimer = 2.8;
+    return true;
+  }
+
   update(delta) {
     this.elapsed += delta;
+    this.checkpointNoticeTimer = Math.max(0, (this.checkpointNoticeTimer ?? 0) - delta);
     this.invulnerabilityTimer = Math.max(0, (this.invulnerabilityTimer || 0) - delta);
     const speed = Math.min(310, 150 + this.elapsed * 2.2);
     this.distance += speed * delta;
@@ -635,6 +674,7 @@ export class EmptyStomach {
       if (p.y + p.h >= playerFloor) { p.y = playerFloor - p.h; p.vy = 0; p.grounded = true; }
     }
 
+    this.updateCheckpointProgress();
     this.updateTerrain(delta, speed);
     if (this.tryResolvePitfall(p, "player")) return;
 
@@ -856,8 +896,15 @@ export class EmptyStomach {
   }
 
   consumeCarriedEgg() {
-    if(!this.running||this.phase!=="playing"||this.carriedItem?.kind!=="egg")return false;
-    this.carriedItem=null; this.invulnerabilityTimer=EGG_INVULNERABILITY_DURATION; return true;
+    if (!this.running || this.phase !== "playing" || this.carriedItem?.kind !== "egg") return false;
+
+    this.carriedItem = null;
+    this.invulnerabilityTimer = EGG_INVULNERABILITY_DURATION;
+    this.eggsEaten = (this.eggsEaten ?? 0) + 1;
+    if (this.eggsEaten % EGGS_PER_CHECKPOINT_CONTINUE === 0) {
+      this.checkpointCharges = (this.checkpointCharges ?? 0) + 1;
+    }
+    return true;
   }
 
   updateGroundItems(delta, speed) {
@@ -1049,8 +1096,89 @@ export class EmptyStomach {
     if(item.kind==="egg")this.drawEgg({...item,x,y});else this.drawRock({...item,x,y});
   }
 
-  finish() {
+  getDeathMessage() {
+    return this.deathCause === "pit"
+      ? this.text("CORAL CAYÓ AL POZO", "CORAL FELL INTO THE PIT")
+      : this.text("CORAL FUE DEVORADA", "CORAL WAS EATEN");
+  }
+
+  updateCheckpointButton() {
+    const button = this.root?.querySelector?.("[data-empty-checkpoint]");
+    if (!button) return;
+    const canContinue = this.phase === "finished" &&
+      (this.checkpoint?.milestone ?? 0) > 0 &&
+      (this.checkpointCharges ?? 0) > 0;
+    button.hidden = !canContinue;
+    if (canContinue) {
+      const meters = this.checkpoint.milestone * CHECKPOINT_INTERVAL_METERS;
+      button.textContent = this.text(
+        `USAR CHECKPOINT · ${meters} M · ${this.checkpointCharges}`,
+        `USE CHECKPOINT · ${meters} M · ${this.checkpointCharges}`
+      );
+    }
+  }
+
+  continueFromCheckpoint() {
+    if (
+      this.phase !== "finished" ||
+      !this.checkpoint ||
+      this.checkpoint.milestone <= 0 ||
+      (this.checkpointCharges ?? 0) <= 0
+    ) return false;
+
+    const checkpoint = this.checkpoint;
+    this.checkpointCharges -= 1;
+    this.distance = checkpoint.distance;
+    this.elapsed = checkpoint.elapsed;
+    this.sceneryOffset = checkpoint.sceneryOffset;
+    this.player = createPlayer(checkpoint.playerLane);
+    this.player.x = Math.max(22, Math.min(WIDTH - this.player.w - PLAYER_RIGHT_MARGIN, checkpoint.playerX));
+    this.enemies = [];
+    this.herd = [];
+    this.eggs = [];
+    this.rocks = [];
+    this.pits = [];
+    this.mudPuddles = [];
+    this.bushes = [];
+    this.particles = [];
+    this.dashDustClouds = [];
+    this.carriedItem = null;
+    this.invulnerabilityTimer = 2;
+    this.spawnTimer = 1.2;
+    this.preyTimer = 0.8;
+    this.eggSpawnTimer = 2.2;
+    this.rockSpawnTimer = 3.4;
+    this.pitSpawnTimer = 5.8;
+    this.mudSpawnTimer = 3.8;
+    this.bushSpawnTimer = 5.1;
+    this.checkpointNoticeTimer = 0;
+    this.deathCause = null;
+    this.keys.clear();
+    this.running = true;
+    this.paused = false;
+    this.phase = "playing";
+    this.root.classList.remove("paused");
+    this.root.classList.add("playing");
+    this.pauseOverlay.hidden = true;
+    this.controlsStrip.hidden = false;
+    this.root.querySelector("[data-empty-title]").textContent = this.text("ESTÓMAGO VACÍO", "EMPTY STOMACH");
+    this.root.querySelector("[data-empty-subtitle]").hidden = true;
+    this.root.querySelector("[data-empty-instructions]").hidden = true;
+    this.root.querySelector("[data-empty-result]").hidden = true;
+    this.root.querySelector("[data-empty-start]").hidden = true;
+    this.root.querySelector("[data-empty-retry]").hidden = true;
+    this.root.querySelector("[data-empty-checkpoint]").hidden = true;
+    this.last = performance.now();
+    this.updatePauseButton();
+    this.updateCheckpointButton();
+    this.render();
+    this.frame = requestAnimationFrame((now) => this.tick(now));
+    return true;
+  }
+
+  finish(reason = "eaten") {
     if (!this.running) return;
+    this.deathCause = reason === "pit" ? "pit" : "eaten";
     this.running = false;
     this.phase = "finished";
     this.paused = false;
@@ -1066,11 +1194,12 @@ export class EmptyStomach {
     this.root.querySelector("[data-empty-title]").textContent = this.text("PARTIDA FINALIZADA", "GAME OVER");
     this.root.querySelector("[data-empty-subtitle]").hidden = true;
     this.root.querySelector("[data-empty-instructions]").hidden = true;
-    this.root.querySelector("[data-empty-result]").textContent = this.text("CORAL FUE DEVORADA", "CORAL WAS EATEN");
+    this.root.querySelector("[data-empty-result]").textContent = this.getDeathMessage();
     this.root.classList.remove("playing");
     this.root.querySelector("[data-empty-result]").hidden = false;
     this.root.querySelector("[data-empty-retry]").hidden = false;
     this.root.querySelector("[data-empty-exit]").hidden = false;
+    this.updateCheckpointButton();
     this.render();
   }
 
@@ -1312,7 +1441,37 @@ export class EmptyStomach {
       ctx.fillText(this.text("DISTANCIA", "DISTANCE") + "  " + scoreForDistance(this.distance) + " M", 26, 34);
       ctx.textAlign = "right";
       ctx.fillText(this.text("CARRIL", "LANE") + " " + (this.getEntityLane(this.player) + 1) + "/4", WIDTH - 26, 34);
+      ctx.font = "bold 12px monospace";
+      const checkpointMeters = this.checkpoint?.milestone
+        ? this.checkpoint.milestone * CHECKPOINT_INTERVAL_METERS
+        : CHECKPOINT_INTERVAL_METERS;
+      ctx.fillText(
+        this.checkpoint?.milestone
+          ? this.text("CHECKPOINT ", "CHECKPOINT ") + checkpointMeters + " M"
+          : this.text("PRÓXIMO CP ", "NEXT CP ") + checkpointMeters + " M",
+        WIDTH - 26,
+        56
+      );
       ctx.textAlign = "left";
+      const eggsProgress = (this.eggsEaten ?? 0) % EGGS_PER_CHECKPOINT_CONTINUE;
+      ctx.font = "bold 12px monospace";
+      ctx.fillText(
+        this.text("HUEVOS ", "EGGS ") + eggsProgress + "/" + EGGS_PER_CHECKPOINT_CONTINUE +
+          " · " + (this.checkpointCharges ?? 0) + " " + this.text("CONTINUACIONES", "CONTINUES"),
+        26,
+        94
+      );
+      if ((this.checkpointNoticeTimer ?? 0) > 0) {
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#fff0bd";
+        ctx.font = "bold 16px monospace";
+        ctx.fillText(
+          this.text("CHECKPOINT ALCANZADO · ", "CHECKPOINT REACHED · ") + checkpointMeters + " M",
+          WIDTH / 2,
+          112
+        );
+        ctx.textAlign = "left";
+      }
     }
     if (!this.running && !this.root.querySelector("[data-empty-result]").hidden) {
       ctx.fillStyle = "rgba(7,13,12,.45)";

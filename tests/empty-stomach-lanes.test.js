@@ -9,6 +9,8 @@ import {
   LANE_BASELINES,
   MUD_SPEED_MULTIPLIER,
   PIT_FALL_FADE_DURATION,
+  CHECKPOINT_INTERVAL_METERS,
+  CHECKPOINT_INTERVAL_DISTANCE,
   createEgg,
   getMudShimmerOpacity
 } from "../src/minigames/EmptyStomach.js";
@@ -27,6 +29,10 @@ function makeSimulation({
   Object.assign(simulation, {
     elapsed: 0,
     distance: 0,
+    checkpoint: null,
+    checkpointCharges: 0,
+    eggsEaten: 0,
+    checkpointNoticeTimer: 0,
     spawnTimer: 60,
     preyTimer: 60,
     eggSpawnTimer: 60,
@@ -66,9 +72,10 @@ function makeSimulation({
     phase: "playing",
     sceneryOffset: 0
   });
-  simulation.finish = () => {
+  simulation.finish = (reason = "eaten") => {
     simulation.running = false;
     simulation.finished = true;
+    simulation.deathCause = reason;
   };
   return simulation;
 }
@@ -125,6 +132,7 @@ test("A ground-level pit ends Coral's run immediately", () => {
   assert.equal(pit.triggered, true);
   assert.equal(simulation.running, false);
   assert.equal(simulation.finished, true);
+  assert.equal(simulation.deathCause, "pit");
 });
 
 test("jumping over a pit prevents the lethal ground collision", () => {
@@ -243,4 +251,25 @@ test("mud shimmer pulses over time without changing the slowdown multiplier", ()
   assert.ok(samples.every((opacity) => opacity >= 0.035 && opacity <= 0.655));
   assert.ok(new Set(samples.map((opacity) => opacity.toFixed(3))).size > 1);
   assert.equal(MUD_SPEED_MULTIPLIER, 0.55);
+});
+
+
+test("Empty Stomach saves a checkpoint at every 250-meter boundary", () => {
+  const simulation = makeSimulation({ player: { x: 318, lane: 2 } });
+  simulation.distance = CHECKPOINT_INTERVAL_DISTANCE - 2;
+
+  simulation.update(0.04);
+
+  assert.equal(CHECKPOINT_INTERVAL_METERS, 250);
+  assert.equal(simulation.checkpoint.milestone, 1);
+  assert.equal(simulation.checkpoint.distance, CHECKPOINT_INTERVAL_DISTANCE);
+  assert.equal(simulation.checkpoint.elapsed, simulation.elapsed);
+  assert.equal(simulation.checkpoint.playerX, simulation.player.x);
+  assert.equal(simulation.checkpoint.playerLane, 2);
+  assert.ok(simulation.checkpointNoticeTimer > 0);
+
+  simulation.distance = CHECKPOINT_INTERVAL_DISTANCE * 2 - 2;
+  simulation.update(0.04);
+  assert.equal(simulation.checkpoint.milestone, 2);
+  assert.equal(simulation.checkpoint.distance, CHECKPOINT_INTERVAL_DISTANCE * 2);
 });
