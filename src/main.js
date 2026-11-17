@@ -163,7 +163,6 @@ const gameplayBriefTitle = document.querySelector("#gameplay-brief-title");
 const gameplayBriefContext = document.querySelector("#gameplay-brief-context");
 const gameplayBriefList = document.querySelector("#gameplay-brief-list");
 const gameplayBriefContinueButton = document.querySelector("#gameplay-brief-continue");
-const gameTutorialButton = document.querySelector("#game-tutorial-button");
 let pendingGameplayBriefAction = null;
 let gameplayBriefPausedGame = false;
 let tutorialReturnFocus = null;
@@ -4110,7 +4109,6 @@ backCharacterConfirmationButton.addEventListener("click", returnToCharacterSelec
 playCharacterButton.addEventListener("click", startFromDinoModal);
 menuToggle.addEventListener("click", () => setMenuOpen(navMenu.classList.contains("hidden")));
 document.querySelector("#tutorial-button").addEventListener("click", () => openTutorial());
-gameTutorialButton.addEventListener("click", () => openTutorial(gameTutorialButton));
 document.querySelector("#tutorial-close").addEventListener("click", closeTutorial);
 gameplayBriefContinueButton.addEventListener("click", closeGameplayBrief);
 document.addEventListener("keydown", (event) => {

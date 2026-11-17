@@ -196,19 +196,39 @@ test("the delete-save control is visible but disabled until a real campaign chec
   assert.equal(unavailableDesktop.deleteButton.disabled, true);
 });
 
-test("session shortcuts are suppressed on minigame start screens and during free roam", async () => {
+test("the hamburger menu is the only in-session tutorial entry point and remains available in free roam", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
   const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
   const styles = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
 
+  assert.ok(html.includes('id="tutorial-button" class="menu-option tutorial-menu-button"'));
+  assert.equal(html.includes('id="game-tutorial-button"'), false);
+  assert.equal(main.includes("gameTutorialButton"), false);
+  assert.doesNotMatch(styles, /game-tutorial-fab/);
   assert.ok(main.includes('document.body.classList.toggle("free-roam-session", freeRoamMode)'));
   assert.ok(main.includes('document.body.classList.remove("game-session-active", "free-roam-session")'));
-  assert.match(styles, /body\.free-roam-session \.menu-toggle/);
-  assert.match(styles, /body\.free-roam-session \.game-tutorial-fab/);
+  assert.doesNotMatch(styles, /body\.free-roam-session\s+\.menu-toggle/);
   for (const panel of ["empty-stomach-panel", "time-attack-panel", "survival-panel"]) {
-    assert.ok(styles.includes(`#${panel}.active:not(.playing)`), `missing start-screen visibility rule for ${panel}`);
+    assert.ok(styles.includes("#" + panel + ".active:not(.playing)"), "missing pre-game staging rule for " + panel);
   }
 });
 
+test("the brand returns to the root start screen and environmental modes cover navbar and hamburger", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+
+  assert.ok(html.includes('<a class="brand" href="/"'));
+  assert.equal(html.includes("https://franticsearch.vercel.app/#"), false);
+
+  for (const mode of ["beige", "gray"]) {
+    assert.ok(styles.includes("html.site-mode-" + mode + " .topbar"), mode + " must theme the navbar");
+    assert.ok(styles.includes("html.site-mode-" + mode + " .menu-toggle"), mode + " must theme the hamburger toggle");
+    assert.ok(styles.includes("html.site-mode-" + mode + " .nav-menu"), mode + " must theme the hamburger panel");
+    assert.ok(styles.includes("html.site-mode-" + mode + " .menu-option"), mode + " must theme menu options");
+  }
+  assert.equal(styles.includes("Keep the hamburger navigation monochrome"), false);
+  assert.doesNotMatch(styles, /#171717 !important/);
+});
 test("Empty Stomach shares the minigame menu button color palette", async () => {
   const styles = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
   const palette = styles.slice(styles.lastIndexOf("/* All four minigame/free-roam choices"));
