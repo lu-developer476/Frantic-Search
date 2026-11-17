@@ -255,7 +255,7 @@
                   <p class="time-attack-instructions game-mode-instructions" data-ta-instructions></p>
                   <p class="time-attack-result" data-ta-result hidden></p>
                   <div class="time-attack-actions game-mode-actions">
-                    <button type="button" data-ta-start>INICIAR CAZA</button>
+                    <button type="button" data-ta-start>INICIAR</button>
                     <button type="button" data-ta-retry hidden>REPETIR SECCIÓN</button>
                     <button type="button" data-ta-exit>VOLVER AL MENÚ</button>
                   </div>
@@ -275,14 +275,21 @@
                   <p data-survival-subtitle>Elegí tu bando y aguantá todas las oleadas que puedas. Cada ronda trae más enemigos y más resistencia.</p>
                   <p class="survival-instructions game-mode-instructions" data-survival-instructions></p>
                   <p class="survival-result" data-survival-result hidden></p>
-                  <div class="survival-actions game-mode-actions" data-survival-options>
-                    <button type="button" data-survival-role="hunter" data-survival-hunter>JUGAR COMO CAZADOR</button>
-                    <button type="button" data-survival-role="blue" data-survival-violeta>JUGAR COMO GALA</button>
-                    <button type="button" data-survival-role="vasti" data-survival-vasti>JUGAR COMO BASILIO</button>
-                  </div>
-                  <div class="survival-actions game-mode-actions">
+                  <div class="survival-actions game-mode-actions" data-survival-entry>
+                    <button type="button" data-survival-start>INICIAR</button>
                     <button type="button" data-survival-retry hidden>VOLVER A INTENTAR</button>
-                    <button type="button" data-survival-exit>VOLVER AL MENÚ</button>
+                    <button type="button" data-survival-exit>SALIR</button>
+                  </div>
+                  <div class="survival-actions game-mode-actions" data-survival-options hidden>
+                    <button type="button" data-survival-role="hunter" data-survival-hunter>SER CAZADOR</button>
+                    <button type="button" data-survival-show-dinosaurs>SER DINOSAURIO</button>
+                    <button type="button" data-survival-back-to-entry>VOLVER</button>
+                  </div>
+                  <div class="survival-actions game-mode-actions" data-survival-dinosaurs hidden>
+                    <button type="button" data-survival-role="blue" data-survival-gala>GALA</button>
+                    <button type="button" data-survival-role="vasti" data-survival-basilio>BASILIO</button>
+                    <button type="button" data-survival-role="rosa" data-survival-brisa>BRISA</button>
+                    <button type="button" data-survival-back-to-roles>VOLVER</button>
                   </div>
                 </div>
               </div>
@@ -367,7 +374,10 @@
         <p id="gameplay-brief-context" class="gameplay-brief-context"></p>
         <ul id="gameplay-brief-list" class="tutorial-list"></ul>
         <p id="gameplay-brief-note" class="gameplay-brief-note" data-i18n="gameplayBriefNote">Podrás consultar nuevamente el tutorial durante la partida.</p>
-        <button id="gameplay-brief-continue" class="gameplay-brief-continue" type="button" data-i18n="gameplayBriefContinue">ENTENDIDO</button>
+        <div class="gameplay-brief-actions">
+          <button id="gameplay-brief-continue" class="gameplay-brief-continue" type="button" data-i18n="gameplayBriefContinue">ENTENDIDO</button>
+          <button id="gameplay-brief-exit" class="gameplay-brief-exit" type="button" hidden>SALIR</button>
+        </div>
       </div>
     </section>
     <script type="module" src="/src/main.js"></script>

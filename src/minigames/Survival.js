@@ -148,6 +148,10 @@ export class Survival {
     this.canvas.addEventListener("pointermove", this.handlePointerMove);
     this.canvas.addEventListener("pointerdown", this.handlePointerDown);
 
+    root.querySelector("[data-survival-start]").addEventListener("click", () => this.showRoleOptions());
+    root.querySelector("[data-survival-show-dinosaurs]").addEventListener("click", () => this.showDinosaurOptions());
+    root.querySelector("[data-survival-back-to-entry]").addEventListener("click", () => this.showEntry());
+    root.querySelector("[data-survival-back-to-roles]").addEventListener("click", () => this.showRoleOptions());
     for (const button of root.querySelectorAll("[data-survival-role]")) {
       button.addEventListener("click", () => this.requestStart(button.dataset.survivalRole));
     }
@@ -168,17 +172,45 @@ export class Survival {
       "Elegí tu bando y aguantá todas las oleadas que puedas. Cada ronda trae más enemigos y más resistencia.",
       "Choose your side and survive as many waves as you can. Every round brings more enemies and tougher opponents."
     );
-    this.root.querySelector("[data-survival-hunter]").textContent = this.text("JUGAR COMO CAZADOR", "PLAY AS HUNTER");
-    this.root.querySelector("[data-survival-violeta]").textContent = this.text("JUGAR COMO VIOLETA", "PLAY AS VIOLETA");
-    this.root.querySelector("[data-survival-vasti]").textContent = this.text("JUGAR COMO VASTI", "PLAY AS VASTI");
+    this.root.querySelector("[data-survival-start]").textContent = this.text("INICIAR", "START");
+    this.root.querySelector("[data-survival-hunter]").textContent = this.text("SER CAZADOR", "BE A HUNTER");
+    this.root.querySelector("[data-survival-show-dinosaurs]").textContent = this.text("SER DINOSAURIO", "BE A DINOSAUR");
+    this.root.querySelector("[data-survival-gala]").textContent = "GALA";
+    this.root.querySelector("[data-survival-basilio]").textContent = "BASILIO";
+    this.root.querySelector("[data-survival-brisa]").textContent = "BRISA";
+    this.root.querySelector("[data-survival-back-to-entry]").textContent = this.text("VOLVER", "BACK");
+    this.root.querySelector("[data-survival-back-to-roles]").textContent = this.text("VOLVER", "BACK");
     this.root.querySelector("[data-survival-instructions]").textContent = this.text(
       "CAZADOR: A / D, ESPACIO para saltar, F o clic para disparar. DINOSAURIO: A / D, ESPACIO para saltar, X para atacar. P: pausa · ESC: salir.",
       "HUNTER: A / D, SPACE to jump, F or click to fire. DINOSAUR: A / D, SPACE to jump, X to attack. P: pause · ESC: exit."
     );
     this.root.querySelector("[data-survival-retry]").textContent = this.text("VOLVER A INTENTAR", "TRY AGAIN");
-    this.root.querySelector("[data-survival-exit]").textContent = this.text("VOLVER AL MENÚ", "BACK TO MENU");
+    this.root.querySelector("[data-survival-exit]").textContent = this.text("SALIR", "EXIT");
     this.root.querySelector("[data-survival-status]").textContent = this.text("SUPERVIVENCIA // OLEADA 01", "SURVIVAL // WAVE 01");
     this.render();
+  }
+
+  showEntry() {
+    const entry = this.root.querySelector("[data-survival-entry]");
+    entry.hidden = false;
+    this.root.querySelector("[data-survival-start]").hidden = false;
+    this.root.querySelector("[data-survival-retry]").hidden = true;
+    this.root.querySelector("[data-survival-options]").hidden = true;
+    this.root.querySelector("[data-survival-dinosaurs]").hidden = true;
+    this.root.querySelector("[data-survival-start]").focus();
+  }
+
+  showRoleOptions() {
+    this.root.querySelector("[data-survival-entry]").hidden = true;
+    this.root.querySelector("[data-survival-dinosaurs]").hidden = true;
+    this.root.querySelector("[data-survival-options]").hidden = false;
+    this.root.querySelector("[data-survival-hunter]").focus();
+  }
+
+  showDinosaurOptions() {
+    this.root.querySelector("[data-survival-options]").hidden = true;
+    this.root.querySelector("[data-survival-dinosaurs]").hidden = false;
+    this.root.querySelector("[data-survival-gala]").focus();
   }
 
   open() {
@@ -187,11 +219,9 @@ export class Survival {
     this.root.classList.remove("playing");
     this.root.setAttribute("aria-hidden", "false");
     this.reset();
-    this.root.querySelector("[data-survival-options]").hidden = false;
-    this.root.querySelector("[data-survival-retry]").hidden = true;
+    this.showEntry();
     this.root.querySelector("[data-survival-exit]").hidden = false;
     this.root.querySelector("[data-survival-result]").hidden = true;
-    this.root.querySelector("[data-survival-hunter]").focus();
     this.render();
   }
 
@@ -231,7 +261,7 @@ export class Survival {
 
   start(role = this.role) {
     if (!this.root.classList.contains("active")) return;
-    if (!["hunter","blue","vasti"].includes(role)) return;
+    if (!["hunter","blue","vasti","rosa"].includes(role)) return;
     this.role = role;
     this.reset();
     this.best = this.readBest();
@@ -239,7 +269,9 @@ export class Survival {
     this.running = true;
     this.intermission = 1.2;
     this.root.classList.add("playing");
+    this.root.querySelector("[data-survival-entry]").hidden = true;
     this.root.querySelector("[data-survival-options]").hidden = true;
+    this.root.querySelector("[data-survival-dinosaurs]").hidden = true;
     this.root.querySelector("[data-survival-retry]").hidden = true;
     this.root.querySelector("[data-survival-result]").hidden = true;
     this.root.querySelector("[data-survival-status]").textContent = this.roleLabel() + " // " + this.text("PREPARATE", "GET READY");
@@ -254,7 +286,7 @@ export class Survival {
 
   roleLabel() {
     if (this.role === "hunter") return this.text("CAZADOR", "HUNTER");
-    return this.role === "blue" ? "VIOLETA" : "VASTI";
+    return ({ blue: "GALA", vasti: "BASILIO", rosa: "BRISA" })[this.role] ?? "GALA";
   }
 
   togglePause() {
@@ -571,6 +603,9 @@ export class Survival {
     );
     this.root.classList.remove("playing");
     result.hidden = false;
+    const entry = this.root.querySelector("[data-survival-entry]");
+    entry.hidden = false;
+    this.root.querySelector("[data-survival-start]").hidden = true;
     this.root.querySelector("[data-survival-retry]").hidden = false;
     this.root.querySelector("[data-survival-exit]").hidden = false;
     this.render();
@@ -661,7 +696,7 @@ export class Survival {
     ctx.save();
     ctx.translate(actor.facing < 0 ? actor.x + actor.w : actor.x, actor.y);
     if (actor.facing < 0) ctx.scale(-1, 1);
-    ctx.fillStyle = this.role === "vasti" ? "#65744e" : "#8e9bb7";
+    ctx.fillStyle = this.role === "vasti" ? "#65744e" : this.role === "rosa" ? "#8f9b82" : "#8e9bb7";
     ctx.fillRect(12, 22, actor.w - 20, actor.h - 30);
     ctx.fillRect(actor.w - 22, 12, 20, 18);
     ctx.fillStyle = "#d6c9a0";

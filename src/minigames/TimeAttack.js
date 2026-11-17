@@ -156,9 +156,9 @@ export class TimeAttack {
       "A / D o ← / →: moverse · W / ↑: saltar · ESPACIO / F o clic izquierdo: disparar · P: pausa · ESC: salir",
       "A / D or ← / →: move · W / ↑: jump · SPACE / F or left click: fire · P: pause · ESC: exit"
     );
-    this.root.querySelector("[data-ta-start]").textContent = this.text("INICIAR CAZA", "START HUNT");
-    this.root.querySelector("[data-ta-retry]").textContent = this.text("REPETIR SECCIÓN", "RETRY SECTION");
-    this.root.querySelector("[data-ta-exit]").textContent = this.text("VOLVER AL MENÚ", "BACK TO MENU");
+    this.root.querySelector("[data-ta-start]").textContent = this.text("INICIAR", "START");
+    this.root.querySelector("[data-ta-retry]").textContent = this.text("VOLVER A INTENTAR", "TRY AGAIN");
+    this.root.querySelector("[data-ta-exit]").textContent = this.text("SALIR", "EXIT");
     this.root.querySelector("[data-ta-status]").textContent = this.text("SECCIÓN 01 // EXTRACCIÓN", "SECTION 01 // EXTRACTION");
     this.render();
   }

@@ -164,6 +164,7 @@ const gameplayBriefContext = document.querySelector("#gameplay-brief-context");
 const gameplayBriefList = document.querySelector("#gameplay-brief-list");
 const gameplayBriefNote = document.querySelector("#gameplay-brief-note");
 const gameplayBriefContinueButton = document.querySelector("#gameplay-brief-continue");
+const gameplayBriefExitButton = document.querySelector("#gameplay-brief-exit");
 let pendingGameplayBriefAction = null;
 let gameplayBriefPausedGame = false;
 let tutorialReturnFocus = null;
@@ -3957,6 +3958,9 @@ function showGameplayBrief(mode, proceed = null, context = "") {
     document.body.classList.add("game-paused");
   }
   gameplayBriefTitle.textContent = lines[0];
+  gameplayBriefContinueButton.textContent = isFreeRoamBrief ? ui("play") : ui("gameplayBriefContinue");
+  gameplayBriefExitButton.textContent = ui("exit");
+  gameplayBriefExitButton.hidden = !isFreeRoamBrief;
   gameplayBriefDialog.classList.toggle("free-roam-brief", isFreeRoamBrief);
   gameplayBriefContext.classList.toggle("game-mode-instructions", isFreeRoamBrief);
   gameplayBriefContext.textContent = isFreeRoamBrief ? lines.slice(1).join(" · ") : context;
@@ -3972,6 +3976,7 @@ function closeGameplayBrief() {
   if (gameplayBriefDialog.classList.contains("hidden")) return;
   gameplayBriefDialog.classList.add("hidden");
   gameplayBriefDialog.classList.remove("free-roam-brief");
+  gameplayBriefExitButton.hidden = true;
   gameplayBriefContext.classList.remove("game-mode-instructions");
   gameplayBriefContext.hidden = true;
   gameplayBriefList.hidden = false;
@@ -3988,6 +3993,13 @@ function closeGameplayBrief() {
   }
   gameplayBriefPausedGame = false;
   if (action) action();
+}
+
+function exitFreeRoamBrief() {
+  if (!gameplayBriefDialog.classList.contains("free-roam-brief")) return;
+  pendingGameplayBriefAction = null;
+  closeGameplayBrief();
+  returnToMainMenu();
 }
 
 function openTutorial(trigger = null) {
@@ -4138,12 +4150,14 @@ menuToggle.addEventListener("click", () => setMenuOpen(navMenu.classList.contain
 document.querySelector("#tutorial-button").addEventListener("click", () => openTutorial());
 document.querySelector("#tutorial-close").addEventListener("click", closeTutorial);
 gameplayBriefContinueButton.addEventListener("click", closeGameplayBrief);
+gameplayBriefExitButton.addEventListener("click", exitFreeRoamBrief);
 document.addEventListener("keydown", (event) => {
   if (gameplayBriefDialog.classList.contains("hidden")) return;
   event.stopPropagation();
   if (event.key === "Escape") {
     event.preventDefault();
-    closeGameplayBrief();
+    if (gameplayBriefDialog.classList.contains("free-roam-brief")) exitFreeRoamBrief();
+    else closeGameplayBrief();
   }
 });
 document.querySelector("#tutorial-dialog").addEventListener("click", (event) => {

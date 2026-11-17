@@ -4535,3 +4535,92 @@ html.site-mode-gray .survival-intro button {
     align-self: start;
   }
 }
+
+
+/* Shared pre-game controls: Free Roam mirrors the Start / Exit pattern used by minigames. */
+.gameplay-brief-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin-top: 18px;
+}
+.gameplay-brief-actions .gameplay-brief-continue {
+  margin-top: 0;
+}
+.gameplay-brief-exit {
+  display: flex;
+  width: 100%;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 18px;
+  border: 1px solid #77866a;
+  background: #1d2b26;
+  color: #e9f0dc;
+  font: 400 10px var(--font-mono);
+  letter-spacing: .12em;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+.gameplay-brief-exit:hover {
+  border-color: #d8f36a;
+  background: #354c3e;
+  color: #eff3e5;
+  transform: translateY(-1px);
+}
+.gameplay-brief-exit:focus-visible {
+  outline: 2px solid #f1f7e8;
+  outline-offset: 4px;
+}
+.gameplay-brief-exit[hidden] {
+  display: none !important;
+}
+.gameplay-brief-dialog.free-roam-brief .gameplay-brief-actions {
+  width: auto;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 18px;
+}
+.gameplay-brief-dialog.free-roam-brief .gameplay-brief-continue,
+.gameplay-brief-dialog.free-roam-brief .gameplay-brief-exit {
+  width: auto;
+  min-width: 150px;
+  min-height: 48px;
+  margin: 0;
+  padding: 12px 18px;
+}
+.gameplay-brief-dialog.free-roam-brief .gameplay-brief-exit {
+  border-color: #8c9d77;
+}
+.survival-actions[hidden] {
+  display: none !important;
+}
+.survival-actions[data-survival-options],
+.survival-actions[data-survival-dinosaurs] {
+  width: min(100%, 520px);
+}
+.survival-actions[data-survival-options] [data-survival-back-to-entry],
+.survival-actions[data-survival-dinosaurs] [data-survival-back-to-roles] {
+  border-color: #8c9d77;
+  background: #1d2b26;
+  color: #e9f0dc;
+}
+.survival-actions[data-survival-dinosaurs] [data-survival-role] {
+  border-color: #e1a17f;
+  background: #e1a17f;
+  color: #1b211a;
+}
+@media (max-width: 700px) {
+  .gameplay-brief-dialog.free-roam-brief .gameplay-brief-actions {
+    gap: 6px;
+  }
+  .gameplay-brief-dialog.free-roam-brief .gameplay-brief-continue,
+  .gameplay-brief-dialog.free-roam-brief .gameplay-brief-exit {
+    min-width: 132px;
+    padding: 9px 12px;
+    font-size: 8px;
+  }
+}
