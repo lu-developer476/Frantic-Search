@@ -1,8 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=Barlow+Condensed:wght@600;800&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Pixelify+Sans:wght@400;500;600;700&display=swap');
 
 :root {
   --font-body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-condensed: "Barlow Condensed", Impact, "Arial Narrow", sans-serif;
+  --font-display: "Pixelify Sans", "Courier New", monospace;
+  --font-condensed: var(--font-display);
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
   font-family: var(--font-body);
   font-synthesis: none;
@@ -42,4 +43,8 @@ button, input, select, textarea { font-weight: 600; }
 }
 .start-button, .overlay-content button, .story-actions button,
 .dialog-actions button, .menu-option, .sound-toggle { font-family: var(--font-mono); }
+#start-button, #continue-campaign-button, .start-menu-view button:not(.menu-back) {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
 ::selection { color: #101819; background: #d8f36a; }

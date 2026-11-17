@@ -3777,6 +3777,48 @@ function showStartMenuPage(page = "home") {
   startScreen.classList.remove("hidden");
 }
 
+function openTutorial() {
+  const tutorialDialog = document.querySelector("#tutorial-dialog");
+  const tutorialList = document.querySelector("#tutorial-list");
+  const tutorialTitle = document.querySelector("#tutorial-title");
+  const isEmptyStomach = emptyStomachPanel.classList.contains("active");
+  const isTimeAttack = timeAttackPanel.classList.contains("active");
+  const isSurvival = survivalPanel.classList.contains("active");
+  const isFreeRoam = running && freeRoamMode;
+  const mode = isEmptyStomach ? "emptyStomach" : isTimeAttack ? "timeAttack" : isSurvival ? "survival" : isFreeRoam ? "freeRoam" : "campaign";
+  const copy = {
+    es: {
+      campaign: ["CAMPAÑA", "A / D O FLECHAS: MOVERSE", "ESPACIO: SALTAR · VIOLETA PUEDE HACER DOBLE SALTO", "X: EMBESTIDA DE VIOLETA / PISOTÓN DE VASTI", "E: INTERACTUAR CON OBJETOS, TERMINALES Y RESCATES", "P: PAUSAR · ESC: VOLVER AL MENÚ CUANDO ESTÉ DISPONIBLE"],
+      freeRoam: ["RECORRIDO LIBRE", "A / D O FLECHAS: MOVERSE", "ESPACIO: SALTAR · VIOLETA PUEDE HACER DOBLE SALTO", "X: EMBESTIDA DE VIOLETA / PISOTÓN DE VASTI", "E: INTERACTUAR CON OBJETOS Y ELEMENTOS DEL ENTORNO", "P: PAUSAR"],
+      emptyStomach: ["ESTÓMAGO VACÍO", "A / D O FLECHAS: MOVERSE", "W / S O ↑ / ↓: CAMBIAR DE CARRIL", "ESPACIO: SALTAR · X: EMBESTIR", "E: TOMAR / SOLTAR OBJETOS · Q: COMER HUEVO", "P: PAUSAR · ESC: SALIR"],
+      timeAttack: ["HORA DE ATACAR", "A / D O ← / →: MOVERSE", "W / ↑: SALTAR", "ESPACIO / F O CLIC IZQUIERDO: DISPARAR", "P: PAUSAR · ESC: SALIR"],
+      survival: ["SUPERVIVENCIA", "CAZADOR: A / D, ESPACIO PARA SALTAR, F O CLIC PARA DISPARAR", "DINOSAURIO: A / D, ESPACIO PARA SALTAR, X PARA ATACAR", "P: PAUSAR · ESC: SALIR"]
+    },
+    en: {
+      campaign: ["CAMPAIGN", "A / D OR ARROW KEYS: MOVE", "SPACE: JUMP · VIOLETA CAN DOUBLE JUMP", "X: VIOLETA'S DASH / VASTI'S STOMP", "E: INTERACT WITH OBJECTS, TERMINALS AND RESCUES", "P: PAUSE · ESC: RETURN TO MENU WHEN AVAILABLE"],
+      freeRoam: ["FREE ROAM", "A / D OR ARROW KEYS: MOVE", "SPACE: JUMP · VIOLETA CAN DOUBLE JUMP", "X: VIOLETA'S DASH / VASTI'S STOMP", "E: INTERACT WITH OBJECTS AND THE ENVIRONMENT", "P: PAUSE"],
+      emptyStomach: ["EMPTY STOMACH", "A / D OR ARROW KEYS: MOVE", "W / S OR ↑ / ↓: CHANGE LANE", "SPACE: JUMP · X: DASH", "E: PICK UP / DROP ITEMS · Q: EAT EGG", "P: PAUSE · ESC: EXIT"],
+      timeAttack: ["TIME ATTACK", "A / D OR ← / →: MOVE", "W / ↑: JUMP", "SPACE / F OR LEFT CLICK: SHOOT", "P: PAUSE · ESC: EXIT"],
+      survival: ["SURVIVAL", "HUNTER: A / D, SPACE TO JUMP, F OR CLICK TO SHOOT", "DINOSAUR: A / D, SPACE TO JUMP, X TO ATTACK", "P: PAUSE · ESC: EXIT"]
+    }
+  };
+  const lines = (copy[locale] ?? copy.es)[mode] ?? copy.es.campaign;
+  tutorialTitle.textContent = lines[0];
+  tutorialList.replaceChildren(...lines.slice(1).map((line) => {
+    const item = document.createElement("li");
+    item.textContent = line;
+    return item;
+  }));
+  setMenuOpen(false);
+  tutorialDialog.classList.remove("hidden");
+  document.querySelector("#tutorial-close").focus();
+}
+
+function closeTutorial() {
+  document.querySelector("#tutorial-dialog").classList.add("hidden");
+  menuToggle.focus();
+}
+
 function setMenuOpen(open) {
   navMenu.classList.toggle("hidden", !open);
   menuToggle.classList.toggle("open", open);
@@ -3872,6 +3914,24 @@ confirmCharacterButton.addEventListener("click", openCharacterConfirmation);
 backCharacterConfirmationButton.addEventListener("click", returnToCharacterSelection);
 playCharacterButton.addEventListener("click", startFromDinoModal);
 menuToggle.addEventListener("click", () => setMenuOpen(navMenu.classList.contains("hidden")));
+document.querySelector("#tutorial-button").addEventListener("click", openTutorial);
+document.querySelector("#tutorial-close").addEventListener("click", closeTutorial);
+document.querySelector("#tutorial-dialog").addEventListener("click", (event) => {
+  if (event.target.id === "tutorial-dialog") closeTutorial();
+});
+document.addEventListener("keydown", (event) => {
+  const tutorialDialog = document.querySelector("#tutorial-dialog");
+  if (event.key === "Escape" && !tutorialDialog.classList.contains("hidden")) {
+    event.preventDefault();
+    event.stopPropagation();
+    closeTutorial();
+  }
+});
+const markSiteLoaded = () => {
+  requestAnimationFrame(() => document.documentElement.classList.add("site-loaded"));
+};
+if (document.readyState === "complete") markSiteLoaded();
+else window.addEventListener("load", markSiteLoaded, { once: true });
 document.querySelectorAll("[data-language]").forEach((button) => {
   button.addEventListener("click", () => setLanguage(button.dataset.language));
 });
