@@ -4308,3 +4308,211 @@ html.site-mode-gray .survival-intro button {
 }
 
 /* Empty Stomach and both arena minigames show the same staged pre-game screen. */
+
+
+/* Shared full-stage intro layout for every minigame and Free Roam. */
+.start-screen {
+  padding-bottom: clamp(64px, 10vh, 84px);
+}
+.start-screen-footer {
+  position: absolute;
+  z-index: 3;
+  left: clamp(16px, 3vw, 44px);
+  right: clamp(16px, 3vw, 44px);
+  bottom: clamp(10px, 1.4vh, 18px);
+  padding-top: 10px;
+  border-top: 1px solid rgba(208, 226, 203, .16);
+  color: #a0afa2;
+  font: 400 clamp(7px, .72vw, 9px)/1.5 var(--font-mono);
+  letter-spacing: .035em;
+  text-align: center;
+}
+
+.time-attack-panel.active,
+.survival-panel.active {
+  display: block;
+}
+.time-attack-stage.game-mode-stage,
+.survival-stage.game-mode-stage {
+  position: absolute;
+  inset: 0;
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid #77866a;
+  background: #a9c6bd;
+}
+.time-attack-stage.game-mode-stage canvas,
+.survival-stage.game-mode-stage canvas {
+  position: absolute;
+  inset: 0;
+  max-width: none;
+  max-height: none;
+}
+.game-mode-intro {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(18px, 4vw, 42px);
+  text-align: center;
+  background: linear-gradient(135deg, rgba(8, 17, 14, .83), rgba(18, 29, 22, .76));
+}
+.game-mode-intro h2 {
+  margin: 10px 0;
+  color: #f3f1df;
+  font: 400 clamp(42px, 8vw, 84px)/.9 var(--font-condensed);
+  letter-spacing: .04em;
+}
+.game-mode-intro small {
+  display: block;
+  margin-bottom: 4px;
+  color: #e8b18f;
+  font: 400 9px var(--font-mono);
+  letter-spacing: .2em;
+}
+.game-mode-intro p {
+  max-width: 72ch;
+  margin: 8px auto;
+  color: #d6dfd1;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.game-mode-intro .game-mode-instructions {
+  display: block;
+  max-width: min(100%, 1000px);
+  margin: 10px auto 0;
+  color: #d6dfd1;
+  font: 400 clamp(7px, .85vw, 10px)/1.55 var(--font-mono) !important;
+  letter-spacing: 0;
+  text-align: center;
+  white-space: normal;
+}
+.game-mode-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+.game-mode-actions button {
+  padding: 10px 14px;
+  border: 1px solid #8c9d77;
+  background: #1d2b26;
+  color: #e9f0dc;
+  font: 400 9px var(--font-mono);
+  letter-spacing: .1em;
+  cursor: pointer;
+}
+.game-mode-actions button:first-child,
+.game-mode-actions button:nth-child(2) {
+  border-color: #e1a17f;
+  background: #e1a17f;
+  color: #1b211a;
+}
+.game-mode-actions button:hover {
+  border-color: #d8f36a;
+  background: #354c3e;
+  color: #eff3e5;
+  transform: translateY(-1px);
+}
+.game-mode-actions button[hidden],
+.game-mode-intro [hidden] {
+  display: none !important;
+}
+.time-attack-top,
+.survival-top {
+  display: none;
+}
+.time-attack-panel.playing .time-attack-top,
+.survival-panel.playing .survival-top {
+  position: absolute;
+  z-index: 4;
+  top: 0;
+  right: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px clamp(12px, 2vw, 24px);
+  background: linear-gradient(180deg, rgba(8, 17, 14, .78), transparent);
+  color: #d7e5c8;
+  font: 400 9px var(--font-mono);
+  letter-spacing: .12em;
+  pointer-events: none;
+}
+
+/* Free Roam's localized controls use the same centered intro screen treatment. */
+.gameplay-brief-dialog.free-roam-brief {
+  padding: clamp(18px, 4vw, 40px);
+  background: linear-gradient(135deg, rgba(8, 17, 14, .88), rgba(18, 29, 22, .86));
+  backdrop-filter: none;
+}
+.gameplay-brief-dialog.free-roam-brief .gameplay-brief-card {
+  display: flex;
+  width: min(100%, 1120px);
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(18px, 4vw, 42px);
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  text-align: center;
+}
+.gameplay-brief-dialog.free-roam-brief .gameplay-brief-card h2 {
+  margin: 10px 0;
+  color: #f3f1df;
+  font: 400 clamp(42px, 8vw, 84px)/.9 var(--font-condensed);
+  letter-spacing: .04em;
+}
+.gameplay-brief-dialog.free-roam-brief .gameplay-brief-context.game-mode-instructions {
+  display: block;
+  max-width: min(100%, 1000px);
+  margin: 10px auto 0;
+  color: #d6dfd1;
+  font: 400 clamp(7px, .85vw, 10px)/1.65 var(--font-mono);
+  letter-spacing: 0;
+  text-align: center;
+  line-height: 1.65;
+}
+.gameplay-brief-dialog.free-roam-brief .gameplay-brief-list,
+.gameplay-brief-dialog.free-roam-brief .gameplay-brief-note {
+  display: none !important;
+}
+.gameplay-brief-dialog.free-roam-brief .gameplay-brief-continue {
+  width: auto;
+  min-width: 150px;
+  margin-top: 18px;
+  padding: 12px 18px;
+}
+@media (max-width: 700px) {
+  .start-screen-footer {
+    left: 10px;
+    right: 10px;
+    bottom: 8px;
+    font-size: 7px;
+  }
+  .game-mode-intro {
+    padding: 14px;
+  }
+  .game-mode-intro h2 {
+    font-size: 40px;
+  }
+  .game-mode-intro p {
+    font-size: 11px;
+  }
+  .gameplay-brief-dialog.free-roam-brief {
+    padding: 12px;
+  }
+  .gameplay-brief-dialog.free-roam-brief .gameplay-brief-card {
+    padding: 14px;
+  }
+  .gameplay-brief-dialog.free-roam-brief .gameplay-brief-card h2 {
+    font-size: 40px;
+  }
+}

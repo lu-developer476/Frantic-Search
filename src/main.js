@@ -162,6 +162,7 @@ const gameplayBriefDialog = document.querySelector("#gameplay-brief-dialog");
 const gameplayBriefTitle = document.querySelector("#gameplay-brief-title");
 const gameplayBriefContext = document.querySelector("#gameplay-brief-context");
 const gameplayBriefList = document.querySelector("#gameplay-brief-list");
+const gameplayBriefNote = document.querySelector("#gameplay-brief-note");
 const gameplayBriefContinueButton = document.querySelector("#gameplay-brief-continue");
 let pendingGameplayBriefAction = null;
 let gameplayBriefPausedGame = false;
@@ -3946,6 +3947,7 @@ function populateInstructionList(list, lines) {
 
 function showGameplayBrief(mode, proceed = null, context = "") {
   const lines = getTutorialLines(mode);
+  const isFreeRoamBrief = mode === "freeRoam";
   pendingGameplayBriefAction = typeof proceed === "function" ? proceed : null;
   gameplayBriefPausedGame = running && !paused;
   if (gameplayBriefPausedGame) {
@@ -3955,8 +3957,12 @@ function showGameplayBrief(mode, proceed = null, context = "") {
     document.body.classList.add("game-paused");
   }
   gameplayBriefTitle.textContent = lines[0];
-  gameplayBriefContext.textContent = context;
-  gameplayBriefContext.hidden = !context;
+  gameplayBriefDialog.classList.toggle("free-roam-brief", isFreeRoamBrief);
+  gameplayBriefContext.classList.toggle("game-mode-instructions", isFreeRoamBrief);
+  gameplayBriefContext.textContent = isFreeRoamBrief ? lines.slice(1).join(" · ") : context;
+  gameplayBriefContext.hidden = isFreeRoamBrief ? false : !context;
+  gameplayBriefList.hidden = isFreeRoamBrief;
+  gameplayBriefNote.hidden = isFreeRoamBrief;
   populateInstructionList(gameplayBriefList, lines);
   gameplayBriefDialog.classList.remove("hidden");
   gameplayBriefContinueButton.focus();
@@ -3965,6 +3971,11 @@ function showGameplayBrief(mode, proceed = null, context = "") {
 function closeGameplayBrief() {
   if (gameplayBriefDialog.classList.contains("hidden")) return;
   gameplayBriefDialog.classList.add("hidden");
+  gameplayBriefDialog.classList.remove("free-roam-brief");
+  gameplayBriefContext.classList.remove("game-mode-instructions");
+  gameplayBriefContext.hidden = true;
+  gameplayBriefList.hidden = false;
+  gameplayBriefNote.hidden = false;
   const action = pendingGameplayBriefAction;
   pendingGameplayBriefAction = null;
   if (gameplayBriefPausedGame && running) {

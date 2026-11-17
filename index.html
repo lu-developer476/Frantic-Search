@@ -205,6 +205,7 @@
               <div class="start-screen-visual" aria-hidden="true">
                 <img class="start-screen-artwork" src="%BASE_URL%artwork/8bits-artwork.png" alt="" />
               </div>
+              <footer class="start-screen-footer" role="contentinfo">© 2026 Todos los derechos reservados - Diseño y Programación por Lucas Montenegro ®</footer>
               <section id="delete-campaign-confirmation" class="pause-confirmation hidden" role="alertdialog" aria-modal="true" aria-labelledby="delete-campaign-confirmation-title" aria-describedby="delete-campaign-confirmation-message">
                 <div class="pause-confirmation-card">
                   <h3 id="delete-campaign-confirmation-title" data-i18n="deleteCampaignSaveTitle">¿BORRAR LA PARTIDA GUARDADA?</h3>
@@ -216,18 +217,18 @@
                 </div>
               </section>
             </section>
-            <section id="empty-stomach-panel" class="empty-stomach-panel" aria-label="Estómago vacío" data-i18n-aria="emptyStomach" aria-hidden="true">
-              <div class="empty-stomach-stage">
+            <section id="empty-stomach-panel" class="empty-stomach-panel game-mode-panel" aria-label="Estómago vacío" data-i18n-aria="emptyStomach" aria-hidden="true">
+              <div class="empty-stomach-stage game-mode-stage">
                 <canvas width="960" height="540" aria-label="Minijuego de supervivencia: Estómago vacío" data-i18n-aria="emptyStomachCanvas"></canvas>
                 <div class="empty-stomach-pause-overlay" data-empty-pause-overlay hidden>
                   <span data-empty-pause-label>PAUSA</span>
                 </div>
-                <div class="empty-stomach-intro">
+                <div class="empty-stomach-intro game-mode-intro">
                   <h2 data-empty-title>ESTÓMAGO VACÍO</h2>
                   <p data-empty-subtitle>Coral corre por su vida. Los depredadores no van a detenerse.</p>
-                  <p class="empty-stomach-instructions" data-empty-instructions></p>
+                  <p class="empty-stomach-instructions game-mode-instructions" data-empty-instructions></p>
                   <p class="empty-stomach-result" data-empty-result hidden></p>
-                  <div class="empty-stomach-actions">
+                  <div class="empty-stomach-actions game-mode-actions">
                     <button type="button" data-empty-start>INICIAR</button>
                     <button type="button" data-empty-retry hidden>RETOMAR</button>
                     <button type="button" data-empty-checkpoint hidden>USAR CHECKPOINT</button>
@@ -240,20 +241,20 @@
                 <button type="button" data-empty-pause>P: PAUSAR</button>
               </div>
             </section>
-            <section id="time-attack-panel" class="time-attack-panel" aria-label="Time Attack" data-i18n-aria="timeAttack" aria-hidden="true">
-              <div class="time-attack-top">
-                <span data-i18n="huntingMode">FRANTIC SEARCH // MODO DE CAZA</span>
-                <span data-ta-status>SECTION 01 // EXTRACTION</span>
-              </div>
-              <div class="time-attack-stage">
+            <section id="time-attack-panel" class="time-attack-panel game-mode-panel" aria-label="Time Attack" data-i18n-aria="timeAttack" aria-hidden="true">
+              <div class="time-attack-stage game-mode-stage">
                 <canvas width="960" height="540" aria-label="Minijuego de caza Time Attack" data-i18n-aria="timeAttackCanvas"></canvas>
-                <div class="time-attack-intro">
+                <div class="time-attack-top">
+                  <span data-i18n="huntingMode">FRANTIC SEARCH // MODO DE CAZA</span>
+                  <span data-ta-status>SECTION 01 // EXTRACTION</span>
+                </div>
+                <div class="time-attack-intro game-mode-intro">
                   <small data-i18n="timeTrialSquad">CONTRARRELOJ // ESCUADRA DE CUATRO CAZADORES</small>
                   <h2 data-ta-title>TIME ATTACK</h2>
                   <p data-ta-subtitle>Una escuadra de cuatro cazadores. Catorce dinosaurios. Despejá la ruta y llegá a la extracción lo más rápido posible.</p>
-                  <p class="time-attack-instructions" data-ta-instructions></p>
+                  <p class="time-attack-instructions game-mode-instructions" data-ta-instructions></p>
                   <p class="time-attack-result" data-ta-result hidden></p>
-                  <div class="time-attack-actions">
+                  <div class="time-attack-actions game-mode-actions">
                     <button type="button" data-ta-start>INICIAR CAZA</button>
                     <button type="button" data-ta-retry hidden>REPETIR SECCIÓN</button>
                     <button type="button" data-ta-exit>VOLVER AL MENÚ</button>
@@ -261,25 +262,25 @@
                 </div>
               </div>
             </section>
-            <section id="survival-panel" class="survival-panel" aria-label="Supervivencia" data-i18n-aria="survival" aria-hidden="true">
-              <div class="survival-top">
-                <span data-i18n="endlessWavesMode">FRANTIC SEARCH // OLEADAS INFINITAS</span>
-                <span data-survival-status>SURVIVAL // WAVE 01</span>
-              </div>
-              <div class="survival-stage">
+            <section id="survival-panel" class="survival-panel game-mode-panel" aria-label="Supervivencia" data-i18n-aria="survival" aria-hidden="true">
+              <div class="survival-stage game-mode-stage">
                 <canvas width="960" height="540" aria-label="Minijuego de supervivencia por oleadas" data-i18n-aria="survivalCanvas"></canvas>
-                <div class="survival-intro">
+                <div class="survival-top">
+                  <span data-i18n="endlessWavesMode">FRANTIC SEARCH // OLEADAS INFINITAS</span>
+                  <span data-survival-status>SURVIVAL // WAVE 01</span>
+                </div>
+                <div class="survival-intro game-mode-intro">
                   <small data-i18n="endlessCombat">COMBATE INFINITO // ELEGÍ TU BANDO</small>
                   <h2 data-survival-title>SURVIVAL</h2>
                   <p data-survival-subtitle>Elegí tu bando y aguantá todas las oleadas que puedas. Cada ronda trae más enemigos y más resistencia.</p>
-                  <p class="survival-instructions" data-survival-instructions></p>
+                  <p class="survival-instructions game-mode-instructions" data-survival-instructions></p>
                   <p class="survival-result" data-survival-result hidden></p>
-                  <div class="survival-actions" data-survival-options>
+                  <div class="survival-actions game-mode-actions" data-survival-options>
                     <button type="button" data-survival-role="hunter" data-survival-hunter>JUGAR COMO CAZADOR</button>
                     <button type="button" data-survival-role="blue" data-survival-violeta>JUGAR COMO GALA</button>
                     <button type="button" data-survival-role="vasti" data-survival-vasti>JUGAR COMO BASILIO</button>
                   </div>
-                  <div class="survival-actions">
+                  <div class="survival-actions game-mode-actions">
                     <button type="button" data-survival-retry hidden>VOLVER A INTENTAR</button>
                     <button type="button" data-survival-exit>VOLVER AL MENÚ</button>
                   </div>
