@@ -157,7 +157,7 @@ test("character selection and narrator panels share readable, edge-safe typograp
 });
 
 
-test("the six README campaign chapters each have a dedicated Canvas environment", async () => {
+test("the six campaign biomes use dedicated layered Canvas atmosphere rendering", async () => {
   const expectedEnvironments = ["coastal", "redwood", "black-site", "containment", "rosa-containment", "extraction"];
   const expectedThemes = ["coastal", "forest", "industrial", "industrial", "facility", "extraction"];
   assert.equal(LEVELS.length, 6);
@@ -165,14 +165,15 @@ test("the six README campaign chapters each have a dedicated Canvas environment"
   assert.deepEqual(LEVELS.map((chapter) => chapter.musicTheme), expectedThemes);
 
   const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
-  const start = main.indexOf("function drawBackground()");
-  const end = main.indexOf("\nfunction ", start + 16);
-  const background = main.slice(start, end);
+  const renderer = await readFile(new URL("../src/rendering/AtmosphereRenderer.js", import.meta.url), "utf8");
+  assert.match(main, /atmosphereRenderer\.draw\(ctx/);
   for (const environment of expectedEnvironments) {
-    assert.ok(background.includes('environment === "' + environment + '"'), "missing Canvas scene: " + environment);
+    assert.ok(renderer.includes('case "' + environment + '"'), "missing Canvas atmosphere: " + environment);
   }
+  assert.match(renderer, /ATMOSPHERE_LAYER_NAMES[\s\S]*?sky[\s\S]*?celestial[\s\S]*?horizon[\s\S]*?lighting/);
+  assert.doesNotMatch(renderer, /\.(?:png|gif)\b/i);
+  assert.doesNotMatch(main, /new Image\([^)]*\.(?:png|gif)/i);
 });
-
 
 test("the upper operation HUD is hidden in non-campaign modes and restored on exit", async () => {
   const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
