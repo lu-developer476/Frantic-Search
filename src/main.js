@@ -1325,11 +1325,14 @@ function drawCollectible(context,item){
 }
 function drawPickupNotice(){
   if(pickupCueTimer<=0)return;
-  ctx.save();ctx.globalAlpha=Math.min(1,pickupCueTimer*1.4);ctx.fillStyle="#0d191be8";ctx.fillRect(260,464,440,46);
-  ctx.strokeStyle=pickupCueTitle==="intelDriveRecovered"?"#68e4df":"#ffd36d";ctx.lineWidth=2;ctx.strokeRect(260,464,440,46);
-  ctx.textAlign="center";ctx.fillStyle="#fff1c7";ctx.font="11px monospace";ctx.fillText(ui(pickupCueTitle),GAME.width/2,482);
+  ctx.save();
+  ctx.globalAlpha=Math.min(1,pickupCueTimer*1.4);
+  ctx.shadowColor="rgba(0,0,0,.9)";
+  ctx.shadowBlur=4;
+  ctx.textAlign="center";
+  ctx.fillStyle="#fff1c7";ctx.font="11px monospace";ctx.fillText(ui(pickupCueTitle),GAME.width/2,482);
   ctx.fillStyle="#d8f3d8";ctx.font="9px monospace";ctx.fillText(ui(pickupCueMessage),GAME.width/2,498);
-  ctx.textAlign="start";ctx.restore();
+  ctx.restore();
 }
 
 function updateCampaignHud() {
@@ -2078,11 +2081,8 @@ function drawCampaignPrologueCaption() {
   const key = captions[prologue.phase];
   if (!key) return;
   ctx.save();
-  ctx.fillStyle = "#0d191be8";
-  ctx.fillRect(294, 22, 372, 30);
-  ctx.strokeStyle = "#d8f36a";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(294, 22, 372, 30);
+  ctx.shadowColor = "rgba(0,0,0,.9)";
+  ctx.shadowBlur = 4;
   ctx.fillStyle = "#edf3e5";
   ctx.font = "10px monospace";
   ctx.textAlign = "center";
@@ -2097,11 +2097,8 @@ function drawCampaignPrologueCaption() {
         : !tutorial.abilityUsed ? ui(selected === "vasti" ? "prologueTutorialStomp" : "prologueTutorialDash")
           : ui("prologueTutorialDefeat");
     ctx.save();
-    ctx.fillStyle = "#0d191be8";
-    ctx.fillRect(110, GAME.height - 58, GAME.width - 220, 34);
-    ctx.strokeStyle = "#d8f36a";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(110, GAME.height - 58, GAME.width - 220, 34);
+    ctx.shadowColor = "rgba(0,0,0,.9)";
+    ctx.shadowBlur = 4;
     ctx.fillStyle = "#edf3e5";
     ctx.font = "10px monospace";
     ctx.textAlign = "center";
@@ -2425,27 +2422,31 @@ function drawBossArenaBoundary() {
 function drawBossHud() {
   if(activeBoss&&!activeBoss.defeated){
     const x=250,y=78,w=460,phaseTwo=activeBoss.phase===2;
-    ctx.fillStyle="#101716e8";ctx.fillRect(x-14,y-42,w+28,86);
-    ctx.strokeStyle=phaseTwo?"#e88a54":"#d8f36a";ctx.lineWidth=1;ctx.strokeRect(x-14,y-42,w+28,86);
+    ctx.save();
+    ctx.shadowColor="rgba(0,0,0,.9)";
+    ctx.shadowBlur=4;
     ctx.fillStyle="#e8eee0";ctx.font="12px monospace";ctx.textAlign="center";
     ctx.fillText(tr(activeBoss.title||(activeBoss.kind==="indoraptor"?"MINIBOSS // INDORAPTOR":"MINIBOSS // INDOMINUS REX")),GAME.width/2,y-25);
     ctx.fillStyle=phaseTwo?"#ffb26b":"#d8f36a";ctx.font="9px monospace";
     ctx.fillText(tr(phaseTwo?"PHASE 2 // ENRAGED":"PHASE 1 // HUNTING"),GAME.width/2,y-12);
+    ctx.shadowBlur=0;
     ctx.fillStyle="#35403a";ctx.fillRect(x,y,w,10);
     ctx.fillStyle=phaseTwo?"#ed925f":"#4cdb70";ctx.fillRect(x,y,w*(activeBoss.health/activeBoss.maxHealth),10);
     ctx.fillStyle="#101716";ctx.fillRect(x+w/2-1,y-2,2,14);
+    ctx.shadowBlur=4;
     ctx.fillStyle="#b9c4b8";ctx.font="9px monospace";
     ctx.fillText(locale==="es"?(activeBoss.formLabelEs??"EJEMPLAR"):(activeBoss.formLabel??"SPECIMEN"),GAME.width/2,y+25);
     const status=activeBoss.isVulnerable?(activeBoss.lastAttackMissed?"DODGE SUCCESSFUL // COUNTER NOW":"ATTACK WINDOW // EXPOSED"):activeBoss.state==="telegraph"?"READ THE TELEGRAPH":activeBoss.state==="attacking"?"DODGE THE ATTACK":"WAIT FOR ITS RECOVERY";
     ctx.fillStyle=activeBoss.isVulnerable?"#d8f36a":"#a5b0a5";ctx.font="8px monospace";ctx.fillText(tr(status),GAME.width/2,y+37);
-    ctx.textAlign="start";
+    ctx.restore();
   }
   if(bossCueTimer>0){
-    ctx.save();ctx.globalAlpha=Math.min(1,bossCueTimer*1.5);ctx.fillStyle="#0d1514dd";ctx.fillRect(215,185,530,90);
-    ctx.strokeStyle="#d8f36a";ctx.lineWidth=1;ctx.strokeRect(215,185,530,90);
+    ctx.save();
+    ctx.globalAlpha=Math.min(1,bossCueTimer*1.5);
+    ctx.shadowColor="rgba(0,0,0,.9)";ctx.shadowBlur=5;
     ctx.fillStyle="#d8f36a";ctx.font="11px monospace";ctx.textAlign="center";ctx.fillText(tr("APEX THREAT DETECTED"),GAME.width/2,211);
     ctx.fillStyle="#f0f2e9";ctx.font="29px sans-serif";ctx.fillText(bossCueTitle,GAME.width/2,249);
-    ctx.textAlign="start";ctx.restore();
+    ctx.restore();
   }
 }
 function syncBossEncounter() {

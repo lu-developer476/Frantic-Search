@@ -103,3 +103,46 @@ test("browser tab title and campaign operation header are standardized", async (
   assert.match(typography, /\.game-panel \.panel-head,[\s\S]*?font-family: var\(--font-display\)/);
   assert.match(css, /\.game-panel \.panel-head\s*\{[^}]*min-height:\s*44px;[^}]*padding-block:\s*2px;/s);
 });
+
+
+test("canvas gameplay overlays no longer draw framed message panels or full-width HUD bands", async () => {
+  const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
+  const timeAttack = await readFile(new URL("../src/minigames/TimeAttack.js", import.meta.url), "utf8");
+  const survival = await readFile(new URL("../src/minigames/Survival.js", import.meta.url), "utf8");
+
+  assert.ok(!main.includes("ctx.fillRect(260,464,440,46)"));
+  assert.ok(!main.includes("ctx.strokeRect(260,464,440,46)"));
+  assert.ok(!main.includes("ctx.fillRect(294, 22, 372, 30)"));
+  assert.ok(!main.includes("ctx.strokeRect(294, 22, 372, 30)"));
+  assert.ok(!main.includes("ctx.fillRect(110, GAME.height - 58, GAME.width - 220, 34)"));
+  assert.ok(!main.includes("ctx.strokeRect(110, GAME.height - 58, GAME.width - 220, 34)"));
+  assert.ok(!main.includes('ctx.fillRect(x-14,y-42,w+28,86)'));
+  assert.ok(!main.includes('ctx.strokeRect(x-14,y-42,w+28,86)'));
+  assert.ok(!main.includes("ctx.fillRect(215,185,530,90)"));
+  assert.ok(!main.includes("ctx.strokeRect(215,185,530,90)"));
+  assert.ok(!timeAttack.includes("ctx.fillRect(0, 0, WIDTH, 54)"));
+  assert.ok(!survival.includes("ctx.fillRect(0, 0, WIDTH, 58)"));
+});
+
+test("ambient modes style the navbar and the full campaign status strip", async () => {
+  const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+  const ambientRules = css.slice(css.lastIndexOf("/* The environmental selector controls"));
+
+  assert.ok(ambientRules.includes("html.site-mode-beige .topbar"));
+  assert.ok(ambientRules.includes("html.site-mode-gray .nav-menu"));
+  assert.ok(ambientRules.includes("html.site-mode-beige .game-panel > .panel-head"));
+  assert.ok(ambientRules.includes("html.site-mode-gray .game-panel > .panel-head .panel-health-fill"));
+  assert.ok(ambientRules.includes("background: var(--site-surface-raised)"));
+  assert.ok(ambientRules.includes("background: var(--site-accent)"));
+});
+
+test("campaign metrics and mission context share the available header width", async () => {
+  const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+  const layoutRules = css.slice(css.lastIndexOf("/* Rebalance the campaign strip"));
+
+  assert.ok(layoutRules.includes("grid-template-columns: minmax(0, 1.08fr) minmax(0, 1.32fr) minmax(112px, .48fr)"));
+  assert.ok(layoutRules.includes("grid-template-columns: repeat(3, minmax(0, 1fr))"));
+  assert.ok(layoutRules.includes("#secondary-objectives"));
+  assert.ok(layoutRules.includes("grid-column: 1 / -1"));
+  assert.ok(layoutRules.includes("#game-state:empty"));
+});

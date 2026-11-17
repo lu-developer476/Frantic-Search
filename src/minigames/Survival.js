@@ -715,8 +715,11 @@ export class Survival {
       ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
     }
     ctx.globalAlpha = 1;
-    ctx.fillStyle = "rgba(9,19,16,.82)";
-    ctx.fillRect(0, 0, WIDTH, 58);
+    ctx.save();
+    ctx.shadowColor = "rgba(7, 16, 13, .92)";
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetX = 1;
+    ctx.shadowOffsetY = 2;
     ctx.font = "17px monospace";
     ctx.fillStyle = "#f0f3e7";
     ctx.fillText(this.text("OLEADA", "WAVE") + " " + String(this.wave).padStart(2, "0"), 24, 26);
@@ -748,6 +751,7 @@ export class Survival {
     ctx.font = "9px monospace";
     ctx.fillStyle = "#c8d5c6";
     ctx.fillText(this.text("RÉCORD", "BEST") + " " + this.best, 838, 45);
+    ctx.restore();
     if (this.paused) {
       ctx.fillStyle = "rgba(7,14,12,.62)";
       ctx.fillRect(0, 0, WIDTH, HEIGHT);

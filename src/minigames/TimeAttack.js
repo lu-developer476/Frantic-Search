@@ -618,8 +618,11 @@ export class TimeAttack {
     }
     ctx.globalAlpha = 1;
 
-    ctx.fillStyle = "rgba(9,19,16,.78)";
-    ctx.fillRect(0, 0, WIDTH, 54);
+    ctx.save();
+    ctx.shadowColor = "rgba(7, 16, 13, .92)";
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetX = 1;
+    ctx.shadowOffsetY = 2;
     ctx.font = "17px monospace";
     ctx.fillStyle = "#f0f3e7";
     ctx.fillText(formatTime(this.elapsed * 1000), 24, 25);
@@ -650,6 +653,7 @@ export class TimeAttack {
     ctx.fillText(this.text("ESCUADRA 1 + 3 IA", "SQUAD 1 + 3 AI"), 740, 26);
     ctx.fillStyle = "#e7c59d";
     ctx.fillText(this.text("ESPACIO / CLIC: DISPARAR", "SPACE / CLICK: FIRE"), 740, 43);
+    ctx.restore();
     if (this.pointer.active && this.running) {
       ctx.strokeStyle = "rgba(245,236,190,.85)";
       ctx.lineWidth = 1;

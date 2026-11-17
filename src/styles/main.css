@@ -3624,3 +3624,285 @@ body:not(.game-session-active) .nav-menu .environment-mode-menu-section { displa
 .game-panel .panel-head .mission-brief-header strong {
   line-height: 1;
 }
+
+
+/* Rebalance the campaign strip: stats, mission context and health each get
+   their own column, while the mission line can use two compact rows. */
+.game-panel > .panel-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 1.32fr) minmax(112px, .48fr);
+  grid-template-rows: 1fr;
+  align-items: center;
+  gap: clamp(10px, 1.2vw, 18px);
+  min-height: 48px;
+  padding: 4px clamp(12px, 1.25vw, 18px);
+}
+.game-panel > .panel-head .panel-metrics {
+  grid-column: 1;
+  grid-row: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+  gap: clamp(7px, .9vw, 13px);
+}
+.game-panel > .panel-head .panel-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.game-panel > .panel-head .panel-metric small {
+  font-size: clamp(7px, .68vw, 9px);
+  line-height: 1.1;
+  letter-spacing: .045em;
+}
+.game-panel > .panel-head .panel-metric b {
+  font-size: clamp(10px, .95vw, 13px);
+  line-height: 1.1;
+  letter-spacing: .025em;
+  text-shadow: none;
+}
+.game-panel > .panel-head .mission-brief-header {
+  grid-column: 2;
+  grid-row: 1;
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+  grid-template-rows: auto auto;
+  align-content: center;
+  align-items: baseline;
+  gap: 3px clamp(8px, 1vw, 14px);
+  min-width: 0;
+  min-height: 0;
+  padding-left: clamp(8px, 1vw, 14px);
+  border-left: 2px solid #f1cd62;
+  white-space: normal;
+}
+.game-panel > .panel-head #campaign-chapter {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.game-panel > .panel-head #campaign-objective {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.game-panel > .panel-head #secondary-objectives {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: clamp(6px, .58vw, 8px);
+  line-height: 1.1;
+}
+.game-panel > .panel-head .mission-brief-header small {
+  font-size: clamp(7px, .62vw, 9px);
+  line-height: 1.1;
+}
+.game-panel > .panel-head .mission-brief-header strong {
+  font-size: clamp(9px, .88vw, 13px);
+  line-height: 1.05;
+}
+.game-panel > .panel-head .panel-health {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: stretch;
+  width: 100%;
+  min-width: 0;
+  max-width: 170px;
+  gap: 6px;
+  margin: 0;
+}
+.game-panel > .panel-head .panel-health-meter {
+  flex: 1 1 auto;
+  min-width: 28px;
+}
+.game-panel > .panel-head #game-state:empty {
+  display: none;
+}
+.game-panel > .panel-head #game-state:not(:empty) {
+  grid-column: 4;
+  grid-row: 1;
+  justify-self: end;
+  margin: 0;
+  white-space: nowrap;
+}
+.game-panel > .panel-head:has(#game-state:not(:empty)) {
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, 1.24fr) minmax(104px, .46fr) auto;
+}
+
+@media (max-width: 1000px) {
+  .game-panel > .panel-head,
+  .game-panel > .panel-head:has(#game-state:not(:empty)) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    grid-template-rows: auto auto;
+    row-gap: 5px;
+    min-height: 54px;
+    padding-block: 6px;
+  }
+  .game-panel > .panel-head .panel-metrics {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .game-panel > .panel-head .mission-brief-header {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: stretch;
+  }
+  .game-panel > .panel-head .panel-health {
+    grid-column: 1;
+    grid-row: 2;
+    max-width: 220px;
+  }
+  .game-panel > .panel-head #game-state:not(:empty) {
+    grid-column: 1;
+    grid-row: 3;
+    justify-self: start;
+  }
+}
+@media (max-width: 640px) {
+  .game-panel > .panel-head,
+  .game-panel > .panel-head:has(#game-state:not(:empty)) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto;
+    row-gap: 9px;
+    min-height: 0;
+    padding: 10px 12px;
+  }
+  .game-panel > .panel-head .panel-metrics {
+    grid-column: 1;
+    grid-row: 1;
+    gap: 6px;
+  }
+  .game-panel > .panel-head .mission-brief-header {
+    grid-column: 1;
+    grid-row: 2;
+    min-height: 30px;
+  }
+  .game-panel > .panel-head .panel-health {
+    grid-column: 1;
+    grid-row: 3;
+    max-width: none;
+  }
+  .game-panel > .panel-head #game-state:not(:empty) {
+    grid-column: 1;
+    grid-row: 4;
+    justify-self: start;
+  }
+}
+
+/* The environmental selector controls the complete navigation chrome and
+   the upper operation strip, not only the page behind them. */
+html.site-mode-beige .topbar,
+html.site-mode-gray .topbar {
+  background: var(--site-surface-raised);
+  border-bottom: 2px solid var(--line);
+  box-shadow: 0 3px 0 var(--site-shadow);
+}
+html.site-mode-beige .navbar-identity .brand,
+html.site-mode-gray .navbar-identity .brand {
+  color: var(--site-text);
+  text-shadow: none;
+}
+html.site-mode-beige .menu-toggle,
+html.site-mode-gray .menu-toggle {
+  color: var(--site-text);
+  border-color: var(--site-accent);
+  background: var(--site-control);
+  box-shadow: none;
+}
+html.site-mode-beige .menu-toggle .menu-icon,
+html.site-mode-gray .menu-toggle .menu-icon {
+  color: var(--site-text);
+}
+html.site-mode-beige .menu-toggle .menu-icon path,
+html.site-mode-gray .menu-toggle .menu-icon path {
+  stroke: currentColor;
+}
+html.site-mode-beige .nav-menu,
+html.site-mode-gray .nav-menu {
+  color: var(--site-text);
+  border-color: var(--line);
+  background: var(--site-surface-raised);
+  box-shadow: 0 16px 36px var(--site-shadow);
+}
+html.site-mode-beige .nav-menu .menu-section > p,
+html.site-mode-gray .nav-menu .menu-section > p {
+  color: var(--site-muted);
+}
+html.site-mode-beige .nav-menu .menu-option,
+html.site-mode-gray .nav-menu .menu-option {
+  color: var(--site-text);
+  border-color: var(--line);
+  background: var(--site-control);
+  box-shadow: none;
+}
+html.site-mode-beige .nav-menu .menu-option:hover,
+html.site-mode-gray .nav-menu .menu-option:hover {
+  color: var(--site-accent);
+  border-color: var(--site-accent);
+  background: var(--site-card);
+}
+html.site-mode-beige .nav-menu .menu-option.active,
+html.site-mode-gray .nav-menu .menu-option.active {
+  color: var(--site-accent);
+  border-color: var(--site-accent);
+  background: var(--site-card);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--site-accent) 18%, transparent);
+}
+html.site-mode-beige .nav-menu .menu-sound-toggle,
+html.site-mode-gray .nav-menu .menu-sound-toggle {
+  color: var(--site-text);
+  border-color: var(--line);
+  background: var(--site-control);
+  box-shadow: none;
+}
+html.site-mode-beige .game-panel > .panel-head,
+html.site-mode-gray .game-panel > .panel-head {
+  color: var(--site-text);
+  border-bottom: 1px solid var(--line);
+  background: var(--site-surface-raised);
+}
+html.site-mode-beige .game-panel > .panel-head .panel-metric small,
+html.site-mode-gray .game-panel > .panel-head .panel-metric small,
+html.site-mode-beige .game-panel > .panel-head #campaign-chapter,
+html.site-mode-gray .game-panel > .panel-head #campaign-chapter,
+html.site-mode-beige .game-panel > .panel-head #secondary-objectives,
+html.site-mode-gray .game-panel > .panel-head #secondary-objectives,
+html.site-mode-beige .game-panel > .panel-head .panel-health-label,
+html.site-mode-gray .game-panel > .panel-head .panel-health-label {
+  color: var(--site-muted);
+}
+html.site-mode-beige .game-panel > .panel-head .panel-metric b,
+html.site-mode-gray .game-panel > .panel-head .panel-metric b,
+html.site-mode-beige .game-panel > .panel-head #campaign-objective,
+html.site-mode-gray .game-panel > .panel-head #campaign-objective {
+  color: var(--site-text);
+}
+html.site-mode-beige .game-panel > .panel-head .mission-brief-header,
+html.site-mode-gray .game-panel > .panel-head .mission-brief-header {
+  border-left-color: var(--site-accent);
+}
+html.site-mode-beige .game-panel > .panel-head .panel-health-meter,
+html.site-mode-gray .game-panel > .panel-head .panel-health-meter {
+  border-color: var(--line);
+  background: var(--site-card);
+  box-shadow: none;
+}
+html.site-mode-beige .game-panel > .panel-head .panel-health-fill,
+html.site-mode-gray .game-panel > .panel-head .panel-health-fill {
+  background: var(--site-accent);
+  box-shadow: none;
+}
+html.site-mode-beige .game-panel > .panel-head #game-state,
+html.site-mode-gray .game-panel > .panel-head #game-state {
+  color: var(--site-accent);
+}
