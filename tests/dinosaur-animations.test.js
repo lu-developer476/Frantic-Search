@@ -2,7 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { IndoraptorBoss } from "../src/entities/IndoraptorBoss.js";
 import { IndominusRexBoss } from "../src/entities/IndominusRexBoss.js";
-import { DINOSAUR_REFERENCE_SCALES, REFERENCE_PNG_CHARACTERS } from "../src/rendering/SpriteRenderer.js";
+import {
+  DINOSAUR_REFERENCE_SCALES,
+  REFERENCE_PNG_CHARACTERS,
+  VENATOSAURUS_ANIMATION_ASSETS,
+  selectVenatosaurusAnimation,
+  SpriteRenderer
+} from "../src/rendering/SpriteRenderer.js";
 import { ENEMY_FADE_DURATION, beginEnemyFade, advanceEnemyFade, getEnemyOpacity, isEnemyFadeComplete } from "../src/systems/EnemyFadeSystem.js";
 import { selectActorPose } from "../src/rendering/AnimationProfiles.js";
 
@@ -98,4 +104,46 @@ test("all reference PNG dinosaurs receive a complete two-pixel black silhouette 
   assert.match(renderer, /outlineContext\.drawImage\(mask, offsetX, offsetY\)/);
   assert.match(renderer, /if \(outlinedImage\)\s*\{[^}]*context\.drawImage\(\s*outlinedImage/s);
   assert.match(renderer, /outlinedReferenceImages\.size > 48/);
+});
+
+test("Venatosaurus variants render their dedicated attack, jump and run GIF references", () => {
+  const variants = {
+    "venatosaurus-impavidus": {
+      attack: "venatosaurus-impavidus-attack.gif",
+      jump: "venatosaurus-impavidus-jump.gif",
+      run: "venatosaurus-impavidus-run.gif"
+    },
+    "venatosaurus-saevidicus": {
+      attack: "venatosaurus-saevidicus-attack.gif",
+      jump: "venatosaurus-saevidicus-jump.gif",
+      run: "venatosaurus-saevidicus-run.gif"
+    }
+  };
+
+  for (const [species, poses] of Object.entries(variants)) {
+    assert.deepEqual(
+      {
+        attack: VENATOSAURUS_ANIMATION_ASSETS[species].attack,
+        jump: VENATOSAURUS_ANIMATION_ASSETS[species].jump,
+        run: VENATOSAURUS_ANIMATION_ASSETS[species].run
+      },
+      poses
+    );
+    assert.equal(REFERENCE_PNG_CHARACTERS[species], undefined);
+    assert.equal(selectVenatosaurusAnimation(species, { state: "windup", onGround: true }), poses.attack);
+    assert.equal(selectVenatosaurusAnimation(species, { state: "attack", onGround: false }), poses.attack);
+    assert.equal(selectVenatosaurusAnimation(species, { state: "patrol", onGround: false }), poses.jump);
+    assert.equal(selectVenatosaurusAnimation(species, { state: "patrol", onGround: true }), poses.run);
+  }
+
+  assert.equal(selectVenatosaurusAnimation("unknown", {}), null);
+
+  const renderer = Object.create(SpriteRenderer.prototype);
+  let routedCharacter = null;
+  renderer.drawAnimatedVenatosaurus = (_context, character) => {
+    routedCharacter = character;
+    return true;
+  };
+  assert.equal(renderer.drawAnimated({}, "venatosaurus-impavidus", 0, 0, 112, 92, { state: "patrol" }, 1), true);
+  assert.equal(routedCharacter, "venatosaurus-impavidus");
 });

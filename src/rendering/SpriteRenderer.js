@@ -5,7 +5,7 @@ const REFERENCE_OUTLINE_WIDTH = 2;
 const REFERENCE_OUTLINE_COLOR = "#000000";
 export const PROLOGUE_ROSA_REFERENCE = "juvenile-velociraptor-abyssomirabilis.gif";
 const PROLOGUE_ROSA_SCALE = 1.8;
-const ANIMATED_REFERENCE_VERSION = "20261116-rosa-frame-playback-1";
+const ANIMATED_REFERENCE_VERSION = "20261116-venatosaurus-gif-integration-1";
 
 export const DINOSAUR_REFERENCE_SCALES = Object.freeze({
   violeta: 1.6,
@@ -26,10 +26,36 @@ export const REFERENCE_PNG_CHARACTERS = Object.freeze({
   "indominus-variant": { file: "indominus-rex-second-generation-variant.png", sourceFacing: -1, scale: 1.18 },
   brontosaurus: { file: "brontosaurus-excelsus-basteri.png", sourceFacing: -1, scale: 1.18 },
   ligocristus: { file: "ligocristus-innocens.png", sourceFacing: -1, scale: DINOSAUR_REFERENCE_SCALES.ligocristusInnocens },
-  stegoceratops: { file: "stegoceratops.png", sourceFacing: -1, scale: 1.18 },
-  "venatosaurus-impavidus": { file: "venatosaurus-impavidus.png", sourceFacing: -1, scale: DINOSAUR_REFERENCE_SCALES.venatosaurusImpavidus },
-  "venatosaurus-saevidicus": { file: "venatosaurus-saevidicus.png", sourceFacing: 1, scale: 1.18 }
+  stegoceratops: { file: "stegoceratops.png", sourceFacing: -1, scale: 1.18 }
 });
+
+export const VENATOSAURUS_ANIMATION_ASSETS = Object.freeze({
+  "venatosaurus-impavidus": Object.freeze({
+    attack: "venatosaurus-impavidus-attack.gif",
+    jump: "venatosaurus-impavidus-jump.gif",
+    run: "venatosaurus-impavidus-run.gif",
+    sourceFacing: -1,
+    scale: DINOSAUR_REFERENCE_SCALES.venatosaurusImpavidus
+  }),
+  "venatosaurus-saevidicus": Object.freeze({
+    attack: "venatosaurus-saevidicus-attack.gif",
+    jump: "venatosaurus-saevidicus-jump.gif",
+    run: "venatosaurus-saevidicus-run.gif",
+    sourceFacing: 1,
+    scale: 1.18
+  })
+});
+
+export function selectVenatosaurusAnimation(character, actor = {}) {
+  const assets = VENATOSAURUS_ANIMATION_ASSETS[character];
+  if (!assets) return null;
+
+  if (["windup", "attack", "attacking", "telegraph"].includes(actor?.state)) {
+    return assets.attack;
+  }
+  if (actor?.onGround === false) return assets.jump;
+  return assets.run;
+}
 
 const REFERENCE_PRELOAD_FILES = [
   "adult-velociraptor-nublarensis.png",
@@ -43,9 +69,7 @@ const REFERENCE_PRELOAD_FILES = [
   "indominus-rex-second-generation-variant.png",
   "brontosaurus-excelsus-basteri.png",
   "ligocristus-innocens.png",
-  "stegoceratops.png",
-  "venatosaurus-impavidus.png",
-  "venatosaurus-saevidicus.png"
+  "stegoceratops.png"
 ];
 
 const SPRITE_ASSET_VERSION = "20261116-prologue-rosa-abyssomirabilis-1";
@@ -154,6 +178,11 @@ export class SpriteRenderer {
 
   preload() {
     for (const file of REFERENCE_PRELOAD_FILES) this.getReferenceImage(file);
+
+    // Decode the six small GIFs up front so the first encounter can animate immediately.
+    for (const assets of Object.values(VENATOSAURUS_ANIMATION_ASSETS)) {
+      for (const file of [assets.attack, assets.jump, assets.run]) this.loadAnimatedReference(file);
+    }
   }
 
   loadAnimatedReference(file) {
@@ -358,6 +387,42 @@ export class SpriteRenderer {
       Math.round(groundAlignedY)
     );
     context.scale(facing < 0 ? -1 : 1, 1);
+    context.drawImage(frame.image, -drawWidth / 2, 0, drawWidth, drawHeight);
+    context.restore();
+    return true;
+  }
+
+  drawAnimatedVenatosaurus(context, character, x, y, width, height, actor = {}, elapsed = 0, options = {}) {
+    const definition = VENATOSAURUS_ANIMATION_ASSETS[character];
+    if (!definition || !(this.animatedReferences instanceof Map)) return false;
+
+    const file = selectVenatosaurusAnimation(character, actor);
+    const animation = this.animatedReferences.get(file);
+    if (!animation?.frames?.length) {
+      this.loadAnimatedReference(file);
+      return false;
+    }
+
+    const frameIndex = getAnimatedFrameIndex(animation.frames, Math.max(0, elapsed) * 1000);
+    const frame = animation.frames[frameIndex];
+    if (!frame?.image) return false;
+
+    const drawWidth = Math.max(1, Math.round(width * definition.scale));
+    const drawHeight = Math.max(1, Math.round(drawWidth * animation.height / animation.width));
+    const bottomPadding = frame.bottomPadding ?? animation.bottomPadding ?? 0;
+    const scaledBottomPadding = drawHeight * bottomPadding / animation.height;
+    const bob = actor?.onGround === false ? 0 : Math.abs(Math.sin(elapsed * 7.2 + phaseOf(actor, character))) * 0.35;
+    const facing = options.facing ?? actor?.facing ?? actor?.direction ?? 1;
+    const flip = Math.sign(facing || 1) !== definition.sourceFacing;
+
+    context.save();
+    context.globalAlpha *= options.alpha ?? 1;
+    context.imageSmoothingEnabled = false;
+    context.translate(
+      Math.round(x + width / 2),
+      Math.round(y + height - drawHeight + scaledBottomPadding + bob)
+    );
+    context.scale(flip ? -1 : 1, 1);
     context.drawImage(frame.image, -drawWidth / 2, 0, drawWidth, drawHeight);
     context.restore();
     return true;
@@ -1533,6 +1598,9 @@ export class SpriteRenderer {
   }
 
   drawAnimated(context, character, x, y, width, height, actor, elapsed, options = {}) {
+    if (VENATOSAURUS_ANIMATION_ASSETS[character]) {
+      return this.drawAnimatedVenatosaurus(context, character, x, y, width, height, actor ?? {}, elapsed, options);
+    }
     if (this.drawReferencePng(context, character, x, y, width, height, actor ?? {}, elapsed, options)) return true;
 
     // The repository ships PNG reference artwork, not the legacy SVG sprite sheet.
