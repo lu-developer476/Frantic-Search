@@ -144,6 +144,8 @@ const rescuesLabel = document.querySelector("#rescues");
 const bestLabel = document.querySelector("#best");
 const playerHealthMeter = document.querySelector("#player-health-meter");
 const playerHealthFill = document.querySelector("#player-health-fill");
+const playerHealthDamage = document.querySelector("#player-health-damage");
+let displayedPlayerHealthRatio = null;
 const abilityLabel = document.querySelector("#ability-status");
 const controlsLabel = document.querySelector(".hud-controls");
 const stegoceratopsStatusLabel = document.querySelector("#stegoceratops-status");
@@ -1210,6 +1212,16 @@ function updatePlayerHealthHud() {
   playerHealthFill.style.width = (ratio * 100) + "%";
   playerHealthMeter.setAttribute("aria-valuemax", String(maxHealth));
   playerHealthMeter.setAttribute("aria-valuenow", String(health));
+
+  if (displayedPlayerHealthRatio !== null && ratio < displayedPlayerHealthRatio && playerHealthDamage) {
+    const lostRatio = displayedPlayerHealthRatio - ratio;
+    playerHealthDamage.style.left = (ratio * 100) + "%";
+    playerHealthDamage.style.width = (lostRatio * 100) + "%";
+    playerHealthDamage.classList.remove("is-fading");
+    void playerHealthDamage.offsetWidth;
+    playerHealthDamage.classList.add("is-fading");
+  }
+  displayedPlayerHealthRatio = ratio;
 }
 
 function tryEatFood(actor, radius = 150) {
@@ -2431,7 +2443,7 @@ function drawBossHud() {
     ctx.fillText(tr(phaseTwo?"PHASE 2 // ENRAGED":"PHASE 1 // HUNTING"),GAME.width/2,y-12);
     ctx.shadowBlur=0;
     ctx.fillStyle="#35403a";ctx.fillRect(x,y,w,10);
-    ctx.fillStyle=phaseTwo?"#ed925f":"#4cdb70";ctx.fillRect(x,y,w*(activeBoss.health/activeBoss.maxHealth),10);
+    ctx.fillStyle="#4cdb70";ctx.fillRect(x,y,w*(activeBoss.health/activeBoss.maxHealth),10);
     ctx.fillStyle="#101716";ctx.fillRect(x+w/2-1,y-2,2,14);
     ctx.shadowBlur=4;
     ctx.fillStyle="#b9c4b8";ctx.font="9px monospace";

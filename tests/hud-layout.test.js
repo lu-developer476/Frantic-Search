@@ -146,3 +146,22 @@ test("campaign metrics and mission context share the available header width", as
   assert.ok(layoutRules.includes("grid-column: 1 / -1"));
   assert.ok(layoutRules.includes("#game-state:empty"));
 });
+
+
+test("campaign header stays in one line and selected character health remains visible and green", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
+  const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+  const timeAttack = await readFile(new URL("../src/minigames/TimeAttack.js", import.meta.url), "utf8");
+  const survival = await readFile(new URL("../src/minigames/Survival.js", import.meta.url), "utf8");
+
+  assert.ok(html.includes('id="player-health-damage"'));
+  assert.ok(main.includes("displayedPlayerHealthRatio !== null && ratio < displayedPlayerHealthRatio"));
+  assert.ok(main.includes('playerHealthDamage.classList.add("is-fading")'));
+  assert.ok(css.includes("grid-template-rows: minmax(30px, auto)"));
+  assert.ok(css.includes("@keyframes player-health-damage-fade"));
+  assert.ok(css.includes("background: #4cdb70 !important"));
+  assert.ok(timeAttack.includes('i < this.player.health ? "#4cdb70"'));
+  assert.ok(survival.includes('i < this.player.health ? "#4cdb70"'));
+  assert.ok(main.includes('ctx.fillStyle="#4cdb70";ctx.fillRect(x,y,w*(activeBoss.health/activeBoss.maxHealth),10)'));
+});
