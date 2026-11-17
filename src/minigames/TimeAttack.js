@@ -536,7 +536,7 @@ export class TimeAttack {
     ctx.restore();
     const screenX = x + hunter.w / 2;
     ctx.fillStyle = hunter.isPlayer ? "#e9f3bd" : "#d4dfd2";
-    ctx.font = "bold 9px monospace";
+    ctx.font = "9px monospace";
     ctx.textAlign = "center";
     ctx.fillText(formatHunterLabel(hunter.squadIndex, hunter.isPlayer, this.locale), screenX, y - 11);
     ctx.textAlign = "left";
@@ -596,7 +596,7 @@ export class TimeAttack {
       ctx.fillRect(exitX, FLOOR - 116, 8, 116);
       ctx.fillStyle = "#d8f36a";
       ctx.fillRect(exitX - 16, FLOOR - 116, 40, 7);
-      ctx.font = "bold 10px monospace";
+      ctx.font = "10px monospace";
       ctx.fillText(this.text("EXTRACCIÓN", "EXTRACTION"), exitX - 78, FLOOR - 130);
     }
     for (const dinosaur of this.dinosaurs) this.drawDinosaur(dinosaur);
@@ -614,19 +614,19 @@ export class TimeAttack {
 
     ctx.fillStyle = "rgba(9,19,16,.78)";
     ctx.fillRect(0, 0, WIDTH, 54);
-    ctx.font = "bold 17px monospace";
+    ctx.font = "17px monospace";
     ctx.fillStyle = "#f0f3e7";
     ctx.fillText(formatTime(this.elapsed * 1000), 24, 25);
     ctx.font = "9px monospace";
     ctx.fillStyle = "#c8d5c6";
     ctx.fillText(this.text("TIEMPO", "TIME"), 25, 43);
-    ctx.font = "bold 14px monospace";
+    ctx.font = "14px monospace";
     ctx.fillStyle = "#d8f36a";
     ctx.fillText(this.kills + "/" + TOTAL_DINOSAURS, 204, 26);
     ctx.font = "9px monospace";
     ctx.fillStyle = "#c8d5c6";
     ctx.fillText(this.text("ELIMINADOS", "ELIMINATED"), 204, 43);
-    ctx.font = "bold 14px monospace";
+    ctx.font = "14px monospace";
     ctx.fillStyle = "#f0f3e7";
     ctx.fillText(this.waveIndex + "/" + this.wavePlan.length, 382, 26);
     ctx.font = "9px monospace";
@@ -659,7 +659,7 @@ export class TimeAttack {
       ctx.fillStyle = "rgba(7,14,12,.58)";
       ctx.fillRect(0, 0, WIDTH, HEIGHT);
       ctx.fillStyle = "#edf2e7";
-      ctx.font = "bold 34px monospace";
+      ctx.font = "34px monospace";
       ctx.textAlign = "center";
       ctx.fillText(this.text("EN PAUSA", "PAUSED"), WIDTH / 2, HEIGHT / 2);
       ctx.textAlign = "left";

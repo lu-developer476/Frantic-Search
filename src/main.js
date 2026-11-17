@@ -504,7 +504,7 @@ function drawBackground() {
     ctx.fillStyle = scene.ridge; ctx.fillRect(gateX + 61, 267, 138, 109);
     ctx.fillStyle = scene.warning; ctx.fillRect(gateX + 32, 198, 196, 8);
     ctx.fillStyle = scene.window; ctx.fillRect(gateX + 56, 232, 148, 20);
-    ctx.fillStyle = scene.buildingShadow; ctx.font = "bold 11px monospace"; ctx.textAlign = "center";
+    ctx.fillStyle = scene.buildingShadow; ctx.font = "11px monospace"; ctx.textAlign = "center";
     ctx.fillText(tr("EAST GATE"), gateX + 130, 246); ctx.textAlign = "start";
     ctx.fillStyle = scene.buildingLight; ctx.fillRect(0, 390, GAME.width, 4);
     const extractionFloorSpan = GAME.width + 120;
@@ -1293,7 +1293,7 @@ function drawPickupNotice(){
   if(pickupCueTimer<=0)return;
   ctx.save();ctx.globalAlpha=Math.min(1,pickupCueTimer*1.4);ctx.fillStyle="#0d191be8";ctx.fillRect(260,464,440,46);
   ctx.strokeStyle=pickupCueTitle==="intelDriveRecovered"?"#68e4df":"#ffd36d";ctx.lineWidth=2;ctx.strokeRect(260,464,440,46);
-  ctx.textAlign="center";ctx.fillStyle="#fff1c7";ctx.font="bold 11px monospace";ctx.fillText(ui(pickupCueTitle),GAME.width/2,482);
+  ctx.textAlign="center";ctx.fillStyle="#fff1c7";ctx.font="11px monospace";ctx.fillText(ui(pickupCueTitle),GAME.width/2,482);
   ctx.fillStyle="#d8f3d8";ctx.font="9px monospace";ctx.fillText(ui(pickupCueMessage),GAME.width/2,498);
   ctx.textAlign="start";ctx.restore();
 }
@@ -1894,7 +1894,7 @@ function drawPrologueJeep(x) {
     ctx.beginPath(); ctx.arc(wheelX, y + 68, 6, 0, Math.PI * 2); ctx.fill();
   }
   ctx.fillStyle = "#e6d5a1";
-  ctx.font = "bold 9px monospace";
+  ctx.font = "9px monospace";
   ctx.fillText("POACHER // 04", x + 27, y - 5);
   ctx.restore();
 }
@@ -1942,13 +1942,13 @@ function drawCampaignPrologueActors() {
     );
     if (prologue.phase === "rest") {
       ctx.fillStyle = "#f2e8c2";
-      ctx.font = "bold 12px monospace";
+      ctx.font = "12px monospace";
       ctx.fillText("Z", prologue.violetaActor.x + 65, prologue.violetaActor.y - 12);
       ctx.fillText("z", prologue.violetaActor.x + 77, prologue.violetaActor.y - 21);
       ctx.fillText("Z", player.x + 48, player.y - 10);
     } else if (prologue.phase === "explore" && prologue.soundCueTimer > 0) {
       ctx.fillStyle = "#f3c36b";
-      ctx.font = "bold 22px monospace";
+      ctx.font = "22px monospace";
       ctx.fillText("!", player.x + 48, player.y - 12);
     }
     const ambushIsVisible = prologue.phase === "capture-dialog" ||
@@ -2015,7 +2015,7 @@ function drawCampaignPrologueCaption() {
   ctx.lineWidth = 1;
   ctx.strokeRect(294, 22, 372, 30);
   ctx.fillStyle = "#edf3e5";
-  ctx.font = "bold 10px monospace";
+  ctx.font = "10px monospace";
   ctx.textAlign = "center";
   ctx.fillText(ui(key), GAME.width / 2, 41);
   ctx.textAlign = "start";
@@ -2034,7 +2034,7 @@ function drawCampaignPrologueCaption() {
     ctx.lineWidth = 1;
     ctx.strokeRect(110, GAME.height - 58, GAME.width - 220, 34);
     ctx.fillStyle = "#edf3e5";
-    ctx.font = "bold 10px monospace";
+    ctx.font = "10px monospace";
     ctx.textAlign = "center";
     ctx.fillText(hint, GAME.width / 2, GAME.height - 37);
     ctx.textAlign = "start";
@@ -2374,7 +2374,7 @@ function drawBossHud() {
     ctx.save();ctx.globalAlpha=Math.min(1,bossCueTimer*1.5);ctx.fillStyle="#0d1514dd";ctx.fillRect(215,185,530,90);
     ctx.strokeStyle="#d8f36a";ctx.lineWidth=1;ctx.strokeRect(215,185,530,90);
     ctx.fillStyle="#d8f36a";ctx.font="11px monospace";ctx.textAlign="center";ctx.fillText(tr("APEX THREAT DETECTED"),GAME.width/2,211);
-    ctx.fillStyle="#f0f2e9";ctx.font="bold 29px sans-serif";ctx.fillText(bossCueTitle,GAME.width/2,249);
+    ctx.fillStyle="#f0f2e9";ctx.font="29px sans-serif";ctx.fillText(bossCueTitle,GAME.width/2,249);
     ctx.textAlign="start";ctx.restore();
   }
 }

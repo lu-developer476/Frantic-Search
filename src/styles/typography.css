@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Pixelify+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400&family=IBM+Plex+Mono:wght@400&family=Pixelify+Sans:wght@400&display=swap');
 
 :root {
   --font-body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -10,12 +10,12 @@
   text-rendering: optimizeLegibility;
 }
 body, button, input, select, textarea { font-family: var(--font-body); }
-button, input, select, textarea { font-weight: 600; }
+button, input, select, textarea { font-weight: 400; }
 .brand, .overlay-content h2, .story-card h2, .character-card strong,
 .desktop-only-notice h2, .dino-dialog .character-card strong,
 .panel-head .mission-brief-header strong {
   font-family: var(--font-condensed);
-  font-weight: 800;
+  font-weight: 400;
 }
 .brand { font-size: 19px; letter-spacing: .14em; }
 .overlay-content h2, .story-card h2, .desktop-only-notice h2 { letter-spacing: .015em; }
@@ -27,14 +27,14 @@ button, input, select, textarea { font-weight: 600; }
 .overlay-kicker, .story-kicker, .story-narrator, .story-actions span,
 .menu-section > p, .menu-option, .dialog-actions button,
 .mission-brief-header small {
-  font-family: var(--font-mono); font-weight: 500;
+  font-family: var(--font-mono); font-weight: 400;
 }
 .canvas-wrap .hud-status-stack .ability-readout,
 .canvas-wrap .hud-status-stack .stegoceratops-readout,
 .canvas-wrap .hud-summary .hud-controls,
 .panel-head .panel-metric b, .panel-head .panel-health-label,
 .panel-head #game-state {
-  font-family: var(--font-condensed); font-weight: 700; letter-spacing: .025em;
+  font-family: var(--font-condensed); font-weight: 400; letter-spacing: .025em;
 }
 .canvas-wrap .hud-status-stack .ability-readout,
 .canvas-wrap .hud-status-stack .stegoceratops-readout,
@@ -45,6 +45,9 @@ button, input, select, textarea { font-weight: 600; }
 .dialog-actions button, .menu-option, .sound-toggle { font-family: var(--font-mono); }
 #start-button, #continue-campaign-button, .start-menu-view button:not(.menu-back) {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 400;
 }
+
+/* Keep every text element at regular weight, including semantic emphasis. */
+b, strong, h1, h2, h3, h4, h5, h6, button, input, select, textarea { font-weight: 400; }
 ::selection { color: #101819; background: #d8f36a; }

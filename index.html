@@ -5,38 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#101a1b" />
     <link rel="icon" href="/favicon/favicon.png" type="image/png" />
-    <meta name="description" content="Frantic Search es un videojuego arcade de plataformas y supervivencia en 2D pixel art. Elegí a Violeta o Vasti y rescatá a Rosa en una campaña de aventura." />
-    <title>Operación: cría perdida</title>
+    <meta name="description" content="Juego indie pixel art de 8 bits para navegador. Búsqueda Frenética combina aventura arcade, plataformas y supervivencia: elegí a Violeta o Vasti y rescatá a Rosa." />
+    <meta name="keywords" content="juego indie, pixel art, 8 bits, videojuego indie, juego arcade, juego de plataformas, supervivencia, dinosaurios, Búsqueda Frenética, Frantic Search" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <title>Juego indie pixel art de 8 bits</title>
   
-    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="application-name" content="Frantic Search" />
     <link rel="canonical" href="https://franticsearch.vercel.app/" />
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Frantic Search" />
-    <meta property="og:title" content="Operación: cría perdida" />
-    <meta property="og:description" content="Aventura arcade de plataformas y supervivencia en 2D pixel art. Elegí a Violeta o Vasti y rescatá a Rosa." />
+    <meta property="og:title" content="Búsqueda Frenética | Juego indie pixel art de 8 bits" />
+    <meta property="og:description" content="Juego indie pixel art de 8 bits para navegador: aventura arcade de plataformas, supervivencia y rescate de dinosaurios." />
     <meta property="og:url" content="https://franticsearch.vercel.app/" />
     <meta property="og:locale" content="es_AR" />
     <meta property="og:locale:alternate" content="en_US" />
     <meta property="og:image" content="https://franticsearch.vercel.app/artwork/8bits-artwork.png" />
-    <meta property="og:image:alt" content="Arte pixel art de Frantic Search" />
+    <meta property="og:image:alt" content="Ilustración 8-bit del juego indie pixel art Búsqueda Frenética" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Operación: cría perdida" />
-    <meta name="twitter:description" content="Aventura arcade de plataformas y supervivencia en 2D pixel art. Elegí a Violeta o Vasti y rescatá a Rosa." />
+    <meta name="twitter:title" content="Búsqueda Frenética | Juego indie pixel art de 8 bits" />
+    <meta name="twitter:description" content="Juego indie pixel art de 8 bits para navegador: aventura arcade de plataformas, supervivencia y rescate de dinosaurios." />
     <meta name="twitter:image" content="https://franticsearch.vercel.app/artwork/8bits-artwork.png" />
+    <meta name="twitter:image:alt" content="Ilustración 8-bit de Búsqueda Frenética" />
 
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "VideoGame",
-        "name": "Frantic Search: Operación: cría perdida",
-        "alternateName": "Operación: cría perdida",
-        "description": "Videojuego arcade de plataformas y supervivencia en 2D pixel art. Elegí a Violeta o Vasti y rescatá a Rosa.",
+        "name": "Búsqueda Frenética",
+        "alternateName": ["Frantic Search", "Operación: cría perdida"],
+        "description": "Juego indie pixel art de 8 bits para navegador. Aventura arcade de plataformas y supervivencia: elegí a Violeta o Vasti y rescatá a Rosa.",
+        "keywords": "juego indie, pixel art, 8 bits, videojuego de plataformas, arcade, supervivencia, dinosaurios",
+        "applicationCategory": "GameApplication",
         "url": "https://franticsearch.vercel.app/",
         "image": "https://franticsearch.vercel.app/artwork/8bits-artwork.png",
-        "gamePlatform": "Web browser",
+        "gamePlatform": ["Web browser"],
+        "operatingSystem": "Any",
         "genre": ["Plataformas", "Supervivencia", "Arcade"],
         "inLanguage": ["es", "en"],
         "playMode": "SinglePlayer"
@@ -54,7 +60,7 @@
     <div id="app">
       <header class="topbar">
         <div class="navbar-identity">
-          <a class="brand" href="https://franticsearch.vercel.app/#" aria-label="Inicio de Búsqueda frenética" data-i18n-aria="brandHome"><strong><em>BÚSQUEDA FRENÉTICA</em></strong></a>
+          <a class="brand" href="https://franticsearch.vercel.app/#" aria-label="Inicio de Búsqueda frenética" data-i18n-aria="brandHome"><em>BÚSQUEDA FRENÉTICA</em></a>
         </div>
         <div class="nav-actions">
           <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav-menu" data-i18n-aria="openMenu">
@@ -156,6 +162,8 @@
             </div>
             <section id="start-screen" class="start-screen" aria-label="PANTALLA DE INICIO" data-i18n-aria="startScreen">
               <div class="start-screen-copy">
+                <h1 id="start-screen-title" class="start-screen-title">BÚSQUEDA FRENÉTICA</h1>
+                <p id="start-screen-subtitle" class="start-screen-subtitle">OPERACIÓN: CRÍA PERDIDA</p>
                 <p id="start-screen-message" hidden></p>
                 <div id="start-menu-home" class="start-screen-actions">
                   <button id="start-button" type="button" aria-expanded="false" aria-controls="start-menu-options">

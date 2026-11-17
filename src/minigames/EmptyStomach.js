@@ -1400,7 +1400,7 @@ export class EmptyStomach {
         ctx.restore();
         if (enemy.state === "stunned") {
           ctx.fillStyle = "#fff2a8";
-          ctx.font = "bold 20px monospace";
+          ctx.font = "20px monospace";
           ctx.fillText("✳", enemy.x + enemy.w / 2 - 7, enemy.y - 5);
         }
       }
@@ -1419,29 +1419,29 @@ export class EmptyStomach {
 
     if (this.isPlayerHidden()) {
       ctx.fillStyle = "#f4efc2";
-      ctx.font = "bold 13px monospace";
+      ctx.font = "13px monospace";
       ctx.fillText(this.text("OCULTA", "HIDDEN"), 26, 56);
     } else if ((this.player.trappedTimer ?? 0) > 0) {
       ctx.fillStyle = "#f4efc2";
-      ctx.font = "bold 13px monospace";
+      ctx.font = "13px monospace";
       ctx.fillText(this.text("ATRAPADA ", "TRAPPED ") + this.player.trappedTimer.toFixed(1) + "s", 26, 56);
     } else if (this.isInMud(this.player)) {
       ctx.fillStyle = "#f4efc2";
-      ctx.font = "bold 13px monospace";
+      ctx.font = "13px monospace";
       ctx.fillText(this.text("LODO · LENTO", "MUD · SLOWED"), 26, 56);
     }
     if (this.invulnerabilityTimer > 0) {
       ctx.fillStyle = "#fff0bd";
-      ctx.font = "bold 13px monospace";
+      ctx.font = "13px monospace";
       ctx.fillText("INVULNERABLE " + this.invulnerabilityTimer.toFixed(1) + "s", 26, 74);
     }
     if (this.phase === "playing" || this.phase === "finished") {
       ctx.fillStyle = "#30452a";
-      ctx.font = "bold 16px monospace";
+      ctx.font = "16px monospace";
       ctx.fillText(this.text("DISTANCIA", "DISTANCE") + "  " + scoreForDistance(this.distance) + " M", 26, 34);
       ctx.textAlign = "right";
       ctx.fillText(this.text("CARRIL", "LANE") + " " + (this.getEntityLane(this.player) + 1) + "/4", WIDTH - 26, 34);
-      ctx.font = "bold 12px monospace";
+      ctx.font = "12px monospace";
       const checkpointMeters = this.checkpoint?.milestone
         ? this.checkpoint.milestone * CHECKPOINT_INTERVAL_METERS
         : CHECKPOINT_INTERVAL_METERS;
@@ -1454,7 +1454,7 @@ export class EmptyStomach {
       );
       ctx.textAlign = "left";
       const eggsProgress = (this.eggsEaten ?? 0) % EGGS_PER_CHECKPOINT_CONTINUE;
-      ctx.font = "bold 12px monospace";
+      ctx.font = "12px monospace";
       ctx.fillText(
         this.text("HUEVOS ", "EGGS ") + eggsProgress + "/" + EGGS_PER_CHECKPOINT_CONTINUE +
           " · " + (this.checkpointCharges ?? 0) + " " + this.text("CONTINUACIONES", "CONTINUES"),
@@ -1464,7 +1464,7 @@ export class EmptyStomach {
       if ((this.checkpointNoticeTimer ?? 0) > 0) {
         ctx.textAlign = "center";
         ctx.fillStyle = "#fff0bd";
-        ctx.font = "bold 16px monospace";
+        ctx.font = "16px monospace";
         ctx.fillText(
           this.text("CHECKPOINT ALCANZADO · ", "CHECKPOINT REACHED · ") + checkpointMeters + " M",
           WIDTH / 2,
