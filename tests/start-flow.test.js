@@ -113,31 +113,48 @@ test("the title screen and menu previews use the canonical artwork filenames", a
 });
 
 
-test("the minigames menu updates the start-screen title and subtitle", async () => {
+test("start-menu headings update with the selected language on every menu page", async () => {
   const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
-  const handlerStart = main.indexOf("function showStartMenuPage(");
-  const handlerEnd = main.indexOf("\nfunction getTutorialLines", handlerStart);
-  assert.ok(handlerStart >= 0 && handlerEnd > handlerStart, "menu page handler must exist");
+  const headingStart = main.indexOf("function updateStartMenuHeading()");
+  const menuStart = main.indexOf("function showStartMenuPage(", headingStart);
+  const handlerEnd = main.indexOf("\nfunction getTutorialLines", menuStart);
+  assert.ok(headingStart >= 0 && menuStart > headingStart && handlerEnd > menuStart, "menu heading handlers must exist");
 
-  const handler = main.slice(handlerStart, handlerEnd);
+  const handlers = main.slice(headingStart, handlerEnd);
+  const applyStart = main.indexOf("function applyLanguage()");
+  const applyEnd = main.indexOf("\nfunction setEnvironmentMode", applyStart);
+  assert.ok(applyStart >= 0 && applyEnd > applyStart, "language application handler must exist");
+  assert.ok(main.slice(applyStart, applyEnd).includes("updateStartMenuHeading();"), "changing locale must refresh the visible menu heading");
+
   const result = runInNewContext(`
-    ${handler}
+    ${handlers}
+    const copy = () => [startScreenTitle.textContent, startScreenSubtitle.textContent, startScreenSubtitle.hidden];
+    updateStartMenuHeading();
+    const spanishHome = copy();
+    locale = "en";
+    updateStartMenuHeading();
+    const englishHome = copy();
+    showStartMenuPage("campaign");
+    const englishCampaign = copy();
     showStartMenuPage("minigames");
-    const minigamesCopy = [startScreenTitle.textContent, startScreenSubtitle.hidden];
+    const englishMinigames = copy();
+    locale = "es";
+    updateStartMenuHeading();
+    const spanishMinigames = copy();
     showStartMenuPage("options");
-    const restoredCopy = [startScreenTitle.textContent, startScreenSubtitle.hidden, startScreenSubtitle.textContent];
-    [minigamesCopy, restoredCopy];
+    const spanishOptions = copy();
+    [spanishHome, englishHome, englishCampaign, englishMinigames, spanishMinigames, spanishOptions];
   `, {
+    activeStartMenuPage: "home",
+    locale: "es",
+    startScreenTitle: { textContent: "" },
+    startScreenSubtitle: { textContent: "", hidden: false },
+    ui: (key) => ({
+      es: { startMenuTitle: "BÚSQUEDA FRENÉTICA", startMenuSubtitle: "OPERACIÓN: CRÍA PERDIDA", minigames: "MINIJUEGOS" },
+      en: { startMenuTitle: "FRANTIC SEARCH", startMenuSubtitle: "OPERATION: LOST HATCHLING", minigames: "MINIGAMES" }
+    })[locale][key],
     hoveredMinigameButton: null,
     focusedMinigameButton: null,
-    activeStartMenuPage: "home",
-    startScreenTitle: { textContent: "BÚSQUEDA FRENÉTICA" },
-    startScreenSubtitle: { textContent: "OPERACIÓN: CRÍA PERDIDA", hidden: false },
-    defaultStartScreenTitle: "BÚSQUEDA FRENÉTICA",
-    defaultStartScreenSubtitle: "OPERACIÓN: CRÍA PERDIDA",
-    ui: (key) => ({
-      minigames: "MINIJUEGOS"
-    })[key],
     updateMinigamePreview: () => {},
     startMenuHome: {},
     startMenuOptions: {},
@@ -149,13 +166,13 @@ test("the minigames menu updates the start-screen title and subtitle", async () 
     startScreen: { classList: { remove: () => {} } }
   });
 
-  assert.equal(result[0][0], "MINIJUEGOS");
-  assert.equal(result[0][1], true, "the minigames page must not display a subtitle");
-  assert.equal(result[1][0], "BÚSQUEDA FRENÉTICA");
-  assert.equal(result[1][1], false, "the regular start-screen subtitle must return");
-  assert.equal(result[1][2], "OPERACIÓN: CRÍA PERDIDA");
+  assert.equal(result[0].join("|"), "BÚSQUEDA FRENÉTICA|OPERACIÓN: CRÍA PERDIDA|false");
+  assert.equal(result[1].join("|"), "FRANTIC SEARCH|OPERATION: LOST HATCHLING|false");
+  assert.equal(result[2].join("|"), "FRANTIC SEARCH|OPERATION: LOST HATCHLING|false");
+  assert.equal(result[3].join("|"), "MINIGAMES|OPERATION: LOST HATCHLING|true");
+  assert.equal(result[4].join("|"), "MINIJUEGOS|OPERATION: LOST HATCHLING|true");
+  assert.equal(result[5].join("|"), "BÚSQUEDA FRENÉTICA|OPERACIÓN: CRÍA PERDIDA|false");
 });
-
 
 test("the delete-save control is visible but disabled until a real campaign checkpoint is saved", async () => {
   const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");

@@ -12,6 +12,13 @@ test("English menu labels remain unchanged", () => {
   assert.equal(t("survival", "en"), "SURVIVAL");
 });
 
+test("the start-screen title and subtitle follow the selected language", () => {
+  assert.equal(t("startMenuTitle", "es"), "BÚSQUEDA FRENÉTICA");
+  assert.equal(t("startMenuSubtitle", "es"), "OPERACIÓN: CRÍA PERDIDA");
+  assert.equal(t("startMenuTitle", "en"), "FRANTIC SEARCH");
+  assert.equal(t("startMenuSubtitle", "en"), "OPERATION: LOST HATCHLING");
+});
+
 
 test("Empty Stomach uses the localized Spanish title and keeps the English title", () => {
   assert.equal(t("emptyStomach", "es"), "ESTÓMAGO VACÍO");
