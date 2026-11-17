@@ -1523,6 +1523,7 @@ function beginPrologueFight() {
 
   dashHitIds = new Set();
   prologueCharacterSelectionPending = false;
+  setCharacterSelectionModalOpen(false);
   dinoModal.classList.remove("prologue-selection");
   dinoModal.classList.add("hidden");
   cancelCharacterButton.hidden = false;
@@ -3427,6 +3428,7 @@ function start(mode = "campaign") {
   cancelScheduledFrame();
   audio.unlock();
   startScreen.classList.add("hidden");
+  setCharacterSelectionModalOpen(false);
   prologueCharacterSelectionPending = false;
   dinoModal.classList.remove("prologue-selection");
   cancelCharacterButton.hidden = false;
@@ -3806,6 +3808,8 @@ function openPrologueCharacterSelection() {
   const prologue = campaignPrologue;
   if (!prologue?.active || prologue.phase !== "character-select" || !desktopPlayback.matches) return;
   prologueCharacterSelectionPending = true;
+  setCharacterSelectionModalOpen(true);
+  storyPanel?.classList.add("hidden");
   selectionReturn = "prologue";
   pendingGameMode = "campaign";
   characterConfirmation.classList.add("hidden");
@@ -3820,6 +3824,7 @@ function openPrologueCharacterSelection() {
 function openDinoModal(returnTo = "start", gameMode = "campaign") {
   if (!desktopPlayback.matches || running || desktopBlocked) return;
   selectionReturn = returnTo;
+  setCharacterSelectionModalOpen(true);
   pendingGameMode = gameMode;
   prologueCharacterSelectionPending = false;
   dinoModal.classList.remove("prologue-selection");
@@ -3834,6 +3839,7 @@ function openDinoModal(returnTo = "start", gameMode = "campaign") {
 
 function closeDinoModal() {
   if (prologueCharacterSelectionPending) return;
+  setCharacterSelectionModalOpen(false);
   dinoModal.classList.remove("prologue-selection");
   cancelCharacterButton.hidden = false;
   dinoModal.classList.add("hidden");
@@ -3869,6 +3875,7 @@ function startFromDinoModal() {
   if (!dinoModal.classList.contains("hidden") || characterConfirmation.classList.contains("hidden") || !desktopPlayback.matches) return;
   characterConfirmation.classList.add("hidden");
   dinoModal.classList.add("hidden");
+  setCharacterSelectionModalOpen(false);
   start(pendingGameMode);
 }
 
@@ -4009,6 +4016,11 @@ function setMenuOpen(open) {
   menuToggle.classList.toggle("open", open);
   menuToggle.setAttribute("aria-expanded", String(open));
   menuToggle.setAttribute("aria-label", ui(open ? "closeMenu" : "openMenu"));
+}
+
+function setCharacterSelectionModalOpen(open) {
+  if (open) setMenuOpen(false);
+  document.body.classList.toggle("character-selection-open", open);
 }
 
 function setLanguage(nextLocale) {
