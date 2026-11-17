@@ -162,7 +162,7 @@ const UI = {
     freeRoam: "FREE ROAM",
     freeRoamObjective: "EXPLORATION WITHOUT OBJECTIVES",
     freeRoamHint: "EXPLORE THE MAP AND ITS ENCOUNTERS",
-    documentTitle: "Juego indie pixel art de 8 bits",
+    documentTitle: "Indie pixel art 8-bits",
     metaDescription: "An 8-bit pixel-art indie game for your browser. Búsqueda Frenética combines arcade platforming and survival in an adventure where you rescue Brisa with Gala or Basilio.",
     brandHome: "Frantic Search home",
     operationStats: "Operation statistics",
