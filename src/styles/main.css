@@ -3293,8 +3293,8 @@ body:has(#survival-panel.active:not(.playing)) .canvas-wrap {
 }
 .tutorial-dialog.hidden{display:none!important}
 .tutorial-card{
-  width:min(620px,100%);max-height:min(78vh,680px);overflow:auto;
-  padding:clamp(22px,4vw,38px);border:1px solid #667c66;
+  width:min(620px,100%);max-height:none;overflow:visible;
+  padding:clamp(18px,3vw,32px);border:1px solid #667c66;
   background:linear-gradient(145deg,#1d2b29,#101a1a);box-shadow:0 26px 90px #000c
 }
 .tutorial-card-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}
@@ -3437,17 +3437,12 @@ body.game-session-active .game-tutorial-fab { display: inline-flex; }
 .gameplay-brief-dialog.hidden { display: none !important; }
 .gameplay-brief-card {
   width: min(650px, 100%);
-  max-height: min(84vh, 760px);
-  overflow: auto;
-  padding: clamp(22px, 4vw, 38px);
+  max-height: none;
+  overflow: visible;
+  padding: clamp(18px, 3vw, 32px);
   border: 1px solid #71856d;
   background: linear-gradient(145deg, #1d2b29, #101a1a);
   box-shadow: 0 26px 90px #000c;
-}
-.gameplay-brief-kicker {
-  color: var(--acid);
-  font: 400 9px var(--font-mono);
-  letter-spacing: .18em;
 }
 .gameplay-brief-card h2 {
   margin: 12px 0 8px;
@@ -3489,4 +3484,57 @@ body.game-session-active .game-tutorial-fab { display: inline-flex; }
 @media (max-width: 560px) {
   .game-tutorial-fab { right: 10px; bottom: 10px; min-width: 100px; min-height: 38px; }
   .gameplay-brief-card { padding: 20px 16px; }
+}
+
+
+/* Compact instruction dialogs: content fits without an internal scrollbar. */
+.tutorial-card h2 {
+  margin: 8px 0 14px;
+  font-size: clamp(24px, 3.6vw, 38px);
+}
+.tutorial-list { gap: 8px; }
+.tutorial-list li {
+  padding: 8px 11px;
+  font-size: clamp(8px, .8vw, 10px);
+  line-height: 1.42;
+}
+.gameplay-brief-card h2 { margin: 4px 0 12px; }
+.gameplay-brief-card .tutorial-list { margin-top: 12px; }
+.gameplay-brief-note {
+  margin-top: 14px;
+  padding-top: 12px;
+  line-height: 1.5;
+}
+.gameplay-brief-continue { margin-top: 14px; }
+.tutorial-card,
+.gameplay-brief-card {
+  max-height: none !important;
+  overflow: visible !important;
+}
+@media (max-height: 620px) {
+  .tutorial-dialog,
+  .gameplay-brief-dialog { padding: 8px; }
+  .tutorial-card,
+  .gameplay-brief-card { padding: 12px 16px; }
+  .tutorial-card h2,
+  .gameplay-brief-card h2 { margin: 5px 0 8px; font-size: 24px; }
+  .tutorial-list { gap: 5px; }
+  .tutorial-list li { padding: 6px 8px; font-size: 8px; line-height: 1.3; }
+  .gameplay-brief-card .tutorial-list { margin-top: 8px; }
+  .gameplay-brief-note { margin-top: 8px; padding-top: 8px; font-size: 9px; }
+  .gameplay-brief-continue { min-height: 40px; margin-top: 8px; padding: 8px 14px; }
+}
+
+/* Keep the character picker integrated with the scene instead of blacking out its stage. */
+body:has(#dino-modal:not(.hidden)) .layout,
+body:has(#dino-modal:not(.hidden)) .game-panel,
+body:has(#dino-modal:not(.hidden)) .canvas-wrap {
+  background: transparent !important;
+}
+body:has(#dino-modal:not(.hidden)) .game-panel {
+  border-color: transparent !important;
+}
+body:has(#dino-modal:not(.hidden)) .dino-modal {
+  background: rgba(5, 18, 29, .48) !important;
+  backdrop-filter: blur(2px) !important;
 }
