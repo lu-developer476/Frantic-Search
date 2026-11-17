@@ -116,28 +116,27 @@ test("the title screen and menu previews use the canonical artwork filenames", a
 test("the minigames menu updates the start-screen title and subtitle", async () => {
   const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
   const handlerStart = main.indexOf("function showStartMenuPage(");
-  const handlerEnd = main.indexOf("\\nfunction getTutorialLines", handlerStart);
+  const handlerEnd = main.indexOf("\nfunction getTutorialLines", handlerStart);
   assert.ok(handlerStart >= 0 && handlerEnd > handlerStart, "menu page handler must exist");
 
   const handler = main.slice(handlerStart, handlerEnd);
   const result = runInNewContext(`
     ${handler}
     showStartMenuPage("minigames");
-    const minigamesCopy = [startScreenTitle.textContent, startScreenSubtitle.textContent];
+    const minigamesCopy = [startScreenTitle.textContent, startScreenSubtitle.hidden];
     showStartMenuPage("options");
-    const restoredCopy = [startScreenTitle.textContent, startScreenSubtitle.textContent];
+    const restoredCopy = [startScreenTitle.textContent, startScreenSubtitle.hidden, startScreenSubtitle.textContent];
     [minigamesCopy, restoredCopy];
   `, {
     hoveredMinigameButton: null,
     focusedMinigameButton: null,
     activeStartMenuPage: "home",
     startScreenTitle: { textContent: "BÚSQUEDA FRENÉTICA" },
-    startScreenSubtitle: { textContent: "OPERACIÓN: CRÍA PERDIDA" },
+    startScreenSubtitle: { textContent: "OPERACIÓN: CRÍA PERDIDA", hidden: false },
     defaultStartScreenTitle: "BÚSQUEDA FRENÉTICA",
     defaultStartScreenSubtitle: "OPERACIÓN: CRÍA PERDIDA",
     ui: (key) => ({
-      minigames: "MINIJUEGOS",
-      minigamesSubtitle: "ELEGÍ UN MINIJUEGO"
+      minigames: "MINIJUEGOS"
     })[key],
     updateMinigamePreview: () => {},
     startMenuHome: {},
@@ -151,7 +150,71 @@ test("the minigames menu updates the start-screen title and subtitle", async () 
   });
 
   assert.equal(result[0][0], "MINIJUEGOS");
-  assert.equal(result[0][1], "ELEGÍ UN MINIJUEGO");
+  assert.equal(result[0][1], true, "the minigames page must not display a subtitle");
   assert.equal(result[1][0], "BÚSQUEDA FRENÉTICA");
-  assert.equal(result[1][1], "OPERACIÓN: CRÍA PERDIDA");
+  assert.equal(result[1][1], false, "the regular start-screen subtitle must return");
+  assert.equal(result[1][2], "OPERACIÓN: CRÍA PERDIDA");
+});
+
+
+test("the delete-save control is visible but disabled until a real campaign checkpoint is saved", async () => {
+  const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
+  const start = main.indexOf("function refreshContinueCampaignButton()");
+  const end = main.indexOf("\nfunction persistCampaignProgressSnapshot", start);
+  assert.ok(start >= 0 && end > start, "save-control refresh handler must exist");
+  const handler = main.slice(start, end);
+
+  const evaluate = (hasSave, checkpointReached, desktopAvailable = true) => {
+    const continueButton = { hidden: false, disabled: false };
+    const deleteButton = { hidden: true, disabled: false };
+    runInNewContext(handler + "\nrefreshContinueCampaignButton();", {
+      continueCampaignButton: continueButton,
+      deleteCampaignSaveButton: deleteButton,
+      save: {
+        getCampaignProgress: () => hasSave ? { snapshot: {} } : null,
+        get: (key) => key === "campaignCheckpointReached" && checkpointReached
+      },
+      desktopPlayback: { matches: desktopAvailable }
+    });
+    return { continueButton, deleteButton };
+  };
+
+  const empty = evaluate(false, false);
+  assert.equal(empty.continueButton.hidden, true);
+  assert.equal(empty.deleteButton.hidden, false);
+  assert.equal(empty.deleteButton.disabled, true);
+
+  const started = evaluate(true, false);
+  assert.equal(started.continueButton.hidden, false);
+  assert.equal(started.deleteButton.hidden, false);
+  assert.equal(started.deleteButton.disabled, true);
+
+  const checkpoint = evaluate(true, true);
+  assert.equal(checkpoint.deleteButton.disabled, false);
+
+  const unavailableDesktop = evaluate(true, true, false);
+  assert.equal(unavailableDesktop.deleteButton.disabled, true);
+});
+
+test("session shortcuts are suppressed on minigame start screens and during free roam", async () => {
+  const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+
+  assert.ok(main.includes('document.body.classList.toggle("free-roam-session", freeRoamMode)'));
+  assert.ok(main.includes('document.body.classList.remove("game-session-active", "free-roam-session")'));
+  assert.match(styles, /body\.free-roam-session \.menu-toggle/);
+  assert.match(styles, /body\.free-roam-session \.game-tutorial-fab/);
+  for (const panel of ["empty-stomach-panel", "time-attack-panel", "survival-panel"]) {
+    assert.ok(styles.includes(`#${panel}.active:not(.playing)`), `missing start-screen visibility rule for ${panel}`);
+  }
+});
+
+test("Empty Stomach shares the minigame menu button color palette", async () => {
+  const styles = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+  const palette = styles.slice(styles.lastIndexOf("/* All four minigame/free-roam choices"));
+  for (const button of ["empty-stomach", "time-attack", "survival", "free-roam"]) {
+    assert.ok(palette.includes(`#${button}-button`), `missing shared palette for ${button}`);
+  }
+  assert.ok(palette.includes("background: #26372f;"));
+  assert.ok(palette.includes("color: #eff3e5;"));
 });

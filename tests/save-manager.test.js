@@ -90,6 +90,7 @@ test("legacy preferences and statistics survive the campaign-save upgrade", (t) 
   assert.equal(save.get("language"), "en");
   assert.equal(save.get("environmentMode"), "gray");
   assert.equal(save.getCampaignProgress(), null);
+  assert.equal(save.get("campaignCheckpointReached"), false);
 });
 
 test("campaign progress round-trips with separate continue and retry snapshots", (t) => {
@@ -139,10 +140,12 @@ test("campaign deletion preserves lifetime records and user preferences", (t) =>
   const snapshot = createSnapshot();
 
   assert.equal(save.saveCampaignProgress({ snapshot }), true);
+  save.update({ campaignCheckpointReached: true });
   save.clearCampaignProgress();
 
   const reloaded = new SaveManager();
   assert.equal(reloaded.getCampaignProgress(), null);
+  assert.equal(reloaded.get("campaignCheckpointReached"), false);
   assert.equal(reloaded.get("bestDistance"), 12000);
   assert.equal(reloaded.get("rescues"), 9);
   assert.equal(reloaded.get("muted"), true);

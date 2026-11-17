@@ -76,11 +76,11 @@ test("post-Indoraptor and Indominus campaign dialogue follows the selected langu
 });
 
 
-test("minigames title-screen copy is localized in both supported languages", () => {
+test("the minigames title remains localized and has no subtitle copy", () => {
   assert.equal(t("minigames", "es"), "MINIJUEGOS");
-  assert.equal(t("minigamesSubtitle", "es"), "ELEGÍ UN MINIJUEGO");
   assert.equal(t("minigames", "en"), "MINIGAMES");
-  assert.equal(t("minigamesSubtitle", "en"), "CHOOSE A MINIGAME");
+  assert.equal(hasTranslation("minigamesSubtitle", "es"), false);
+  assert.equal(hasTranslation("minigamesSubtitle", "en"), false);
 });
 
 

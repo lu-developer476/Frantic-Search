@@ -21,6 +21,7 @@ const DEFAULTS = {
   selectedCharacter: "blue",
   campaignCompleted: false,
   completedCampaigns: 0,
+  campaignCheckpointReached: false,
   campaignSave: null
 };
 
@@ -155,6 +156,7 @@ export class SaveManager {
       const parsed = JSON.parse(localStorage.getItem(KEY) || "{}");
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return { ...DEFAULTS };
       const data = { ...DEFAULTS, ...parsed };
+      if (typeof data.campaignCheckpointReached !== "boolean") data.campaignCheckpointReached = false;
       if (!isValidCampaignProgress(data.campaignSave)) data.campaignSave = null;
       return data;
     } catch {
@@ -214,6 +216,6 @@ export class SaveManager {
   }
 
   clearCampaignProgress() {
-    this.update({ campaignSave: null });
+    this.update({ campaignSave: null, campaignCheckpointReached: false });
   }
 }

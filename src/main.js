@@ -3142,9 +3142,11 @@ function captureRestartSnapshot(levelIndex, distanceValue = distance) {
 function refreshContinueCampaignButton() {
   if (!continueCampaignButton || !deleteCampaignSaveButton) return;
   const available = Boolean(save.getCampaignProgress());
+  const checkpointReached = Boolean(save.get("campaignCheckpointReached"));
   continueCampaignButton.hidden = !available;
-  deleteCampaignSaveButton.hidden = !available;
+  deleteCampaignSaveButton.hidden = false;
   continueCampaignButton.disabled = !desktopPlayback.matches;
+  deleteCampaignSaveButton.disabled = !available || !checkpointReached || !desktopPlayback.matches;
 }
 function persistCampaignProgressSnapshot(snapshot) {
   if (freeRoamMode || !snapshot || campaign.flags.completed) return false;
@@ -3209,12 +3211,16 @@ function updateLevelCheckpoint() {
   if (distance < checkpointDistance) return;
   if (latestLevelCheckpoint?.levelIndex === levelIndex && latestLevelCheckpoint.distance >= checkpointDistance) return;
   latestLevelCheckpoint = captureRestartSnapshot(levelIndex);
-  persistCampaignProgressSnapshot(latestLevelCheckpoint);
+  if (persistCampaignProgressSnapshot(latestLevelCheckpoint)) {
+    save.update({ campaignCheckpointReached: true });
+    refreshContinueCampaignButton();
+  }
   audio.collect();
 }
 function restoreRestartSnapshot(snapshot, savedProgress = null) {
   if (!snapshot || !desktopPlayback.matches) return false;
   freeRoamMode = Boolean(snapshot.freeRoamMode);
+  document.body.classList.toggle("free-roam-session", freeRoamMode);
   operationHeader?.classList.toggle("is-hidden", freeRoamMode);
   campaignBriefHeader?.classList.toggle("is-hidden", freeRoamMode);
   if (snapshot.selectedCharacter === "blue" || snapshot.selectedCharacter === "vasti") {
@@ -3423,7 +3429,12 @@ function resetPlayer(worldSeed = undefined) {
 
 function start(mode = "campaign") {
   if (!desktopPlayback.matches) return;
+  const restartingCurrentSession = running && paused;
   freeRoamMode = mode === "free-roam";
+  document.body.classList.toggle("free-roam-session", freeRoamMode);
+  if (!freeRoamMode && !restartingCurrentSession) {
+    save.update({ campaignCheckpointReached: false });
+  }
   operationHeader?.classList.toggle("is-hidden", freeRoamMode);
   campaignBriefHeader?.classList.toggle("is-hidden", freeRoamMode);
   cancelScheduledFrame();
@@ -3576,7 +3587,7 @@ function returnToMainMenu() {
   startScreenMessage.textContent = "";
   startScreenMessage.hidden = true;
   freeRoamMode = false;
-  document.body.classList.remove("game-session-active");
+  document.body.classList.remove("game-session-active", "free-roam-session");
   operationHeader?.classList.remove("is-hidden");
   campaignBriefHeader?.classList.remove("is-hidden");
   pendingGameMode = "campaign";
@@ -3754,7 +3765,7 @@ continueCampaignButton.addEventListener("click", () => {
   restoreRestartSnapshot(progress.snapshot, progress);
 });
 function openDeleteCampaignSaveConfirmation() {
-  if (!save.getCampaignProgress()) {
+  if (!save.getCampaignProgress() || !save.get("campaignCheckpointReached")) {
     refreshContinueCampaignButton();
     return;
   }
@@ -3772,7 +3783,7 @@ function closeDeleteCampaignSaveConfirmation(restoreFocus = true) {
 }
 
 function confirmDeleteCampaignSave() {
-  if (!save.getCampaignProgress()) {
+  if (!save.getCampaignProgress() || !save.get("campaignCheckpointReached")) {
     refreshContinueCampaignButton();
     closeDeleteCampaignSaveConfirmation(false);
     newCampaignButton.focus();
@@ -3887,7 +3898,8 @@ function showStartMenuPage(page = "home") {
   activeStartMenuPage = nextPage;
   const isMinigamesPage = nextPage === "minigames";
   startScreenTitle.textContent = isMinigamesPage ? ui("minigames") : defaultStartScreenTitle;
-  startScreenSubtitle.textContent = isMinigamesPage ? ui("minigamesSubtitle") : defaultStartScreenSubtitle;
+  startScreenSubtitle.hidden = isMinigamesPage;
+  startScreenSubtitle.textContent = defaultStartScreenSubtitle;
   updateMinigamePreview();
   startMenuHome.hidden = nextPage !== "home";
   startMenuOptions.hidden = nextPage !== "options";

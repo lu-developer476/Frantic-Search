@@ -3567,3 +3567,49 @@ body:has(#dino-modal:not(.hidden)) .dino-dialog {
     max-height: calc(100dvh - 16px) !important;
   }
 }
+
+
+/* Minigame start screens and free roam do not expose the global menu or tutorial shortcut. */
+body.free-roam-session .menu-toggle,
+body.free-roam-session .game-tutorial-fab,
+body:has(#empty-stomach-panel.active:not(.playing)) .menu-toggle,
+body:has(#time-attack-panel.active:not(.playing)) .menu-toggle,
+body:has(#survival-panel.active:not(.playing)) .menu-toggle,
+body:has(#empty-stomach-panel.active:not(.playing)) .game-tutorial-fab,
+body:has(#time-attack-panel.active:not(.playing)) .game-tutorial-fab,
+body:has(#survival-panel.active:not(.playing)) .game-tutorial-fab {
+  display: none !important;
+}
+
+/* All four minigame/free-roam choices share the same muted green button treatment. */
+.start-screen-copy .start-menu-view #empty-stomach-button,
+.start-screen-copy .start-menu-view #time-attack-button,
+.start-screen-copy .start-menu-view #survival-button,
+.start-screen-copy .start-menu-view #free-roam-button {
+  border: 1px solid #8c9d77;
+  background: #26372f;
+  color: #eff3e5;
+}
+.start-screen-copy .start-menu-view #empty-stomach-button:hover,
+.start-screen-copy .start-menu-view #time-attack-button:hover,
+.start-screen-copy .start-menu-view #survival-button:hover,
+.start-screen-copy .start-menu-view #free-roam-button:hover {
+  border-color: #d8f36a;
+  background: #354c3e;
+}
+
+/* Save deletion stays visible, but reads as unavailable until a campaign checkpoint exists. */
+.start-screen-copy .start-menu-view #delete-campaign-save-button:disabled {
+  border-color: #929292;
+  background: #bdbdbd;
+  color: #111111;
+  opacity: 1;
+  cursor: not-allowed;
+  transform: none;
+}
+.start-screen-copy .start-menu-view #delete-campaign-save-button:disabled:hover {
+  border-color: #929292;
+  background: #bdbdbd;
+  color: #111111;
+  transform: none;
+}
