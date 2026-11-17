@@ -3287,7 +3287,7 @@ body:has(#survival-panel.active:not(.playing)) .canvas-wrap {
 .tutorial-menu-section{margin-top:0!important;padding-top:0!important;border-top:0!important}
 .tutorial-menu-button{width:100%;min-height:40px;text-align:center;color:var(--acid)}
 .tutorial-dialog{
-  position:fixed;inset:0;z-index:100;display:grid;place-items:center;
+  position:fixed;inset:0;z-index:130;display:grid;place-items:center;
   padding:clamp(16px,4vw,40px);background:rgba(3,10,9,.84);
   backdrop-filter:blur(9px)
 }
@@ -3369,4 +3369,124 @@ body:has(#survival-panel.active:not(.playing)) .canvas-wrap {
     opacity: 1 !important;
     transform: none !important;
   }
+}
+
+
+/* Menu labels use the lighter mono face instead of the chunkier display font. */
+#minigames-button,
+#new-campaign-button,
+#free-roam-button,
+#empty-stomach-button,
+#time-attack-button,
+#survival-button,
+#continue-campaign-button,
+#minigames-button *,
+#new-campaign-button *,
+#free-roam-button *,
+#empty-stomach-button *,
+#time-attack-button *,
+#survival-button *,
+#continue-campaign-button * {
+  font-family: var(--font-mono) !important;
+  font-weight: 400 !important;
+  text-shadow: none !important;
+  -webkit-text-stroke: 0 !important;
+}
+
+/* Control bars have been replaced by the contextual pre-game reminder and tutorial. */
+.hud-strip,
+.empty-stomach-bottom {
+  display: none !important;
+}
+
+/* Tutorial shortcut stays available at the bottom-right throughout an active session. */
+.game-tutorial-fab {
+  display: none;
+  position: fixed;
+  right: clamp(14px, 2vw, 28px);
+  bottom: clamp(14px, 2vh, 24px);
+  z-index: 110;
+  min-width: 112px;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 15px;
+  border: 1px solid var(--acid);
+  border-radius: 2px;
+  background: rgba(16, 26, 25, .94);
+  color: #eaf0e4;
+  font: 400 10px var(--font-mono);
+  letter-spacing: .12em;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+body.game-session-active .game-tutorial-fab { display: inline-flex; }
+.game-tutorial-fab:hover { background: #263b32; border-color: #e8ff8a; }
+.game-tutorial-fab:focus-visible { outline: 2px solid var(--acid); outline-offset: 4px; }
+
+.gameplay-brief-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: clamp(16px, 4vw, 40px);
+  background: rgba(3, 10, 9, .88);
+  backdrop-filter: blur(9px);
+}
+.gameplay-brief-dialog.hidden { display: none !important; }
+.gameplay-brief-card {
+  width: min(650px, 100%);
+  max-height: min(84vh, 760px);
+  overflow: auto;
+  padding: clamp(22px, 4vw, 38px);
+  border: 1px solid #71856d;
+  background: linear-gradient(145deg, #1d2b29, #101a1a);
+  box-shadow: 0 26px 90px #000c;
+}
+.gameplay-brief-kicker {
+  color: var(--acid);
+  font: 400 9px var(--font-mono);
+  letter-spacing: .18em;
+}
+.gameplay-brief-card h2 {
+  margin: 12px 0 8px;
+  color: #f0f3e8;
+  font: 400 clamp(26px, 4vw, 40px)/1 var(--font-display);
+}
+.gameplay-brief-context {
+  margin: 0 0 16px;
+  color: #a9b8a8;
+  font: 400 10px var(--font-mono);
+  letter-spacing: .08em;
+}
+.gameplay-brief-context:empty { display: none; }
+.gameplay-brief-card .tutorial-list { margin-top: 18px; }
+.gameplay-brief-note {
+  margin: 18px 0 0;
+  padding-top: 15px;
+  border-top: 1px solid rgba(222,237,221,.16);
+  color: #c8d5c6;
+  font: 400 10px/1.65 var(--font-mono);
+}
+.gameplay-brief-continue {
+  display: flex;
+  width: 100%;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 18px;
+  padding: 12px 18px;
+  border: 1px solid var(--acid);
+  background: var(--acid);
+  color: #17201a;
+  font: 400 10px var(--font-mono);
+  letter-spacing: .12em;
+  cursor: pointer;
+}
+.gameplay-brief-continue:hover { background: #e8ff8a; }
+.gameplay-brief-continue:focus-visible { outline: 2px solid #f1f7e8; outline-offset: 4px; }
+@media (max-width: 560px) {
+  .game-tutorial-fab { right: 10px; bottom: 10px; min-width: 100px; min-height: 38px; }
+  .gameplay-brief-card { padding: 20px 16px; }
 }

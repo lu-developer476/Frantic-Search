@@ -81,7 +81,7 @@ function living(enemies) {
 }
 
 export class Survival {
-  constructor(root, onExit = () => {}, spriteRenderer = null) {
+  constructor(root, onExit = () => {}, spriteRenderer = null, onBeforeStart = (_mode, proceed) => proceed()) {
     this.root = root;
     this.canvas = root.querySelector("canvas");
     this.ctx = this.canvas.getContext("2d");
@@ -90,6 +90,7 @@ export class Survival {
       this.ctx.imageSmoothingEnabled = false;
     });
     this.onExit = onExit;
+    this.onBeforeStart = onBeforeStart;
     this.spriteRenderer = spriteRenderer;
     this.locale = "es";
     this.keys = new Set();
@@ -148,9 +149,9 @@ export class Survival {
     this.canvas.addEventListener("pointerdown", this.handlePointerDown);
 
     for (const button of root.querySelectorAll("[data-survival-role]")) {
-      button.addEventListener("click", () => this.start(button.dataset.survivalRole));
+      button.addEventListener("click", () => this.requestStart(button.dataset.survivalRole));
     }
-    root.querySelector("[data-survival-retry]").addEventListener("click", () => this.start(this.role));
+    root.querySelector("[data-survival-retry]").addEventListener("click", () => this.requestStart(this.role));
     root.querySelector("[data-survival-exit]").addEventListener("click", () => this.exit());
     this.setLocale("es");
     this.render();
@@ -221,6 +222,11 @@ export class Survival {
     try {
       this.best = Math.max(0, Number(localStorage.getItem(BEST_KEY + "-" + this.role)) || 0);
     } catch {}
+  }
+
+  requestStart(role = this.role) {
+    if (!this.root.classList.contains("active")) return;
+    this.onBeforeStart("survival", () => this.start(role));
   }
 
   start(role = this.role) {

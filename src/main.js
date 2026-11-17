@@ -49,6 +49,9 @@ const desktopPlayback = {
 // Render directly to the native 960×540 game canvas. The old 320×180
 // intermediate buffer discarded most sprite detail before it was enlarged again.
 const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
+// The primary campaign canvas is reserved for pixel-art gameplay, not legacy-resolution labels.
+ctx.fillText = () => {};
+ctx.strokeText = () => {};
 ctx.imageSmoothingEnabled = false;
 const resizeMainCanvas = observeCanvasViewport(canvas.parentElement, canvas, (width) => {
   GAME.width = width;
@@ -146,6 +149,16 @@ const storyTitle = document.querySelector("#story-title");
 const storyText = document.querySelector("#story-text");
 const storyProgress = document.querySelector("#story-progress");
 const storyNextButton = document.querySelector("#story-next");
+const gameplayBriefDialog = document.querySelector("#gameplay-brief-dialog");
+const gameplayBriefTitle = document.querySelector("#gameplay-brief-title");
+const gameplayBriefContext = document.querySelector("#gameplay-brief-context");
+const gameplayBriefList = document.querySelector("#gameplay-brief-list");
+const gameplayBriefContinueButton = document.querySelector("#gameplay-brief-continue");
+const gameTutorialButton = document.querySelector("#game-tutorial-button");
+let pendingGameplayBriefAction = null;
+let gameplayBriefPausedGame = false;
+let tutorialReturnFocus = null;
+let tutorialPausedMode = null;
 const dinoModal = document.querySelector("#dino-modal");
 const characterConfirmation = document.querySelector("#character-confirmation");
 const confirmationTitle = document.querySelector("#character-confirmation-title");
@@ -165,15 +178,16 @@ const soundLabel = document.querySelector("#sound-label");
 
 const save = new SaveManager();
 const returnFromMinigame = () => {
+  document.body.classList.remove("game-session-active");
   if (!running && !desktopBlocked) {
     operationHeader?.classList.remove("is-hidden");
     campaignBriefHeader?.classList.remove("is-hidden");
     showStartMenuPage("minigames");
   }
 };
-const emptyStomach = new EmptyStomach(emptyStomachPanel, returnFromMinigame);
-const timeAttack = new TimeAttack(timeAttackPanel, returnFromMinigame, spriteRenderer);
-const survival = new Survival(survivalPanel, returnFromMinigame, spriteRenderer);
+const emptyStomach = new EmptyStomach(emptyStomachPanel, returnFromMinigame, showGameplayBrief);
+const timeAttack = new TimeAttack(timeAttackPanel, returnFromMinigame, spriteRenderer, showGameplayBrief);
+const survival = new Survival(survivalPanel, returnFromMinigame, spriteRenderer, showGameplayBrief);
 const audio = new AudioManager();
 const music = new AdaptiveMusic();
 let locale = save.get("language") || "es";
@@ -1552,6 +1566,7 @@ function finishCampaignPrologue() {
   renderStoryPanel();
   music.setTheme(currentMusicTheme());
   render();
+  showGameplayBrief("campaign", null, LEVELS[0].name);
 }
 
 function damageProloguePredator(enemy, amount = 1) {
@@ -2506,6 +2521,7 @@ function updateLevelTransition(delta) {
     distance = levelTransition.nextDistance;
     levelTransition = null;
     saveLevelEntrySnapshot(enteredLevelIndex);
+    if (!freeRoamMode) showGameplayBrief("campaign", null, LEVELS[enteredLevelIndex].name);
   }
 }
 
@@ -3192,7 +3208,9 @@ function restoreRestartSnapshot(snapshot, savedProgress = null) {
   updatePlayerHealthHud(); updateCampaignHud(); renderStoryPanel();
   stateLabel.textContent = ui("inProgress");
   music.start(audio.context, currentMusicTheme()); music.setPaused(false); music.setEnabled(audio.enabled);
-  render(); scheduleFrame();
+  document.body.classList.add("game-session-active");
+  render();
+  showGameplayBrief(freeRoamMode ? "freeRoam" : "campaign");
   return true;
 }
 function openRetryOptions() {
@@ -3365,8 +3383,9 @@ function start(mode = "campaign") {
   updateCampaignHud();
   renderStoryPanel();
   last = performance.now();
+  document.body.classList.add("game-session-active");
   render();
-  scheduleFrame();
+  showGameplayBrief(freeRoamMode ? "freeRoam" : "campaign");
 }
 
 function endGame() {
@@ -3466,6 +3485,7 @@ function returnToMainMenu() {
   startScreenMessage.textContent = "";
   startScreenMessage.hidden = true;
   freeRoamMode = false;
+  document.body.classList.remove("game-session-active");
   operationHeader?.classList.remove("is-hidden");
   campaignBriefHeader?.classList.remove("is-hidden");
   pendingGameMode = "campaign";
@@ -3596,6 +3616,7 @@ emptyStomachButton.addEventListener("click", () => {
   if (!desktopPlayback.matches || desktopBlocked) return;
   startScreen.classList.add("hidden");
   setMenuOpen(false);
+  document.body.classList.add("game-session-active");
   operationHeader?.classList.add("is-hidden");
   campaignBriefHeader?.classList.add("is-hidden");
   emptyStomach.open();
@@ -3604,6 +3625,7 @@ timeAttackButton.addEventListener("click", () => {
   if (!desktopPlayback.matches || desktopBlocked) return;
   startScreen.classList.add("hidden");
   setMenuOpen(false);
+  document.body.classList.add("game-session-active");
   operationHeader?.classList.add("is-hidden");
   campaignBriefHeader?.classList.add("is-hidden");
   timeAttack.open();
@@ -3612,6 +3634,7 @@ survivalButton.addEventListener("click", () => {
   if (!desktopPlayback.matches || desktopBlocked) return;
   startScreen.classList.add("hidden");
   setMenuOpen(false);
+  document.body.classList.add("game-session-active");
   operationHeader?.classList.add("is-hidden");
   campaignBriefHeader?.classList.add("is-hidden");
   survival.open();
@@ -3777,46 +3800,117 @@ function showStartMenuPage(page = "home") {
   startScreen.classList.remove("hidden");
 }
 
-function openTutorial() {
-  const tutorialDialog = document.querySelector("#tutorial-dialog");
-  const tutorialList = document.querySelector("#tutorial-list");
-  const tutorialTitle = document.querySelector("#tutorial-title");
-  const isEmptyStomach = emptyStomachPanel.classList.contains("active");
-  const isTimeAttack = timeAttackPanel.classList.contains("active");
-  const isSurvival = survivalPanel.classList.contains("active");
-  const isFreeRoam = running && freeRoamMode;
-  const mode = isEmptyStomach ? "emptyStomach" : isTimeAttack ? "timeAttack" : isSurvival ? "survival" : isFreeRoam ? "freeRoam" : "campaign";
+function getTutorialLines(mode) {
   const copy = {
-    es: {
-      campaign: ["CAMPAÑA", "A / D O FLECHAS: MOVERSE", "ESPACIO: SALTAR · VIOLETA PUEDE HACER DOBLE SALTO", "X: EMBESTIDA DE VIOLETA / PISOTÓN DE VASTI", "E: INTERACTUAR CON OBJETOS, TERMINALES Y RESCATES", "P: PAUSAR · ESC: VOLVER AL MENÚ CUANDO ESTÉ DISPONIBLE"],
-      freeRoam: ["RECORRIDO LIBRE", "A / D O FLECHAS: MOVERSE", "ESPACIO: SALTAR · VIOLETA PUEDE HACER DOBLE SALTO", "X: EMBESTIDA DE VIOLETA / PISOTÓN DE VASTI", "E: INTERACTUAR CON OBJETOS Y ELEMENTOS DEL ENTORNO", "P: PAUSAR"],
-      emptyStomach: ["ESTÓMAGO VACÍO", "A / D O FLECHAS: MOVERSE", "W / S O ↑ / ↓: CAMBIAR DE CARRIL", "ESPACIO: SALTAR · X: EMBESTIR", "E: TOMAR / SOLTAR OBJETOS · Q: COMER HUEVO", "P: PAUSAR · ESC: SALIR"],
-      timeAttack: ["HORA DE ATACAR", "A / D O ← / →: MOVERSE", "W / ↑: SALTAR", "ESPACIO / F O CLIC IZQUIERDO: DISPARAR", "P: PAUSAR · ESC: SALIR"],
-      survival: ["SUPERVIVENCIA", "CAZADOR: A / D, ESPACIO PARA SALTAR, F O CLIC PARA DISPARAR", "DINOSAURIO: A / D, ESPACIO PARA SALTAR, X PARA ATACAR", "P: PAUSAR · ESC: SALIR"]
-    },
-    en: {
-      campaign: ["CAMPAIGN", "A / D OR ARROW KEYS: MOVE", "SPACE: JUMP · VIOLETA CAN DOUBLE JUMP", "X: VIOLETA'S DASH / VASTI'S STOMP", "E: INTERACT WITH OBJECTS, TERMINALS AND RESCUES", "P: PAUSE · ESC: RETURN TO MENU WHEN AVAILABLE"],
-      freeRoam: ["FREE ROAM", "A / D OR ARROW KEYS: MOVE", "SPACE: JUMP · VIOLETA CAN DOUBLE JUMP", "X: VIOLETA'S DASH / VASTI'S STOMP", "E: INTERACT WITH OBJECTS AND THE ENVIRONMENT", "P: PAUSE"],
-      emptyStomach: ["EMPTY STOMACH", "A / D OR ARROW KEYS: MOVE", "W / S OR ↑ / ↓: CHANGE LANE", "SPACE: JUMP · X: DASH", "E: PICK UP / DROP ITEMS · Q: EAT EGG", "P: PAUSE · ESC: EXIT"],
-      timeAttack: ["TIME ATTACK", "A / D OR ← / →: MOVE", "W / ↑: JUMP", "SPACE / F OR LEFT CLICK: SHOOT", "P: PAUSE · ESC: EXIT"],
-      survival: ["SURVIVAL", "HUNTER: A / D, SPACE TO JUMP, F OR CLICK TO SHOOT", "DINOSAUR: A / D, SPACE TO JUMP, X TO ATTACK", "P: PAUSE · ESC: EXIT"]
-    }
-  };
-  const lines = (copy[locale] ?? copy.es)[mode] ?? copy.es.campaign;
-  tutorialTitle.textContent = lines[0];
-  tutorialList.replaceChildren(...lines.slice(1).map((line) => {
+      es: {
+        campaign: ["CAMPAÑA", "A / D O FLECHAS: MOVERSE", "ESPACIO: SALTAR · VIOLETA PUEDE HACER DOBLE SALTO", "X: EMBESTIDA DE VIOLETA / PISOTÓN DE VASTI", "E: INTERACTUAR CON OBJETOS, TERMINALES Y RESCATES", "P: PAUSAR · ESC: VOLVER AL MENÚ CUANDO ESTÉ DISPONIBLE"],
+        freeRoam: ["RECORRIDO LIBRE", "A / D O FLECHAS: MOVERSE", "ESPACIO: SALTAR · VIOLETA PUEDE HACER DOBLE SALTO", "X: EMBESTIDA DE VIOLETA / PISOTÓN DE VASTI", "E: INTERACTUAR CON OBJETOS Y ELEMENTOS DEL ENTORNO", "P: PAUSAR"],
+        emptyStomach: ["ESTÓMAGO VACÍO", "A / D O FLECHAS: MOVERSE", "W / S O ↑ / ↓: CAMBIAR DE CARRIL", "ESPACIO: SALTAR · X: EMBESTIR", "E: TOMAR / SOLTAR OBJETOS · Q: COMER HUEVO", "P: PAUSAR · ESC: SALIR"],
+        timeAttack: ["HORA DE ATACAR", "A / D O ← / →: MOVERSE", "W / ↑: SALTAR", "ESPACIO / F O CLIC IZQUIERDO: DISPARAR", "P: PAUSAR · ESC: SALIR"],
+        survival: ["SUPERVIVENCIA", "CAZADOR: A / D, ESPACIO PARA SALTAR, F O CLIC PARA DISPARAR", "DINOSAURIO: A / D, ESPACIO PARA SALTAR, X PARA ATACAR", "P: PAUSAR · ESC: SALIR"]
+      },
+      en: {
+        campaign: ["CAMPAIGN", "A / D OR ARROW KEYS: MOVE", "SPACE: JUMP · VIOLETA CAN DOUBLE JUMP", "X: VIOLETA'S DASH / VASTI'S STOMP", "E: INTERACT WITH OBJECTS, TERMINALS AND RESCUES", "P: PAUSE · ESC: RETURN TO MENU WHEN AVAILABLE"],
+        freeRoam: ["FREE ROAM", "A / D OR ARROW KEYS: MOVE", "SPACE: JUMP · VIOLETA CAN DOUBLE JUMP", "X: VIOLETA'S DASH / VASTI'S STOMP", "E: INTERACT WITH OBJECTS AND THE ENVIRONMENT", "P: PAUSE"],
+        emptyStomach: ["EMPTY STOMACH", "A / D OR ARROW KEYS: MOVE", "W / S OR ↑ / ↓: CHANGE LANE", "SPACE: JUMP · X: DASH", "E: PICK UP / DROP ITEMS · Q: EAT EGG", "P: PAUSE · ESC: EXIT"],
+        timeAttack: ["TIME ATTACK", "A / D OR ← / →: MOVE", "W / ↑: JUMP", "SPACE / F OR LEFT CLICK: SHOOT", "P: PAUSE · ESC: EXIT"],
+        survival: ["SURVIVAL", "HUNTER: A / D, SPACE TO JUMP, F OR CLICK TO SHOOT", "DINOSAUR: A / D, SPACE TO JUMP, X TO ATTACK", "P: PAUSE · ESC: EXIT"]
+      }
+    };
+  return (copy[locale] ?? copy.es)[mode] ?? copy.es.campaign;
+}
+
+function getActiveTutorialMode() {
+  if (emptyStomachPanel.classList.contains("active")) return "emptyStomach";
+  if (timeAttackPanel.classList.contains("active")) return "timeAttack";
+  if (survivalPanel.classList.contains("active")) return "survival";
+  return running && freeRoamMode ? "freeRoam" : "campaign";
+}
+
+function populateInstructionList(list, lines) {
+  list.replaceChildren(...lines.slice(1).map((line) => {
     const item = document.createElement("li");
     item.textContent = line;
     return item;
   }));
-  setMenuOpen(false);
-  tutorialDialog.classList.remove("hidden");
-  document.querySelector("#tutorial-close").focus();
 }
 
+function showGameplayBrief(mode, proceed = null, context = "") {
+  const lines = getTutorialLines(mode);
+  pendingGameplayBriefAction = typeof proceed === "function" ? proceed : null;
+  gameplayBriefPausedGame = running && !paused;
+  if (gameplayBriefPausedGame) {
+    paused = true;
+    cancelScheduledFrame();
+    music.setPaused(true);
+    document.body.classList.add("game-paused");
+  }
+  gameplayBriefTitle.textContent = lines[0];
+  gameplayBriefContext.textContent = context;
+  gameplayBriefContext.hidden = !context;
+  populateInstructionList(gameplayBriefList, lines);
+  gameplayBriefDialog.classList.remove("hidden");
+  gameplayBriefContinueButton.focus();
+}
+
+function closeGameplayBrief() {
+  if (gameplayBriefDialog.classList.contains("hidden")) return;
+  gameplayBriefDialog.classList.add("hidden");
+  const action = pendingGameplayBriefAction;
+  pendingGameplayBriefAction = null;
+  if (gameplayBriefPausedGame && running) {
+    paused = false;
+    document.body.classList.remove("game-paused");
+    music.setPaused(false);
+    accumulator = 0;
+    last = performance.now();
+    scheduleFrame();
+  }
+  gameplayBriefPausedGame = false;
+  if (action) action();
+}
+
+function openTutorial(trigger = null) {
+  const mode = getActiveTutorialMode();
+  const lines = getTutorialLines(mode);
+  document.querySelector("#tutorial-title").textContent = lines[0];
+  populateInstructionList(document.querySelector("#tutorial-list"), lines);
+  tutorialReturnFocus = trigger;
+  tutorialPausedMode = null;
+
+  if ((mode === "campaign" || mode === "freeRoam") && running && !paused && !campaign.sceneOpen) {
+    togglePause();
+    tutorialPausedMode = mode;
+  } else if (mode === "emptyStomach" && emptyStomach.running && !emptyStomach.paused) {
+    emptyStomach.togglePause();
+    tutorialPausedMode = mode;
+  } else if (mode === "timeAttack" && timeAttack.running && !timeAttack.paused) {
+    timeAttack.togglePause();
+    tutorialPausedMode = mode;
+  } else if (mode === "survival" && survival.running && !survival.paused) {
+    survival.togglePause();
+    tutorialPausedMode = mode;
+  }
+
+  setMenuOpen(false);
+  document.querySelector("#tutorial-dialog").classList.remove("hidden");
+  document.querySelector("#tutorial-close").focus();
+}
 function closeTutorial() {
   document.querySelector("#tutorial-dialog").classList.add("hidden");
-  menuToggle.focus();
+  if (tutorialPausedMode === "campaign" || tutorialPausedMode === "freeRoam") {
+    if (running && paused) togglePause();
+  } else if (tutorialPausedMode === "emptyStomach" && emptyStomach.running && emptyStomach.paused) {
+    emptyStomach.togglePause();
+  } else if (tutorialPausedMode === "timeAttack" && timeAttack.running && timeAttack.paused) {
+    timeAttack.togglePause();
+  } else if (tutorialPausedMode === "survival" && survival.running && survival.paused) {
+    survival.togglePause();
+  }
+  tutorialPausedMode = null;
+  if (tutorialReturnFocus?.isConnected && !tutorialReturnFocus.hidden) tutorialReturnFocus.focus();
+  else menuToggle.focus();
+  tutorialReturnFocus = null;
 }
 
 function setMenuOpen(open) {
@@ -3914,16 +4008,27 @@ confirmCharacterButton.addEventListener("click", openCharacterConfirmation);
 backCharacterConfirmationButton.addEventListener("click", returnToCharacterSelection);
 playCharacterButton.addEventListener("click", startFromDinoModal);
 menuToggle.addEventListener("click", () => setMenuOpen(navMenu.classList.contains("hidden")));
-document.querySelector("#tutorial-button").addEventListener("click", openTutorial);
+document.querySelector("#tutorial-button").addEventListener("click", () => openTutorial());
+gameTutorialButton.addEventListener("click", () => openTutorial(gameTutorialButton));
 document.querySelector("#tutorial-close").addEventListener("click", closeTutorial);
+gameplayBriefContinueButton.addEventListener("click", closeGameplayBrief);
+document.addEventListener("keydown", (event) => {
+  if (gameplayBriefDialog.classList.contains("hidden")) return;
+  event.stopPropagation();
+  if (event.key === "Escape") {
+    event.preventDefault();
+    closeGameplayBrief();
+  }
+});
 document.querySelector("#tutorial-dialog").addEventListener("click", (event) => {
   if (event.target.id === "tutorial-dialog") closeTutorial();
 });
 document.addEventListener("keydown", (event) => {
   const tutorialDialog = document.querySelector("#tutorial-dialog");
-  if (event.key === "Escape" && !tutorialDialog.classList.contains("hidden")) {
+  if (tutorialDialog.classList.contains("hidden")) return;
+  event.stopPropagation();
+  if (event.key === "Escape") {
     event.preventDefault();
-    event.stopPropagation();
     closeTutorial();
   }
 });

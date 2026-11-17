@@ -184,7 +184,7 @@ export function enemyAnimationKey(enemy, elapsed = 0) {
 }
 
 export class EmptyStomach {
-  constructor(root, onExit = () => {}) {
+  constructor(root, onExit = () => {}, onBeforeStart = (_mode, proceed) => proceed()) {
     this.root = root;
     this.canvas = root.querySelector("canvas");
     this.ctx = this.canvas.getContext("2d");
@@ -193,6 +193,7 @@ export class EmptyStomach {
       this.ctx.imageSmoothingEnabled = false;
     });
     this.onExit = onExit;
+    this.onBeforeStart = onBeforeStart;
     this.locale = "es";
     this.pauseButton = root.querySelector("[data-empty-pause]");
     this.checkpointButton = root.querySelector("[data-empty-checkpoint]");
@@ -252,7 +253,7 @@ export class EmptyStomach {
       if (event.code === "KeyX" && !event.repeat) { this.activateDash(); return; }
       if (event.code === "KeyE" && !event.repeat) { this.interactWithItem(); return; }
       if (event.code === "KeyQ" && !event.repeat) { this.consumeCarriedEgg(); return; }
-      if (!this.running && event.code === "Space" && !event.repeat) { this.start(); return; }
+      if (!this.running && event.code === "Space" && !event.repeat) { this.requestStart(); return; }
       if ((event.code === "ArrowUp" || event.code === "KeyW") && !event.repeat) { this.changeLane(-1); return; }
       if ((event.code === "ArrowDown" || event.code === "KeyS") && !event.repeat) { this.changeLane(1); return; }
       if (["ArrowLeft", "ArrowRight", "Space", "KeyA", "KeyD"].includes(event.code)) this.keys.add(event.code);
@@ -260,11 +261,11 @@ export class EmptyStomach {
     this.handleKeyUp = (event) => this.keys.delete(event.code);
     window.addEventListener("keydown", this.handleKeyDown);
     window.addEventListener("keyup", this.handleKeyUp);
-    root.querySelector("[data-empty-start]").addEventListener("click", () => this.start());
-    root.querySelector("[data-empty-retry]").addEventListener("click", () => this.start());
+    root.querySelector("[data-empty-start]").addEventListener("click", () => this.requestStart());
+    root.querySelector("[data-empty-retry]").addEventListener("click", () => this.requestStart());
     root.querySelector("[data-empty-exit]").addEventListener("click", () => this.exit());
     this.pauseButton.addEventListener("click", () => this.togglePause());
-    this.checkpointButton.addEventListener("click", () => this.continueFromCheckpoint());
+    this.checkpointButton.addEventListener("click", () => this.onBeforeStart("emptyStomach", () => this.continueFromCheckpoint()));
     this.render();
   }
 
@@ -434,6 +435,11 @@ export class EmptyStomach {
     this.bushSpawnTimer = 5.1;
     this.player = createPlayer();
     this.keys.clear();
+  }
+
+  requestStart() {
+    if (!this.root.classList.contains("active")) return;
+    this.onBeforeStart("emptyStomach", () => this.start());
   }
 
   start() {

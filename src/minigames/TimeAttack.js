@@ -81,7 +81,7 @@ function hunterActor(index, x) {
 }
 
 export class TimeAttack {
-  constructor(root, onExit = () => {}, spriteRenderer = null) {
+  constructor(root, onExit = () => {}, spriteRenderer = null, onBeforeStart = (_mode, proceed) => proceed()) {
     this.root = root;
     this.canvas = root.querySelector("canvas");
     this.ctx = this.canvas.getContext("2d");
@@ -90,6 +90,7 @@ export class TimeAttack {
       this.ctx.imageSmoothingEnabled = false;
     });
     this.onExit = onExit;
+    this.onBeforeStart = onBeforeStart;
     this.locale = "es";
     this.sprites = spriteRenderer ?? new SpriteRenderer(import.meta.env.BASE_URL);
     this.keys = new Set();
@@ -135,8 +136,8 @@ export class TimeAttack {
     window.addEventListener("pointerup", this.handlePointerUp);
     this.canvas.addEventListener("pointermove", this.handlePointerMove);
     this.canvas.addEventListener("pointerdown", this.handlePointerDown);
-    root.querySelector("[data-ta-start]").addEventListener("click", () => this.start());
-    root.querySelector("[data-ta-retry]").addEventListener("click", () => this.start());
+    root.querySelector("[data-ta-start]").addEventListener("click", () => this.requestStart());
+    root.querySelector("[data-ta-retry]").addEventListener("click", () => this.requestStart());
     root.querySelector("[data-ta-exit]").addEventListener("click", () => this.exit());
     this.setLocale(this.locale);
     this.render();
@@ -200,6 +201,11 @@ export class TimeAttack {
     this.wavePlan = createWavePlan();
     this.best = 0;
     try { this.best = Math.max(0, Number(localStorage.getItem(BEST_KEY)) || 0); } catch {}
+  }
+
+  requestStart() {
+    if (!this.root.classList.contains("active")) return;
+    this.onBeforeStart("timeAttack", () => this.start());
   }
 
   start() {
