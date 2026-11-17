@@ -3538,3 +3538,31 @@ body:has(#dino-modal:not(.hidden)) .dino-modal {
   background: rgba(5, 18, 29, .48) !important;
   backdrop-filter: blur(2px) !important;
 }
+
+
+/* The character picker floats directly over the black staging screen. */
+body:has(#dino-modal:not(.hidden)) .dino-dialog {
+  border-color: transparent !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Tutorial dialogs are fixed, non-scrollable overlays. Their compact layout adapts to short viewports. */
+.tutorial-dialog,
+.gameplay-brief-dialog {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+.tutorial-card,
+.gameplay-brief-card {
+  max-height: calc(100dvh - 32px) !important;
+  overflow: clip !important;
+  overscroll-behavior: none;
+}
+@media (max-height: 620px) {
+  .tutorial-card,
+  .gameplay-brief-card {
+    max-height: calc(100dvh - 16px) !important;
+  }
+}
