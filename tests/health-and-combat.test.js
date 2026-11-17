@@ -9,6 +9,8 @@ import { HunterEnemy } from "../src/entities/HunterEnemy.js";
 import { PhysicsSystem } from "../src/systems/PhysicsSystem.js";
 import { PlatformWorld } from "../src/world/PlatformWorld.js";
 import { CollisionSystem } from "../src/systems/CollisionSystem.js";
+import { advanceEnemyFade, getEnemyOpacity, isEnemyFadeComplete } from "../src/systems/EnemyFadeSystem.js";
+import { dropVenatosaurusFood, VENATOSAURUS_REMAINS_OPACITY } from "../src/systems/FoodSystem.js";
 
 test("player health changes on impact and does not keep decreasing afterward", () => {
   const player = new Player("blue", 100, 430);
@@ -171,4 +173,41 @@ test("player HUD contains one continuous health bar and no numeric counter", asy
   assert.match(html, /id="player-health-meter"/);
   assert.match(html, /id="player-health-fill"/);
   assert.doesNotMatch(html, /player-health-value|aria-valuetext="\d+\/\d+"/);
+});
+
+test("defeated Venatosaurus leave a persistent faded carcass and one edible meat drop", () => {
+  const enemy = new WildDinosaur({
+    id: "venato-carcass",
+    kind: "venatosaurus-impavidus",
+    x: 320,
+    groundY: 430,
+    patrolStart: 250,
+    patrolEnd: 650
+  });
+  const foodSources = [];
+  assert.equal(enemy.takeDamage(3).defeated, true);
+
+  const drop = dropVenatosaurusFood(enemy, foodSources);
+  assert.equal(enemy.retainDefeatedRemains, true);
+  assert.equal(getEnemyOpacity(enemy), 1);
+  assert.equal(drop.kind, "venatosaurus");
+  assert.equal(drop.id, "food-venato-carcass");
+  assert.equal(foodSources.length, 1);
+
+  advanceEnemyFade(enemy, 0.9);
+  assert.equal(getEnemyOpacity(enemy), VENATOSAURUS_REMAINS_OPACITY);
+  assert.equal(isEnemyFadeComplete(enemy), true);
+  assert.equal(enemy.retainDefeatedRemains, true);
+
+  assert.equal(dropVenatosaurusFood(enemy, foodSources), null);
+  assert.equal(foodSources.length, 1, "a carcass must not generate duplicate food drops");
+});
+
+test("the player can eat food by interacting and the AI companion consumes it automatically", async () => {
+  const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
+  assert.match(main, /if \(food && tryEatFood\(player\)\) return true/);
+  assert.match(main, /tryEatFood\(companion\.actor\)/);
+  assert.match(main, /function drawFoodDrop\(food\)/);
+  assert.match(main, /drawFoodDrop\(food\)/);
+  assert.match(main, /enemy\.retainDefeatedRemains \|\| !isEnemyFadeComplete\(enemy\)/);
 });

@@ -21,6 +21,7 @@ import { IndominusRexBoss } from "./entities/IndominusRexBoss.js";
 import { PhysicsSystem } from "./systems/PhysicsSystem.js";
 import { CollisionSystem } from "./systems/CollisionSystem.js";
 import { beginEnemyFade, advanceEnemyFade, getEnemyOpacity, isEnemyFadeComplete } from "./systems/EnemyFadeSystem.js";
+import { dropVenatosaurusFood } from "./systems/FoodSystem.js";
 import { BOSS_ARENA_HALF_WIDTH, PlatformWorld } from "./world/PlatformWorld.js";
 import { COLLECTIBLE_TOTALS } from "./world/CollectibleGenerator.js";
 import { CampaignManager, BOSS_ENCOUNTER_FLAGS } from "./campaign/CampaignManager.js";
@@ -1232,6 +1233,46 @@ function collectNearbyCollectibles(){
     audio.collect();applyCollectibleUnlocks();updateCampaignHud();updatePlayerHealthHud();updateStegoceratopsHud();
   }
 }
+function drawFoodDrop(food) {
+  const bob = Math.sin(elapsed * 4.2 + food.x * 0.013) * 2;
+  const centerX = food.x + food.w / 2;
+  const centerY = food.y + food.h / 2 + bob;
+
+  ctx.save();
+  ctx.translate(Math.round(centerX), Math.round(centerY));
+  ctx.globalAlpha = 0.96;
+  ctx.shadowBlur = 10;
+  ctx.shadowColor = "#9bd48a";
+  ctx.fillStyle = "rgba(155, 212, 138, 0.22)";
+  ctx.beginPath();
+  ctx.arc(0, 0, 18 + Math.sin(elapsed * 4.8 + food.x * 0.01) * 1.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Pixel-art meat on a bone, matching the game's chunky sprite language.
+  ctx.fillStyle = "#1b2521";
+  ctx.fillRect(-17, -8, 25, 16);
+  ctx.fillRect(-13, -11, 18, 22);
+  ctx.fillRect(7, -4, 10, 8);
+  ctx.fillRect(14, -7, 6, 6);
+  ctx.fillRect(14, 1, 6, 6);
+
+  ctx.fillStyle = "#8f3c3d";
+  ctx.fillRect(-15, -7, 20, 14);
+  ctx.fillRect(-12, -9, 15, 18);
+  ctx.fillRect(-17, -4, 24, 8);
+  ctx.fillStyle = "#c86d59";
+  ctx.fillRect(-10, -6, 8, 3);
+  ctx.fillRect(-4, 2, 6, 2);
+  ctx.fillStyle = "#eadfc1";
+  ctx.fillRect(8, -2, 8, 4);
+  ctx.fillRect(15, -5, 4, 4);
+  ctx.fillRect(15, 1, 4, 4);
+  ctx.fillStyle = "#fff4d8";
+  ctx.fillRect(10, -1, 4, 2);
+  ctx.restore();
+}
+
 function drawCollectible(context,item){
   const bob=Math.sin(elapsed*3.4+item.phase)*3,centerY=item.y+item.h/2+bob;
   context.save();context.globalAlpha=.78+Math.sin(elapsed*5+item.phase)*.12;context.shadowBlur=12;
@@ -2163,8 +2204,12 @@ function pruneEncounterBookkeeping() {
 function registerHunterResult(hunter, result) {
   if (!result || !result.hit) return;
   if (result.defeated) {
-    beginEnemyFade(hunter);
-    foodSources.push({ id: "food-" + hunter.id, kind: hunter instanceof WildDinosaur ? "venatosaurus" : "hunter", x: hunter.x + 2, y: hunter.y + hunter.h - 22, w: 54, h: 22, consumed: false });
+    if (hunter instanceof WildDinosaur) {
+      dropVenatosaurusFood(hunter, foodSources);
+    } else {
+      beginEnemyFade(hunter);
+      foodSources.push({ id: "food-" + hunter.id, kind: "hunter", x: hunter.x + 2, y: hunter.y + hunter.h - 22, w: 54, h: 22, consumed: false });
+    }
     if (result.rescued) {
       rescues += 1;
       audio.rescue();
@@ -2188,7 +2233,8 @@ function resolveEnemyPitfall(enemy, delta) {
   }
   if (enemy.defeated && !enemy.pitfallFadeStarted) {
     enemy.pitfallFadeStarted = true;
-    beginEnemyFade(enemy);
+    if (enemy instanceof WildDinosaur) dropVenatosaurusFood(enemy, foodSources);
+    else beginEnemyFade(enemy);
   }
   return true;
 }
@@ -2217,10 +2263,7 @@ function damageVenatosaurus(enemy, amount = 1) {
   if (!result.hit) return;
   audio.hit();
   burst(enemy.x + enemy.w / 2, enemy.y + enemy.h * 0.55, result.defeated ? "#9bd48a" : "#e8a77d", result.defeated ? 22 : 10);
-  if (result.defeated) {
-    beginEnemyFade(enemy);
-    foodSources.push({ id: "food-" + enemy.id, kind: "venatosaurus", x: enemy.x + 10, y: enemy.y + enemy.h - 24, w: 54, h: 22, consumed: false });
-  }
+  if (result.defeated) dropVenatosaurusFood(enemy, foodSources);
 }
 
 function damagePlayer() {
@@ -2759,7 +2802,11 @@ function update(delta) {
   allies = allies.filter((ally) => !ally.departed);
   foodSources = foodSources.filter((food) => !food.consumed && food.x + food.w >= cameraX - 1100 &&
     !(food.defeated && isEnemyFadeComplete(food)));
-  venatosauruses = venatosauruses.filter((enemy) => enemy.x + enemy.w >= cameraX - 1100 && !isEnemyFadeComplete(enemy));
+  // Defeated Venatosaurus remain as faint carcasses; only camera pruning removes them.
+  venatosauruses = venatosauruses.filter((enemy) =>
+    enemy.x + enemy.w >= cameraX - 1100 &&
+    (enemy.retainDefeatedRemains || !isEnemyFadeComplete(enemy))
+  );
   wildlife = wildlife.filter((animal) => animal.x + animal.w >= cameraX - 500);
   ferrucutusCaptives = ferrucutusCaptives.filter((captive) => captive.x + captive.w >= cameraX - 900);
   hunters = hunters.filter((hunter) => hunter.x + hunter.w >= cameraX - 1100 && !isEnemyFadeComplete(hunter));
@@ -2857,10 +2904,7 @@ function render() {
         }
       );
     } else {
-      ctx.fillStyle = food.kind === "hunter" ? "#6b6250" : "#485b45";
-      ctx.fillRect(food.x, food.y + 12, food.w, food.h - 12);
-      ctx.fillStyle = "#9bd48a";
-      ctx.fillRect(food.x + 6, food.y + 8, 12, 4);
+      drawFoodDrop(food);
     }
   }
   for (const enemy of venatosauruses) {
