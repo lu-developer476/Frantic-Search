@@ -37,7 +37,7 @@ import { FacilityConsole } from "./entities/FacilityConsole.js";
 import { SpriteRenderer } from "./rendering/SpriteRenderer.js";
 import { drawBackgroundScenery, drawGroundScenery } from "./rendering/SceneryRenderer.js";
 import { roundedRect, observeCanvasViewport } from "./rendering/CanvasUtils.js";
-import { t as uiText, translateText } from "./i18n.js";
+import { t as uiText, translateText, getModalTutorialCopy, getCampaignSceneCopy } from "./i18n.js";
 import { EmptyStomach } from "./minigames/EmptyStomach.js";
 import { TimeAttack } from "./minigames/TimeAttack.js";
 import { Survival } from "./minigames/Survival.js";
@@ -2119,12 +2119,13 @@ function renderStoryPanel({ syncAudio = true } = {}) {
     return;
   }
   const scene = campaign.activeScene;
-  const line = campaign.currentLine;
+  const copy = scene ? getCampaignSceneCopy(scene.id, locale) : null;
+  const line = copy?.lines[scene.index];
   if (!scene || !line || !storyPanel) return;
-  storyTitle.textContent = tr(scene.title);
-  storyText.textContent = tr(line);
-  storyProgress.textContent = (scene.index + 1) + " / " + scene.lines.length;
-  storyNextButton.textContent = scene.index + 1 >= scene.lines.length ? ui("continue") : ui("next");
+  storyTitle.textContent = copy.title;
+  storyText.textContent = line;
+  storyProgress.textContent = (scene.index + 1) + " / " + copy.lines.length;
+  storyNextButton.textContent = scene.index + 1 >= copy.lines.length ? ui("continue") : ui("next");
   storyPanel.classList.remove("hidden");
   if (syncAudio) music.setDucked(true);
 }
@@ -3899,23 +3900,7 @@ function showStartMenuPage(page = "home") {
 }
 
 function getTutorialLines(mode) {
-  const copy = {
-      es: {
-        campaign: ["CAMPAÑA", "A / D O FLECHAS: MOVERSE", "ESPACIO: SALTAR · VIOLETA PUEDE HACER DOBLE SALTO", "X: EMBESTIDA DE VIOLETA / PISOTÓN DE VASTI", "E: INTERACTUAR CON OBJETOS, TERMINALES Y RESCATES", "P: PAUSAR · ESC: VOLVER AL MENÚ CUANDO ESTÉ DISPONIBLE"],
-        freeRoam: ["RECORRIDO LIBRE", "A / D O FLECHAS: MOVERSE", "ESPACIO: SALTAR · VIOLETA PUEDE HACER DOBLE SALTO", "X: EMBESTIDA DE VIOLETA / PISOTÓN DE VASTI", "E: INTERACTUAR CON OBJETOS Y ELEMENTOS DEL ENTORNO", "P: PAUSAR"],
-        emptyStomach: ["ESTÓMAGO VACÍO", "A / D O FLECHAS: MOVERSE", "W / S O ↑ / ↓: CAMBIAR DE CARRIL", "ESPACIO: SALTAR · X: EMBESTIR", "E: TOMAR / SOLTAR OBJETOS · Q: COMER HUEVO", "P: PAUSAR · ESC: SALIR"],
-        timeAttack: ["HORA DE ATACAR", "A / D O ← / →: MOVERSE", "W / ↑: SALTAR", "ESPACIO / F O CLIC IZQUIERDO: DISPARAR", "P: PAUSAR · ESC: SALIR"],
-        survival: ["SUPERVIVENCIA", "CAZADOR: A / D, ESPACIO PARA SALTAR, F O CLIC PARA DISPARAR", "DINOSAURIO: A / D, ESPACIO PARA SALTAR, X PARA ATACAR", "P: PAUSAR · ESC: SALIR"]
-      },
-      en: {
-        campaign: ["CAMPAIGN", "A / D OR ARROW KEYS: MOVE", "SPACE: JUMP · VIOLETA CAN DOUBLE JUMP", "X: VIOLETA'S DASH / VASTI'S STOMP", "E: INTERACT WITH OBJECTS, TERMINALS AND RESCUES", "P: PAUSE · ESC: RETURN TO MENU WHEN AVAILABLE"],
-        freeRoam: ["FREE ROAM", "A / D OR ARROW KEYS: MOVE", "SPACE: JUMP · VIOLETA CAN DOUBLE JUMP", "X: VIOLETA'S DASH / VASTI'S STOMP", "E: INTERACT WITH OBJECTS AND THE ENVIRONMENT", "P: PAUSE"],
-        emptyStomach: ["EMPTY STOMACH", "A / D OR ARROW KEYS: MOVE", "W / S OR ↑ / ↓: CHANGE LANE", "SPACE: JUMP · X: DASH", "E: PICK UP / DROP ITEMS · Q: EAT EGG", "P: PAUSE · ESC: EXIT"],
-        timeAttack: ["TIME ATTACK", "A / D OR ← / →: MOVE", "W / ↑: JUMP", "SPACE / F OR LEFT CLICK: SHOOT", "P: PAUSE · ESC: EXIT"],
-        survival: ["SURVIVAL", "HUNTER: A / D, SPACE TO JUMP, F OR CLICK TO SHOOT", "DINOSAUR: A / D, SPACE TO JUMP, X TO ATTACK", "P: PAUSE · ESC: EXIT"]
-      }
-    };
-  return (copy[locale] ?? copy.es)[mode] ?? copy.es.campaign;
+  return getModalTutorialCopy(mode, locale);
 }
 
 function getActiveTutorialMode() {
@@ -4060,6 +4045,7 @@ function applyLanguage() {
   });
   soundLabel.textContent = audio.enabled ? ui("sound") : ui("silence");
   menuToggle.setAttribute("aria-label", ui(navMenu.classList.contains("hidden") ? "openMenu" : "closeMenu"));
+  updatePauseConfirmationCopy();
   updatePlayerAbilityHud();
   updateStegoceratopsHud();
   updateCharacterConfirmationCopy();

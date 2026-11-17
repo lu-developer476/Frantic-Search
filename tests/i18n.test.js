@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { hasTranslation, t, supportedLocales, translateText } from "../src/i18n.js";
+import { hasTranslation, t, supportedLocales, translateText, getModalTutorialCopy, getCampaignSceneCopy } from "../src/i18n.js";
 
 test("Spanish Latin American menu labels are localized", () => {
   assert.equal(t("timeAttack", "es"), "HORA DE ATACAR");
@@ -81,4 +81,44 @@ test("minigames title-screen copy is localized in both supported languages", () 
   assert.equal(t("minigamesSubtitle", "es"), "ELEGÍ UN MINIJUEGO");
   assert.equal(t("minigames", "en"), "MINIGAMES");
   assert.equal(t("minigamesSubtitle", "en"), "CHOOSE A MINIGAME");
+});
+
+
+test("modal tutorials are centralized and localized in both languages", () => {
+  const modes = ["campaign", "freeRoam", "emptyStomach", "timeAttack", "survival"];
+  for (const mode of modes) {
+    const spanish = getModalTutorialCopy(mode, "es");
+    const english = getModalTutorialCopy(mode, "en");
+    assert.ok(spanish.length > 1, `Missing Spanish modal copy for ${mode}`);
+    assert.ok(english.length > 1, `Missing English modal copy for ${mode}`);
+    assert.notDeepEqual(spanish, english, `Modal copy should be localized for ${mode}`);
+  }
+});
+
+test("campaign story modal copy is centralized and translated", () => {
+  const scenes = [
+    "prologue-intro", "opening", "redwood-arrival", "black-site-arrival",
+    "black-site-interior", "containment-perimeter-arrival", "facility-entry",
+    "extraction-arrival", "indoraptor-defeated", "indominus-defeated",
+    "power-restored", "security-released", "beta-rescued", "campaign-complete"
+  ];
+
+  for (const sceneId of scenes) {
+    const spanish = getCampaignSceneCopy(sceneId, "es");
+    const english = getCampaignSceneCopy(sceneId, "en");
+    assert.ok(spanish && english, `Missing centralized campaign scene: ${sceneId}`);
+    assert.equal(spanish.lines.length, english.lines.length, sceneId);
+    assert.notEqual(spanish.title, english.title, `Missing localized title: ${sceneId}`);
+    for (let index = 0; index < english.lines.length; index += 1) {
+      assert.notEqual(spanish.lines[index], english.lines[index], `Missing localized line ${index} in ${sceneId}`);
+    }
+  }
+});
+
+test("character selection has no roster kicker and dialog headings use localization keys", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  assert.equal(html.includes("FRANTIC SEARCH // ROSTER"), false);
+  assert.match(html, /id="pause-confirmation-title" data-i18n="confirmRestartTitle"/);
+  assert.match(html, /class="dialog-kicker" data-i18n="tutorialKicker"/);
 });

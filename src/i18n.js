@@ -7,6 +7,7 @@ const UI = {
     menu: "MENÚ",
     tutorial: "TUTORIAL",
     tutorialTitle: "TUTORIAL",
+    tutorialKicker: "FRANTIC SEARCH // FIELD MANUAL",
     closeTutorial: "Cerrar tutorial",
     gameplayBriefNote: "Podrás consultar nuevamente el tutorial durante la partida.",
     gameplayBriefContinue: "ENTENDIDO",
@@ -140,6 +141,7 @@ const UI = {
     menu: "MENU",
     tutorial: "TUTORIAL",
     tutorialTitle: "TUTORIAL",
+    tutorialKicker: "FRANTIC SEARCH // FIELD MANUAL",
     closeTutorial: "Close tutorial",
     gameplayBriefNote: "You can view the tutorial again during gameplay.",
     gameplayBriefContinue: "GOT IT",
@@ -321,6 +323,8 @@ const ENGLISH_TO_SPANISH = {
   "MISSION COMPLETE": "MISIÓN COMPLETADA",
   "OPERATION: LOST HATCHLING": "OPERACIÓN: CRÍA PERDIDA",
 "A QUIET MOMENT": "UN MOMENTO DE CALMA",
+"The forest clearing is quiet. Violeta rests beneath the trees, while Rosa, her young Abyssomirabilis velociraptor, settles beside her after a long day.": "El claro del bosque está en calma. Violeta descansa bajo los árboles, mientras Rosa, su joven velociraptor Abyssomirabilis, se acomoda a su lado después de un día largo.",
+"A metallic clank echoes from deeper in the woods. Rosa wakes first, slips away from Violeta and follows the sound through two kilometers of unfamiliar forest.": "Un estruendo metálico resuena desde lo profundo del bosque. Rosa se despierta primero, se aleja de Violeta y sigue el sonido a través de dos kilómetros de un bosque desconocido.",
 "THE NOISE IN THE WOODS": "EL RUIDO ENTRE LOS ÁRBOLES",
 "THE TRAIL": "EL RASTRO",
 "The forest clearing is quiet. Violeta rests beneath the trees, while Rosa, her young Abyssomirabilis velociraptor, curls up close beside her after a long day.": "El claro del bosque está en calma. Violeta descansa bajo los árboles, mientras Rosa, su joven velociraptor Abyssomirabilis, se acurruca a su lado después de un día largo.",
@@ -446,6 +450,130 @@ const ENGLISH_TO_SPANISH = {
   "RÉCORD": "RECORD"
 };
 
+
+const MODAL_TUTORIAL_COPY = {
+  es: {
+    campaign: ["CAMPAÑA", "A / D O FLECHAS: MOVERSE", "ESPACIO: SALTAR · VIOLETA PUEDE HACER DOBLE SALTO", "X: EMBESTIDA DE VIOLETA / PISOTÓN DE VASTI", "E: INTERACTUAR CON OBJETOS, TERMINALES Y RESCATES", "P: PAUSAR · ESC: VOLVER AL MENÚ CUANDO ESTÉ DISPONIBLE"],
+    freeRoam: ["RECORRIDO LIBRE", "A / D O FLECHAS: MOVERSE", "ESPACIO: SALTAR · VIOLETA PUEDE HACER DOBLE SALTO", "X: EMBESTIDA DE VIOLETA / PISOTÓN DE VASTI", "E: INTERACTUAR CON OBJETOS Y ELEMENTOS DEL ENTORNO", "P: PAUSAR"],
+    emptyStomach: ["ESTÓMAGO VACÍO", "A / D O FLECHAS: MOVERSE", "W / S O ↑ / ↓: CAMBIAR DE CARRIL", "ESPACIO: SALTAR · X: EMBESTIR", "E: TOMAR / SOLTAR OBJETOS · Q: COMER HUEVO", "P: PAUSAR · ESC: SALIR"],
+    timeAttack: ["HORA DE ATACAR", "A / D O ← / →: MOVERSE", "W / ↑: SALTAR", "ESPACIO / F O CLIC IZQUIERDO: DISPARAR", "P: PAUSAR · ESC: SALIR"],
+    survival: ["SUPERVIVENCIA", "CAZADOR: A / D, ESPACIO PARA SALTAR, F O CLIC PARA DISPARAR", "DINOSAURIO: A / D, ESPACIO PARA SALTAR, X PARA ATACAR", "P: PAUSAR · ESC: SALIR"]
+  },
+  en: {
+    campaign: ["CAMPAIGN", "A / D OR ARROW KEYS: MOVE", "SPACE: JUMP · VIOLETA CAN DOUBLE JUMP", "X: VIOLETA'S DASH / VASTI'S STOMP", "E: INTERACT WITH OBJECTS, TERMINALS AND RESCUES", "P: PAUSE · ESC: RETURN TO MENU WHEN AVAILABLE"],
+    freeRoam: ["FREE ROAM", "A / D OR ARROW KEYS: MOVE", "SPACE: JUMP · VIOLETA CAN DOUBLE JUMP", "X: VIOLETA'S DASH / VASTI'S STOMP", "E: INTERACT WITH OBJECTS AND THE ENVIRONMENT", "P: PAUSE"],
+    emptyStomach: ["EMPTY STOMACH", "A / D OR ARROW KEYS: MOVE", "W / S OR ↑ / ↓: CHANGE LANE", "SPACE: JUMP · X: DASH", "E: PICK UP / DROP ITEMS · Q: EAT EGG", "P: PAUSE · ESC: EXIT"],
+    timeAttack: ["TIME ATTACK", "A / D OR ← / →: MOVE", "W / ↑: JUMP", "SPACE / F OR LEFT CLICK: SHOOT", "P: PAUSE · ESC: EXIT"],
+    survival: ["SURVIVAL", "HUNTER: A / D, SPACE TO JUMP, F OR CLICK TO SHOOT", "DINOSAUR: A / D, SPACE TO JUMP, X TO ATTACK", "P: PAUSE · ESC: EXIT"]
+  }
+};
+
+const CAMPAIGN_SCENE_COPY = {
+  "prologue-intro": {
+    title: "A QUIET MOMENT",
+    lines: [
+      "The forest clearing is quiet. Violeta rests beneath the trees, while Rosa, her young Abyssomirabilis velociraptor, settles beside her after a long day.",
+      "A metallic clank echoes from deeper in the woods. Rosa wakes first, slips away from Violeta and follows the sound through two kilometers of unfamiliar forest."
+    ]
+  },
+  "opening": {
+    title: "OPERATION: LOST HATCHLING",
+    lines: [
+      "The trail from the clearing joins a wider set of tire marks: a convoy has passed through the forest and is heading toward the coastal highway.",
+      "The poachers are not working alone. Their vehicles, supply crates and armed escorts point to a much larger operation moving captured dinosaurs.",
+      "Violeta and Vasti must follow the convoy, discover where it is taking the animals and reach Rosa before she is transferred again.",
+      "The first lead is the Coastal Highway. The search for Rosa begins."
+    ]
+  },
+  "redwood-arrival": {
+    title: "REDWOOD FRONTIER",
+    lines: [
+      "The convoy leaves the coastal highway and enters the Redwood Frontier. Towering redwoods close over the route, while armed poacher escorts patrol the forest.",
+      "A second set of tracks cuts through the undergrowth. An Indoraptor is hunting ahead, and the route will not be safe until it is stopped."
+    ]
+  },
+  "black-site-arrival": {
+    title: "POACHER BLACK SITE",
+    lines: [
+      "Beyond the Redwood Frontier, the Poacher Black Site appears behind reinforced fencing and guarded service roads.",
+      "Breach the clandestine complex and follow the convoy's trail toward Rosa's containment wing."
+    ]
+  },
+  "black-site-interior": {
+    title: "INNER RESEARCH PERIMETER",
+    lines: [
+      "The first perimeter is behind the group. A second service corridor leads deeper into the black site, where transport records and containment systems converge.",
+      "The route is longer than the convoy trail suggested. Patrols are spread across the industrial grounds, and the next containment sector remains ahead."
+    ]
+  },
+  "containment-perimeter-arrival": {
+    title: "CONTAINMENT PERIMETER",
+    lines: [
+      "The inner perimeter opens onto a reinforced containment yard. Heavy blast doors divide this sector from the cell block.",
+      "Three distinct Indominus Rex specimens occupy the reinforced containment yard. They are separate individuals, and all three must be defeated before the facility's auxiliary systems can be reached."
+    ]
+  },
+  "facility-entry": {
+    title: "CONTAINMENT WING",
+    lines: [
+      "Inside the facility, a security network controls the containment doors and life-support systems.",
+      "Rosa's cell is deeper in the wing. The auxiliary power relay must be restored before the internal security lock can be released.",
+      "Faint sounds from the cell block confirm that Rosa is still alive. The rescue is close, but the route remains sealed."
+    ]
+  },
+  "extraction-arrival": {
+    title: "EXTRACTION ZONE",
+    lines: [
+      "Rosa is out of containment. The service road beyond the cell block leads to the extraction gate.",
+      "The route is still exposed. Keep the group together and reach the east gate to complete the rescue."
+    ]
+  },
+  "indoraptor-defeated": {
+    title: "THREATS NEUTRALIZED",
+    lines: [
+      "Both Indoraptor specimens have been defeated. The route to Poacher Black Site is now open.",
+      "The two genetically distinct predators are no longer guarding the route. The search for Rosa continues beyond the perimeter."
+    ]
+  },
+  "indominus-defeated": {
+    title: "CONTAINMENT BREACHED",
+    lines: [
+      "All three Indominus Rex specimens are defeated. Their containment systems fall silent, but Rosa's cell remains sealed behind the facility's security network.",
+      "With every perimeter specimen neutralized, the path to the containment wing is finally open."
+    ]
+  },
+  "power-restored": {
+    title: "AUXILIARY POWER RESTORED",
+    lines: [
+      "Auxiliary power returns to the facility. The internal security terminal comes back online.",
+      "Only one barrier remains: the containment lock protecting the cell block."
+    ]
+  },
+  "security-released": {
+    title: "CONTAINMENT LOCK RELEASED",
+    lines: [
+      "The security lockdown disengages. Cell block C is now accessible.",
+      "At the end of the corridor, Rosa's enclosure stands between the family and a long-awaited reunion."
+    ]
+  },
+  "beta-rescued": {
+    title: "SUBJECT ROSA SECURED",
+    lines: [
+      "Rosa is freed from containment. After everything that happened, she stays close to Violeta as the rescue team approaches the east service gate.",
+      "Her vital signs are stable. The only remaining task is to escort her to the extraction marker.",
+      "Violeta, Vasti and Rosa leave the cell block together, accompanied by the Ferrucutus they rescued along the way."
+    ]
+  },
+  "campaign-complete": {
+    title: "OPERATION COMPLETE",
+    lines: [
+      "Extraction is confirmed. Rosa is safe, and evidence from the clandestine facility can expose the operation.",
+      "After crossing the facility and its perimeter, the group can finally leave together.",
+      "The wilderness remains dangerous, but this rescue brings the family back together."
+    ]
+  }
+};
+
 export function hasTranslation(key, locale = "es") {
   return Object.prototype.hasOwnProperty.call(UI[locale] ?? {}, key);
 }
@@ -462,6 +590,21 @@ export function translateText(value, locale = "es") {
   if (typeof value !== "string") return value;
   if (locale === "en") return SPANISH_TO_ENGLISH[value] ?? value;
   return ENGLISH_TO_SPANISH[value] ?? value;
+}
+
+export function getModalTutorialCopy(mode, locale = "es") {
+  const localizedCopy = MODAL_TUTORIAL_COPY[locale] ?? MODAL_TUTORIAL_COPY.es;
+  return [...(localizedCopy[mode] ?? localizedCopy.campaign)];
+}
+
+export function getCampaignSceneCopy(id, locale = "en") {
+  const scene = CAMPAIGN_SCENE_COPY[id];
+  if (!scene) return null;
+
+  return {
+    title: translateText(scene.title, locale),
+    lines: scene.lines.map((line) => translateText(line, locale))
+  };
 }
 
 export function supportedLocales() {

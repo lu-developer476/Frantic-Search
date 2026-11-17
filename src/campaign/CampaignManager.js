@@ -1,4 +1,5 @@
 import { GAME, LEVELS, WORLD } from "../config/GameConfig.js";
+import { getCampaignSceneCopy } from "../i18n.js";
 
 export const BOSS_ENCOUNTER_FLAGS = Object.freeze({
   "indoraptor-first-generation": "indoraptorFirstDefeated",
@@ -16,18 +17,6 @@ const INDOMINUS_ENCOUNTERS = [
   "indominus-first-generation",
   "indominus-second-generation",
   "indominus-second-generation-variant"
-];
-
-const PROLOGUE_INTRO = [
-  "The forest clearing is quiet. Violeta rests beneath the trees, while Rosa, her young Abyssomirabilis velociraptor, settles beside her after a long day.",
-  "A metallic clank echoes from deeper in the woods. Rosa wakes first, slips away from Violeta and follows the sound through two kilometers of unfamiliar forest."
-];
-
-const OPENING = [
-  "The trail from the clearing joins a wider set of tire marks: a convoy has passed through the forest and is heading toward the coastal highway.",
-  "The poachers are not working alone. Their vehicles, supply crates and armed escorts point to a much larger operation moving captured dinosaurs.",
-  "Violeta and Vasti must follow the convoy, discover where it is taking the animals and reach Rosa before she is transferred again.",
-  "The first lead is the Coastal Highway. The search for Rosa begins."
 ];
 
 export class CampaignManager {
@@ -54,11 +43,17 @@ export class CampaignManager {
   }
 
   beginPrologue() {
-    this.queueScene("prologue-intro", "A QUIET MOMENT", PROLOGUE_INTRO);
+    this.queueCampaignScene("prologue-intro");
   }
 
   begin() {
-    this.queueScene("opening", "OPERATION: LOST HATCHLING", OPENING);
+    this.queueCampaignScene("opening");
+  }
+
+  queueCampaignScene(id) {
+    const scene = getCampaignSceneCopy(id, "en");
+    if (!scene) throw new RangeError(`Unknown campaign scene: ${id}`);
+    return this.queueScene(id, scene.title, scene.lines);
   }
 
   queueScene(id, title, lines) {
@@ -97,52 +92,33 @@ export class CampaignManager {
     if (worldX >= chapterStart(1)) {
       this.chapter = LEVELS[1].name;
       this.objective = this.flags.indoraptorDefeated ? "BREACH THE BLACK SITE" : "SURVIVE THE REDWOOD FRONTIER";
-      this.queueScene("redwood-arrival", "REDWOOD FRONTIER", [
-        "The convoy leaves the coastal highway and enters the Redwood Frontier. Towering redwoods close over the route, while armed poacher escorts patrol the forest.",
-        "A second set of tracks cuts through the undergrowth. An Indoraptor is hunting ahead, and the route will not be safe until it is stopped."
-      ]);
+      this.queueCampaignScene("redwood-arrival");
     }
     if (worldX >= chapterStart(2)) {
       this.chapter = LEVELS[2].name;
       this.objective = this.flags.indoraptorDefeated ? "BREACH THE BLACK SITE" : "DEFEAT THE INDORAPTOR";
-      this.queueScene("black-site-arrival", "POACHER BLACK SITE", [
-        "Beyond the Redwood Frontier, the Poacher Black Site appears behind reinforced fencing and guarded service roads.",
-        "Breach the clandestine complex and follow the convoy's trail toward Rosa's containment wing."
-      ]);
+      this.queueCampaignScene("black-site-arrival");
     }
     if (worldX >= WORLD.sectionStarts[3]) {
       this.objective = this.flags.indoraptorDefeated ? "BREACH THE BLACK SITE" : "DEFEAT THE INDORAPTOR";
-      this.queueScene("black-site-interior", "INNER RESEARCH PERIMETER", [
-        "The first perimeter is behind the group. A second service corridor leads deeper into the black site, where transport records and containment systems converge.",
-        "The route is longer than the convoy trail suggested. Patrols are spread across the industrial grounds, and the next containment sector remains ahead."
-      ]);
+      this.queueCampaignScene("black-site-interior");
     }
     if (worldX >= chapterStart(3)) {
       this.chapter = LEVELS[3].name;
       this.objective = this.flags.indominusDefeated ? "RESTORE AUXILIARY POWER" : "DEFEAT THE INDOMINUS REX";
-      this.queueScene("containment-perimeter-arrival", "CONTAINMENT PERIMETER", [
-        "The inner perimeter opens onto a reinforced containment yard. Heavy blast doors divide this sector from the cell block.",
-        "Three distinct Indominus Rex specimens occupy the reinforced containment yard. They are separate individuals, and all three must be defeated before the facility's auxiliary systems can be reached."
-      ]);
+      this.queueCampaignScene("containment-perimeter-arrival");
     }
     if (worldX >= chapterStart(4)) {
       this.chapter = LEVELS[4].name;
       this.refreshObjective();
-      this.queueScene("facility-entry", "CONTAINMENT WING", [
-        "Inside the facility, a security network controls the containment doors and life-support systems.",
-        "Rosa's cell is deeper in the wing. The auxiliary power relay must be restored before the internal security lock can be released.",
-        "Faint sounds from the cell block confirm that Rosa is still alive. The rescue is close, but the route remains sealed."
-      ]);
+      this.queueCampaignScene("facility-entry");
     }
 
     if (this.flags.betaFreed) {
       this.objective = "ESCORT ROSA TO THE EAST GATE";
       if (worldX >= chapterStart(5)) {
         this.chapter = LEVELS[5].name;
-        this.queueScene("extraction-arrival", "EXTRACTION ZONE", [
-          "Rosa is out of containment. The service road beyond the cell block leads to the extraction gate.",
-          "The route is still exposed. Keep the group together and reach the east gate to complete the rescue."
-        ]);
+        this.queueCampaignScene("extraction-arrival");
       } else {
         this.chapter = LEVELS[4].name;
       }
@@ -166,10 +142,7 @@ export class CampaignManager {
       );
       if (!wasComplete && this.flags.indoraptorDefeated) {
         this.objective = "BREACH THE BLACK SITE";
-        this.queueScene("indoraptor-defeated", "THREATS NEUTRALIZED", [
-          "Both Indoraptor specimens have been defeated. The route to Poacher Black Site is now open.",
-          "The two genetically distinct predators are no longer guarding the route. The search for Rosa continues beyond the perimeter."
-        ]);
+        this.queueCampaignScene("indoraptor-defeated");
       }
     }
 
@@ -189,10 +162,7 @@ export class CampaignManager {
       );
       if (!wasComplete && this.flags.indominusDefeated) {
         this.objective = "RESTORE AUXILIARY POWER";
-        this.queueScene("indominus-defeated", "CONTAINMENT BREACHED", [
-          "All three Indominus Rex specimens are defeated. Their containment systems fall silent, but Rosa's cell remains sealed behind the facility's security network.",
-          "With every perimeter specimen neutralized, the path to the containment wing is finally open."
-        ]);
+        this.queueCampaignScene("indominus-defeated");
       }
     }
     this.refreshObjective();
@@ -203,17 +173,11 @@ export class CampaignManager {
     if (kind === "power") {
       this.flags.powerRestored = true;
       this.objective = "RELEASE THE SECURITY LOCK";
-      this.queueScene("power-restored", "AUXILIARY POWER RESTORED", [
-        "Auxiliary power returns to the facility. The internal security terminal comes back online.",
-        "Only one barrier remains: the containment lock protecting the cell block."
-      ]);
+      this.queueCampaignScene("power-restored");
     } else if (kind === "security" && this.flags.powerRestored) {
       this.flags.securityReleased = true;
       this.objective = "FREE ROSA";
-      this.queueScene("security-released", "CONTAINMENT LOCK RELEASED", [
-        "The security lockdown disengages. Cell block C is now accessible.",
-        "At the end of the corridor, Rosa's enclosure stands between the family and a long-awaited reunion."
-      ]);
+      this.queueCampaignScene("security-released");
     }
     this.refreshObjective();
     return kind === "power" || kind === "security";
@@ -231,22 +195,14 @@ export class CampaignManager {
     this.flags.betaFreed = true;
     this.chapter = LEVELS[4].name;
     this.objective = "ESCORT ROSA TO THE EAST GATE";
-    this.queueScene("beta-rescued", "SUBJECT ROSA SECURED", [
-      "Rosa is freed from containment. After everything that happened, she stays close to Violeta as the rescue team approaches the east service gate.",
-      "Her vital signs are stable. The only remaining task is to escort her to the extraction marker.",
-      "Violeta, Vasti and Rosa leave the cell block together, accompanied by the Ferrucutus they rescued along the way."
-    ]);
+    this.queueCampaignScene("beta-rescued");
     return true;
   }
 
   complete() {
     if (!this.flags.betaFreed || this.flags.completed) return false;
     this.objective = "MISSION COMPLETE";
-    const queued = this.queueScene("campaign-complete", "OPERATION COMPLETE", [
-      "Extraction is confirmed. Rosa is safe, and evidence from the clandestine facility can expose the operation.",
-      "After crossing the facility and its perimeter, the group can finally leave together.",
-      "The wilderness remains dangerous, but this rescue brings the family back together."
-    ]);
+    const queued = this.queueCampaignScene("campaign-complete");
     this.flags.completed = true;
     return queued;
   }
