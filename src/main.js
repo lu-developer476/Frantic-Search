@@ -3300,7 +3300,7 @@ function restoreRestartSnapshot(snapshot, savedProgress = null) {
   pauseMenu.classList.add("hidden"); pauseConfirmation.classList.add("hidden");
   pendingPauseAction = null; pauseActionTrigger = null;
   updatePlayerHealthHud(); updateCampaignHud(); renderStoryPanel();
-  stateLabel.textContent = ui("inProgress");
+  stateLabel.textContent = freeRoamMode ? ui("inProgress") : "";
   music.start(audio.context, currentMusicTheme()); music.setPaused(false); music.setEnabled(audio.enabled);
   document.body.classList.add("game-session-active");
   render();
@@ -3469,7 +3469,7 @@ function start(mode = "campaign") {
   distance = 0;
   rescues = 0;
   campaignAutosaveElapsed = 0;
-  stateLabel.textContent = ui("inProgress");
+  stateLabel.textContent = freeRoamMode ? ui("inProgress") : "";
   rescuesLabel.textContent = "00";
   if (!freeRoamMode && !campaignPrologue) {
     campaign.begin();
@@ -3532,7 +3532,7 @@ function togglePause() {
     overlay.classList.remove("pause-mode");
     overlay.classList.add("hidden");
     music.setPaused(false);
-    stateLabel.textContent = ui("inProgress");
+    stateLabel.textContent = freeRoamMode ? ui("inProgress") : "";
     accumulator = 0;
     last = performance.now();
     scheduleFrame();
@@ -4070,7 +4070,7 @@ function applyLanguage() {
     stateLabel.textContent = ui("paused");
     updatePauseConfirmationCopy();
   } else if (running) {
-    stateLabel.textContent = ui("inProgress");
+    stateLabel.textContent = freeRoamMode ? ui("inProgress") : "";
   } else if (campaign.flags.completed) {
     showCampaignEnding();
   } else if (failureScreenActive || ["SIGNAL LOST", "SEÑAL PERDIDA"].includes(stateLabel.textContent)) {

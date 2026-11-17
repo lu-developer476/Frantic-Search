@@ -90,3 +90,16 @@ test("control copy matches the separate interaction indicator and does not dupli
   assert.match(i18n, /interact: "E: INTERACTUAR"/);
   assert.match(i18n, /interact: "E: INTERACT"/);
 });
+
+
+test("browser tab title and campaign operation header are standardized", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
+  const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+  const typography = await readFile(new URL("../src/styles/typography.css", import.meta.url), "utf8");
+
+  assert.match(html, /<title>Indie pixel art 8-bits<\/title>/);
+  assert.match(main, /stateLabel\.textContent = freeRoamMode \? ui\("inProgress"\) : "";/);
+  assert.match(typography, /\.game-panel \.panel-head,[\s\S]*?font-family: var\(--font-display\)/);
+  assert.match(css, /\.game-panel \.panel-head\s*\{[^}]*min-height:\s*44px;[^}]*padding-block:\s*2px;/s);
+});

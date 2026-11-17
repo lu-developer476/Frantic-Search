@@ -51,3 +51,16 @@ button, input, select, textarea { font-weight: 400; }
 /* Keep every text element at regular weight, including semantic emphasis. */
 b, strong, h1, h2, h3, h4, h5, h6, button, input, select, textarea { font-weight: 400; }
 ::selection { color: #101819; background: #d8f36a; }
+
+
+/* Match every campaign-header label and value to the Pixelify Sans brand title. */
+.game-panel .panel-head,
+.game-panel .panel-head .panel-metric small,
+.game-panel .panel-head .panel-metric b,
+.game-panel .panel-head .panel-health-label,
+.game-panel .panel-head .mission-brief-header small,
+.game-panel .panel-head .mission-brief-header strong,
+.game-panel .panel-head #game-state {
+  font-family: var(--font-display);
+  font-weight: 400;
+}

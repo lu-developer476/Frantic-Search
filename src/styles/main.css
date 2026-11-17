@@ -3608,3 +3608,19 @@ body:has(#survival-panel.active:not(.playing)) .menu-toggle {
 /* Tutorial and environment appearance controls belong to active gameplay, not menu browsing. */
 body:not(.game-session-active) .nav-menu .tutorial-menu-section,
 body:not(.game-session-active) .nav-menu .environment-mode-menu-section { display: none !important; }
+
+
+/* Compact the campaign header vertically without clipping wrapped mission details. */
+.game-panel .panel-head {
+  min-height: 44px;
+  padding-block: 2px;
+}
+.game-panel .panel-head .mission-brief-header {
+  gap: 2px;
+}
+.game-panel .panel-head .mission-brief-header small {
+  line-height: 1.05;
+}
+.game-panel .panel-head .mission-brief-header strong {
+  line-height: 1;
+}
