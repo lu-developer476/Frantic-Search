@@ -208,8 +208,8 @@ const physics = new PhysicsSystem({ gravity: GAME.gravity, worldBottom: GAME.hei
 
 const savedCharacter = save.get("selectedCharacter");
 let selected = savedCharacter === "vasti" ? "vasti" : "blue";
-// Rosa is a rescue objective, never a playable character. Migrate old saves
-// that may contain the previous mistaken "rosa" selection back to Violeta.
+// Brisa is a rescue objective, never a playable character. Migrate old saves
+// that may contain the previous mistaken "rosa" selection back to Gala.
 if (savedCharacter !== selected) save.update({ selectedCharacter: selected });
 let running = false;
 let paused = false;
@@ -1356,7 +1356,7 @@ function updatePrologueDistance(worldX) {
 }
 
 function beginCampaignPrologue() {
-  // Rosa starts at 0 m beside Violeta; the counter measures from their clearing.
+  // Brisa starts at 0 m beside Gala; the counter measures from their clearing.
   const prologue = new CampaignPrologue({ startX: GAME.playerX + 74 });
   campaignPrologue = prologue;
   campaign.chapter = "FOREST CLEARING";
@@ -1417,7 +1417,7 @@ function beginPrologueSearch() {
   const prologue = campaignPrologue;
   if (!prologue?.active) return;
 
-  // Rosa is now inside the poachers' jeep. Violeta becomes the controlled
+  // Brisa is now inside the poachers' jeep. Gala becomes the controlled
   // protagonist and follows the tracks from 2,000 m to the 2,500 m encounter.
   player = prologue.violetaActor;
   player.setCharacter("blue");
@@ -1435,7 +1435,7 @@ function beginPrologueSearch() {
   prologue.searchStartX = prologue.captureX;
   prologue.tracksFound = true;
 
-  // Vasti is already locked in combat when Violeta reaches the rocky opening.
+  // Basilio is already locked in combat when Gala reaches the rocky opening.
   prologue.vastiActor = new Player("vasti", prologue.encounterX + 105, GAME.groundY);
   prologue.vastiActor.x = prologue.encounterX + 105 - prologue.vastiActor.w / 2;
   prologue.vastiActor.y = GAME.groundY - prologue.vastiActor.h;
@@ -1461,7 +1461,7 @@ function beginPrologueSearch() {
   });
 
   campaign.chapter = "FOREST TRAIL";
-  campaign.objective = "FOLLOW ROSA'S TRAIL";
+  campaign.objective = "FOLLOW BRISA'S TRAIL";
   cameraX = Math.max(0, prologue.captureX - 360);
   updateCampaignHud();
   updatePlayerHealthHud();
@@ -1530,7 +1530,7 @@ function beginPrologueFight() {
   characterConfirmation.classList.add("hidden");
   music.setDucked(false);
   campaign.chapter = "ROCKY OPENING";
-  campaign.objective = "HELP VASTI";
+  campaign.objective = "HELP BASILIO";
   cameraX = Math.max(0, prologue.encounterX - 360);
   updateCampaignHud();
   updatePlayerHealthHud();
@@ -1718,8 +1718,8 @@ function updatePrologueFight(delta) {
     campaign.chapter = "FOREST ROUTE";
     campaign.objective = "REACH THE COASTAL HIGHWAY";
     campaign.queueScene("prologue-alliance", "AN UNEXPECTED ALLY", [
-      "The fight carries across the rocky clearing. Violeta and Vasti work together against the Venatosaurus impavidus and Venatosaurus saevidicus, using their different strengths to keep the predators at bay.",
-      "At 2,800 meters, both predators are defeated. Vasti agrees to help Violeta follow the poachers' trail and bring Rosa home."
+      "The fight carries across the rocky clearing. Gala and Basilio work together against the Venatosaurus impavidus and Venatosaurus saevidicus, using their different strengths to keep the predators at bay.",
+      "At 2,800 meters, both predators are defeated. Basilio agrees to help Gala follow the poachers' trail and bring Brisa home."
     ]);
     updateCampaignHud();
     renderStoryPanel();
@@ -1806,10 +1806,10 @@ function updateCampaignPrologue(delta) {
     if (event === "capture") {
       prologue.violetaActor.state = "alert";
       prologue.violetaActor.animationState = null;
-      campaign.objective = "FOLLOW ROSA'S TRAIL";
+      campaign.objective = "FOLLOW BRISA'S TRAIL";
       campaign.queueScene("prologue-capture", "THE NOISE IN THE WOODS", [
-        "At 2,000 meters, Rosa reaches a narrow service track and spots a lone poachers' jeep. No hunters are visible; the vehicle appears abandoned.",
-        "As she approaches, two hunters burst from cover and cut off her way home. Rosa struggles, but they force her into the jeep and speed away. Violeta wakes to the engine and follows the tracks."
+        "At 2,000 meters, Brisa reaches a narrow service track and spots a lone poachers' jeep. No hunters are visible; the vehicle appears abandoned.",
+        "As she approaches, two hunters burst from cover and cut off her way home. Brisa struggles, but they force her into the jeep and speed away. Gala wakes to the engine and follows the tracks."
       ]);
       updateCampaignHud();
       renderStoryPanel();
@@ -1819,7 +1819,7 @@ function updateCampaignPrologue(delta) {
   }
 
   if (prologue.phase === "search") {
-    // This 500 m section is fully playable: Violeta follows the tracks herself.
+    // This 500 m section is fully playable: Gala follows the tracks herself.
     player.update(delta, input);
     player.state = Math.abs(player.vx) > 30 ? "running" : "alert";
     if (player.consumeJumpEvent()) audio.jump();
@@ -1858,8 +1858,8 @@ function updateCampaignPrologue(delta) {
       campaign.chapter = "ROCKY OPENING";
       campaign.objective = "CHOOSE YOUR DINOSAUR";
       campaign.queueScene("prologue-tracks", "A FIGHT IN THE UNDERGROWTH", [
-        "After following Rosa's tracks for 500 meters, Violeta reaches a rocky opening at 2,500 meters. Vasti is already fighting two predators: a Venatosaurus impavidus and a Venatosaurus saevidicus.",
-        "The two animals attack from different angles. Violeta closes in to help Vasti, and the struggle spreads across the 2,200–2,800 meter clearing."
+        "After following Brisa's tracks for 500 meters, Gala reaches a rocky opening at 2,500 meters. Basilio is already fighting two predators: a Venatosaurus impavidus and a Venatosaurus saevidicus.",
+        "The two animals attack from different angles. Gala closes in to help Basilio, and the struggle spreads across the 2,200–2,800 meter clearing."
       ]);
       updateCampaignHud();
       renderStoryPanel();
@@ -2000,7 +2000,7 @@ function drawCampaignPrologueActors() {
   if (!prologue?.active) return;
 
   if (["rest", "explore", "capture", "capture-dialog"].includes(prologue.phase)) {
-    // Keep the jeep completely out of view until Rosa reaches the 2,000 m
+    // Keep the jeep completely out of view until Brisa reaches the 2,000 m
     // milestone. The hunters are revealed later during the ambush animation.
     if (["capture", "capture-dialog"].includes(prologue.phase)) {
       drawPrologueJeep(prologue.jeepVisualX ?? prologue.jeepX);
@@ -2207,7 +2207,7 @@ function interactWithFacility() {
       Math.abs((player.x + player.w / 2) - (beta.x + beta.w / 2)) < 112) {
     if (!campaign.canFreeBeta()) {
       campaign.queueScene("beta-cell-locked-hint", "CELL BLOCK C", [
-        "Rosa's cell remains sealed. Auxiliary power must be restored and the security lock disengaged before she can be freed."
+        "Brisa's cell remains sealed. Auxiliary power must be restored and the security lock disengaged before she can be freed."
       ]);
       renderStoryPanel();
       return true;
@@ -2948,7 +2948,7 @@ function update(delta) {
     const canInteract = Boolean(nearbyConsole || nearBeta || nearFerrucutus);
     interactionHintLabel.textContent = canInteract
       ? ui("interact")
-      : beta?.state === "following" ? "ROSA // " + ui("escorting") : "";
+      : beta?.state === "following" ? "BRISA // " + ui("escorting") : "";
   }
   updateLevelCheckpoint();
   updateCampaignAutosave(delta);
@@ -3087,7 +3087,7 @@ function render() {
   if (!campaignPrologue?.active) {
     ctx.fillStyle = "#d2a27d";
     ctx.font = "10px monospace";
-    ctx.fillText(tr(selected === "blue" ? "VIOLETA // DOUBLE JUMP + DASH" : selected === "rosa" ? "ROSA // JUVENILE RAPTOR" : "VASTI // HEAVY STOMP"), 24, GAME.height - 18);
+    ctx.fillText(tr(selected === "blue" ? "GALA // DOUBLE JUMP + DASH" : selected === "rosa" ? "BRISA // JUVENILE RAPTOR" : "BASILIO // HEAVY STOMP"), 24, GAME.height - 18);
     ctx.fillStyle = "#d8f36a";
     ctx.fillText(tr("FERRUCUTUS RESCUE // SUPPORT ACTIVE"), GAME.width - 314, GAME.height - 18);
   }
@@ -3616,7 +3616,7 @@ function confirmPendingPauseAction() {
 }
 
 function updateCharacterConfirmationCopy() {
-  const characterName = selected === "vasti" ? "VASTI" : "VIOLETA";
+  const characterName = selected === "vasti" ? "BASILIO" : "GALA";
   confirmationTitle.textContent = ui("characterConfirmTitle").replace("{character}", characterName);
 }
 

@@ -26,7 +26,7 @@ test("the prologue fixes the capture, encounter, battle-end and Level 1 mileston
   });
 });
 
-test("Rosa remains playable through 2,000 m, where the jeep cinematic starts automatically", () => {
+test("Brisa remains playable through 2,000 m, where the jeep cinematic starts automatically", () => {
   const prologue = new CampaignPrologue({ startX: 100 });
   assert.equal(prologue.phase, "rest");
   assert.equal(prologue.update(4.19), null);
@@ -42,7 +42,7 @@ test("Rosa remains playable through 2,000 m, where the jeep cinematic starts aut
   assert.equal(prologue.phase, "capture");
 });
 
-test("Violeta follows the 500 m trail under player control before the character choice", () => {
+test("Gala follows the 500 m trail under player control before the character choice", () => {
   const prologue = new CampaignPrologue({ startX: 145 });
   assert.equal(prologue.update(4.2), "rest");
   const rosa = { x: prologue.captureX - 27, w: 54, vx: 0 };

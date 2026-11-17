@@ -78,8 +78,8 @@ export const LEVELS = [
     building: "#424f55", buildingShadow: "#29383e", buildingLight: "#7e9293", window: "#d9c38b", warning: "#e88a54"
   },
   {
-    name: "ROSA CONTAINMENT",
-    subtitle: "Restore auxiliary power, release the security lock and free Rosa.",
+    name: "BRISA CONTAINMENT",
+    subtitle: "Restore auxiliary power, release the security lock and free Brisa.",
     distance: WORLD.sectionStarts[5] - GAME.playerX,
     sky: "#799ba7", ground: "#695346", environment: "rosa-containment", musicTheme: "facility",
     sun: "#f6d58a", sunShade: "#d9ad78", cloud: "#dae9dc", cloudShadow: "#8aa6a5",
@@ -91,7 +91,7 @@ export const LEVELS = [
   },
   {
     name: "EXTRACTION ZONE",
-    subtitle: "Escort Rosa to the east gate and complete the rescue.",
+    subtitle: "Escort Brisa to the east gate and complete the rescue.",
     distance: WORLD.extractionChapterStartX - GAME.playerX,
     sky: "#f0a66f", ground: "#795039", environment: "extraction", musicTheme: "extraction",
     sun: "#ffe58a", sunShade: "#e8b65d", cloud: "#fff0d2", cloudShadow: "#d69a7a",

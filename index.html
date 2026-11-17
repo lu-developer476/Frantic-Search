@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#101a1b" />
     <link rel="icon" href="/favicon/favicon.png" type="image/png" />
-    <meta name="description" content="Juego indie pixel art de 8 bits para navegador. Búsqueda Frenética combina aventura arcade, plataformas y supervivencia: elegí a Violeta o Vasti y rescatá a Rosa." />
+    <meta name="description" content="Juego indie pixel art de 8 bits para navegador. Búsqueda Frenética combina aventura arcade, plataformas y supervivencia: elegí a Gala o Basilio y rescatá a Brisa." />
     <meta name="keywords" content="juego indie, pixel art, 8 bits, videojuego indie, juego arcade, juego de plataformas, supervivencia, dinosaurios, Búsqueda Frenética, Frantic Search" />
     <meta name="googlebot" content="index, follow, max-image-preview:large" />
     <title>Juego indie pixel art de 8 bits</title>
@@ -36,7 +36,7 @@
         "@type": "VideoGame",
         "name": "Búsqueda Frenética",
         "alternateName": ["Frantic Search", "Operación: cría perdida"],
-        "description": "Juego indie pixel art de 8 bits para navegador. Aventura arcade de plataformas y supervivencia: elegí a Violeta o Vasti y rescatá a Rosa.",
+        "description": "Juego indie pixel art de 8 bits para navegador. Aventura arcade de plataformas y supervivencia: elegí a Gala o Basilio y rescatá a Brisa.",
         "keywords": "juego indie, pixel art, 8 bits, videojuego de plataformas, arcade, supervivencia, dinosaurios",
         "applicationCategory": "GameApplication",
         "url": "https://franticsearch.vercel.app/",
@@ -276,8 +276,8 @@
                   <p class="survival-result" data-survival-result hidden></p>
                   <div class="survival-actions" data-survival-options>
                     <button type="button" data-survival-role="hunter" data-survival-hunter>JUGAR COMO CAZADOR</button>
-                    <button type="button" data-survival-role="blue" data-survival-violeta>JUGAR COMO VIOLETA</button>
-                    <button type="button" data-survival-role="vasti" data-survival-vasti>JUGAR COMO VASTI</button>
+                    <button type="button" data-survival-role="blue" data-survival-violeta>JUGAR COMO GALA</button>
+                    <button type="button" data-survival-role="vasti" data-survival-vasti>JUGAR COMO BASILIO</button>
                   </div>
                   <div class="survival-actions">
                     <button type="button" data-survival-retry hidden>VOLVER A INTENTAR</button>
@@ -292,22 +292,22 @@
                   <h2 data-i18n="chooseCharacterTitle">ELEGÍ TU PERSONAJE</h2>
                 </div>
                 <div class="character-picker" aria-label="Elegir personaje" data-i18n-aria="chooseCharacter">
-                  <button class="character-card active" data-character="blue" type="button" aria-label="Seleccionar a Violeta" data-i18n-aria="selectVioleta" aria-pressed="true">
+                  <button class="character-card active" data-character="blue" type="button" aria-label="Seleccionar a Gala" data-i18n-aria="selectVioleta" aria-pressed="true">
                     <span class="character-art blue-art"><img src="%BASE_URL%references/adult-velociraptor-nublarensis.png" data-idle-src="%BASE_URL%references/adult-velociraptor-nublarensis.png" data-run-a-src="%BASE_URL%references/adult-velociraptor-nublarensis.png" data-run-b-src="%BASE_URL%references/adult-velociraptor-nublarensis.png" alt="" /></span>
                   </button>
-                  <button class="character-card" data-character="vasti" type="button" aria-label="Seleccionar a Vasti" data-i18n-aria="selectVasti" aria-pressed="false">
+                  <button class="character-card" data-character="vasti" type="button" aria-label="Seleccionar a Basilio" data-i18n-aria="selectVasti" aria-pressed="false">
                     <span class="character-art vasti-art"><img src="%BASE_URL%references/vastatosaurus-rex.png" data-idle-src="%BASE_URL%references/vastatosaurus-rex.png" data-run-a-src="%BASE_URL%references/vastatosaurus-rex.png" data-run-b-src="%BASE_URL%references/vastatosaurus-rex.png" alt="" /></span>
                   </button>
                 </div>
                 <div class="character-info-grid" aria-label="Información de los personajes" data-i18n-aria="characterInfo">
                   <div class="character-info">
                     <span class="character-species" data-i18n="raptor">Velociraptor nublarensis</span>
-                    <span class="character-name">VIOLETA</span>
+                    <span class="character-name">GALA</span>
                     <small data-i18n="blueAbility">VELOCIDAD · DOBLE SALTO · EMBESTIDA</small>
                   </div>
                   <div class="character-info">
                     <span class="character-species" data-i18n="titan">Vastatosaurus Rex</span>
-                    <span class="character-name">VASTI</span>
+                    <span class="character-name">BASILIO</span>
                     <small data-i18n="vastiAbility">FUERZA · PISOTÓN DE IMPACTO</small>
                   </div>
                 </div>
@@ -319,7 +319,7 @@
             </section>
             <section id="character-confirmation" class="character-confirmation hidden" role="dialog" aria-modal="true" aria-labelledby="character-confirmation-title">
               <div class="dino-dialog character-confirmation-card">
-                <h2 id="character-confirmation-title" data-i18n="characterConfirmTitle">¿Estás seguro de jugar como VIOLETA?</h2>
+                <h2 id="character-confirmation-title" data-i18n="characterConfirmTitle">¿Estás seguro de jugar como GALA?</h2>
                 <div class="dialog-actions">
                   <button id="back-character-confirmation" class="dialog-back" type="button" data-i18n="back">VOLVER</button>
                   <button id="play-character" class="dialog-confirm" type="button"><span data-i18n="playSelected">JUGAR</span></button>

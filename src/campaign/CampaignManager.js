@@ -115,7 +115,7 @@ export class CampaignManager {
     }
 
     if (this.flags.betaFreed) {
-      this.objective = "ESCORT ROSA TO THE EAST GATE";
+      this.objective = "ESCORT BRISA TO THE EAST GATE";
       if (worldX >= chapterStart(5)) {
         this.chapter = LEVELS[5].name;
         this.queueCampaignScene("extraction-arrival");
@@ -176,7 +176,7 @@ export class CampaignManager {
       this.queueCampaignScene("power-restored");
     } else if (kind === "security" && this.flags.powerRestored) {
       this.flags.securityReleased = true;
-      this.objective = "FREE ROSA";
+      this.objective = "FREE BRISA";
       this.queueCampaignScene("security-released");
     }
     this.refreshObjective();
@@ -194,7 +194,7 @@ export class CampaignManager {
     if (!this.canFreeBeta()) return false;
     this.flags.betaFreed = true;
     this.chapter = LEVELS[4].name;
-    this.objective = "ESCORT ROSA TO THE EAST GATE";
+    this.objective = "ESCORT BRISA TO THE EAST GATE";
     this.queueCampaignScene("beta-rescued");
     return true;
   }
@@ -209,8 +209,8 @@ export class CampaignManager {
 
   refreshObjective() {
     if (this.flags.completed) this.objective = "MISSION COMPLETE";
-    else if (this.flags.betaFreed) this.objective = "ESCORT ROSA TO THE EAST GATE";
-    else if (this.flags.securityReleased) this.objective = "FREE ROSA";
+    else if (this.flags.betaFreed) this.objective = "ESCORT BRISA TO THE EAST GATE";
+    else if (this.flags.securityReleased) this.objective = "FREE BRISA";
     else if (this.flags.powerRestored) this.objective = "RELEASE THE SECURITY LOCK";
     else if (this.flags.indominusDefeated) this.objective = "RESTORE AUXILIARY POWER";
   }
