@@ -169,8 +169,8 @@ export class Survival {
     this.locale = locale === "en" ? "en" : "es";
     this.root.querySelector("[data-survival-title]").textContent = this.text("SUPERVIVENCIA", "SURVIVAL");
     this.root.querySelector("[data-survival-subtitle]").textContent = this.text(
-      "Elegí tu bando y aguantá todas las oleadas que puedas. Cada ronda trae más enemigos y más resistencia.",
-      "Choose your side and survive as many waves as you can. Every round brings more enemies and tougher opponents."
+      "Elegí al personaje y aguantá todo lo que puedas. Cada ronda aumenta la dificultad.",
+      "Choose your character and survive for as long as you can. Each round increases the difficulty."
     );
     this.root.querySelector("[data-survival-start]").textContent = this.text("INICIAR", "START");
     this.root.querySelector("[data-survival-hunter]").textContent = this.text("SER CAZADOR", "BE A HUNTER");

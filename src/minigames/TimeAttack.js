@@ -149,8 +149,8 @@ export class TimeAttack {
     this.locale = locale === "en" ? "en" : "es";
     this.root.querySelector("[data-ta-title]").textContent = this.text("HORA DE ATACAR", "TIME ATTACK");
     this.root.querySelector("[data-ta-subtitle]").textContent = this.text(
-      "Una escuadra de cuatro cazadores. Catorce dinosaurios. Despejá la ruta y llegá a la extracción lo más rápido posible.",
-      "A four-hunter squad. Fourteen dinosaurs. Clear the route and reach extraction as fast as possible."
+      "Una escuadra. Múltiples presas. Despejá el camino y llegá a la extracción cuanto antes.",
+      "One squad. Multiple targets. Clear the path and reach extraction as soon as possible."
     );
     this.root.querySelector("[data-ta-instructions]").textContent = this.text(
       "A / D o ← / →: moverse · W / ↑: saltar · ESPACIO / F o clic izquierdo: disparar · P: pausa · ESC: salir",
