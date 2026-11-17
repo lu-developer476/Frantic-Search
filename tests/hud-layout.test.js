@@ -165,3 +165,33 @@ test("campaign header stays in one line and selected character health remains vi
   assert.ok(survival.includes('i < this.player.health ? "#4cdb70"'));
   assert.ok(main.includes('ctx.fillStyle="#4cdb70";ctx.fillRect(x,y,w*(activeBoss.health/activeBoss.maxHealth),10)'));
 });
+
+
+test("story, pause, retry and pre-game briefing surfaces respond to both ambient themes", async () => {
+  const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+  const themeRules = css.slice(css.lastIndexOf("/* Environmental palettes extend"));
+
+  for (const mode of ["beige", "gray"]) {
+    assert.ok(themeRules.includes(`html.site-mode-${mode} .story-panel`));
+    assert.ok(themeRules.includes(`html.site-mode-${mode} .pause-confirmation-card`));
+    assert.ok(themeRules.includes(`html.site-mode-${mode} .pause-menu h2`));
+    assert.ok(themeRules.includes(`html.site-mode-${mode} .gameplay-brief-card`));
+    assert.ok(themeRules.includes(`html.site-mode-${mode} .tutorial-card`));
+    assert.ok(themeRules.includes(`html.site-mode-${mode} .retry-options`));
+  }
+  assert.ok(themeRules.includes("background: var(--site-surface-raised)"));
+  assert.ok(themeRules.includes("color: var(--site-accent-contrast)"));
+});
+
+test("Time Attack and Survival reuse the Empty Stomach pre-game intro layout; Free Roam uses its shared briefing card", async () => {
+  const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+  const sharedIntro = css.slice(css.lastIndexOf("/* === Shared minigame intro"));
+
+  for (const selector of [".empty-stomach-intro", ".time-attack-intro", ".survival-intro"]) {
+    assert.ok(sharedIntro.includes(selector));
+  }
+  assert.ok(sharedIntro.includes(".time-attack-panel:not(.playing) .time-attack-top"));
+  assert.ok(sharedIntro.includes(".survival-panel:not(.playing) .survival-top"));
+  assert.ok(sharedIntro.includes(".gameplay-brief-card"));
+  assert.ok(sharedIntro.includes(".gameplay-brief-continue"));
+});
