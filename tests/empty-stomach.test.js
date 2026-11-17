@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  overlaps, scoreForDistance, getGroundAlignedY, createPredator, enemyAnimationKey, ASSETS,
+  overlaps, scoreForDistance, getGroundAlignedY, createPredator, enemyAnimationKey, ASSETS, coralAnimationKey,
   EmptyStomach, ENEMY_CHASE_DURATION, INTRO_DURATION, PLAYER_WIDTH, PLAYER_HEIGHT,
   DASH_DURATION, DASH_COOLDOWN, DASH_SPEED_MULTIPLIER, ENEMY_STUN_DURATION,
   EGG_INVULNERABILITY_DURATION, ENEMY_TRIP_FADE_DURATION, createEgg,
@@ -16,6 +16,18 @@ test("Empty Stomach resolves every animation from the current GIF asset director
       throw new Error(`Missing Empty Stomach asset for ${key}: public/${path}`);
     })
   ));
+});
+
+test("Coral switches between idle, running and jumping GIF assets", () => {
+  assert.equal(coralAnimationKey({ grounded: true }, "intro"), "coralIdle");
+  assert.equal(coralAnimationKey({ grounded: true }, "playing"), "coral");
+  assert.equal(coralAnimationKey({ grounded: false }, "playing"), "coralJump");
+  for (const key of ["coralIdle", "coralJump", "coral"]) assert.ok(ASSETS[key]);
+});
+
+test("Empty Stomach includes both Brontosaurus movement GIFs", () => {
+  assert.equal(ASSETS.brontosaurusWalk, "references/brontosaurus-excelsus-basteri-walk.gif");
+  assert.equal(ASSETS.brontosaurusRun, "references/brontosaurus-excelsus-basteri-run.gif");
 });
 
 test("Empty Stomach uses rectangle overlap for predator contact", () => {

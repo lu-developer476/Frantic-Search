@@ -22,6 +22,8 @@ const PRAIRIE_HERD = [
 ];
 export const ASSETS = {
   coral: "minigame/empty-stomach/gif/main/miniraptor-run.gif",
+  coralIdle: "minigame/empty-stomach/gif/main/miniraptor-idle.gif",
+  coralJump: "minigame/empty-stomach/gif/main/miniraptor-jump.gif",
   xenoraptorRun: "minigame/empty-stomach/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-run.gif",
   xenoraptorJump: "minigame/empty-stomach/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-jump.gif",
   xenoraptorAttack: "minigame/empty-stomach/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-attack.gif",
@@ -32,8 +34,16 @@ export const ASSETS = {
   parasaurRun: "minigame/empty-stomach/gif/parasaurolophus/parasaurolophus-run.gif",
   parasaurWalk: "minigame/empty-stomach/gif/parasaurolophus/parasaurolophus-walk.gif",
   parasaurIdle: "minigame/empty-stomach/gif/parasaurolophus/parasaurolophus-idle.gif",
-  parasaurPerturbed: "minigame/empty-stomach/gif/parasaurolophus/parasaurolophus-attack.gif"
+  parasaurPerturbed: "minigame/empty-stomach/gif/parasaurolophus/parasaurolophus-attack.gif",
+  brontosaurusRun: "references/brontosaurus-excelsus-basteri-run.gif",
+  brontosaurusWalk: "references/brontosaurus-excelsus-basteri-walk.gif"
 };
+
+export function coralAnimationKey(player = {}, phase = "playing") {
+  if (phase !== "playing" || (player.trappedTimer ?? 0) > 0) return "coralIdle";
+  if (player.grounded === false || player.onGround === false) return "coralJump";
+  return "coral";
+}
 
 export function overlaps(a, b) {
   return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
@@ -698,13 +708,17 @@ export class EmptyStomach {
       const count = 1 + (Math.random() < 0.42 ? 1 : 0);
       for (let i = 0; i < count; i += 1) {
         const lane = randomLane();
+        const species = Math.random() < 0.32 ? "brontosaurus" : "parasaur";
+        const baseW = species === "brontosaurus" ? 142 : 100;
+        const baseH = species === "brontosaurus" ? 92 : 72;
         this.herd.push(applyLane({
+          species,
           x: WIDTH + i * 94,
           y: 0,
-          w: 100,
-          h: 72,
-          baseW: 100,
-          baseH: 72,
+          w: baseW,
+          h: baseH,
+          baseW,
+          baseH,
           phase: Math.random() * 6,
           beingEaten: false,
           beingEatenElapsed: 0,
@@ -1228,10 +1242,10 @@ export class EmptyStomach {
     if (animation?.frames.length) {
       const index = getAnimatedFrameIndex(animation.frames, animationTime);
       const frame = animation.frames[index];
-      const bottomPadding = key.startsWith("parasaur")
+      const bottomPadding = key.startsWith("parasaur") || key.startsWith("brontosaurus")
         ? frame.bottomPadding ?? animation.bottomPadding
         : animation.bottomPadding;
-      const drawY = key === "coral" || key.startsWith("parasaur")
+      const drawY = key.startsWith("coral") || key.startsWith("parasaur") || key.startsWith("brontosaurus")
         ? getGroundAlignedY(y, h, animation.height, bottomPadding)
         : y;
       this.ctx.drawImage(frame.image, x, drawY, w, h);
@@ -1334,11 +1348,14 @@ export class EmptyStomach {
       ctx.fill();
     }
 
-    // A few Parasaurolophus graze across the horizon, making Coral part of a living herd.
+    // Parasaurolophus and Brontosaurus share the prairie as ambient herd animals.
     for (let i = 0; i < PRAIRIE_HERD.length; i += 1) {
       const animal = PRAIRIE_HERD[i];
       const x = ((animal.x - scroll * 0.12) % (WIDTH + 180) + (WIDTH + 180)) % (WIDTH + 180) - 90;
-      const pose = i % 2 === 0 ? "parasaurIdle" : "parasaurWalk";
+      const isBrontosaurus = i === 1 || i === 3;
+      const pose = isBrontosaurus
+        ? (i === 1 ? "brontosaurusWalk" : "brontosaurusRun")
+        : (i % 2 === 0 ? "parasaurIdle" : "parasaurWalk");
       this.drawSprite(
         pose,
         x,
@@ -1382,9 +1399,12 @@ export class EmptyStomach {
 
     for (let lane = 0; lane < LANE_COUNT; lane += 1) {
       for (const prey of this.herd.filter((item) => this.getEntityLane(item) === lane)) {
-        const pose = prey.beingEaten
-          ? (prey.beingEatenElapsed < 0.65 ? "parasaurPerturbed" : "parasaurIdle")
-          : prey.animationState === "perturbed" ? "parasaurPerturbed" : "parasaurRun";
+        const isBrontosaurus = prey.species === "brontosaurus";
+        const pose = isBrontosaurus
+          ? (prey.animationState === "perturbed" || prey.beingEaten ? "brontosaurusWalk" : "brontosaurusRun")
+          : prey.beingEaten
+            ? (prey.beingEatenElapsed < 0.65 ? "parasaurPerturbed" : "parasaurIdle")
+            : prey.animationState === "perturbed" ? "parasaurPerturbed" : "parasaurRun";
         const sink = (prey.trappedTimer ?? 0) > 0 ? 9 * getLaneScale(lane) : 0;
         this.drawSprite(pose, prey.x, prey.y + sink, prey.w, prey.h, "#8e9b72");
       }
@@ -1416,7 +1436,7 @@ export class EmptyStomach {
         ctx.save();
         if (this.invulnerabilityTimer > 0) ctx.globalAlpha = Math.floor(this.invulnerabilityTimer * 12) % 2 ? 0.42 : 1;
         if (this.isPlayerHidden()) ctx.globalAlpha *= 0.78;
-        this.drawSprite("coral", this.player.x, playerY, this.player.w, this.player.h, "#e7a7a0");
+        this.drawSprite(coralAnimationKey(this.player, this.phase), this.player.x, playerY, this.player.w, this.player.h, "#e7a7a0");
         ctx.restore();
         if (this.carriedItem) this.drawCarriedItem(this.carriedItem);
       }

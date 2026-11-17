@@ -6,6 +6,9 @@ import {
   DINOSAUR_REFERENCE_SCALES,
   REFERENCE_PNG_CHARACTERS,
   VENATOSAURUS_ANIMATION_ASSETS,
+  BRONTOSAURUS_ANIMATION_ASSETS,
+  PROLOGUE_ROSA_ANIMATIONS,
+  selectBrontosaurusAnimation,
   selectVenatosaurusAnimation,
   SpriteRenderer
 } from "../src/rendering/SpriteRenderer.js";
@@ -75,11 +78,21 @@ test("boss attack states remain distinct from idle and feeding states", () => {
 });
 
 
-test("Brontosaurus and Ligocristus reference sprites face the corrected travel direction", () => {
-  assert.equal(REFERENCE_PNG_CHARACTERS.brontosaurus.sourceFacing, -1);
+test("Brontosaurus uses dedicated walking and running GIFs instead of a missing PNG", () => {
+  assert.equal(REFERENCE_PNG_CHARACTERS.brontosaurus, undefined);
+  assert.equal(BRONTOSAURUS_ANIMATION_ASSETS.walk, "brontosaurus-excelsus-basteri-walk.gif");
+  assert.equal(BRONTOSAURUS_ANIMATION_ASSETS.run, "brontosaurus-excelsus-basteri-run.gif");
+  assert.equal(BRONTOSAURUS_ANIMATION_ASSETS.sourceFacing, -1);
+  assert.equal(selectBrontosaurusAnimation({ state: "grazing", motionSpeed: 0 }), BRONTOSAURUS_ANIMATION_ASSETS.walk);
+  assert.equal(selectBrontosaurusAnimation({ state: "retreating", motionSpeed: 42 }), BRONTOSAURUS_ANIMATION_ASSETS.run);
   assert.equal(REFERENCE_PNG_CHARACTERS.ligocristus.sourceFacing, 1);
-  assert.equal(REFERENCE_PNG_CHARACTERS.brontosaurus.file, "brontosaurus-excelsus-basteri.png");
   assert.equal(REFERENCE_PNG_CHARACTERS.ligocristus.file, "ligocristus-innocens.png");
+});
+
+test("Rosa's controllable prologue uses her dedicated idle, jump and run GIFs", () => {
+  assert.equal(PROLOGUE_ROSA_ANIMATIONS.idle, "juvenile-velociraptor-abyssomirabilis-idle.gif");
+  assert.equal(PROLOGUE_ROSA_ANIMATIONS.jump, "juvenile-velociraptor-abyssomirabilis-jump.gif");
+  assert.equal(PROLOGUE_ROSA_ANIMATIONS.run, "juvenile-velociraptor-abyssomirabilis-run.gif");
 });
 
 

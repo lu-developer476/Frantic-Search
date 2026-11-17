@@ -3,9 +3,14 @@ import { getAnimatedFrameIndex, loadAnimatedGif } from "../minigames/AnimatedGif
 
 const REFERENCE_OUTLINE_WIDTH = 2;
 const REFERENCE_OUTLINE_COLOR = "#000000";
-export const PROLOGUE_ROSA_REFERENCE = "juvenile-velociraptor-abyssomirabilis.gif";
+export const PROLOGUE_ROSA_REFERENCE = "juvenile-velociraptor-abyssomirabilis-idle.gif";
+export const PROLOGUE_ROSA_ANIMATIONS = Object.freeze({
+  idle: "juvenile-velociraptor-abyssomirabilis-idle.gif",
+  jump: "juvenile-velociraptor-abyssomirabilis-jump.gif",
+  run: "juvenile-velociraptor-abyssomirabilis-run.gif"
+});
 const PROLOGUE_ROSA_SCALE = 1.8;
-const ANIMATED_REFERENCE_VERSION = "20261116-venatosaurus-gif-integration-1";
+const ANIMATED_REFERENCE_VERSION = "20261117-rosa-brontosaurus-gif-integration-1";
 
 export const DINOSAUR_REFERENCE_SCALES = Object.freeze({
   violeta: 1.6,
@@ -24,10 +29,23 @@ export const REFERENCE_PNG_CHARACTERS = Object.freeze({
   indoraptor: { first: "indoraptor-first-generation.png", second: "indoraptor-second-generation.png", sourceFacing: 1, scale: 1.34 },
   indominus: { first: "indominus-rex-first-generation.png", second: "indominus-rex-second-generation.png", sourceFacing: -1, scale: 1.18 },
   "indominus-variant": { file: "indominus-rex-second-generation-variant.png", sourceFacing: -1, scale: 1.18 },
-  brontosaurus: { file: "brontosaurus-excelsus-basteri.png", sourceFacing: -1, scale: 1.18 },
   ligocristus: { file: "ligocristus-innocens.png", sourceFacing: -1, scale: DINOSAUR_REFERENCE_SCALES.ligocristusInnocens },
   stegoceratops: { file: "stegoceratops.png", sourceFacing: -1, scale: 1.18 }
 });
+
+export const BRONTOSAURUS_ANIMATION_ASSETS = Object.freeze({
+  walk: "brontosaurus-excelsus-basteri-walk.gif",
+  run: "brontosaurus-excelsus-basteri-run.gif",
+  sourceFacing: -1,
+  scale: 1.18
+});
+
+export function selectBrontosaurusAnimation(actor = {}) {
+  return Math.abs(actor?.motionSpeed ?? 0) > 28 ||
+    ["running", "retreating", "run"].includes(actor?.state)
+    ? BRONTOSAURUS_ANIMATION_ASSETS.run
+    : BRONTOSAURUS_ANIMATION_ASSETS.walk;
+}
 
 export const VENATOSAURUS_ANIMATION_ASSETS = Object.freeze({
   "venatosaurus-impavidus": Object.freeze({
@@ -67,7 +85,6 @@ const REFERENCE_PRELOAD_FILES = [
   "indominus-rex-first-generation.png",
   "indominus-rex-second-generation.png",
   "indominus-rex-second-generation-variant.png",
-  "brontosaurus-excelsus-basteri.png",
   "ligocristus-innocens.png",
   "stegoceratops.png"
 ];
@@ -179,7 +196,11 @@ export class SpriteRenderer {
   preload() {
     for (const file of REFERENCE_PRELOAD_FILES) this.getReferenceImage(file);
 
-    // Decode the six small GIFs up front so the first encounter can animate immediately.
+    // Decode campaign character GIFs before their first visible appearance.
+    for (const file of Object.values(PROLOGUE_ROSA_ANIMATIONS)) this.loadAnimatedReference(file);
+    for (const file of [BRONTOSAURUS_ANIMATION_ASSETS.walk, BRONTOSAURUS_ANIMATION_ASSETS.run]) {
+      this.loadAnimatedReference(file);
+    }
     for (const assets of Object.values(VENATOSAURUS_ANIMATION_ASSETS)) {
       for (const file of [assets.attack, assets.jump, assets.run]) this.loadAnimatedReference(file);
     }
@@ -354,10 +375,17 @@ export class SpriteRenderer {
   }
 
   drawPrologueRosa(context, x, y, width, height, actor = {}, elapsed = 0, alpha = 1, sleeping = false) {
-    const animation = this.animatedReferences.get(PROLOGUE_ROSA_REFERENCE);
+    const animationKey = sleeping
+      ? "idle"
+      : actor?.onGround === false
+        ? "jump"
+        : Math.abs(actor?.vx ?? actor?.motionSpeed ?? 0) > 24
+          ? "run"
+          : "idle";
+    const file = PROLOGUE_ROSA_ANIMATIONS[animationKey];
+    const animation = this.animatedReferences.get(file);
     if (!animation?.frames?.length) {
-      // Decode once into composited frame canvases, exactly like Coral in Empty Stomach.
-      this.loadAnimatedReference(PROLOGUE_ROSA_REFERENCE);
+      this.loadAnimatedReference(file);
       return false;
     }
 
@@ -1597,7 +1625,36 @@ export class SpriteRenderer {
     return result;
   }
 
+  drawAnimatedBrontosaurus(context, x, y, width, height, actor = {}, elapsed = 0, options = {}) {
+    const file = selectBrontosaurusAnimation(actor);
+    const animation = this.animatedReferences.get(file);
+    if (!animation?.frames?.length) {
+      this.loadAnimatedReference(file);
+      return false;
+    }
+    const frame = animation.frames[getAnimatedFrameIndex(animation.frames, Math.max(0, elapsed) * 1000)];
+    if (!frame?.image) return false;
+    const definition = BRONTOSAURUS_ANIMATION_ASSETS;
+    const drawWidth = Math.max(1, Math.round(width * definition.scale));
+    const drawHeight = Math.max(1, Math.round(drawWidth * animation.height / animation.width));
+    const bottomPadding = frame.bottomPadding ?? animation.bottomPadding ?? 0;
+    const scaledBottomPadding = drawHeight * bottomPadding / animation.height;
+    const facing = options.facing ?? actor?.facing ?? actor?.direction ?? 1;
+    const flip = Math.sign(facing || 1) !== definition.sourceFacing;
+    context.save();
+    context.globalAlpha *= options.alpha ?? 1;
+    context.imageSmoothingEnabled = false;
+    context.translate(Math.round(x + width / 2), Math.round(y + height - drawHeight + scaledBottomPadding));
+    context.scale(flip ? -1 : 1, 1);
+    context.drawImage(frame.image, -drawWidth / 2, 0, drawWidth, drawHeight);
+    context.restore();
+    return true;
+  }
+
   drawAnimated(context, character, x, y, width, height, actor, elapsed, options = {}) {
+    if (character === "brontosaurus") {
+      return this.drawAnimatedBrontosaurus(context, x, y, width, height, actor ?? {}, elapsed, options);
+    }
     if (VENATOSAURUS_ANIMATION_ASSETS[character]) {
       return this.drawAnimatedVenatosaurus(context, character, x, y, width, height, actor ?? {}, elapsed, options);
     }
