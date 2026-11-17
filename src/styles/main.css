@@ -3613,3 +3613,32 @@ body:has(#survival-panel.active:not(.playing)) .game-tutorial-fab {
   color: #111111;
   transform: none;
 }
+
+
+/* Keep the hamburger navigation monochrome against its black menu surface. */
+.menu-toggle,
+.nav-menu,
+.nav-menu .menu-option,
+.nav-menu .menu-option.active,
+.nav-menu .menu-sound-toggle,
+html.site-mode-beige .menu-toggle,
+html.site-mode-gray .menu-toggle,
+html.site-mode-beige .nav-menu,
+html.site-mode-gray .nav-menu,
+html.site-mode-beige .nav-menu .menu-option,
+html.site-mode-gray .nav-menu .menu-option {
+  color: #d0d0d0 !important;
+  border-color: #555 !important;
+  background: #171717 !important;
+  box-shadow: none !important;
+}
+.menu-toggle span { background: #c8c8c8 !important; }
+.nav-menu { border-color: #555 !important; background: rgba(8,8,8,.98) !important; }
+.nav-menu .menu-section > p { color: #999 !important; }
+.nav-menu .menu-option:hover,
+.nav-menu .menu-option.active { color: #f0f0f0 !important; border-color: #888 !important; background: #303030 !important; }
+.nav-menu .menu-sound-toggle { color: #d0d0d0 !important; }
+
+/* Tutorial and environment appearance controls belong to active gameplay, not menu browsing. */
+body:not(.game-session-active) .nav-menu .tutorial-menu-section,
+body:not(.game-session-active) .nav-menu .environment-mode-menu-section { display: none !important; }
