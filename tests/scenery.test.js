@@ -119,3 +119,17 @@ test("scenery does not change the fixed campaign chapter and objective layout", 
   assert.equal(WORLD.sectionCount, 7);
   assert.equal(GAME.campaignEndX, WORLD.extractionX);
 });
+
+test("background Brontosaurus set pieces and their jeep pursuits appear in outdoor campaign areas", () => {
+  const world = new PlatformWorld(GAME.groundY, { seed: 314159 });
+  world.extendTo(WORLD.totalLength + 1);
+
+  assert.deepEqual(
+    world.brontosaurusSpawns.map((spawn) => spawn.id),
+    ["brontosaurus-0", "brontosaurus-1", "brontosaurus-6"]
+  );
+  assert.ok(world.brontosaurusSpawns.every((spawn) => spawn.jeepChase === true));
+  assert.ok(world.brontosaurusSpawns.every((spawn) =>
+    spawn.x >= WORLD.sectionStarts[Number(spawn.id.split("-").at(-1))]
+  ));
+});

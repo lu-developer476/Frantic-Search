@@ -260,8 +260,8 @@ export class PlatformWorld {
       this.foodSpawns.push({ id: "ligocristus-" + index + "-" + spawnIndex, kind: "ligocristus", x, groundY: this.groundY });
     });
 
-    if (index === 0 || index === 1) {
-      const ratio = index === 0 ? 0.66 : 0.55;
+    if (index === 0 || index === 1 || index === 6) {
+      const ratio = index === 0 ? 0.66 : index === 1 ? 0.55 : 0.38;
       const brontosaurusX = at(ratio) + Math.round((random() - 0.5) * 90);
       this.brontosaurusSpawns.push({
         id: "brontosaurus-" + index,
@@ -269,7 +269,8 @@ export class PlatformWorld {
         patrolStart: Math.max(start + 100, brontosaurusX - 430),
         patrolEnd: Math.min(end - 80, brontosaurusX + 650),
         groundY: this.groundY,
-        kind: "brontosaurus"
+        kind: "brontosaurus",
+        jeepChase: true
       });
     }
 

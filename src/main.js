@@ -14,6 +14,11 @@ import { HunterEnemy } from "./entities/HunterEnemy.js";
 import { HunterProjectile } from "./entities/HunterProjectile.js";
 import { WildDinosaur } from "./entities/WildDinosaur.js";
 import { LigocristusPrey, Brontosaurus } from "./entities/LigocristusPrey.js";
+import {
+  createBrontosaurusBackPlatforms,
+  startBrontosaurusRide,
+  updateBrontosaurusRide
+} from "./systems/BrontosaurusMountSystem.js";
 import { FerrucutusAlly } from "./entities/FerrucutusAlly.js";
 import { FerrucutusCaptive } from "./entities/FerrucutusCaptive.js";
 import { IndoraptorBoss } from "./entities/IndoraptorBoss.js";
@@ -219,6 +224,7 @@ let hunterProjectiles = [];
 let venatosauruses = [];
 let foodSources = [];
 let wildlife = [];
+let wildlifeJeepChases = [];
 let seenVenatosaurusSpawns = new Set();
 let seenFoodSpawns = new Set();
 let seenBrontosaurusSpawns = new Set();
@@ -1132,12 +1138,23 @@ function syncEncounters() {
   for (const spawn of world.brontosaurusSpawns) {
     if (seenBrontosaurusSpawns.has(spawn.id)) continue;
     seenBrontosaurusSpawns.add(spawn.id);
-    wildlife.push(new Brontosaurus({
+    const animal = new Brontosaurus({
       ...spawn,
       groundY: spawn.groundY ?? GAME.groundY,
       patrolStart: spawn.patrolStart ?? spawn.x - 430,
       patrolEnd: spawn.patrolEnd ?? spawn.x + 650
-    }));
+    });
+    wildlife.push(animal);
+    if (spawn.jeepChase) {
+      wildlifeJeepChases.push({
+        id: "jeep-chase-" + animal.id,
+        animalId: animal.id,
+        x: animal.x - 720,
+        elapsed: 0,
+        duration: 8.5,
+        phase: (String(animal.id).length % 7) * 0.7
+      });
+    }
   }
   for(const spawn of world.collectibleSpawns){
     if(seenCollectibleSpawns.has(spawn.id))continue;
@@ -1377,6 +1394,7 @@ function beginCampaignPrologue() {
   venatosauruses = [];
   foodSources = [];
   wildlife = [];
+  wildlifeJeepChases = [];
   ferrucutusCaptives = [];
   allies = [];
   autonomousCompanions = [];
@@ -1883,35 +1901,67 @@ function updateCampaignPrologue(delta) {
   }
 }
 
-function drawPrologueJeep(x) {
-  const y = GAME.groundY - 78;
+function drawJeep(x, y, { scale = 1, alpha = 1, label = "POACHER // 04" } = {}) {
   ctx.save();
+  ctx.globalAlpha *= alpha;
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
   ctx.fillStyle = "#172323";
-  ctx.fillRect(x + 4, y + 25, 154, 43);
+  ctx.fillRect(4, 25, 154, 43);
   ctx.fillStyle = "#5d694f";
-  ctx.fillRect(x + 18, y + 6, 96, 34);
+  ctx.fillRect(18, 6, 96, 34);
   ctx.fillStyle = "#8b9670";
-  ctx.fillRect(x + 25, y + 11, 38, 22);
-  ctx.fillRect(x + 68, y + 11, 37, 22);
+  ctx.fillRect(25, 11, 38, 22);
+  ctx.fillRect(68, 11, 37, 22);
   ctx.fillStyle = "#283d3b";
-  ctx.fillRect(x + 65, y + 8, 5, 32);
+  ctx.fillRect(65, 8, 5, 32);
   ctx.fillStyle = "#c69b5d";
-  ctx.fillRect(x + 110, y + 25, 42, 43);
+  ctx.fillRect(110, 25, 42, 43);
   ctx.fillStyle = "#e5bd73";
-  ctx.fillRect(x + 121, y + 32, 24, 5);
+  ctx.fillRect(121, 32, 24, 5);
   ctx.fillStyle = "#d8b36d";
-  ctx.fillRect(x + 8, y + 41, 12, 8);
-  ctx.fillRect(x + 147, y + 41, 12, 8);
-  for (const wheelX of [x + 27, x + 119]) {
+  ctx.fillRect(8, 41, 12, 8);
+  ctx.fillRect(147, 41, 12, 8);
+  for (const wheelX of [27, 119]) {
     ctx.fillStyle = "#101719";
-    ctx.beginPath(); ctx.arc(wheelX, y + 68, 14, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(wheelX, 68, 14, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = "#718078";
-    ctx.beginPath(); ctx.arc(wheelX, y + 68, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(wheelX, 68, 6, 0, Math.PI * 2); ctx.fill();
   }
   ctx.fillStyle = "#e6d5a1";
   ctx.font = "9px monospace";
-  ctx.fillText("POACHER // 04", x + 27, y - 5);
+  ctx.fillText(label, 27, -5);
   ctx.restore();
+}
+
+function drawPrologueJeep(x) {
+  drawJeep(x, GAME.groundY - 78);
+}
+
+function drawWildlifeJeep(chase) {
+  const sway = Math.sin(elapsed * 1.7 + chase.phase) * 5;
+  drawJeep(chase.x + sway, GAME.groundY - 78, {
+    scale: 0.78,
+    alpha: 0.78,
+    label: "POACHER"
+  });
+}
+
+function updateWildlifeJeepChases(delta) {
+  const active = [];
+  for (const chase of wildlifeJeepChases) {
+    const animal = wildlife.find((candidate) => candidate.id === chase.animalId);
+    if (!animal || chase.elapsed >= chase.duration) continue;
+    const inScene = animal.x + animal.w >= cameraX - 850 &&
+      animal.x <= cameraX + GAME.width + 850;
+    if (inScene) {
+      chase.elapsed = Math.min(chase.duration, chase.elapsed + delta);
+      const targetX = animal.x - 184;
+      chase.x += (targetX - chase.x) * Math.min(1, delta * 0.72);
+    }
+    if (chase.elapsed < chase.duration) active.push(chase);
+  }
+  wildlifeJeepChases = active;
 }
 
 function drawPrologueTracks(prologue) {
@@ -2599,7 +2649,9 @@ function update(delta) {
   }
   player.update(delta, input);
   if (input.consume("special")) activateStegoceratops();
-  if (player.consumeJumpEvent()) audio.jump();
+  const jumped = player.consumeJumpEvent();
+  if (jumped) audio.jump();
+  if (player.brontosaurusRide && jumped) player.brontosaurusRide = null;
   const abilityEvent = player.consumeAbilityEvent();
   if (abilityEvent === "dash") {
     dashHitIds.clear();
@@ -2608,7 +2660,18 @@ function update(delta) {
   if (abilityEvent === "dash" || abilityEvent === "stomp") audio.collect();
   if (abilityEvent === "slam") audio.hit();
 
-  const physicsResult = physics.step(player, delta, world.platformsNear(player.x));
+  const brontosaurusBacks = createBrontosaurusBackPlatforms(wildlife, selected);
+  const wasFalling = !player.onGround && player.vy >= 0;
+  const physicsResult = player.brontosaurusRide
+    ? { fell: player.y > 760, landed: false }
+    : physics.step(player, delta, [...world.platformsNear(player.x), ...brontosaurusBacks]);
+  if (!player.brontosaurusRide && wasFalling && physicsResult.landed) {
+    const landedBack = brontosaurusBacks.find((platform) =>
+      Math.abs(player.y + player.h - platform.y) <= 1 &&
+      player.x + player.w > platform.x && player.x < platform.x + platform.w
+    );
+    if (landedBack) startBrontosaurusRide(player, landedBack.animal);
+  }
   if (physicsResult.fell) {
     endGame();
     return;
@@ -2745,7 +2808,14 @@ function update(delta) {
     ...venatosauruses.filter((enemy) => !enemy.defeated)
   ];
   for (const source of foodSources) source.update?.(delta, preyThreats);
-  for (const animal of wildlife) animal.update(delta, venatosauruses);
+  for (const animal of wildlife) {
+    const previousX = animal.x;
+    animal.update(delta, venatosauruses);
+    if (player.brontosaurusRide?.animalId === animal.id) {
+      updateBrontosaurusRide(player, animal, delta, previousX);
+    }
+  }
+  updateWildlifeJeepChases(delta);
 
   for (const companion of autonomousCompanions) {
     tryEatFood(companion.actor);
@@ -2882,6 +2952,11 @@ function render() {
   drawBackground();
   ctx.save();
   ctx.translate(-Math.round(cameraX), 0);
+  for (const chase of wildlifeJeepChases) {
+    if (chase.x + 160 >= cameraX - 120 && chase.x <= cameraX + GAME.width + 120) {
+      drawWildlifeJeep(chase);
+    }
+  }
   for (const animal of wildlife) {
     if (animal.x + animal.w >= cameraX - 120 && animal.x <= cameraX + GAME.width + 120) {
       spriteRenderer.drawAnimated(ctx, "brontosaurus", animal.x, animal.y, animal.w, animal.h, animal, elapsed, { alpha: 0.9, facing: animal.facing });
@@ -2981,6 +3056,14 @@ function render() {
     }
   } else if (!campaignPrologue?.active) {
     drawDino(player.x, player.y, player.w, player.h, "#75a99b", selected, elapsed, blink ? 0.35 : 1, player.facing, player);
+  }
+  if (player.brontosaurusRide) {
+    ctx.save();
+    ctx.fillStyle = "#e8d7a3";
+    ctx.font = "10px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("BRONTOSAURUS RIDE // " + Math.ceil(player.brontosaurusRide.remaining) + "s", player.x + player.w / 2, player.y - 14);
+    ctx.restore();
   }
   if (player.dashTimer > 0) {
     ctx.fillStyle = "#d8f36a66";
@@ -3302,6 +3385,7 @@ function resetPlayer(worldSeed = undefined) {
   venatosauruses = [];
   foodSources = [];
   wildlife = [];
+  wildlifeJeepChases = [];
   seenVenatosaurusSpawns = new Set();
   seenFoodSpawns = new Set();
   seenBrontosaurusSpawns = new Set();

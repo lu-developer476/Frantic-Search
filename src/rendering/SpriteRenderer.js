@@ -10,7 +10,7 @@ export const PROLOGUE_ROSA_ANIMATIONS = Object.freeze({
   run: "juvenile-velociraptor-abyssomirabilis-run.gif"
 });
 const PROLOGUE_ROSA_SCALE = 1.8;
-const ANIMATED_REFERENCE_VERSION = "20261117-rosa-brontosaurus-gif-integration-1";
+const ANIMATED_REFERENCE_VERSION = "20261117-brontosaurus-rides-jeep-chases-facing-1";
 
 export const DINOSAUR_REFERENCE_SCALES = Object.freeze({
   violeta: 1.6,
@@ -36,7 +36,7 @@ export const REFERENCE_PNG_CHARACTERS = Object.freeze({
 export const BRONTOSAURUS_ANIMATION_ASSETS = Object.freeze({
   walk: "brontosaurus-excelsus-basteri-walk.gif",
   run: "brontosaurus-excelsus-basteri-run.gif",
-  sourceFacing: -1,
+  sourceFacing: 1,
   scale: 1.18
 });
 
@@ -52,7 +52,7 @@ export const VENATOSAURUS_ANIMATION_ASSETS = Object.freeze({
     attack: "venatosaurus-impavidus-attack.gif",
     jump: "venatosaurus-impavidus-jump.gif",
     run: "venatosaurus-impavidus-run.gif",
-    sourceFacing: -1,
+    sourceFacing: 1,
     scale: DINOSAUR_REFERENCE_SCALES.venatosaurusImpavidus
   }),
   "venatosaurus-saevidicus": Object.freeze({

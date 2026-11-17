@@ -45,6 +45,10 @@ export function coralAnimationKey(player = {}, phase = "playing") {
   return "coral";
 }
 
+export function shouldFlipMinigameSprite(key) {
+  return typeof key === "string" && key.startsWith("brontosaurus");
+}
+
 export function overlaps(a, b) {
   return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 }
@@ -1248,7 +1252,15 @@ export class EmptyStomach {
       const drawY = key.startsWith("coral") || key.startsWith("parasaur") || key.startsWith("brontosaurus")
         ? getGroundAlignedY(y, h, animation.height, bottomPadding)
         : y;
-      this.ctx.drawImage(frame.image, x, drawY, w, h);
+      if (shouldFlipMinigameSprite(key)) {
+        this.ctx.save();
+        this.ctx.translate(x + w, 0);
+        this.ctx.scale(-1, 1);
+        this.ctx.drawImage(frame.image, 0, drawY, w, h);
+        this.ctx.restore();
+      } else {
+        this.ctx.drawImage(frame.image, x, drawY, w, h);
+      }
     } else {
       this.ctx.fillStyle = fallback;
       this.ctx.fillRect(x + 10, y + 20, w - 20, h - 24);

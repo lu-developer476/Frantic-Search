@@ -82,7 +82,9 @@ test("Brontosaurus uses dedicated walking and running GIFs instead of a missing 
   assert.equal(REFERENCE_PNG_CHARACTERS.brontosaurus, undefined);
   assert.equal(BRONTOSAURUS_ANIMATION_ASSETS.walk, "brontosaurus-excelsus-basteri-walk.gif");
   assert.equal(BRONTOSAURUS_ANIMATION_ASSETS.run, "brontosaurus-excelsus-basteri-run.gif");
-  assert.equal(BRONTOSAURUS_ANIMATION_ASSETS.sourceFacing, -1);
+  assert.equal(BRONTOSAURUS_ANIMATION_ASSETS.sourceFacing, 1);
+  assert.equal(VENATOSAURUS_ANIMATION_ASSETS["venatosaurus-impavidus"].sourceFacing, 1);
+  assert.equal(VENATOSAURUS_ANIMATION_ASSETS["venatosaurus-saevidicus"].sourceFacing, 1);
   assert.equal(selectBrontosaurusAnimation({ state: "grazing", motionSpeed: 0 }), BRONTOSAURUS_ANIMATION_ASSETS.walk);
   assert.equal(selectBrontosaurusAnimation({ state: "retreating", motionSpeed: 42 }), BRONTOSAURUS_ANIMATION_ASSETS.run);
   assert.equal(REFERENCE_PNG_CHARACTERS.ligocristus.sourceFacing, 1);
