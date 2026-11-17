@@ -111,3 +111,47 @@ test("the title screen and menu previews use the canonical artwork filenames", a
   assert.ok(main.includes("${import.meta.env.BASE_URL}artwork/free-roam-artwork.png"));
   assert.ok(main.includes('activeStartMenuPage === "minigames"'));
 });
+
+
+test("the minigames menu updates the start-screen title and subtitle", async () => {
+  const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
+  const handlerStart = main.indexOf("function showStartMenuPage(");
+  const handlerEnd = main.indexOf("\\nfunction getTutorialLines", handlerStart);
+  assert.ok(handlerStart >= 0 && handlerEnd > handlerStart, "menu page handler must exist");
+
+  const handler = main.slice(handlerStart, handlerEnd);
+  const result = runInNewContext(`
+    ${handler}
+    showStartMenuPage("minigames");
+    const minigamesCopy = [startScreenTitle.textContent, startScreenSubtitle.textContent];
+    showStartMenuPage("options");
+    const restoredCopy = [startScreenTitle.textContent, startScreenSubtitle.textContent];
+    [minigamesCopy, restoredCopy];
+  `, {
+    hoveredMinigameButton: null,
+    focusedMinigameButton: null,
+    activeStartMenuPage: "home",
+    startScreenTitle: { textContent: "BÚSQUEDA FRENÉTICA" },
+    startScreenSubtitle: { textContent: "OPERACIÓN: CRÍA PERDIDA" },
+    defaultStartScreenTitle: "BÚSQUEDA FRENÉTICA",
+    defaultStartScreenSubtitle: "OPERACIÓN: CRÍA PERDIDA",
+    ui: (key) => ({
+      minigames: "MINIJUEGOS",
+      minigamesSubtitle: "ELEGÍ UN MINIJUEGO"
+    })[key],
+    updateMinigamePreview: () => {},
+    startMenuHome: {},
+    startMenuOptions: {},
+    campaignMenu: {},
+    minigamesMenu: {},
+    startButton: { setAttribute: () => {} },
+    campaignButton: { setAttribute: () => {} },
+    minigamesButton: { setAttribute: () => {} },
+    startScreen: { classList: { remove: () => {} } }
+  });
+
+  assert.equal(result[0][0], "MINIJUEGOS");
+  assert.equal(result[0][1], "ELEGÍ UN MINIJUEGO");
+  assert.equal(result[1][0], "BÚSQUEDA FRENÉTICA");
+  assert.equal(result[1][1], "OPERACIÓN: CRÍA PERDIDA");
+});

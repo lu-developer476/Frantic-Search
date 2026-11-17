@@ -75,6 +75,10 @@ const spriteRenderer = new SpriteRenderer(import.meta.env.BASE_URL, (_asset, _re
 });
 const overlay = document.querySelector("#overlay");
 const startScreen = document.querySelector("#start-screen");
+const startScreenTitle = document.querySelector("#start-screen-title");
+const startScreenSubtitle = document.querySelector("#start-screen-subtitle");
+const defaultStartScreenTitle = startScreenTitle.textContent;
+const defaultStartScreenSubtitle = startScreenSubtitle.textContent;
 const startScreenMessage = document.querySelector("#start-screen-message");
 const startButton = document.querySelector("#start-button");
 const startMenuHome = document.querySelector("#start-menu-home");
@@ -3873,6 +3877,9 @@ function showStartMenuPage(page = "home") {
   hoveredMinigameButton = null;
   focusedMinigameButton = null;
   activeStartMenuPage = nextPage;
+  const isMinigamesPage = nextPage === "minigames";
+  startScreenTitle.textContent = isMinigamesPage ? ui("minigames") : defaultStartScreenTitle;
+  startScreenSubtitle.textContent = isMinigamesPage ? ui("minigamesSubtitle") : defaultStartScreenSubtitle;
   updateMinigamePreview();
   startMenuHome.hidden = nextPage !== "home";
   startMenuOptions.hidden = nextPage !== "options";
