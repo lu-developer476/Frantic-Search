@@ -4,7 +4,7 @@ import {
   overlaps, scoreForDistance, getGroundAlignedY, createPredator, enemyAnimationKey, ASSETS,
   EmptyStomach, ENEMY_CHASE_DURATION, INTRO_DURATION, PLAYER_WIDTH, PLAYER_HEIGHT,
   DASH_DURATION, DASH_COOLDOWN, DASH_SPEED_MULTIPLIER, ENEMY_STUN_DURATION,
-  EGG_INVULNERABILITY_DURATION, ENEMY_TRIP_FADE_DURATION
+  EGG_INVULNERABILITY_DURATION, ENEMY_TRIP_FADE_DURATION, createEgg
 } from "../src/minigames/EmptyStomach.js";
 import { removeEdgeBackground, getBottomTransparentPadding } from "../src/minigames/AnimatedGif.js";
 
@@ -673,4 +673,16 @@ test("egg invulnerability lets Coral pass through predators without ending the r
   simulation.update(.04);
   assert.equal(simulation.running,true);
   assert.ok(simulation.invulnerabilityTimer>0);
+});
+
+test("eggs retain their ovoid speckled shell when picked up and carried", () => {
+  const egg = createEgg(undefined, 280);
+  const simulation = makeSimulation({ player: { x: 200, y: 366, w: 80, h: 66 } });
+  simulation.phase = "playing";
+  simulation.eggs = [egg];
+
+  assert.equal(simulation.interactWithItem(), true);
+  assert.equal(simulation.carriedItem, egg);
+  assert.ok(egg.h > egg.w);
+  assert.ok(egg.spots.length >= 10);
 });

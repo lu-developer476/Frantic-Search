@@ -9,7 +9,7 @@ export const DEFAULT_LANE = LANE_COUNT - 1;
 export const LANE_BASELINES = Object.freeze([448, 474, 500, 526]);
 export const LANE_SCALES = Object.freeze([0.82, 0.94, 1.06, 1.18]);
 export const MUD_SPEED_MULTIPLIER = 0.55;
-export const PIT_TRAP_DURATION = 1.25;
+export const PIT_FALL_FADE_DURATION = 0.9;
 export const INTRO_DURATION = 5;
 export const PLAYER_WIDTH = 80;
 export const PLAYER_HEIGHT = 66;
@@ -76,6 +76,39 @@ function applyLane(entity, lane, baseWidth = entity.baseW ?? entity.w, baseHeigh
 
 function randomLane() {
   return Math.floor(Math.random() * LANE_COUNT);
+}
+
+const EGG_SPOT_COLORS = Object.freeze([
+  "#8b6748", "#a47750", "#b58b5c", "#d6c18c", "#e6d6a7", "#f0e3bd"
+]);
+
+export function createEgg(lane = DEFAULT_LANE, x = WIDTH + 20) {
+  const spotCount = 10 + Math.floor(Math.random() * 9);
+  const spots = Array.from({ length: spotCount }, () => ({
+    x: 0.2 + Math.random() * 0.6,
+    y: 0.13 + Math.random() * 0.72,
+    radius: 0.025 + Math.random() * 0.105,
+    aspect: 0.65 + Math.random() * 1.05,
+    rotation: (Math.random() - 0.5) * 1.1,
+    color: EGG_SPOT_COLORS[Math.floor(Math.random() * EGG_SPOT_COLORS.length)]
+  }));
+
+  return applyLane({
+    kind: "egg",
+    x,
+    y: 0,
+    w: 26,
+    h: 33,
+    baseW: 26,
+    baseH: 33,
+    vx: 0,
+    spots
+  }, lane);
+}
+
+export function getMudShimmerOpacity(elapsed = 0, phase = 0) {
+  const pulse = (Math.sin(Math.max(0, elapsed) * 5.8 + phase) + 1) / 2;
+  return 0.035 + 0.62 * pulse ** 3;
 }
 
 function createPlayer(lane = DEFAULT_LANE) {
@@ -271,23 +304,41 @@ export class EmptyStomach {
     );
   }
 
-  tryTrapDinosaur(entity, isPredator = false) {
-    if ((entity.trappedTimer ?? 0) > 0) return false;
+  tryResolvePitfall(entity, kind) {
+    if (!entity || entity.fellIntoPit || entity.pitfallDefeated || entity.state === "fading") return false;
+
     const lane = this.getEntityLane(entity);
+    const floor = getLaneBaseline(lane);
+    // A pit only catches actors whose feet reach the ground; jumping clears the hazard.
+    if ((kind === "player" && !entity.grounded) || entity.y + entity.h < floor - 10) return false;
+
     const pit = (this.pits ?? []).find((candidate) =>
-      !candidate.triggered &&
       candidate.lane === lane &&
       entity.x + entity.w * 0.86 > candidate.x &&
       entity.x + entity.w * 0.14 < candidate.x + candidate.w
     );
     if (!pit) return false;
+
     pit.triggered = true;
-    entity.trappedTimer = PIT_TRAP_DURATION;
-    if (isPredator) {
-      entity.trappedState = entity.state;
-      entity.state = "trapped";
-      entity.stateTimer = PIT_TRAP_DURATION;
+    pit.triggeredAt = this.elapsed;
+    entity.fellIntoPit = true;
+
+    if (kind === "player") {
+      this.finish();
+      return true;
     }
+
+    if (kind === "predator") {
+      entity.preyTarget = null;
+      entity.eatTarget = null;
+      entity.eatTargetType = null;
+      entity.state = "fading";
+      entity.fadeTimer = ENEMY_TRIP_FADE_DURATION;
+      return true;
+    }
+
+    entity.pitfallDefeated = true;
+    entity.pitFadeTimer = PIT_FALL_FADE_DURATION;
     return true;
   }
 
@@ -585,7 +636,7 @@ export class EmptyStomach {
     }
 
     this.updateTerrain(delta, speed);
-    this.tryTrapDinosaur(p);
+    if (this.tryResolvePitfall(p, "player")) return;
 
     this.spawnTimer -= delta;
     if (this.spawnTimer <= 0) {
@@ -619,8 +670,14 @@ export class EmptyStomach {
     }
 
     for (const prey of this.herd) {
-      prey.trappedTimer = Math.max(0, (prey.trappedTimer ?? 0) - delta);
       const floor = getLaneBaseline(this.getEntityLane(prey));
+      if (prey.pitfallDefeated) {
+        prey.pitFadeTimer = Math.max(0, (prey.pitFadeTimer ?? 0) - delta);
+        const progress = 1 - prey.pitFadeTimer / PIT_FALL_FADE_DURATION;
+        prey.y = floor - prey.h + progress * 16;
+        continue;
+      }
+      prey.trappedTimer = Math.max(0, (prey.trappedTimer ?? 0) - delta);
       if (prey.beingEaten) {
         prey.beingEatenElapsed += delta;
         prey.y = floor - prey.h;
@@ -637,10 +694,11 @@ export class EmptyStomach {
       prey.animationState = threatened ? "perturbed" : "running";
       prey.x -= (speed * 0.72 * this.movementMultiplier(prey)) * delta;
       prey.y = floor - prey.h;
-      this.tryTrapDinosaur(prey);
-      if (prey.trappedTimer > 0) prey.y = floor - prey.h + 9;
+      if (this.tryResolvePitfall(prey, "prey")) continue;
     }
-    this.herd = this.herd.filter((prey) => prey.beingEaten || prey.x > -140);
+    this.herd = this.herd.filter((prey) =>
+      prey.pitfallDefeated ? prey.pitFadeTimer > 0 : prey.beingEaten || prey.x > -140
+    );
 
     const playerHitbox = {
       x: p.x + 12,
@@ -739,8 +797,7 @@ export class EmptyStomach {
         enemy.y = enemyFloor - enemy.h;
       }
 
-      this.tryTrapDinosaur(enemy, true);
-      if (enemy.state === "trapped") enemy.y = getLaneBaseline(this.getEntityLane(enemy)) - enemy.h + 10;
+      if (this.tryResolvePitfall(enemy, "predator")) continue;
 
       const enemyHitbox = {
         x: enemy.x + 20 * getLaneScale(this.getEntityLane(enemy)),
@@ -807,7 +864,7 @@ export class EmptyStomach {
     this.eggSpawnTimer -= delta;
     if (this.eggSpawnTimer <= 0) {
       const lane = randomLane();
-      this.eggs.push(applyLane({ kind: "egg", x: WIDTH + 20, y: 0, w: 28, h: 23, baseW: 28, baseH: 23, vx: 0 }, lane));
+      this.eggs.push(createEgg(lane, WIDTH + 20));
       this.eggSpawnTimer = 4.8 + Math.random() * 3.2;
     }
     this.rockSpawnTimer -= delta;
@@ -831,9 +888,59 @@ export class EmptyStomach {
   }
 
   drawEgg(egg) {
-    const c=this.ctx;c.save();c.fillStyle="#e9dfc2";c.strokeStyle="#9f8c68";c.lineWidth=2;c.beginPath();
-    c.ellipse(egg.x+egg.w/2,egg.y+egg.h/2,egg.w*.42,egg.h*.48,-.18,0,Math.PI*2);c.fill();c.stroke();
-    c.fillStyle="rgba(255,255,255,.62)";c.beginPath();c.ellipse(egg.x+egg.w*.36,egg.y+egg.h*.3,3,5,-.3,0,Math.PI*2);c.fill();c.restore();
+    const c = this.ctx;
+    const x = egg.x, y = egg.y, w = egg.w, h = egg.h;
+    const centerX = x + w / 2;
+    const pathEgg = () => {
+      c.beginPath();
+      c.moveTo(centerX, y + h * 0.025);
+      c.bezierCurveTo(x + w * 0.29, y + h * 0.025, x + w * 0.07, y + h * 0.28, x + w * 0.085, y + h * 0.56);
+      c.bezierCurveTo(x + w * 0.10, y + h * 0.82, x + w * 0.30, y + h * 0.985, centerX, y + h * 0.985);
+      c.bezierCurveTo(x + w * 0.70, y + h * 0.985, x + w * 0.90, y + h * 0.82, x + w * 0.915, y + h * 0.56);
+      c.bezierCurveTo(x + w * 0.93, y + h * 0.28, x + w * 0.71, y + h * 0.025, centerX, y + h * 0.025);
+      c.closePath();
+    };
+
+    c.save();
+    c.fillStyle = "#eee4cd";
+    c.strokeStyle = "#8f7959";
+    c.lineWidth = Math.max(1, w * 0.055);
+    pathEgg();
+    c.fill();
+    c.save();
+    pathEgg();
+    c.clip();
+
+    for (const spot of egg.spots ?? []) {
+      const radius = Math.max(0.65, w * spot.radius);
+      c.fillStyle = spot.color;
+      c.globalAlpha = 0.78;
+      c.beginPath();
+      c.ellipse(
+        x + w * spot.x,
+        y + h * spot.y,
+        radius,
+        Math.max(0.65, radius * spot.aspect * (h / w) * 0.72),
+        spot.rotation,
+        0,
+        Math.PI * 2
+      );
+      c.fill();
+    }
+
+    c.globalAlpha = 0.5;
+    c.fillStyle = "#fffaf0";
+    c.beginPath();
+    c.ellipse(x + w * 0.34, y + h * 0.29, w * 0.075, h * 0.14, -0.36, 0, Math.PI * 2);
+    c.fill();
+    c.restore();
+
+    c.globalAlpha = 1;
+    c.strokeStyle = "#9a8564";
+    c.lineWidth = Math.max(1, w * 0.045);
+    pathEgg();
+    c.stroke();
+    c.restore();
   }
 
   drawRock(rock) {
@@ -877,6 +984,27 @@ export class EmptyStomach {
       c.ellipse(mud.x + mud.w * (0.22 + index * 0.27), floor - 7, mud.w * 0.11, mud.h * 0.17, -0.2, 0, Math.PI * 2);
       c.fill();
     }
+
+    // Moving, pulsing highlights make the active slow-down surface visibly shimmer.
+    for (let index = 0; index < 5; index += 1) {
+      const travel = (this.elapsed * 0.32 + index * 0.21) % 1;
+      const phase = index * 1.63 + mud.x * 0.012;
+      c.globalAlpha = getMudShimmerOpacity(this.elapsed, phase);
+      c.fillStyle = index % 2 === 0 ? "#e8d5a5" : "#c8d5a0";
+      c.beginPath();
+      c.ellipse(
+        mud.x + mud.w * (0.09 + travel * 0.82),
+        floor - 8 - Math.sin(this.elapsed * 3.1 + phase) * 1.6,
+        mud.w * 0.027,
+        Math.max(1, mud.h * 0.12),
+        -0.28,
+        0,
+        Math.PI * 2
+      );
+      c.fill();
+    }
+
+    c.globalAlpha = 0.82;
     c.strokeStyle = "rgba(211, 180, 126, 0.6)";
     c.lineWidth = 1;
     c.beginPath();

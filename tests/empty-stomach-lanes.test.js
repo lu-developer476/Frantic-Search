@@ -8,7 +8,9 @@ import {
   LANE_SCALES,
   LANE_BASELINES,
   MUD_SPEED_MULTIPLIER,
-  PIT_TRAP_DURATION
+  PIT_FALL_FADE_DURATION,
+  createEgg,
+  getMudShimmerOpacity
 } from "../src/minigames/EmptyStomach.js";
 
 function makeSimulation({
@@ -114,21 +116,31 @@ test("Predators only collide with Coral while they occupy the same lane", () => 
   assert.equal(enemy.lane, 2);
 });
 
-test("A pit traps Coral temporarily and prevents lane changes until she gets free", () => {
+test("A ground-level pit ends Coral's run immediately", () => {
   const pit = { x: 180, w: 112, lane: DEFAULT_LANE, life: 8, triggered: false };
   const simulation = makeSimulation({ pits: [pit] });
 
   simulation.update(0.04);
 
   assert.equal(pit.triggered, true);
-  assert.equal(simulation.player.trappedTimer, PIT_TRAP_DURATION);
-  assert.equal(simulation.changeLane(-1), false);
-  simulation.update(PIT_TRAP_DURATION + 0.1);
-  assert.equal(simulation.player.trappedTimer, 0);
-  assert.equal(simulation.changeLane(-1), true);
+  assert.equal(simulation.running, false);
+  assert.equal(simulation.finished, true);
 });
 
-test("A pit also traps a predator in its own lane", () => {
+test("jumping over a pit prevents the lethal ground collision", () => {
+  const pit = { x: 180, w: 112, lane: DEFAULT_LANE, life: 8, triggered: false };
+  const simulation = makeSimulation({
+    player: { y: LANE_BASELINES[DEFAULT_LANE] - 66 * LANE_SCALES[DEFAULT_LANE] - 48, grounded: false, vy: -220 },
+    pits: [pit]
+  });
+
+  simulation.update(0.04);
+
+  assert.equal(pit.triggered, false);
+  assert.equal(simulation.running, true);
+});
+
+test("a pit eliminates a predator in its lane", () => {
   const enemy = createPredator("umbraraptor", 0, 3);
   enemy.x = 200;
   enemy.laneShiftTimer = 30;
@@ -143,8 +155,30 @@ test("A pit also traps a predator in its own lane", () => {
   simulation.update(0.04);
 
   assert.equal(pit.triggered, true);
-  assert.equal(enemy.state, "trapped");
-  assert.equal(enemy.trappedTimer, PIT_TRAP_DURATION);
+  assert.equal(enemy.fellIntoPit, true);
+  assert.equal(enemy.state, "fading");
+  assert.equal(enemy.fadeTimer, 0.9);
+});
+
+test("a previously triggered pit still removes herd prey that enters it", () => {
+  const prey = {
+    x: 200, y: LANE_BASELINES[3] - 50, w: 90, h: 50, lane: 3,
+    beingEaten: false, trappedTimer: 0, animationState: "running"
+  };
+  const pit = { x: 180, w: 130, lane: 3, life: 8, triggered: true };
+  const simulation = makeSimulation({
+    player: { x: 700, lane: 2 },
+    herd: [prey],
+    pits: [pit]
+  });
+
+  simulation.update(0.04);
+  assert.equal(prey.pitfallDefeated, true);
+  assert.ok(prey.pitFadeTimer > 0);
+  assert.equal(pit.triggered, true);
+
+  simulation.update(PIT_FALL_FADE_DURATION + 0.05);
+  assert.equal(simulation.herd.includes(prey), false);
 });
 
 test("Mud slows Coral and predators while they cross a puddle", () => {
@@ -189,4 +223,24 @@ test("Eggs and stones can only be picked up from Coral's current lane", () => {
   assert.equal(simulation.interactWithItem(), true);
   assert.equal(simulation.carriedItem, sameLaneRock);
   assert.equal(simulation.eggs.includes(differentLaneEgg), true);
+});
+
+test("new cream eggs are upright ovoids with varied brown and pale-yellow speckles", () => {
+  const egg = createEgg(2, 420);
+  assert.equal(egg.kind, "egg");
+  assert.ok(egg.baseH > egg.baseW, "the egg silhouette must be taller than it is wide");
+  assert.ok(egg.spots.length >= 10);
+  assert.ok(egg.spots.length <= 18);
+
+  const allowedColors = new Set(["#8b6748", "#a47750", "#b58b5c", "#d6c18c", "#e6d6a7", "#f0e3bd"]);
+  assert.ok(egg.spots.every((spot) => allowedColors.has(spot.color)));
+  assert.ok(egg.spots.every((spot) => spot.radius >= 0.025 && spot.radius <= 0.13));
+  assert.ok(new Set(egg.spots.map((spot) => spot.radius)).size > 1, "speckles should use varied sizes");
+});
+
+test("mud shimmer pulses over time without changing the slowdown multiplier", () => {
+  const samples = [0, 0.12, 0.25, 0.4, 0.6, 0.9].map((time) => getMudShimmerOpacity(time, 0.7));
+  assert.ok(samples.every((opacity) => opacity >= 0.035 && opacity <= 0.655));
+  assert.ok(new Set(samples.map((opacity) => opacity.toFixed(3))).size > 1);
+  assert.equal(MUD_SPEED_MULTIPLIER, 0.55);
 });
