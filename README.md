@@ -1,5 +1,3 @@
-<img width="1537" height="1023" alt="8bits-artwork" src="https://github.com/user-attachments/assets/1f857e0e-899f-441b-b81d-44f9cca09aca" />
-
 # Frantic Search — Operation: Lost Hatchling #
 
 **Version 1.3.1 · 2D pixel-art survival-platformer · HTML5 Canvas · JavaScript · Vite**
