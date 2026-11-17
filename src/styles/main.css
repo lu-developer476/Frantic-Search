@@ -4516,3 +4516,22 @@ html.site-mode-gray .survival-intro button {
     font-size: 40px;
   }
 }
+
+/* Keep the start-screen heading and first action row at a stable vertical position. */
+@media (min-width: 768px) {
+  #start-screen {
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  #start-screen .start-screen-copy {
+    align-self: stretch;
+    display: grid;
+    grid-template-rows: max-content max-content minmax(0, 1fr);
+    align-content: start;
+    min-height: 0;
+  }
+
+  #start-screen .start-screen-copy > :is(.start-screen-actions, .start-menu-view) {
+    align-self: start;
+  }
+}
