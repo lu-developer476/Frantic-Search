@@ -31,7 +31,17 @@ const PRAIRIE_SCENE = Object.freeze({
   platformShadow: "#4c3c2d"
 });
 
+const RACE_SCENE = Object.freeze({
+  ...PRAIRIE_SCENE,
+  name: "LONG-DISTANCE RACE",
+  sky: "#73c7df",
+  ground: "#8ba64c",
+  mountain: "#a9c28a",
+  ridge: "#73965a"
+});
+
 export const MINIGAME_ENVIRONMENT_SCENES = Object.freeze({
+  race: RACE_SCENE,
   persecution: PRAIRIE_SCENE,
   hunting: LEVELS[1],
   ambush: LEVELS[1]

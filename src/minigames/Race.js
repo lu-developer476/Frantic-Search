@@ -1,18 +1,48 @@
-import { createEgg, getLaneBaseline, getLaneScale, normalizeLane, LANE_COUNT } from "./Persecution.js";
+import {
+  createEgg, getLaneBaseline, getLaneScale, normalizeLane, LANE_COUNT,
+  DASH_DURATION, DASH_COOLDOWN, DASH_SPEED_MULTIPLIER, DASH_DUST_DURATION
+} from "./Persecution.js";
 import { drawOutlinedImage, observeCanvasViewport } from "../rendering/CanvasUtils.js";
 import { MinigameEnvironmentRenderer, MINIGAME_ENVIRONMENT_SCENES } from "./MinigameEnvironment.js";
 
 let WIDTH = 960;
 const HEIGHT = 540;
 const BASE_WIDTH = 960;
-const START_RATIO = 92 / BASE_WIDTH;
-const FINISH_RATIO = 874 / BASE_WIDTH;
-const CHECKPOINT_POSITIONS = [250, 410, 570, 730];
-const CHECKPOINT_RATIOS = CHECKPOINT_POSITIONS.map((x) => x / BASE_WIDTH);
+const CHECKPOINT_PROGRESS = Object.freeze([0.2, 0.4, 0.6, 0.8]);
+const CHECKPOINT_RATIOS = CHECKPOINT_PROGRESS;
 const COURSE_HAZARD_KINDS = Object.freeze(["rock", "spikes", "pit", "bush", "mud"]);
-const COURSE_PICKUP_KINDS = Object.freeze(["egg", "egg", "egg", "egg", "egg", "meat", "meat"]);
+const COURSE_PICKUP_KINDS = Object.freeze([
+  "egg", "egg", "egg", "egg", "egg", "egg", "egg", "egg",
+  "meat", "meat", "meat", "meat"
+]);
 const CHECKPOINT_CLEARANCE = 0.035;
 const LANE_OBJECT_CLEARANCE = 0.075;
+
+export const RACE_DISTANCE_METERS = 10_000;
+export const RACE_PIXELS_PER_METER = 0.9;
+export const RACE_TRACK_LENGTH_PIXELS = RACE_DISTANCE_METERS * RACE_PIXELS_PER_METER;
+export const RAM_SLOW_DURATION = 1.35;
+export const RAM_SLOW_PENALTY = 39;
+export const RACE_BASE_SPEED = 88;
+export const RACE_SPEED_VARIANCE = 0.2;
+
+export function getRacePace(rosterSpeed) {
+  const speed = Number.isFinite(Number(rosterSpeed)) ? Number(rosterSpeed) : RACE_BASE_SPEED;
+  return RACE_BASE_SPEED + (speed - RACE_BASE_SPEED) * RACE_SPEED_VARIANCE;
+}
+const START_SCREEN_RATIO = 0.29;
+
+export function getRaceDistanceMeters(worldX) {
+  return clamp((Number(worldX) || 0) / RACE_PIXELS_PER_METER, 0, RACE_DISTANCE_METERS);
+}
+
+export function hasRacerBeenEaten(screenX, spriteWidth = 0) {
+  return Number(screenX) + Math.max(0, Number(spriteWidth) || 0) / 2 < 0;
+}
+
+export function areAllRaceParticipantsEaten(racers = []) {
+  return racers.length === LANE_COUNT && racers.every((racer) => racer.eaten && !racer.finished);
+}
 
 export const BREAKING_RACE_ROSTER = Object.freeze([
   { id: "gala", name: "Gala", species: "Velociraptor nublarensis", run: "references/adult-velociraptor-nublarensis.png", jump: "references/adult-velociraptor-nublarensis.png", speed: 92 },
@@ -40,8 +70,9 @@ function createSeededRandom(seed) {
 }
 
 function isClearOfCheckpoints(progress) {
-  const checkpointProgress = CHECKPOINT_POSITIONS.map((x) => (x - 92) / (874 - 92));
-  return checkpointProgress.every((checkpoint) => Math.abs(progress - checkpoint) >= CHECKPOINT_CLEARANCE);
+  return CHECKPOINT_PROGRESS.every((checkpoint) =>
+    Math.abs(progress - checkpoint) >= CHECKPOINT_CLEARANCE
+  );
 }
 
 export function generateRaceCourse(seed = Date.now()) {
@@ -74,7 +105,7 @@ export function generateRaceCourse(seed = Date.now()) {
   placeHazard("bush", 3);
   placeHazard("mud");
 
-  for (let index = 0; index < 11; index += 1) {
+  for (let index = 0; index < 27; index += 1) {
     const kind = COURSE_HAZARD_KINDS[Math.floor(random() * COURSE_HAZARD_KINDS.length)];
     placeHazard(kind);
   }
@@ -99,7 +130,7 @@ export function generateRaceCourse(seed = Date.now()) {
     if (!placed) break;
   }
 
-  return { seed: Number(seed) >>> 0, hazards, pickups };
+  return { seed: Number(seed) >>> 0, distanceMeters: RACE_DISTANCE_METERS, hazards, pickups };
 }
 
 export function createRaceLineup(selectedDinosaurId, random = Math.random) {
@@ -164,6 +195,9 @@ export class Race {
     this.checkpoints = [];
     this.hazards = [];
     this.pickups = [];
+    this.ramDustClouds = [];
+    this.eatEffects = [];
+    this.random = Math.random;
     this.selectedDinosaurId = BREAKING_RACE_ROSTER[0].id;
     this.dinosaurSelect = root.querySelector("[data-br-dinosaur-select]");
     this.dinosaurSelectLabel = root.querySelector("[data-br-select-label]");
@@ -178,7 +212,7 @@ export class Race {
     this.environmentRenderer = this.createEnvironmentRenderer(4021);
     this.handleDown = (event) => {
       if (!this.root.classList.contains("active")) return;
-      if (["Space", "ArrowUp", "ArrowDown", "KeyW", "KeyS"].includes(event.code)) event.preventDefault();
+      if (["Space", "ArrowUp", "ArrowDown", "KeyW", "KeyS", "KeyX"].includes(event.code)) event.preventDefault();
 
       if (event.code === "Escape" && !event.repeat) {
         this.exit();
@@ -192,9 +226,10 @@ export class Race {
 
       const player = this.playerRacer;
       if (!player) return;
-      if (["Space"].includes(event.code)) this.jump(player);
-      else if (["ArrowUp", "KeyW"].includes(event.code)) this.changeLane(player, -1);
-      else if (["ArrowDown", "KeyS"].includes(event.code)) this.changeLane(player, 1);
+      if (event.code === "Space") this.jump(player);
+      else if (event.code === "ArrowUp" || event.code === "KeyW") this.changeLane(player, -1);
+      else if (event.code === "ArrowDown" || event.code === "KeyS") this.changeLane(player, 1);
+      else if (event.code === "KeyX") this.activateRam(player);
     };
 
     window.addEventListener("keydown", this.handleDown);
@@ -211,11 +246,15 @@ export class Race {
   }
 
   get startX() {
-    return laneX(START_RATIO);
+    return 0;
   }
 
   get finishX() {
-    return laneX(FINISH_RATIO);
+    return RACE_TRACK_LENGTH_PIXELS;
+  }
+
+  get startScreenX() {
+    return Math.min(330, Math.max(240, WIDTH * START_SCREEN_RATIO));
   }
 
   get playerRacer() {
@@ -224,11 +263,11 @@ export class Race {
 
   createEnvironmentRenderer(seed) {
     return new MinigameEnvironmentRenderer({
-      scene: MINIGAME_ENVIRONMENT_SCENES.persecution,
+      scene: MINIGAME_ENVIRONMENT_SCENES.race,
       groundY: 438,
       seed,
-      sectionLength: 6200,
-      sectionCount: 8
+      sectionLength: 5000,
+      sectionCount: 3
     });
   }
 
@@ -244,16 +283,8 @@ export class Race {
   }
 
   resizeCanvas(width) {
-    const nextWidth = Math.max(BASE_WIDTH, Math.ceil(width));
-    if (nextWidth !== WIDTH) {
-      const ratio = nextWidth / WIDTH;
-      for (const collection of [this.racers, this.checkpoints, this.hazards, this.pickups]) {
-        for (const item of collection ?? []) {
-          if (Number.isFinite(item.x)) item.x *= ratio;
-        }
-      }
-      WIDTH = nextWidth;
-    }
+    WIDTH = Math.max(BASE_WIDTH, Math.ceil(width));
+    this.cameraX = this.cameraX ?? -this.startScreenX;
     this.ctx.imageSmoothingEnabled = false;
   }
 
@@ -270,13 +301,13 @@ export class Race {
     this.locale = locale === "en" ? "en" : "es";
     this.root.querySelector("[data-br-title]").textContent = this.text("CARRERA", "RACE");
     this.root.querySelector("[data-br-subtitle]").textContent = this.text(
-      "Elegí tu dinosaurio, esquivá el terreno y cruzá la meta antes que tus rivales.",
-      "Choose your dinosaur, dodge the terrain and reach the finish before your rivals."
+      "Elegí tu dinosaurio, cambiá entre cuatro carriles, embestí a tus rivales y sobreviví a los 10.000 metros.",
+      "Choose your dinosaur, shift between four lanes, ram your rivals and survive the 10,000 meters."
     );
     this.dinosaurSelectLabel.textContent = this.text("DINOSAURIO A CONTROLAR", "DINOSAUR TO CONTROL");
     this.root.querySelector("[data-br-instructions]").textContent = this.text(
-      "ESPACIO: SALTAR · W / S O ↑ / ↓: CAMBIAR CARRIL · P: PAUSA · ESC: SALIR · HUEVOS Y CARNE: IMPULSO",
-      "SPACE: JUMP · W / S OR ↑ / ↓: CHANGE LANE · P: PAUSE · ESC: EXIT · EGGS AND MEAT: BOOST"
+      "ESPACIO: SALTAR · W / S O ↑ / ↓: CAMBIAR CARRIL · X: EMBESTIR · P: PAUSA · ESC: SALIR · HUEVOS Y CARNE: IMPULSO",
+      "SPACE: JUMP · W / S OR ↑ / ↓: CHANGE LANE · X: RAM · P: PAUSE · ESC: EXIT · EGGS AND MEAT: BOOST"
     );
     this.root.querySelector("[data-br-start]").textContent = this.text("INICIAR CARRERA", "START RACE");
     this.root.querySelector("[data-br-retry]").textContent = this.text("OTRA CARRERA", "RACE AGAIN");
@@ -305,14 +336,18 @@ export class Race {
     this.elapsed = 0;
     this.paused = false;
     this.racers = [];
+    this.ramDustClouds = [];
+    this.eatEffects = [];
     this.courseSeed = Math.floor(Math.random() * 0xffffffff) || 1;
+    this.random = createSeededRandom(this.courseSeed ^ 0xa511e9b3);
     const course = generateRaceCourse(this.courseSeed);
     this.environmentRenderer = this.createEnvironmentRenderer(this.courseSeed);
+    this.cameraX = -this.startScreenX;
     const trackLength = this.finishX - this.startX;
 
     this.checkpoints = CHECKPOINT_RATIOS.map((progress, index) => ({
       id: "checkpoint-" + index,
-      x: laneX(progress),
+      x: this.startX + trackLength * progress,
       hit: false
     }));
     this.hazards = course.hazards.map((hazard) => {
@@ -324,7 +359,7 @@ export class Race {
     this.pickups = course.pickups.map((pickup) => {
       const x = this.startX + trackLength * pickup.progress;
       const item = pickup.kind === "egg"
-        ? createEgg(pickup.lane, x)
+        ? createEgg(pickup.lane, x, this.random)
         : {
             id: pickup.id,
             kind: "meat",
@@ -333,8 +368,7 @@ export class Race {
             x,
             y: getLaneBaseline(pickup.lane) - 29 * getLaneScale(pickup.lane),
             w: 32 * getLaneScale(pickup.lane),
-            h: 29 * getLaneScale(pickup.lane),
-            taken: false
+            h: 29 * getLaneScale(pickup.lane)
           };
       item.id = pickup.id;
       item.progress = pickup.progress;
@@ -353,16 +387,19 @@ export class Race {
   start() {
     this.canvasViewport();
     this.reset();
-    const lineup = createRaceLineup(this.selectedDinosaurId);
+    const lineup = createRaceLineup(this.selectedDinosaurId, this.random);
     const laneOrder = [0, 1, 2, 3];
     for (let index = laneOrder.length - 1; index > 0; index -= 1) {
-      const swapIndex = Math.floor(Math.random() * (index + 1));
+      const swapIndex = Math.floor(this.random() * (index + 1));
       [laneOrder[index], laneOrder[swapIndex]] = [laneOrder[swapIndex], laneOrder[index]];
     }
     this.racers = lineup.map((dinosaur, index) => ({
+      raceId: dinosaur.id,
       d: dinosaur,
+      raceSpeed: getRacePace(dinosaur.speed),
       lane: laneOrder[index],
       x: this.startX,
+      distanceMeters: 0,
       score: 0,
       cp: 0,
       wait: 0,
@@ -373,9 +410,16 @@ export class Race {
       jumpY: 0,
       jumping: false,
       finished: false,
+      eaten: false,
       finishTime: 0,
+      eliminationTime: 0,
+      eliminationDistance: 0,
       flash: 0,
       laneChangeCooldown: 0,
+      laneDecisionTimer: 0.55 + this.random() * 1.5,
+      ramTimer: 0,
+      ramCooldown: this.random() * 0.45,
+      ramDecisionTimer: 0.7 + this.random() * 1.4,
       hitHazards: new Set(),
       isPlayer: dinosaur.id === this.selectedDinosaurId
     }));
@@ -416,7 +460,10 @@ export class Race {
   }
 
   changeLane(racer, direction) {
-    if (!this.running || !racer?.isPlayer || racer.laneChangeCooldown > 0 || racer.pitfallTimer > 0) return false;
+    if (
+      !this.running || !racer || racer.finished || racer.eaten ||
+      racer.laneChangeCooldown > 0 || racer.pitfallTimer > 0
+    ) return false;
     const nextLane = normalizeLane(racer.lane + Math.sign(direction));
     if (nextLane === racer.lane) return false;
     racer.lane = nextLane;
@@ -425,7 +472,7 @@ export class Race {
   }
 
   jump(racer) {
-    if (!this.running || !racer || racer.jumping || racer.wait > 0 || racer.finished || racer.pitfallTimer > 0) return;
+    if (!this.running || !racer || racer.jumping || racer.wait > 0 || racer.finished || racer.eaten || racer.pitfallTimer > 0) return;
     const scale = getLaneScale(racer.lane);
     racer.jumping = true;
     racer.vy = -245 * scale;
@@ -442,9 +489,11 @@ export class Race {
 
   update(delta) {
     this.elapsed += delta;
+    for (const effect of this.eatEffects) effect.life = Math.max(0, effect.life - delta);
+    this.eatEffects = this.eatEffects.filter((effect) => effect.life > 0);
 
     for (const racer of this.racers) {
-      if (racer.finished) continue;
+      if (racer.finished || racer.eaten) continue;
 
       const scale = getLaneScale(racer.lane);
       racer.flash = Math.max(0, racer.flash - delta);
@@ -453,6 +502,8 @@ export class Race {
       racer.boost = Math.max(0, racer.boost - delta);
       racer.pitfallTimer = Math.max(0, racer.pitfallTimer - delta);
       racer.laneChangeCooldown = Math.max(0, racer.laneChangeCooldown - delta);
+      racer.ramTimer = Math.max(0, racer.ramTimer - delta);
+      racer.ramCooldown = Math.max(0, racer.ramCooldown - delta);
 
       if (racer.jumping) {
         racer.vy += 600 * scale * delta;
@@ -463,6 +514,8 @@ export class Race {
           racer.jumping = false;
         }
       }
+
+      if (!racer.isPlayer) this.updateRacerAI(racer, delta);
       if (racer.wait > 0 || racer.pitfallTimer > 0) continue;
 
       if (!racer.isPlayer && !racer.jumping) {
@@ -479,35 +532,169 @@ export class Race {
       this.resolveHazards(racer);
       this.resolvePickups(racer);
 
-      const pace = racer.d.speed +
+      const pace = (
+        racer.raceSpeed +
         (racer.boost > 0 ? 42 : 0) -
-        (racer.slow > 0 ? 39 : 0) +
-        (racer.jumping ? 4 : 0);
+        (racer.slow > 0 ? RAM_SLOW_PENALTY : 0) +
+        (racer.jumping ? 4 : 0)
+      ) * (racer.ramTimer > 0 ? DASH_SPEED_MULTIPLIER : 1);
       racer.x = Math.min(this.finishX, racer.x + pace * delta);
+      racer.distanceMeters = getRaceDistanceMeters(racer.x);
 
       const target = this.checkpoints[racer.cp];
       if (target && racer.x >= target.x - 5) {
         const error = Math.abs(racer.x - target.x);
-        if (error <= 12) {
-          racer.score += 100;
-          racer.cp += 1;
-          racer.wait = 2;
-          racer.flash = 0.35;
-        } else {
-          racer.score += Math.max(0, 50 - Math.round(error * 2));
-          racer.cp += 1;
-          racer.wait = 2;
-        }
+        racer.score += error <= 12 ? 100 : Math.max(0, 50 - Math.round(error * 2));
+        if (error <= 12) racer.flash = 0.35;
+        racer.cp += 1;
+        racer.wait = 0.12;
       }
 
       if (racer.x >= this.finishX) {
         racer.finished = true;
+        racer.distanceMeters = RACE_DISTANCE_METERS;
         racer.finishTime = this.elapsed;
-        racer.score += Math.max(0, Math.round((LANE_COUNT - this.racers.filter((item) => item.finished).length) * 25));
+        racer.score += Math.max(0, Math.round(
+          (LANE_COUNT - this.racers.filter((item) => item.finished).length) * 25
+        ));
       }
     }
 
-    if (this.racers.length && this.racers.every((racer) => racer.finished)) this.finish();
+    this.updateCamera();
+    this.updateRamDust(delta);
+    this.updateEatenRacers();
+
+    if (this.racers.length && this.racers.every((racer) => racer.finished || racer.eaten)) {
+      this.finish();
+    }
+  }
+
+  updateCamera() {
+    const leader = this.racers.reduce((current, racer) => {
+      if (racer.eaten || racer.finished) return current;
+      return !current || racer.x > current.x ? racer : current;
+    }, null);
+    if (leader) this.cameraX = Math.max(this.cameraX, leader.x - this.startScreenX);
+  }
+
+  updateRacerAI(racer, delta) {
+    racer.laneDecisionTimer = Math.max(0, racer.laneDecisionTimer - delta);
+    if (racer.laneDecisionTimer <= 0) {
+      const hazardAhead = this.hazards.some((hazard) =>
+        hazard.lane === racer.lane &&
+        !racer.hitHazards.has(hazard.id) &&
+        hazard.x - racer.x > -30 &&
+        hazard.x - racer.x < 235
+      );
+      const options = [racer.lane - 1, racer.lane + 1]
+        .filter((lane) => lane >= 0 && lane < LANE_COUNT);
+      if (options.length && (hazardAhead || this.random() < 0.52)) {
+        const laneRisk = (lane) => {
+          const hazardRisk = this.hazards.reduce((risk, hazard) => {
+            const distance = hazard.x - racer.x;
+            if (hazard.lane !== lane || racer.hitHazards.has(hazard.id) || distance < -35 || distance > 300) {
+              return risk;
+            }
+            return risk + (300 - Math.max(0, distance)) / 110;
+          }, 0);
+          const trafficRisk = this.racers.filter((other) =>
+            other !== racer && !other.eaten && !other.finished && other.lane === lane &&
+            Math.abs(other.x - racer.x) < 92
+          ).length * 1.5;
+          const pickupReward = this.pickups.some((pickup) =>
+            !pickup.taken && pickup.lane === lane && Math.abs(pickup.x - racer.x) < 280
+          ) ? 0.7 : 0;
+          return hazardRisk + trafficRisk - pickupReward + this.random() * 0.25;
+        };
+        options.sort((a, b) => laneRisk(a) - laneRisk(b));
+        this.changeLane(racer, options[0] - racer.lane);
+      }
+      racer.laneDecisionTimer = 0.8 + this.random() * 1.8;
+    }
+
+    racer.ramDecisionTimer = Math.max(0, racer.ramDecisionTimer - delta);
+    if (racer.ramDecisionTimer <= 0) {
+      const rivalBehind = this.racers.some((other) =>
+        other !== racer && !other.eaten && !other.finished && other.lane === racer.lane &&
+        racer.x - other.x > 34 && racer.x - other.x < 195
+      );
+      if (rivalBehind && racer.ramCooldown <= 0) this.activateRam(racer);
+      racer.ramDecisionTimer = 0.9 + this.random() * 1.6;
+    }
+  }
+
+  activateRam(racer) {
+    if (
+      !this.running || !racer || racer.finished || racer.eaten ||
+      (racer.ramCooldown ?? 0) > 0 || (racer.ramTimer ?? 0) > 0
+    ) return false;
+
+    const scale = getLaneScale(racer.lane);
+    const width = 205 * scale;
+    const height = 64 * scale;
+    racer.ramTimer = DASH_DURATION;
+    racer.ramCooldown = DASH_COOLDOWN;
+    this.ramDustClouds ??= [];
+    this.ramDustClouds.push({
+      sourceId: racer.raceId ?? racer.d?.id ?? "unknown",
+      x: racer.x - width + 10 * scale,
+      y: getLaneBaseline(racer.lane) - height + 5 * scale,
+      w: width,
+      h: height,
+      lane: racer.lane,
+      life: DASH_DUST_DURATION,
+      max: DASH_DUST_DURATION,
+      hitIds: new Set()
+    });
+    return true;
+  }
+
+  updateRamDust(delta) {
+    const clouds = this.ramDustClouds ?? [];
+    for (const cloud of clouds) {
+      cloud.life = Math.max(0, cloud.life - delta);
+      if (cloud.life <= 0) continue;
+      for (const racer of this.racers) {
+        if (
+          racer.raceId === cloud.sourceId || racer.eaten || racer.finished ||
+          racer.lane !== cloud.lane || cloud.hitIds.has(racer.raceId)
+        ) continue;
+        const centerX = racer.x;
+        const centerY = getLaneBaseline(racer.lane) - 24 * getLaneScale(racer.lane);
+        if (
+          centerX < cloud.x || centerX > cloud.x + cloud.w ||
+          centerY < cloud.y || centerY > cloud.y + cloud.h
+        ) continue;
+        cloud.hitIds.add(racer.raceId);
+        racer.slow = Math.max(racer.slow, RAM_SLOW_DURATION);
+        racer.flash = Math.max(racer.flash, 0.42);
+        racer.score = Math.max(0, racer.score - 5);
+      }
+    }
+    this.ramDustClouds = clouds.filter((cloud) => cloud.life > 0);
+  }
+
+  updateEatenRacers() {
+    for (const racer of this.racers) {
+      if (racer.finished || racer.eaten) continue;
+      const spriteWidth = 64 * getLaneScale(racer.lane);
+      const screenX = racer.x - this.cameraX;
+      if (!hasRacerBeenEaten(screenX, spriteWidth)) continue;
+
+      racer.eaten = true;
+      racer.eliminationTime = this.elapsed;
+      racer.eliminationDistance = getRaceDistanceMeters(racer.x);
+      racer.distanceMeters = racer.eliminationDistance;
+      this.eatEffects.push({
+        lane: racer.lane,
+        life: 0.78,
+        max: 0.78,
+        name: racer.d.name
+      });
+      if (racer.isPlayer) {
+        this.setStatus("JUGADOR DEVORADO // OBSERVANDO", "PLAYER EATEN // SPECTATING");
+      }
+    }
   }
 
   resolveHazards(racer) {
@@ -550,24 +737,45 @@ export class Race {
 
   finish() {
     this.stop();
-    this.racers.sort((a, b) => b.score - a.score || a.finishTime - b.finishTime);
-    const winner = this.racers[0];
-    const playerPosition = this.racers.findIndex((racer) => racer.isPlayer) + 1;
+    this.racers.sort((a, b) => {
+      if (a.finished !== b.finished) return a.finished ? -1 : 1;
+      if (a.finished && b.finished) return a.finishTime - b.finishTime;
+      return (b.eliminationDistance ?? getRaceDistanceMeters(b.x)) -
+        (a.eliminationDistance ?? getRaceDistanceMeters(a.x));
+    });
+
     const player = this.playerRacer;
+    const playerPosition = this.racers.findIndex((racer) => racer.isPlayer) + 1;
+    const winner = this.racers.find((racer) => racer.finished);
     const playerResult = player
       ? this.text(" · TU PUESTO: ", " · YOUR PLACE: ") + playerPosition + "/" + this.racers.length
       : "";
-    this.root.querySelector("[data-br-result]").textContent =
-      this.text("GANADOR: ", "WINNER: ") + winner.d.name + " · " + winner.score + " PTS" + playerResult;
+    let result;
+    if (areAllRaceParticipantsEaten(this.racers)) {
+      result = this.text("TODOS FUERON DEVORADOS · PARTIDA PERDIDA", "ALL RACERS WERE EATEN · GAME OVER");
+    } else if (player?.eaten) {
+      result = this.text("TE DEVORARON · ELIMINADO", "YOU WERE EATEN · ELIMINATED") +
+        (winner ? " · " + this.text("GANADOR: ", "WINNER: ") + winner.d.name : "") +
+        playerResult;
+    } else {
+      result = this.text("GANADOR: ", "WINNER: ") +
+        (winner?.d.name ?? this.text("SIN GANADOR", "NO WINNER")) +
+        " · " + (winner?.score ?? 0) + " PTS" + playerResult;
+    }
+
+    this.root.querySelector("[data-br-result]").textContent = result;
     this.root.querySelector("[data-br-result]").hidden = false;
     this.root.querySelector("[data-br-retry]").hidden = false;
     this.root.classList.remove("playing");
-    this.setStatus("CARRERA // FINALIZADA", "RACE // FINISHED");
+    this.setStatus(
+      areAllRaceParticipantsEaten(this.racers) ? "CARRERA // DERROTA" : "CARRERA // FINALIZADA",
+      areAllRaceParticipantsEaten(this.racers) ? "RACE // DEFEAT" : "RACE // FINISHED"
+    );
   }
 
   drawBackground() {
     const rendered = this.environmentRenderer.draw(this.ctx, {
-      cameraX: 0,
+      cameraX: this.cameraX,
       viewportWidth: WIDTH,
       viewportHeight: HEIGHT,
       elapsed: this.elapsed
@@ -635,7 +843,8 @@ export class Race {
     context.fillStyle = "#f3f1df";
     context.font = "bold 12px monospace";
     context.textAlign = "center";
-    context.fillText(this.text("META", "FINISH"), this.finishX, 421);
+    context.fillText("A", this.startX, 421);
+    context.fillText(this.text("B · 10.000 M", "B · 10,000 M"), this.finishX, 421);
     context.textAlign = "left";
   }
 
@@ -859,6 +1068,7 @@ export class Race {
   }
 
   drawDino(racer) {
+    if (racer.eaten) return;
     const context = this.ctx;
     const layout = getRaceLaneLayout(racer.lane);
     const width = 64 * layout.scale;
@@ -908,14 +1118,90 @@ export class Race {
     context.textAlign = "left";
   }
 
+  drawRamDustCloud(cloud) {
+    const context = this.ctx;
+    const opacity = clamp(cloud.life / cloud.max, 0, 1);
+    const centerY = cloud.y + cloud.h * 0.58;
+    context.save();
+    context.globalAlpha = 0.58 * opacity;
+    context.fillStyle = "#d8c7a1";
+    for (let index = 0; index < 8; index += 1) {
+      const phase = index / 7;
+      const x = cloud.x + cloud.w * (0.08 + phase * 0.84);
+      const y = centerY + Math.sin(index * 1.7 + this.elapsed * 5) * cloud.h * 0.13;
+      const radius = cloud.h * (0.16 + (index % 3) * 0.035);
+      context.beginPath();
+      context.ellipse(x, y, radius * 1.35, radius, 0, 0, Math.PI * 2);
+      context.fill();
+    }
+    context.globalAlpha = 0.18 * opacity;
+    context.fillStyle = "#6c6049";
+    context.beginPath();
+    context.ellipse(cloud.x + cloud.w * 0.52, centerY + 5, cloud.w * 0.48, cloud.h * 0.24, 0, 0, Math.PI * 2);
+    context.fill();
+    context.restore();
+  }
+
+  drawLeftChaserEdge() {
+    const context = this.ctx;
+    context.save();
+    const gradient = context.createLinearGradient(0, 0, 32, 0);
+    gradient.addColorStop(0, "rgba(37, 14, 13, 0.96)");
+    gradient.addColorStop(1, "rgba(91, 31, 24, 0.52)");
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, 30, HEIGHT);
+    context.fillStyle = "#e8dcc1";
+    for (let y = 10; y < HEIGHT - 12; y += 34) {
+      context.beginPath();
+      context.moveTo(1, y);
+      context.lineTo(22, y + 15);
+      context.lineTo(1, y + 25);
+      context.closePath();
+      context.fill();
+    }
+    context.fillStyle = "rgba(34, 10, 10, 0.9)";
+    context.font = "bold 8px monospace";
+    context.textAlign = "center";
+    context.fillText(this.text("ATRÁS", "BACK"), 14, 12);
+    context.restore();
+  }
+
+  drawEatenEffects() {
+    const context = this.ctx;
+    for (const effect of this.eatEffects) {
+      const progress = 1 - effect.life / effect.max;
+      context.save();
+      context.globalAlpha = clamp(effect.life / effect.max, 0, 1);
+      const y = getLaneBaseline(effect.lane) - 28 * getLaneScale(effect.lane);
+      context.fillStyle = "#c7a77c";
+      for (let index = 0; index < 6; index += 1) {
+        const angle = index * Math.PI / 3 + progress * 3;
+        const radius = 8 + progress * 28;
+        context.beginPath();
+        context.arc(20 + Math.cos(angle) * radius, y + Math.sin(angle) * radius * 0.5, 3 + progress * 2, 0, Math.PI * 2);
+        context.fill();
+      }
+      context.fillStyle = "#fff0d2";
+      context.font = "bold 9px monospace";
+      context.textAlign = "left";
+      context.fillText(this.text("DEVORADO", "EATEN"), 34, y);
+      context.restore();
+    }
+  }
+
   render() {
     const context = this.ctx;
     context.clearRect(0, 0, WIDTH, HEIGHT);
     this.drawBackground();
     this.drawLaneGuides();
+    this.drawLeftChaserEdge();
+
+    context.save();
+    context.translate(-this.cameraX, 0);
     this.drawStartAndFinish();
 
     for (const checkpoint of this.checkpoints) this.drawCheckpoint(checkpoint);
+    for (const cloud of this.ramDustClouds) this.drawRamDustCloud(cloud);
     for (const hazard of this.hazards) {
       if (hazard.kind === "pit") this.drawPit(hazard);
       else if (hazard.kind === "mud") this.drawMud(hazard);
@@ -928,28 +1214,59 @@ export class Race {
       if (!pickup.taken) this.drawPickup(pickup);
     }
 
-    for (const racer of [...this.racers].sort((a, b) => a.lane - b.lane)) this.drawDino(racer);
+    for (const racer of [...this.racers].sort((a, b) => a.lane - b.lane)) {
+      if (!racer.eaten) this.drawDino(racer);
+    }
     for (const hazard of this.hazards) {
       if (hazard.kind === "bush") this.drawBush(hazard);
     }
+    context.restore();
 
-    context.fillStyle = "#30452a";
+    this.drawEatenEffects();
+    context.save();
+    context.fillStyle = "rgba(27, 39, 29, 0.82)";
+    context.fillRect(12, 10, WIDTH - 24, 48);
+    context.fillStyle = "#f3f1df";
     context.font = "12px monospace";
     context.textAlign = "left";
-    context.fillText(this.text("TIEMPO ", "TIME ") + this.elapsed.toFixed(1) + "s", 20, 32);
-    context.textAlign = "center";
-    context.fillText(this.text("CHECKPOINTS", "CHECKPOINTS"), WIDTH / 2, 32);
+    context.fillText(this.text("TIEMPO ", "TIME ") + this.elapsed.toFixed(1) + "s", 22, 29);
+
     const player = this.playerRacer;
+    const playerDistance = player
+      ? (player.eaten ? player.eliminationDistance : getRaceDistanceMeters(player.x))
+      : 0;
+    const formattedDistance = Math.floor(playerDistance).toLocaleString(this.locale === "es" ? "es-AR" : "en-US");
+    context.textAlign = "center";
+    context.font = "bold 12px monospace";
+    context.fillText(
+      this.text("DISTANCIA ", "DISTANCE ") + formattedDistance +
+        this.text(" / 10.000 M", " / 10,000 M"),
+      WIDTH / 2,
+      29
+    );
     if (player) {
       context.textAlign = "right";
+      const ramLabel = player.eaten
+        ? this.text("ELIMINADO", "ELIMINATED")
+        : player.ramCooldown <= 0
+          ? this.text("X: EMBESTIDA LISTA", "X: RAM READY")
+          : this.text("X: RECARGANDO", "X: RECHARGING");
       context.fillText(
-        this.text("JUGADOR ", "PLAYER ") + player.d.name + " · " +
-          this.text("CARRIL ", "LANE ") + (player.lane + 1) + "/4",
-        WIDTH - 20,
-        32
+        this.text("CARRIL ", "LANE ") + (player.lane + 1) + "/4 · " + ramLabel,
+        WIDTH - 22,
+        29
       );
     }
-    context.textAlign = "left";
+
+    const barX = 22;
+    const barY = 42;
+    const barWidth = WIDTH - 44;
+    const progress = clamp(playerDistance / RACE_DISTANCE_METERS, 0, 1);
+    context.fillStyle = "rgba(239, 230, 200, 0.3)";
+    context.fillRect(barX, barY, barWidth, 5);
+    context.fillStyle = player?.eaten ? "#d36c58" : "#d8f36a";
+    context.fillRect(barX, barY, barWidth * progress, 5);
+    context.restore();
   }
 
   exit() {

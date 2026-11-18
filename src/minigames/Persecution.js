@@ -128,15 +128,15 @@ const EGG_SPOT_COLORS = Object.freeze([
   "#8b6748", "#a47750", "#b58b5c", "#d6c18c", "#e6d6a7", "#f0e3bd"
 ]);
 
-export function createEgg(lane = DEFAULT_LANE, x = WIDTH + 20) {
-  const spotCount = 10 + Math.floor(Math.random() * 9);
+export function createEgg(lane = DEFAULT_LANE, x = WIDTH + 20, random = Math.random) {
+  const spotCount = 10 + Math.floor(random() * 9);
   const spots = Array.from({ length: spotCount }, () => ({
-    x: 0.2 + Math.random() * 0.6,
-    y: 0.13 + Math.random() * 0.72,
-    radius: 0.025 + Math.random() * 0.105,
-    aspect: 0.65 + Math.random() * 1.05,
-    rotation: (Math.random() - 0.5) * 1.1,
-    color: EGG_SPOT_COLORS[Math.floor(Math.random() * EGG_SPOT_COLORS.length)]
+    x: 0.2 + random() * 0.6,
+    y: 0.13 + random() * 0.72,
+    radius: 0.025 + random() * 0.105,
+    aspect: 0.65 + random() * 1.05,
+    rotation: (random() - 0.5) * 1.1,
+    color: EGG_SPOT_COLORS[Math.floor(random() * EGG_SPOT_COLORS.length)]
   }));
 
   return applyLane({

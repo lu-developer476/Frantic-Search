@@ -7,6 +7,8 @@ import {
 } from "../src/minigames/MinigameEnvironment.js";
 
 test("mini-game scenes keep distinct prairie and Redwood identities with campaign palettes", () => {
+  assert.equal(MINIGAME_ENVIRONMENT_SCENES.race.environment, "prairie");
+  assert.equal(MINIGAME_ENVIRONMENT_SCENES.race.name, "LONG-DISTANCE RACE");
   assert.equal(MINIGAME_ENVIRONMENT_SCENES.persecution.environment, "prairie");
   assert.equal(MINIGAME_ENVIRONMENT_SCENES.hunting.environment, "redwood");
   assert.equal(MINIGAME_ENVIRONMENT_SCENES.ambush.environment, "redwood");
@@ -32,20 +34,24 @@ test("layered mini-game environment composes campaign atmosphere, scenery, terra
   assert.match(source, /effects\.drawWeather\(targetContext/);
 });
 
-test("all three mini-games delegate their environment backgrounds to the shared renderer", async () => {
+test("all mini-games delegate their environment backgrounds to the shared renderer", async () => {
   const paths = [
     "../src/minigames/Persecution.js",
     "../src/minigames/Hunting.js",
-    "../src/minigames/Ambush.js"
+    "../src/minigames/Ambush.js",
+    "../src/minigames/Race.js"
   ];
   const sources = await Promise.all(paths.map(path =>
     readFile(new URL(path, import.meta.url), "utf8")
   ));
-  for (const source of sources) {
+  for (const source of sources.slice(0, 3)) {
     assert.match(source, /new MinigameEnvironmentRenderer\(/);
     assert.match(source, /environmentRenderer\?\.draw\(ctx/);
     assert.match(source, /MINIGAME_ENVIRONMENT_SCENES\./);
   }
+  assert.match(sources[3], /new MinigameEnvironmentRenderer\(/);
+  assert.match(sources[3], /cameraX: this\.cameraX/);
+  assert.match(sources[3], /MINIGAME_ENVIRONMENT_SCENES\.race/);
 });
 
 test("prairie is a first-class atmosphere, vegetation and ambient-effects biome", async () => {
@@ -93,7 +99,8 @@ test("hidden minigames do not render during application bootstrap", async () => 
   const paths = [
     "../src/minigames/Persecution.js",
     "../src/minigames/Hunting.js",
-    "../src/minigames/Ambush.js"
+    "../src/minigames/Ambush.js",
+    "../src/minigames/Race.js"
   ];
   for (const path of paths) {
     const source = await readFile(new URL(path, import.meta.url), "utf8");
