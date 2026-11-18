@@ -39,6 +39,7 @@ import { AtmosphereRenderer } from "./rendering/AtmosphereRenderer.js";
 import { drawGroundScenery } from "./rendering/SceneryRenderer.js";
 import { VegetationRenderer, isPixelGroundSceneryProp } from "./rendering/VegetationRenderer.js";
 import { TerrainRenderer } from "./rendering/TerrainRenderer.js";
+import { ObjectRenderer } from "./rendering/ObjectRenderer.js";
 import { roundedRect, observeCanvasViewport } from "./rendering/CanvasUtils.js";
 import { t as uiText, translateText, getModalTutorialCopy, getCampaignSceneCopy } from "./i18n.js";
 import { EmptyStomach } from "./minigames/EmptyStomach.js";
@@ -64,6 +65,7 @@ ctx.imageSmoothingEnabled = false;
 const atmosphereRenderer = new AtmosphereRenderer();
 const vegetationRenderer = new VegetationRenderer();
 const terrainRenderer = new TerrainRenderer();
+const objectRenderer = new ObjectRenderer();
 const resizeMainCanvas = observeCanvasViewport(canvas.parentElement, canvas, (width) => {
   GAME.width = width;
   ctx.imageSmoothingEnabled = false;
@@ -398,192 +400,166 @@ function drawBackground() {
 
 
 
-function drawFacilityProp(prop) {
+function drawFacilityProp(prop, context = ctx) {
   if (prop.kind === "security-fence") {
-    ctx.fillStyle = "#171f22";
-    ctx.fillRect(prop.x, prop.y, prop.w, prop.h);
-    ctx.fillStyle = "#71817d";
-    ctx.fillRect(prop.x, prop.y, prop.w, 3);
+    context.fillStyle = "#171f22";
+    context.fillRect(prop.x, prop.y, prop.w, prop.h);
+    context.fillStyle = "#71817d";
+    context.fillRect(prop.x, prop.y, prop.w, 3);
     for (let x = prop.x + 8; x < prop.x + prop.w; x += 26) {
-      ctx.fillStyle = "#778580";
-      ctx.fillRect(x, prop.y - 38, 3, 38);
+      context.fillStyle = "#778580";
+      context.fillRect(x, prop.y - 38, 3, 38);
     }
     return;
   }
 
   if (prop.kind === "facility-lamp") {
-    ctx.fillStyle = "#202a2c";
-    ctx.fillRect(prop.x + 10, prop.y, 8, prop.h);
-    ctx.fillStyle = "#87958a";
-    ctx.fillRect(prop.x, prop.y, 28, 8);
-    ctx.fillStyle = "#e4d9a1";
-    ctx.fillRect(prop.x + 4, prop.y + 8, 20, 8);
-    ctx.fillStyle = "#e4d9a122";
-    ctx.beginPath();
-    ctx.moveTo(prop.x + 4, prop.y + 16);
-    ctx.lineTo(prop.x - 65, GAME.groundY);
-    ctx.lineTo(prop.x + 93, GAME.groundY);
-    ctx.closePath();
-    ctx.fill();
+    context.fillStyle = "#202a2c";
+    context.fillRect(prop.x + 10, prop.y, 8, prop.h);
+    context.fillStyle = "#87958a";
+    context.fillRect(prop.x, prop.y, 28, 8);
+    context.fillStyle = "#e4d9a1";
+    context.fillRect(prop.x + 4, prop.y + 8, 20, 8);
+    context.fillStyle = "#e4d9a122";
+    context.beginPath();
+    context.moveTo(prop.x + 4, prop.y + 16);
+    context.lineTo(prop.x - 65, GAME.groundY);
+    context.lineTo(prop.x + 93, GAME.groundY);
+    context.closePath();
+    context.fill();
     return;
   }
 
-  ctx.fillStyle = prop.kind === "containment-wing" ? "#424c50" : "#313d42";
-  ctx.fillRect(prop.x, prop.y, prop.w, prop.h);
-  ctx.fillStyle = "#68777a";
-  ctx.fillRect(prop.x, prop.y, prop.w, 7);
-  ctx.fillStyle = "#182326";
+  context.fillStyle = prop.kind === "containment-wing" ? "#424c50" : "#313d42";
+  context.fillRect(prop.x, prop.y, prop.w, prop.h);
+  context.fillStyle = "#68777a";
+  context.fillRect(prop.x, prop.y, prop.w, 7);
+  context.fillStyle = "#182326";
   for (let x = prop.x + 18; x < prop.x + prop.w - 18; x += 52) {
-    ctx.fillRect(x, prop.y + 35, 31, Math.max(28, prop.h - 72));
-    ctx.fillStyle = prop.kind === "containment-wing" ? "#8cb1a4" : "#758a85";
-    ctx.fillRect(x + 5, prop.y + 41, 21, 4);
-    ctx.fillStyle = "#182326";
+    context.fillRect(x, prop.y + 35, 31, Math.max(28, prop.h - 72));
+    context.fillStyle = prop.kind === "containment-wing" ? "#8cb1a4" : "#758a85";
+    context.fillRect(x + 5, prop.y + 41, 21, 4);
+    context.fillStyle = "#182326";
   }
-  ctx.fillStyle = "#d8f36a";
-  ctx.fillRect(prop.x + 14, prop.y + 16, Math.min(90, prop.w - 28), 3);
+  context.fillStyle = "#d8f36a";
+  context.fillRect(prop.x + 14, prop.y + 16, Math.min(90, prop.w - 28), 3);
   if (prop.kind === "containment-wing") {
-    ctx.strokeStyle = "#a9b7a4";
-    ctx.lineWidth = 4;
-    ctx.strokeRect(prop.x + 32, prop.y + 54, prop.w - 64, prop.h - 72);
-    ctx.fillStyle = "#8bb6a044";
-    ctx.fillRect(prop.x + 36, prop.y + 58, prop.w - 72, prop.h - 80);
-    ctx.fillStyle = "#d8f36a";
-    ctx.font = "10px monospace";
-    ctx.fillText(tr("CELL BLOCK C"), prop.x + 48, prop.y + prop.h - 28);
+    context.strokeStyle = "#a9b7a4";
+    context.lineWidth = 4;
+    context.strokeRect(prop.x + 32, prop.y + 54, prop.w - 64, prop.h - 72);
+    context.fillStyle = "#8bb6a044";
+    context.fillRect(prop.x + 36, prop.y + 58, prop.w - 72, prop.h - 80);
+    context.fillStyle = "#d8f36a";
+    context.font = "10px monospace";
+    context.fillText(tr("CELL BLOCK C"), prop.x + 48, prop.y + prop.h - 28);
   }
-}
 
-function drawFacilityConsole(consoleEntity) {
+}
+function drawFacilityConsole(consoleEntity, context = ctx) {
   const x = consoleEntity.x;
   const y = consoleEntity.y;
-  ctx.save();
-  ctx.fillStyle = "#202a2d";
-  roundedRect(ctx, x, y + 18, consoleEntity.w, 60, 6);
-  ctx.fillStyle = "#71817b";
-  ctx.fillRect(x + 5, y + 20, consoleEntity.w - 10, 5);
-  ctx.fillStyle = consoleEntity.activated ? "#d8f36a" : "#e18c62";
-  roundedRect(ctx, x + 8, y + 7, consoleEntity.w - 16, 28, 4);
-  ctx.fillStyle = "#14201f";
-  ctx.fillRect(x + 12, y + 12, consoleEntity.w - 24, 17);
-  ctx.fillStyle = consoleEntity.activated ? "#d8f36a" : "#e18c62";
-  ctx.fillRect(x + 17, y + 17, consoleEntity.w - 34, 4);
-  ctx.fillStyle = "#9aa69d";
-  ctx.font = "8px monospace";
-  ctx.fillText(locale === "es" ? (consoleEntity.kind === "power" ? "ENE" : "SEG") : (consoleEntity.kind === "power" ? "PWR" : "LOCK"), x + 7, y + 2);
+  context.save();
+  context.fillStyle = "#202a2d";
+  roundedRect(context, x, y + 18, consoleEntity.w, 60, 6);
+  context.fillStyle = "#71817b";
+  context.fillRect(x + 5, y + 20, consoleEntity.w - 10, 5);
+  context.fillStyle = consoleEntity.activated ? "#d8f36a" : "#e18c62";
+  roundedRect(context, x + 8, y + 7, consoleEntity.w - 16, 28, 4);
+  context.fillStyle = "#14201f";
+  context.fillRect(x + 12, y + 12, consoleEntity.w - 24, 17);
+  context.fillStyle = consoleEntity.activated ? "#d8f36a" : "#e18c62";
+  context.fillRect(x + 17, y + 17, consoleEntity.w - 34, 4);
+  context.fillStyle = "#9aa69d";
+  context.font = "8px monospace";
+  context.fillText(locale === "es" ? (consoleEntity.kind === "power" ? "ENE" : "SEG") : (consoleEntity.kind === "power" ? "PWR" : "LOCK"), x + 7, y + 2);
   if (consoleEntity.activated) {
-    ctx.fillStyle = "#d8f36a";
-    ctx.font = "9px monospace";
-    ctx.fillText(tr("ONLINE"), x - 2, y - 10);
+    context.fillStyle = "#d8f36a";
+    context.font = "9px monospace";
+    context.fillText(tr("ONLINE"), x - 2, y - 10);
   }
-  ctx.restore();
+  context.restore();
+
+}
+function drawBetaContainmentFrame(context, entity) {
+  if (!entity || entity.state !== "confined") return;
+  const x = entity.x;
+  const y = entity.y;
+  context.save();
+  context.fillStyle = "#a3c9ba1b";
+  roundedRect(context, x - 12, y - 12, entity.w + 24, entity.h + 15, 12);
+  context.strokeStyle = "#9bb5ac";
+  context.lineWidth = 3;
+  context.strokeRect(x - 12, y - 12, entity.w + 24, entity.h + 15);
+  context.restore();
 }
 
 function drawBeta(entity) {
   if (!entity) return;
-  const x = entity.x;
-  const y = entity.y;
-  ctx.save();
-  if (entity.state === "confined") {
-    ctx.fillStyle = "#a3c9ba1b";
-    roundedRect(ctx, x - 12, y - 12, entity.w + 24, entity.h + 15, 12);
-    ctx.strokeStyle = "#9bb5ac";
-    ctx.lineWidth = 3;
-    ctx.strokeRect(x - 12, y - 12, entity.w + 24, entity.h + 15);
-  }
-  spriteRenderer.drawAnimated(ctx, "beta", x, y, entity.w, entity.h, entity, entity.animation, { facing: entity.facing });
-  ctx.restore();
-  return;
-  ctx.translate(entity.facing < 0 ? x + entity.w : x, y);
-  if (entity.facing < 0) ctx.scale(-1, 1);
-  ctx.fillStyle = "#6f9c8b";
-  ctx.beginPath();
-  ctx.moveTo(14, 29);
-  ctx.lineTo(-10, 23);
-  ctx.lineTo(8, 36);
-  ctx.fill();
-  ctx.fillStyle = "#83b3a1";
-  ctx.beginPath();
-  ctx.ellipse(24, 27, 19, 15, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(37, 18, 13, 12, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#c8d8bb";
-  ctx.beginPath();
-  ctx.arc(42, 15, 2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = "#6f9c8b";
-  ctx.lineWidth = 6;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(18, 37);
-  ctx.lineTo(17, 45);
-  ctx.moveTo(31, 37);
-  ctx.lineTo(34, 45);
-  ctx.stroke();
-  ctx.restore();
+  spriteRenderer.drawAnimated(
+    ctx, "beta", entity.x, entity.y, entity.w, entity.h,
+    entity, entity.animation, { facing: entity.facing }
+  );
 }
 
-function drawExtractionMarker(x) {
+function drawExtractionMarker(x, context = ctx) {
   if (!Number.isFinite(x)) return;
-  ctx.fillStyle = "#1b2929";
-  ctx.fillRect(x, GAME.groundY - 190, 18, 190);
-  ctx.fillRect(x + 180, GAME.groundY - 190, 18, 190);
-  ctx.fillRect(x, GAME.groundY - 190, 198, 16);
-  ctx.fillStyle = "#d8f36a";
-  ctx.fillRect(x + 22, GAME.groundY - 166, 154, 4);
-  ctx.fillStyle = "#edf3e5";
-  ctx.font = "11px monospace";
-  ctx.fillText(tr(beta?.state === "following" || beta?.state === "extracted" ? "EXTRACTION" : "EXIT LOCKED"), x + 28, GAME.groundY - 139);
-  ctx.fillStyle = "#d8f36a";
-  ctx.font = "8px monospace";
-  ctx.fillText(tr("EAST GATE"), x + 60, GAME.groundY - 123);
-}
+  context.fillStyle = "#1b2929";
+  context.fillRect(x, GAME.groundY - 190, 18, 190);
+  context.fillRect(x + 180, GAME.groundY - 190, 18, 190);
+  context.fillRect(x, GAME.groundY - 190, 198, 16);
+  context.fillStyle = "#d8f36a";
+  context.fillRect(x + 22, GAME.groundY - 166, 154, 4);
+  context.fillStyle = "#edf3e5";
+  context.font = "11px monospace";
+  context.fillText(tr(beta?.state === "following" || beta?.state === "extracted" ? "EXTRACTION" : "EXIT LOCKED"), x + 28, GAME.groundY - 139);
+  context.fillStyle = "#d8f36a";
+  context.font = "8px monospace";
+  context.fillText(tr("EAST GATE"), x + 60, GAME.groundY - 123);
 
-function drawObstacle(obstacle) {
-  ctx.save();
+}
+function drawObstacle(obstacle, context = ctx) {
+  context.save();
   if (obstacle.type === "crate") {
-    ctx.fillStyle = "#a66b3d";
-    ctx.fillRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h);
-    ctx.fillStyle = "#d6a45f";
-    ctx.fillRect(obstacle.x + 4, obstacle.y + 4, obstacle.w - 8, 5);
-    ctx.fillRect(obstacle.x + 4, obstacle.y + obstacle.h - 8, obstacle.w - 8, 4);
-    ctx.fillStyle = "#70472f";
-    ctx.fillRect(obstacle.x + 8, obstacle.y + 10, 5, obstacle.h - 20);
-    ctx.fillRect(obstacle.x + obstacle.w - 13, obstacle.y + 10, 5, obstacle.h - 20);
-    ctx.fillStyle = "#d6a45f";
-    ctx.fillRect(obstacle.x + 9, obstacle.y + 10, obstacle.w - 18, 4);
-    ctx.fillRect(obstacle.x + 9, obstacle.y + obstacle.h - 14, obstacle.w - 18, 4);
+    context.fillStyle = "#a66b3d";
+    context.fillRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h);
+    context.fillStyle = "#d6a45f";
+    context.fillRect(obstacle.x + 4, obstacle.y + 4, obstacle.w - 8, 5);
+    context.fillRect(obstacle.x + 4, obstacle.y + obstacle.h - 8, obstacle.w - 8, 4);
+    context.fillStyle = "#70472f";
+    context.fillRect(obstacle.x + 8, obstacle.y + 10, 5, obstacle.h - 20);
+    context.fillRect(obstacle.x + obstacle.w - 13, obstacle.y + 10, 5, obstacle.h - 20);
+    context.fillStyle = "#d6a45f";
+    context.fillRect(obstacle.x + 9, obstacle.y + 10, obstacle.w - 18, 4);
+    context.fillRect(obstacle.x + 9, obstacle.y + obstacle.h - 14, obstacle.w - 18, 4);
   } else if (obstacle.type === "hunter") {
-    ctx.fillStyle = "#d1c5a0";
-    ctx.fillRect(obstacle.x + 8, obstacle.y + 14, obstacle.w - 16, obstacle.h - 14);
-    ctx.fillStyle = "#a8794f";
-    ctx.fillRect(obstacle.x + obstacle.w / 2 - 9, obstacle.y, 18, 18);
-    ctx.fillStyle = "#303a35";
-    ctx.fillRect(obstacle.x + 5, obstacle.y + obstacle.h - 8, obstacle.w - 10, 8);
+    context.fillStyle = "#d1c5a0";
+    context.fillRect(obstacle.x + 8, obstacle.y + 14, obstacle.w - 16, obstacle.h - 14);
+    context.fillStyle = "#a8794f";
+    context.fillRect(obstacle.x + obstacle.w / 2 - 9, obstacle.y, 18, 18);
+    context.fillStyle = "#303a35";
+    context.fillRect(obstacle.x + 5, obstacle.y + obstacle.h - 8, obstacle.w - 10, 8);
   } else {
-    ctx.fillStyle = "#686f61";
-    ctx.beginPath();
-    ctx.moveTo(obstacle.x, obstacle.y + obstacle.h);
-    ctx.lineTo(obstacle.x + obstacle.w * 0.08, obstacle.y + obstacle.h * 0.52);
-    ctx.lineTo(obstacle.x + obstacle.w * 0.20, obstacle.y + 4);
-    ctx.lineTo(obstacle.x + obstacle.w * 0.80, obstacle.y + 4);
-    ctx.lineTo(obstacle.x + obstacle.w * 0.92, obstacle.y + obstacle.h * 0.48);
-    ctx.lineTo(obstacle.x + obstacle.w, obstacle.y + obstacle.h);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = "#929982";
-    ctx.fillRect(obstacle.x + obstacle.w * 0.22, obstacle.y + 5, obstacle.w * 0.55, 5);
-    ctx.fillStyle = "#4d584b";
-    ctx.fillRect(obstacle.x + obstacle.w * 0.12, obstacle.y + obstacle.h * 0.72, obstacle.w * 0.27, 4);
-    ctx.fillRect(obstacle.x + obstacle.w * 0.68, obstacle.y + obstacle.h * 0.64, obstacle.w * 0.19, 5);
-    ctx.fillStyle = "#c0c0a0";
-    ctx.fillRect(obstacle.x + obstacle.w * 0.32, obstacle.y + 9, obstacle.w * 0.20, 3);
+    context.fillStyle = "#686f61";
+    context.beginPath();
+    context.moveTo(obstacle.x, obstacle.y + obstacle.h);
+    context.lineTo(obstacle.x + obstacle.w * 0.08, obstacle.y + obstacle.h * 0.52);
+    context.lineTo(obstacle.x + obstacle.w * 0.20, obstacle.y + 4);
+    context.lineTo(obstacle.x + obstacle.w * 0.80, obstacle.y + 4);
+    context.lineTo(obstacle.x + obstacle.w * 0.92, obstacle.y + obstacle.h * 0.48);
+    context.lineTo(obstacle.x + obstacle.w, obstacle.y + obstacle.h);
+    context.closePath();
+    context.fill();
+    context.fillStyle = "#929982";
+    context.fillRect(obstacle.x + obstacle.w * 0.22, obstacle.y + 5, obstacle.w * 0.55, 5);
+    context.fillStyle = "#4d584b";
+    context.fillRect(obstacle.x + obstacle.w * 0.12, obstacle.y + obstacle.h * 0.72, obstacle.w * 0.27, 4);
+    context.fillRect(obstacle.x + obstacle.w * 0.68, obstacle.y + obstacle.h * 0.64, obstacle.w * 0.19, 5);
+    context.fillStyle = "#c0c0a0";
+    context.fillRect(obstacle.x + obstacle.w * 0.32, obstacle.y + 9, obstacle.w * 0.20, 3);
   }
-  ctx.restore();
+  context.restore();
+
 }
-
-
 function createDashDustCloud() {
   const direction = Math.sign(player.facing) || 1;
   const width = 205;
@@ -776,46 +752,47 @@ function drawFerrucutus(ally) {
 }
 
 
-function drawFerrucutusCage(captive) {
+function drawFerrucutusCageBack(context, captive) {
+  const { x, y, w, h } = captive;
+  const ground = captive.groundY;
+  context.save();
+  context.fillStyle = "#101918dd";
+  context.fillRect(x + 5, ground - 24, w - 10, 21);
+  context.fillStyle = "#1a2425";
+  context.fillRect(x, y + 8, 8, h - 18);
+  context.fillRect(x + w - 8, y + 8, 8, h - 18);
+  context.fillRect(x + 4, y, w - 8, 10);
+  context.fillRect(x + 4, ground - 18, w - 8, 8);
+  context.restore();
+}
+
+function drawFerrucutusCageFront(context, captive) {
   const { x, y, w, h } = captive;
   const ground = captive.groundY;
   const frame = "#1a2425";
   const steel = "#71817e";
   const highlight = "#aeb8a4";
-  ctx.save();
-  ctx.fillStyle = "#101918dd";
-  ctx.fillRect(x + 5, ground - 24, w - 10, 21);
-  ctx.fillStyle = frame;
-  ctx.fillRect(x, y + 8, 8, h - 18);
-  ctx.fillRect(x + w - 8, y + 8, 8, h - 18);
-  ctx.fillRect(x + 4, y, w - 8, 10);
-  ctx.fillRect(x + 4, ground - 18, w - 8, 8);
-
-  spriteRenderer.drawAnimated(
-    ctx, "ferrucutus", captive.dinosaurX, captive.dinosaurY,
-    captive.dinosaurW, captive.dinosaurH, captive, elapsed
-  );
-
-  ctx.fillStyle = steel;
+  context.save();
+  context.fillStyle = steel;
   for (let barX = x + 13; barX < x + w - 8; barX += 27) {
-    ctx.fillRect(barX, y + 10, 4, h - 30);
-    ctx.fillStyle = highlight;
-    ctx.fillRect(barX + 1, y + 12, 1, h - 34);
-    ctx.fillStyle = steel;
+    context.fillRect(barX, y + 10, 4, h - 30);
+    context.fillStyle = highlight;
+    context.fillRect(barX + 1, y + 12, 1, h - 34);
+    context.fillStyle = steel;
   }
-  ctx.fillStyle = frame;
-  ctx.fillRect(x + 3, y + 34, w - 6, 5);
-  ctx.fillRect(x + 3, y + 82, w - 6, 5);
-  ctx.fillStyle = highlight;
-  ctx.fillRect(x + 6, y + 10, w - 12, 2);
-  ctx.fillRect(x + 6, ground - 16, w - 12, 2);
-  ctx.fillStyle = "#202c2d";
-  ctx.fillRect(x + w - 27, y + 42, 16, 25);
-  ctx.fillStyle = "#e18a58";
-  ctx.fillRect(x + w - 23, y + 47, 8, 5);
-  ctx.fillStyle = "#d8f36a";
-  ctx.fillRect(x + w - 21, y + 58, 4, 4);
-  ctx.restore();
+  context.fillStyle = frame;
+  context.fillRect(x + 3, y + 34, w - 6, 5);
+  context.fillRect(x + 3, y + 82, w - 6, 5);
+  context.fillStyle = highlight;
+  context.fillRect(x + 6, y + 10, w - 12, 2);
+  context.fillRect(x + 6, ground - 16, w - 12, 2);
+  context.fillStyle = "#202c2d";
+  context.fillRect(x + w - 27, y + 42, 16, 25);
+  context.fillStyle = "#e18a58";
+  context.fillRect(x + w - 23, y + 47, 8, 5);
+  context.fillStyle = "#d8f36a";
+  context.fillRect(x + w - 21, y + 58, 4, 4);
+  context.restore();
 }
 
 function drawHunter(hunter) {
@@ -883,28 +860,28 @@ function drawHunter(hunter) {
   }
 }
 
-function drawHunterProjectile(projectile) {
+function drawHunterProjectile(projectile, context = ctx) {
   const fade = Math.min(1, projectile.life / 0.18);
-  ctx.save();
-  ctx.globalAlpha = fade;
-  ctx.shadowColor = "#ff1f2d";
-  ctx.shadowBlur = 15;
-  ctx.fillStyle = "#b81725";
-  ctx.beginPath();
-  ctx.arc(projectile.x, projectile.y, projectile.radius + 2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = "#ff3644";
-  ctx.beginPath();
-  ctx.arc(projectile.x, projectile.y, projectile.radius, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#ffd5d5";
-  ctx.beginPath();
-  ctx.arc(projectile.x - projectile.radius * 0.32, projectile.y - projectile.radius * 0.34, projectile.radius * 0.28, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-}
+  context.save();
+  context.globalAlpha = fade;
+  context.shadowColor = "#ff1f2d";
+  context.shadowBlur = 15;
+  context.fillStyle = "#b81725";
+  context.beginPath();
+  context.arc(projectile.x, projectile.y, projectile.radius + 2, 0, Math.PI * 2);
+  context.fill();
+  context.shadowBlur = 0;
+  context.fillStyle = "#ff3644";
+  context.beginPath();
+  context.arc(projectile.x, projectile.y, projectile.radius, 0, Math.PI * 2);
+  context.fill();
+  context.fillStyle = "#ffd5d5";
+  context.beginPath();
+  context.arc(projectile.x - projectile.radius * 0.32, projectile.y - projectile.radius * 0.34, projectile.radius * 0.28, 0, Math.PI * 2);
+  context.fill();
+  context.restore();
 
+}
 function syncEncounters() {
   for (const spawn of world.hunterSpawns) {
     if (seenHunterSpawns.has(spawn.id)) continue;
@@ -1080,46 +1057,46 @@ function collectNearbyCollectibles(){
     audio.collect();applyCollectibleUnlocks();updateCampaignHud();updatePlayerHealthHud();updateStegoceratopsHud();
   }
 }
-function drawFoodDrop(food) {
+function drawFoodDrop(food, context = ctx) {
   const bob = Math.sin(elapsed * 4.2 + food.x * 0.013) * 2;
   const centerX = food.x + food.w / 2;
   const centerY = food.y + food.h / 2 + bob;
 
-  ctx.save();
-  ctx.translate(Math.round(centerX), Math.round(centerY));
-  ctx.globalAlpha = 0.96;
-  ctx.shadowBlur = 10;
-  ctx.shadowColor = "#9bd48a";
-  ctx.fillStyle = "rgba(155, 212, 138, 0.22)";
-  ctx.beginPath();
-  ctx.arc(0, 0, 18 + Math.sin(elapsed * 4.8 + food.x * 0.01) * 1.2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.shadowBlur = 0;
+  context.save();
+  context.translate(Math.round(centerX), Math.round(centerY));
+  context.globalAlpha = 0.96;
+  context.shadowBlur = 10;
+  context.shadowColor = "#9bd48a";
+  context.fillStyle = "rgba(155, 212, 138, 0.22)";
+  context.beginPath();
+  context.arc(0, 0, 18 + Math.sin(elapsed * 4.8 + food.x * 0.01) * 1.2, 0, Math.PI * 2);
+  context.fill();
+  context.shadowBlur = 0;
 
   // Pixel-art meat on a bone, matching the game's chunky sprite language.
-  ctx.fillStyle = "#1b2521";
-  ctx.fillRect(-17, -8, 25, 16);
-  ctx.fillRect(-13, -11, 18, 22);
-  ctx.fillRect(7, -4, 10, 8);
-  ctx.fillRect(14, -7, 6, 6);
-  ctx.fillRect(14, 1, 6, 6);
+  context.fillStyle = "#1b2521";
+  context.fillRect(-17, -8, 25, 16);
+  context.fillRect(-13, -11, 18, 22);
+  context.fillRect(7, -4, 10, 8);
+  context.fillRect(14, -7, 6, 6);
+  context.fillRect(14, 1, 6, 6);
 
-  ctx.fillStyle = "#8f3c3d";
-  ctx.fillRect(-15, -7, 20, 14);
-  ctx.fillRect(-12, -9, 15, 18);
-  ctx.fillRect(-17, -4, 24, 8);
-  ctx.fillStyle = "#c86d59";
-  ctx.fillRect(-10, -6, 8, 3);
-  ctx.fillRect(-4, 2, 6, 2);
-  ctx.fillStyle = "#eadfc1";
-  ctx.fillRect(8, -2, 8, 4);
-  ctx.fillRect(15, -5, 4, 4);
-  ctx.fillRect(15, 1, 4, 4);
-  ctx.fillStyle = "#fff4d8";
-  ctx.fillRect(10, -1, 4, 2);
-  ctx.restore();
+  context.fillStyle = "#8f3c3d";
+  context.fillRect(-15, -7, 20, 14);
+  context.fillRect(-12, -9, 15, 18);
+  context.fillRect(-17, -4, 24, 8);
+  context.fillStyle = "#c86d59";
+  context.fillRect(-10, -6, 8, 3);
+  context.fillRect(-4, 2, 6, 2);
+  context.fillStyle = "#eadfc1";
+  context.fillRect(8, -2, 8, 4);
+  context.fillRect(15, -5, 4, 4);
+  context.fillRect(15, 1, 4, 4);
+  context.fillStyle = "#fff4d8";
+  context.fillRect(10, -1, 4, 2);
+  context.restore();
+
 }
-
 function drawCollectible(context,item){
   const bob=Math.sin(elapsed*3.4+item.phase)*3,centerY=item.y+item.h/2+bob;
   context.save();context.globalAlpha=.78+Math.sin(elapsed*5+item.phase)*.12;context.shadowBlur=12;
@@ -2216,22 +2193,22 @@ function drawBoss(boss) {
   }
 }
 
-function drawBossArenaBoundary() {
+function drawBossArenaBoundary(context = ctx) {
   if (!activeBoss || activeBoss.defeated) return;
   for (const boundaryX of [activeBoss.arenaMinX, activeBoss.arenaMaxX]) {
-    ctx.save();
-    ctx.globalAlpha = 0.62 + Math.sin(elapsed * 7) * 0.12;
-    ctx.fillStyle = "#d8f36a";
-    ctx.fillRect(boundaryX - 3, GAME.groundY - 224, 6, 224);
-    ctx.fillStyle = "#f7f2df";
-    ctx.fillRect(boundaryX - 1, GAME.groundY - 224, 2, 224);
-    ctx.globalAlpha = 0.14;
-    ctx.fillStyle = "#d8f36a";
-    ctx.fillRect(boundaryX - 18, GAME.groundY - 224, 36, 224);
-    ctx.restore();
+    context.save();
+    context.globalAlpha = 0.62 + Math.sin(elapsed * 7) * 0.12;
+    context.fillStyle = "#d8f36a";
+    context.fillRect(boundaryX - 3, GAME.groundY - 224, 6, 224);
+    context.fillStyle = "#f7f2df";
+    context.fillRect(boundaryX - 1, GAME.groundY - 224, 2, 224);
+    context.globalAlpha = 0.14;
+    context.fillStyle = "#d8f36a";
+    context.fillRect(boundaryX - 18, GAME.groundY - 224, 36, 224);
+    context.restore();
   }
-}
 
+}
 function drawBossHud() {
   if(activeBoss&&!activeBoss.defeated){
     const x=250,y=78,w=460,phaseTwo=activeBoss.phase===2;
@@ -2800,15 +2777,32 @@ function render() {
   for (const prop of groundScenery) {
     if (!isPixelGroundSceneryProp(prop)) drawGroundScenery(ctx, prop, sceneryScene);
   }
-  for(const item of collectibles){
-    if(item.x+item.w>=cameraX-50&&item.x-item.w<=cameraX+GAME.width+50)drawCollectible(ctx,item);
-  }
-  for (const prop of world.facilityProps) {
-    if (prop.x + prop.w >= cameraX - 50 && prop.x <= cameraX + GAME.width + 50) drawFacilityProp(prop);
-  }
-  drawBossArenaBoundary();
-  for (const terminal of facilityConsoles) drawFacilityConsole(terminal);
-  drawExtractionMarker(extractionX);
+  const objectLayerOptions = {
+    cameraX,
+    viewportWidth: GAME.width,
+    viewportHeight: GAME.height
+  };
+  objectRenderer.drawLayer(ctx, "collectibles", objectLayerOptions, (layerContext) => {
+    for (const item of collectibles) {
+      if (item.x + item.w >= cameraX - 50 && item.x - item.w <= cameraX + GAME.width + 50) {
+        drawCollectible(layerContext, item);
+      }
+    }
+  });
+  objectRenderer.drawLayer(ctx, "facility", objectLayerOptions, (layerContext) => {
+    for (const prop of world.facilityProps) {
+      if (prop.x + prop.w >= cameraX - 50 && prop.x <= cameraX + GAME.width + 50) {
+        drawFacilityProp(prop, layerContext);
+      }
+    }
+  });
+  objectRenderer.drawLayer(ctx, "arena-boundary", objectLayerOptions, (layerContext) => {
+    drawBossArenaBoundary(layerContext);
+  });
+  objectRenderer.drawLayer(ctx, "interactives", objectLayerOptions, (layerContext) => {
+    for (const terminal of facilityConsoles) drawFacilityConsole(terminal, layerContext);
+    drawExtractionMarker(extractionX, layerContext);
+  });
   const visibleObstacles = world.visibleObstacles(cameraX, GAME.width);
   terrainRenderer.drawRockFormations(ctx, {
     obstacles: visibleObstacles.filter((obstacle) => obstacle.type === "rock"),
@@ -2817,12 +2811,26 @@ function render() {
     viewportHeight: GAME.height,
     scene: level()
   });
-  for (const obstacle of visibleObstacles) {
-    if (obstacle.type !== "rock") drawObstacle(obstacle);
+  objectRenderer.drawLayer(ctx, "obstacles", objectLayerOptions, (layerContext) => {
+    for (const obstacle of visibleObstacles) {
+      if (obstacle.type !== "rock") drawObstacle(obstacle, layerContext);
+    }
+  });
+  const visibleCaptives = ferrucutusCaptives.filter((captive) =>
+    captive.x + captive.w >= cameraX - 70 && captive.x <= cameraX + GAME.width + 70
+  );
+  objectRenderer.drawLayer(ctx, "cage-back", objectLayerOptions, (layerContext) => {
+    for (const captive of visibleCaptives) drawFerrucutusCageBack(layerContext, captive);
+  });
+  for (const captive of visibleCaptives) {
+    spriteRenderer.drawAnimated(
+      ctx, "ferrucutus", captive.dinosaurX, captive.dinosaurY,
+      captive.dinosaurW, captive.dinosaurH, captive, elapsed
+    );
   }
-  for (const captive of ferrucutusCaptives) {
-    if (captive.x + captive.w >= cameraX - 70 && captive.x <= cameraX + GAME.width + 70) drawFerrucutusCage(captive);
-  }
+  objectRenderer.drawLayer(ctx, "cage-front", objectLayerOptions, (layerContext) => {
+    for (const captive of visibleCaptives) drawFerrucutusCageFront(layerContext, captive);
+  });
   for (const food of foodSources) {
     if (food.consumed || food.x + food.w < cameraX - 80 || food.x > cameraX + GAME.width + 80) continue;
     if (food.kind === "ligocristus") {
@@ -2838,7 +2846,9 @@ function render() {
         }
       );
     } else {
-      drawFoodDrop(food);
+      objectRenderer.drawLayer(ctx, "food", objectLayerOptions, (layerContext) => {
+        drawFoodDrop(food, layerContext);
+      });
     }
   }
   for (const enemy of venatosauruses) {
@@ -2851,16 +2861,23 @@ function render() {
   for (const hunter of hunters) {
     if (hunter.x + hunter.w >= cameraX - 90 && hunter.x <= cameraX + GAME.width + 90) drawHunter(hunter);
   }
-  for (const projectile of hunterProjectiles) {
-    if (projectile.x >= cameraX - 30 && projectile.x <= cameraX + GAME.width + 30) {
-      drawHunterProjectile(projectile);
+  objectRenderer.drawLayer(ctx, "projectiles", objectLayerOptions, (layerContext) => {
+    for (const projectile of hunterProjectiles) {
+      if (projectile.x >= cameraX - 30 && projectile.x <= cameraX + GAME.width + 30) {
+        drawHunterProjectile(projectile, layerContext);
+      }
     }
-  }
+  });
   for (const ally of allies) {
     if (ally.x + ally.w >= cameraX - 100 && ally.x <= cameraX + GAME.width + 100) drawFerrucutus(ally);
   }
   for (const boss of bosses) {
     if (boss.x + boss.w >= cameraX - 180 && boss.x <= cameraX + GAME.width + 180) drawBoss(boss);
+  }
+  if (beta?.state === "confined") {
+    objectRenderer.drawLayer(ctx, "containment-shell", objectLayerOptions, (layerContext) => {
+      drawBetaContainmentFrame(layerContext, beta);
+    });
   }
   if (beta) drawBeta(beta);
   if (stegoceratops) spriteRenderer.drawAnimated(ctx, "stegoceratops", stegoceratops.x, stegoceratops.y, stegoceratops.w, stegoceratops.h, stegoceratops, elapsed, { facing: 1 });
