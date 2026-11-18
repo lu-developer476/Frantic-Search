@@ -17,6 +17,8 @@ export class VenatosaurusEnemy {
     this.attackCooldown = 0.3;
     this.direction = -1;
     this.motionSpeed = 0;
+    this.slideTimer = 0;
+    this.slideCooldown = 2.7;
     this.defeated = false;
     this.feedTimer = 0;
   }
@@ -27,6 +29,8 @@ export class VenatosaurusEnemy {
 
     this.attackCooldown = Math.max(0, this.attackCooldown - delta);
     this.stateTimer = Math.max(0, this.stateTimer - delta);
+    this.slideTimer = Math.max(0, this.slideTimer - delta);
+    this.slideCooldown = Math.max(0, this.slideCooldown - delta);
     if (this.state === "stunned") {
       if (this.stateTimer <= 0) this.state = "pursuit";
       return null;
@@ -63,7 +67,12 @@ export class VenatosaurusEnemy {
     this.direction = separation >= 0 ? 1 : -1;
     if (distance > 84) {
       this.state = "pursuit";
-      this.x += this.direction * 142 * delta;
+      if (this.slideTimer <= 0 && this.slideCooldown <= 0) {
+        this.slideTimer = 0.36;
+        this.slideCooldown = 3.1;
+      }
+      const sliding = this.slideTimer > 0;
+      this.x += this.direction * (sliding ? 226 : 142) * delta;
     } else if (this.attackCooldown <= 0) {
       this.state = "attack";
       this.stateTimer = 0.28;

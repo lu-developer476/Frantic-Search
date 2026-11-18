@@ -433,6 +433,26 @@ test("Empty Stomach changes predator GIFs for running, jumping, eating, and depa
   assert.equal(enemyAnimationKey({ ...umbraraptor, state: "departing" }, 0), "umbraraptorIdle");
 });
 
+test("Xenoraptors and Umbraraptors use a faster low slide while chasing", () => {
+  for (const [kind, expectedPose] of [
+    ["xenoraptor", "xenoraptorRun"],
+    ["umbraraptor", "umbraraptorWalk"]
+  ]) {
+    const enemy = createPredator(kind, 0);
+    enemy.x = 100;
+    enemy.slideCooldown = 0;
+    const simulation = {
+      elapsed: 0,
+      movementMultiplier: () => 1,
+      getEntityLane: () => 0
+    };
+    Persecution.prototype.moveEnemyTowards.call(simulation, enemy, 300, 100, 0.04);
+    assert.equal(enemy.slideTimer, 0.36);
+    assert.ok(enemy.x > 100, "the slide advances the predator toward its target");
+    assert.equal(enemyAnimationKey(enemy, 0), expectedPose);
+  }
+});
+
 test("Empty Stomach ends the run when Coral collides with a departing predator", () => {
   const player = { x: 250, y: 366, w: 88, h: 72 };
   const enemy = createPredator("umbraraptor", 0);

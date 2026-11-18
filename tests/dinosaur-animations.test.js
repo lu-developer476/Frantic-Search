@@ -121,10 +121,13 @@ test("the HUD status combines dash and Stegoceratops readiness with the requeste
   assert.match(css, /\.stegoceratops-readout::before\s*\{[^}]*content:"◦"/s);
 });
 
-test("all reference PNG dinosaurs receive a complete two-pixel black silhouette outline", async () => {
-  const renderer = await readFile(new URL("../src/rendering/SpriteRenderer.js", import.meta.url), "utf8");
+test("all dinosaur PNG and GIF renderers apply a one-pixel black silhouette outline", async () => {
+  const [renderer, canvasUtils] = await Promise.all([
+    readFile(new URL("../src/rendering/SpriteRenderer.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/rendering/CanvasUtils.js", import.meta.url), "utf8")
+  ]);
+  assert.match(renderer, /REFERENCE_OUTLINE_WIDTH = 1/);
   assert.match(renderer, /getOutlinedReferenceImage\(file, image, bounds, drawWidth, drawHeight\)/);
-  assert.match(renderer, /const border = 2/);
   assert.match(renderer, /outline-" \+ border/);
   assert.match(renderer, /const REFERENCE_OUTLINE_COLOR = "#000000"/);
   assert.match(renderer, /maskContext\.globalCompositeOperation = "source-in"/);
@@ -132,7 +135,10 @@ test("all reference PNG dinosaurs receive a complete two-pixel black silhouette 
   assert.match(renderer, /for \(let offsetY = -border; offsetY <= border; offsetY \+= 1\)/);
   assert.match(renderer, /for \(let offsetX = -border; offsetX <= border; offsetX \+= 1\)/);
   assert.match(renderer, /outlineContext\.drawImage\(mask, offsetX, offsetY\)/);
-  assert.match(renderer, /if \(outlinedImage\)\s*\{[^}]*context\.drawImage\(\s*outlinedImage/s);
+  assert.match(renderer, /drawOutlinedImage\(context, frame\.image/);
+  assert.match(canvasUtils, /export function drawOutlinedImage\(/);
+  assert.match(canvasUtils, /context\.filter = "brightness\(0\)"/);
+  assert.match(canvasUtils, /context\.drawImage\(image, x, y, width, height\)/);
   assert.match(renderer, /outlinedReferenceImages\.size > 48/);
 });
 

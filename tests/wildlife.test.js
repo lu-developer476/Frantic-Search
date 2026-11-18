@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { PlatformWorld } from "../src/world/PlatformWorld.js";
 import { WildDinosaur } from "../src/entities/WildDinosaur.js";
+import { VenatosaurusEnemy } from "../src/entities/VenatosaurusEnemy.js";
 import { LigocristusPrey } from "../src/entities/LigocristusPrey.js";
 import { REFERENCE_PNG_CHARACTERS } from "../src/rendering/SpriteRenderer.js";
 import { WORLD } from "../src/config/GameConfig.js";
@@ -36,6 +37,38 @@ test("Venatosaurus spawns throughout the campaign and both reference variants ar
     return spawn.x >= start && spawn.x < end &&
       spawn.patrolStart >= start && spawn.patrolEnd <= end;
   }));
+});
+
+test("Venatosaurus variants can slide forward during pursuit", () => {
+  const target = { x: 400, y: 338, w: 64, h: 62, health: 3, defeated: false };
+  const wild = new WildDinosaur({
+    id: "venatosaurus-slide",
+    kind: "venatosaurus-impavidus",
+    x: 100,
+    groundY: 430,
+    patrolStart: 0,
+    patrolEnd: 700
+  });
+  wild.jumpCooldown = 10;
+  wild.slideCooldown = 0;
+  const wildStart = wild.x;
+  wild.update(0.1, [{ target, kind: "protagonist" }]);
+  assert.equal(wild.slideTimer, 0.36);
+  assert.equal(wild.onGround, true, "the slide stays grounded instead of becoming a jump");
+  assert.ok(wild.x > wildStart + 15);
+
+  const campaign = new VenatosaurusEnemy({
+    id: "campaign-venatosaurus-slide",
+    x: 100,
+    patrolStart: 0,
+    patrolEnd: 700,
+    groundY: 430
+  });
+  campaign.slideCooldown = 0;
+  const campaignStart = campaign.x;
+  campaign.update(0.1, target);
+  assert.equal(campaign.slideTimer, 0.36);
+  assert.ok(campaign.x > campaignStart + 20);
 });
 
 test("Venatosaurus attacks nearby protagonists and can be defeated", () => {

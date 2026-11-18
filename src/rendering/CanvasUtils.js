@@ -26,6 +26,33 @@ export function roundedRect(context, x, y, width, height, radius = 0) {
 
 
 /**
+ * Draws an image with a one-pixel black silhouette, preserving its original alpha.
+ * This works with both static image elements and individual decoded GIF frames.
+ */
+export function drawOutlinedImage(context, image, x, y, width, height) {
+  if (!context || !image) return false;
+
+  context.save();
+  try {
+    context.filter = "brightness(0)";
+    context.drawImage(image, x - 1, y - 1, width, height);
+    context.drawImage(image, x, y - 1, width, height);
+    context.drawImage(image, x + 1, y - 1, width, height);
+    context.drawImage(image, x - 1, y, width, height);
+    context.drawImage(image, x + 1, y, width, height);
+    context.drawImage(image, x - 1, y + 1, width, height);
+    context.drawImage(image, x, y + 1, width, height);
+    context.drawImage(image, x + 1, y + 1, width, height);
+    context.filter = "none";
+    context.drawImage(image, x, y, width, height);
+  } finally {
+    context.restore();
+  }
+  return true;
+}
+
+
+/**
  * Expands a 960×540 logical viewport to match wider containers without
  * stretching sprites. Narrow stages retain the original world width.
  */

@@ -87,7 +87,7 @@ test("the copyright footer is part of the start screen and remains independent o
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
   const styles = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
 
-  assert.ok(html.includes('<footer class="start-screen-footer" role="contentinfo">© 2026 Todos los derechos reservados - Diseño y Programación por Lucas Montenegro ®</footer>'));
+  assert.ok(html.includes('<footer class="start-screen-footer" role="contentinfo">© 2026 Todos los derechos reservados - Diseño y Programación por <a href="https://lu-dev-portfolio.vercel.app/" target="_blank" rel="noopener noreferrer">Lucas Montenegro</a> ®</footer>'));
   assert.ok(html.indexOf('id="start-screen"') < html.indexOf('class="start-screen-footer"'));
   const footerStyles = styles.slice(styles.indexOf(".start-screen-footer {"));
   assert.ok(footerStyles.includes("position: absolute;"));

@@ -1,7 +1,8 @@
 import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.js";
 import { getAnimatedFrameIndex, loadAnimatedGif } from "../minigames/AnimatedGif.js";
+import { drawOutlinedImage } from "./CanvasUtils.js";
 
-const REFERENCE_OUTLINE_WIDTH = 2;
+const REFERENCE_OUTLINE_WIDTH = 1;
 const REFERENCE_OUTLINE_COLOR = "#000000";
 export const BRISA_ANIMATIONS = Object.freeze({
   idle: "juvenile-velociraptor-abyssomirabilis-idle.gif",
@@ -342,7 +343,7 @@ export class SpriteRenderer {
     const key = file + ":" + drawWidth + "x" + drawHeight + ":outline-" + border + "px";
     if (this.outlinedReferenceImages.has(key)) return this.outlinedReferenceImages.get(key);
 
-    // Expand the complete opaque silhouette by two pixels in every direction.
+    // Expand the complete opaque silhouette by one pixel in every direction.
     // The original artwork is composited last, preserving all interior details.
     const canvasWidth = drawWidth + border * 2;
     const canvasHeight = drawHeight + border * 2;
@@ -375,10 +376,10 @@ export class SpriteRenderer {
       if (!outlineContext) return null;
       outlineContext.imageSmoothingEnabled = false;
 
-      // Use a circular two-pixel dilation so diagonal edges stay fine rather than blocky.
+      // Use a one-pixel eight-neighbour dilation for a continuous, crisp contour.
       for (let offsetY = -border; offsetY <= border; offsetY += 1) {
         for (let offsetX = -border; offsetX <= border; offsetX += 1) {
-          if (offsetX * offsetX + offsetY * offsetY > border * border) continue;
+          if (offsetX === 0 && offsetY === 0) continue;
           outlineContext.drawImage(mask, offsetX, offsetY);
         }
       }
@@ -447,7 +448,7 @@ export class SpriteRenderer {
     context.imageSmoothingEnabled = false;
     context.translate(Math.round(x + width / 2), Math.round(groundAlignedY));
     context.scale(flip ? -1 : 1, 1);
-    context.drawImage(frame.image, -drawWidth / 2, 0, drawWidth, drawHeight);
+    drawOutlinedImage(context, frame.image, -drawWidth / 2, 0, drawWidth, drawHeight);
     context.restore();
     return true;
   }
@@ -477,8 +478,11 @@ export class SpriteRenderer {
 
     const drawWidth = Math.max(1, Math.round(width * definition.scale));
     const drawHeight = Math.max(1, Math.round(drawWidth * animation.height / animation.width));
+    const sliding = actor?.state === "pursuit" && (actor?.slideTimer ?? 0) > 0;
+    const renderedWidth = drawWidth * (sliding ? 1.12 : 1);
+    const renderedHeight = drawHeight * (sliding ? 0.72 : 1);
     const bottomPadding = frame.bottomPadding ?? animation.bottomPadding ?? 0;
-    const scaledBottomPadding = drawHeight * bottomPadding / animation.height;
+    const scaledBottomPadding = renderedHeight * bottomPadding / animation.height;
     const bob = actor?.onGround === false ? 0 : Math.abs(Math.sin(elapsed * 7.2 + phaseOf(actor, character))) * 0.35;
     const facing = options.facing ?? actor?.facing ?? actor?.direction ?? 1;
     const flip = Math.sign(facing || 1) !== definition.sourceFacing;
@@ -488,10 +492,10 @@ export class SpriteRenderer {
     context.imageSmoothingEnabled = false;
     context.translate(
       Math.round(x + width / 2),
-      Math.round(y + height - drawHeight + scaledBottomPadding + bob)
+      Math.round(y + height - renderedHeight + scaledBottomPadding + bob)
     );
     context.scale(flip ? -1 : 1, 1);
-    context.drawImage(frame.image, -drawWidth / 2, 0, drawWidth, drawHeight);
+    drawOutlinedImage(context, frame.image, -renderedWidth / 2, 0, renderedWidth, renderedHeight);
     context.restore();
     return true;
   }
@@ -1686,7 +1690,7 @@ export class SpriteRenderer {
     context.imageSmoothingEnabled = false;
     context.translate(Math.round(x + width / 2), Math.round(y + height - drawHeight + scaledBottomPadding));
     context.scale(flip ? -1 : 1, 1);
-    context.drawImage(frame.image, -drawWidth / 2, 0, drawWidth, drawHeight);
+    drawOutlinedImage(context, frame.image, -drawWidth / 2, 0, drawWidth, drawHeight);
     context.restore();
     return true;
   }

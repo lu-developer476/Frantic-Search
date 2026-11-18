@@ -1,5 +1,5 @@
 import { createEgg, getLaneBaseline, getLaneScale, normalizeLane, LANE_COUNT } from "./Persecution.js";
-import { observeCanvasViewport } from "../rendering/CanvasUtils.js";
+import { drawOutlinedImage, observeCanvasViewport } from "../rendering/CanvasUtils.js";
 import { MinigameEnvironmentRenderer, MINIGAME_ENVIRONMENT_SCENES } from "./MinigameEnvironment.js";
 
 let WIDTH = 960;
@@ -884,7 +884,7 @@ export class Race {
     if (image?.complete && image.naturalWidth) {
       context.save();
       context.globalAlpha = racer.flash > 0 && Math.floor(this.elapsed * 14) % 2 === 0 ? 0.25 : 1;
-      context.drawImage(image, racer.x - width / 2, y, width, height);
+      drawOutlinedImage(context, image, racer.x - width / 2, y, width, height);
       context.restore();
     } else {
       context.fillStyle = ["#526b4b", "#b38b61", "#786b54", "#8d715b"][racer.lane];

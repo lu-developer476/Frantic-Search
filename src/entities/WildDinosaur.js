@@ -21,6 +21,8 @@ export class WildDinosaur {
     this.attackCooldown = 0;
     this.defeated = false;
     this.motionSpeed = 0;
+    this.slideTimer = 0;
+    this.slideCooldown = 2.7;
     this.targetId = null;
   }
 
@@ -29,6 +31,8 @@ export class WildDinosaur {
     this.updateJump(delta);
     this.attackCooldown = Math.max(0, this.attackCooldown - delta);
     this.stateTimer = Math.max(0, this.stateTimer - delta);
+    this.slideTimer = Math.max(0, this.slideTimer - delta);
+    this.slideCooldown = Math.max(0, this.slideCooldown - delta);
     const ownCenter = this.x + this.w / 2;
     const candidates = targets
       .filter((entry) => entry && entry.target && !entry.target.defeated && entry.target.health !== 0)
@@ -66,8 +70,13 @@ export class WildDinosaur {
       this.direction = target.target.x >= this.x ? 1 : -1;
       if (target.distance > 82) {
         this.state = "pursuit";
-        this.x += this.direction * 104 * delta;
-        this.jump();
+        if (this.onGround && this.slideTimer <= 0 && this.slideCooldown <= 0) {
+          this.slideTimer = 0.36;
+          this.slideCooldown = 3.1;
+        }
+        const sliding = this.onGround && this.slideTimer > 0;
+        this.x += this.direction * (sliding ? 176 : 104) * delta;
+        if (!sliding) this.jump();
       } else if (this.attackCooldown <= 0) {
         this.state = "windup";
         this.stateTimer = 0.38;

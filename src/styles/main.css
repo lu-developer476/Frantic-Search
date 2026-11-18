@@ -4343,6 +4343,14 @@ html.site-mode-gray .ambush-intro button {
   letter-spacing: .035em;
   text-align: center;
 }
+.start-screen-footer a {
+  color: inherit;
+  text-decoration-color: rgba(216, 243, 106, .55);
+  text-underline-offset: 2px;
+}
+.start-screen-footer a:hover {
+  color: #d8f36a;
+}
 
 .hunting-panel.active,
 .ambush-panel.active {

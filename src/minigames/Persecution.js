@@ -1,5 +1,5 @@
 import { loadAnimatedGif, getAnimatedFrameIndex } from "./AnimatedGif.js";
-import { observeCanvasViewport } from "../rendering/CanvasUtils.js";
+import { drawOutlinedImage, observeCanvasViewport } from "../rendering/CanvasUtils.js";
 import { MinigameEnvironmentRenderer, MINIGAME_ENVIRONMENT_SCENES } from "./MinigameEnvironment.js";
 let WIDTH = 960;
 const HEIGHT = 540;
@@ -204,6 +204,8 @@ export function createPredator(kind, phase = 0, lane = DEFAULT_LANE) {
     state: "chasing",
     stateTimer: ENEMY_CHASE_DURATION,
     laneShiftTimer: 0.55 + Math.random() * 0.35,
+    slideTimer: 0,
+    slideCooldown: 2.7,
     preyTarget: null,
     eatTarget: null
   }, lane);
@@ -219,6 +221,8 @@ export function enemyAnimationKey(enemy, elapsed = 0) {
   if (enemy.state === "departing" || (enemy.state === "hunting" && !enemy.preyTarget)) {
     return isXenoraptor ? "xenoraptorJump" : "umbraraptorIdle";
   }
+
+  if ((enemy.slideTimer ?? 0) > 0) return isXenoraptor ? "xenoraptorRun" : "umbraraptorWalk";
 
   const jumping = Math.sin(elapsed * 3.8 + (enemy.phase ?? 0)) > 0.92;
   if (isXenoraptor) return jumping ? "xenoraptorJump" : "xenoraptorRun";
@@ -628,7 +632,14 @@ export class Persecution {
   moveEnemyTowards(enemy, targetX, chaseSpeed, delta) {
     const center = enemy.x + enemy.w / 2;
     const difference = targetX - center;
-    const step = Math.min(Math.abs(difference), chaseSpeed * this.movementMultiplier(enemy) * delta);
+    enemy.slideTimer = Math.max(0, (enemy.slideTimer ?? 0) - delta);
+    enemy.slideCooldown = Math.max(0, (enemy.slideCooldown ?? 2.7) - delta);
+    if (enemy.slideTimer <= 0 && enemy.slideCooldown <= 0) {
+      enemy.slideTimer = 0.36;
+      enemy.slideCooldown = 3.1;
+    }
+    const slideMultiplier = enemy.slideTimer > 0 ? 1.55 : 1;
+    const step = Math.min(Math.abs(difference), chaseSpeed * slideMultiplier * this.movementMultiplier(enemy) * delta);
     if (step > 0) {
       enemy.direction = Math.sign(difference);
       enemy.x += enemy.direction * step;
@@ -1276,20 +1287,25 @@ export class Persecution {
     this.onExit();
   }
 
-  drawSprite(key, x, y, w, h, fallback, animationTime = (this.animationClock ?? this.elapsed ?? 0) * 1000, facing = 1) {
+  drawSprite(key, x, y, w, h, fallback, animationTime = (this.animationClock ?? this.elapsed ?? 0) * 1000, facing = 1, options = {}) {
     const animation = this.animations[key];
     if (animation?.frames.length) {
       const index = getAnimatedFrameIndex(animation.frames, animationTime);
       const frame = animation.frames[index];
       const rect = getAnimationDrawRect(x, y, w, h, animation, frame);
+      const sliding = Boolean(options.sliding);
+      const drawWidth = rect.width * (sliding ? 1.12 : 1);
+      const drawHeight = rect.height * (sliding ? 0.72 : 1);
+      const drawX = rect.x - (drawWidth - rect.width) / 2;
+      const drawY = rect.y + rect.height - drawHeight;
       if (shouldFlipMinigameSprite(key, facing)) {
         this.ctx.save();
-        this.ctx.translate(rect.x + rect.width, 0);
+        this.ctx.translate(drawX + drawWidth, 0);
         this.ctx.scale(-1, 1);
-        this.ctx.drawImage(frame.image, 0, rect.y, rect.width, rect.height);
+        drawOutlinedImage(this.ctx, frame.image, 0, drawY, drawWidth, drawHeight);
         this.ctx.restore();
       } else {
-        this.ctx.drawImage(frame.image, rect.x, rect.y, rect.width, rect.height);
+        drawOutlinedImage(this.ctx, frame.image, drawX, drawY, drawWidth, drawHeight);
       }
     } else {
       this.ctx.fillStyle = fallback;
@@ -1472,7 +1488,8 @@ export class Persecution {
           enemy.h,
           enemy.kind === "xenoraptor" ? "#6c524b" : "#34433c",
           frozenPose ? 0 : this.animationClock * 1000,
-          enemy.direction
+          enemy.direction,
+          { sliding: ["chasing", "hunting"].includes(enemy.state) && enemy.slideTimer > 0 }
         );
         ctx.restore();
         if (enemy.state === "stunned") {
