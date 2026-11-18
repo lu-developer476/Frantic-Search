@@ -15,12 +15,24 @@ export const INTRO_DURATION = 5;
 export const PLAYER_WIDTH = 80;
 export const PLAYER_HEIGHT = 66;
 const INTRO_END_X = 250;
-const PRAIRIE_HERD = [
-  { x: 32, y: 368, w: 72, h: 52 },
-  { x: 282, y: 358, w: 88, h: 64 },
-  { x: 610, y: 366, w: 78, h: 56 },
-  { x: 905, y: 354, w: 92, h: 66 }
-];
+export const PRAIRIE_HERD = Object.freeze([
+  Object.freeze({ species: "parasaur", pose: "parasaurIdle", x: 32, y: 368, w: 72, h: 52 }),
+  Object.freeze({ species: "brontosaurus", pose: "brontosaurusWalk", x: 282, y: 358, w: 88, h: 64 }),
+  Object.freeze({ species: "ligocristus", phase: 0.2, x: 452, y: 373, w: 60, h: 43 }),
+  Object.freeze({ species: "parasaur", pose: "parasaurWalk", x: 610, y: 366, w: 78, h: 56 }),
+  Object.freeze({ species: "ligocristus", phase: 4.25, x: 770, y: 372, w: 64, h: 46 }),
+  Object.freeze({ species: "brontosaurus", pose: "brontosaurusRun", x: 905, y: 354, w: 92, h: 66 })
+]);
+
+export function prairieHerdAnimationKey(animal = {}, elapsed = 0) {
+  if (animal.species !== "ligocristus") return animal.pose ?? "parasaurWalk";
+
+  const cycle = ((elapsed + (animal.phase ?? 0)) % 9 + 9) % 9;
+  if (cycle < 0.55) return "ligocristusJump";
+  if (cycle < 1.8) return "ligocristusRun";
+  if (cycle < 3.6) return "ligocristusIdle";
+  return "ligocristusWalk";
+}
 export const CORAL_ANIMATION_ASSETS = Object.freeze({
   idle: "minigame/persecution/gif/main/miniraptor-idle.gif",
   run: "minigame/persecution/gif/main/miniraptor-run.gif",
@@ -1377,13 +1389,11 @@ export class Persecution {
     for (let i = 0; i < PRAIRIE_HERD.length; i += 1) {
       const animal = PRAIRIE_HERD[i];
       const x = ((animal.x - scroll * 0.12) % (WIDTH + 180) + (WIDTH + 180)) % (WIDTH + 180) - 90;
-      const isBrontosaurus = i === 1 || i === 3;
-      const pose = isBrontosaurus
-        ? (i === 1 ? "brontosaurusWalk" : "brontosaurusRun")
-        : (i % 2 === 0 ? "parasaurIdle" : "parasaurWalk");
+      const elapsed = (this.animationClock ?? this.elapsed ?? 0) + i * 0.31;
+      const pose = prairieHerdAnimationKey(animal, elapsed);
       this.drawSprite(
         pose, x, animal.y, animal.w, animal.h, "#82975e",
-        (this.animationClock ?? 0) * 1000 + i * 310, -1
+        elapsed * 1000, -1
       );
     }
   }

@@ -6,7 +6,7 @@ import {
   DASH_DURATION, DASH_COOLDOWN, DASH_SPEED_MULTIPLIER, ENEMY_STUN_DURATION,
   EGG_INVULNERABILITY_DURATION, ENEMY_TRIP_FADE_DURATION, createEgg,
   CHECKPOINT_INTERVAL_METERS, CHECKPOINT_INTERVAL_DISTANCE, EGGS_PER_CHECKPOINT_CONTINUE,
-  selectHerdPreySpecies, herdPreyAnimationKey
+  selectHerdPreySpecies, herdPreyAnimationKey, PRAIRIE_HERD, prairieHerdAnimationKey
 } from "../src/minigames/Persecution.js";
 import { removeEdgeBackground, getBottomTransparentPadding } from "../src/minigames/AnimatedGif.js";
 
@@ -17,6 +17,26 @@ test("Empty Stomach resolves every animation from the current GIF asset director
       throw new Error(`Missing Empty Stomach asset for ${key}: public/${path}`);
     })
   ));
+});
+
+test("the ambient prairie herd includes Ligocristus alongside Brontosaurus and Parasaurolophus", () => {
+  assert.ok(PRAIRIE_HERD.some((animal) => animal.species === "brontosaurus"));
+  assert.ok(PRAIRIE_HERD.some((animal) => animal.species === "parasaur"));
+  const ligocristus = PRAIRIE_HERD.filter((animal) => animal.species === "ligocristus");
+  assert.equal(ligocristus.length, 2);
+  assert.ok(ligocristus.every((animal) => animal.w > 0 && animal.h > 0));
+  assert.equal(prairieHerdAnimationKey({ species: "ligocristus", phase: 0 }, 0), "ligocristusJump");
+  assert.equal(prairieHerdAnimationKey({ species: "ligocristus", phase: 0 }, 1), "ligocristusRun");
+  assert.equal(prairieHerdAnimationKey({ species: "ligocristus", phase: 0 }, 2), "ligocristusIdle");
+  assert.equal(prairieHerdAnimationKey({ species: "ligocristus", phase: 0 }, 4), "ligocristusWalk");
+
+  const simulation = Object.create(Persecution.prototype);
+  simulation.animationClock = 0;
+  const drawnPoses = [];
+  simulation.drawSprite = (pose) => drawnPoses.push(pose);
+  simulation.drawPrairieHerd(0);
+  assert.equal(drawnPoses.length, PRAIRIE_HERD.length);
+  assert.equal(drawnPoses.filter((pose) => pose.startsWith("ligocristus")).length, 2);
 });
 
 test("PERSECUSIÓN can spawn Ligocristus as edible prey and uses all four GIF poses", () => {
