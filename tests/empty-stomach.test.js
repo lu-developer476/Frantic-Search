@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  overlaps, scoreForDistance, getGroundAlignedY, getAnimationDrawRect, createPredator, enemyAnimationKey, ASSETS, coralAnimationKey, shouldFlipMinigameSprite,
+  overlaps, scoreForDistance, getGroundAlignedY, getAnimationDrawRect, createPredator, enemyAnimationKey, ASSETS, CORAL_ANIMATION_ASSETS, coralAnimationKey, shouldFlipMinigameSprite,
   EmptyStomach, ENEMY_CHASE_DURATION, INTRO_DURATION, PLAYER_WIDTH, PLAYER_HEIGHT,
   DASH_DURATION, DASH_COOLDOWN, DASH_SPEED_MULTIPLIER, ENEMY_STUN_DURATION,
   EGG_INVULNERABILITY_DURATION, ENEMY_TRIP_FADE_DURATION, createEgg,
@@ -18,11 +18,18 @@ test("Empty Stomach resolves every animation from the current GIF asset director
   ));
 });
 
-test("Coral switches between idle, running and jumping GIF assets", () => {
+test("Coral uses the dedicated Miniraptor idle, run and jump GIF assets", () => {
+  assert.deepEqual(CORAL_ANIMATION_ASSETS, {
+    idle: "minigame/empty-stomach/gif/main/miniraptor-idle.gif",
+    run: "minigame/empty-stomach/gif/main/miniraptor-run.gif",
+    jump: "minigame/empty-stomach/gif/main/miniraptor-jump.gif"
+  });
+  assert.equal(ASSETS.coralIdle, CORAL_ANIMATION_ASSETS.idle);
+  assert.equal(ASSETS.coral, CORAL_ANIMATION_ASSETS.run);
+  assert.equal(ASSETS.coralJump, CORAL_ANIMATION_ASSETS.jump);
   assert.equal(coralAnimationKey({ grounded: true }, "intro"), "coralIdle");
   assert.equal(coralAnimationKey({ grounded: true }, "playing"), "coral");
   assert.equal(coralAnimationKey({ grounded: false }, "playing"), "coralJump");
-  for (const key of ["coralIdle", "coralJump", "coral"]) assert.ok(ASSETS[key]);
 });
 
 test("Empty Stomach includes both Brontosaurus movement GIFs and mirrors them for leftward travel", () => {

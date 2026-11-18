@@ -20,10 +20,16 @@ const PRAIRIE_HERD = [
   { x: 610, y: 366, w: 78, h: 56 },
   { x: 905, y: 354, w: 92, h: 66 }
 ];
+export const CORAL_ANIMATION_ASSETS = Object.freeze({
+  idle: "minigame/empty-stomach/gif/main/miniraptor-idle.gif",
+  run: "minigame/empty-stomach/gif/main/miniraptor-run.gif",
+  jump: "minigame/empty-stomach/gif/main/miniraptor-jump.gif"
+});
+
 export const ASSETS = {
-  coral: "minigame/empty-stomach/gif/main/miniraptor-run.gif",
-  coralIdle: "minigame/empty-stomach/gif/main/miniraptor-idle.gif",
-  coralJump: "minigame/empty-stomach/gif/main/miniraptor-jump.gif",
+  coral: CORAL_ANIMATION_ASSETS.run,
+  coralIdle: CORAL_ANIMATION_ASSETS.idle,
+  coralJump: CORAL_ANIMATION_ASSETS.jump,
   xenoraptorRun: "minigame/empty-stomach/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-run.gif",
   xenoraptorJump: "minigame/empty-stomach/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-jump.gif",
   xenoraptorAttack: "minigame/empty-stomach/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-attack.gif",

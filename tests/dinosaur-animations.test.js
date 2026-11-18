@@ -11,7 +11,7 @@ import {
   JUVENILE_ANIMATED_CHARACTERS,
   VENATOSAURUS_ANIMATION_ASSETS,
   BRONTOSAURUS_ANIMATION_ASSETS,
-  PROLOGUE_ROSA_ANIMATIONS,
+  BRISA_ANIMATIONS,
   selectBrontosaurusAnimation,
   selectVenatosaurusAnimation,
   SpriteRenderer
@@ -21,7 +21,7 @@ import { selectActorPose } from "../src/rendering/AnimationProfiles.js";
 
 test("feeding, jumping and combat actions resolve to their own poses", () => {
   assert.equal(selectActorPose("blue", { animationState: "eat" }), "violeta-eat");
-  assert.equal(selectActorPose("beta", { animationState: "eat" }), "rosa-eat");
+  assert.equal(selectActorPose("brisa", { animationState: "eat" }), "rosa-eat");
   assert.equal(selectActorPose("vasti", { animationState: "eat" }), "vasti-eat");
   assert.equal(selectActorPose("indoraptor", { animationState: "eat" }), "indoraptor-eat");
   assert.equal(selectActorPose("indoraptor", { animationState: "jump" }), "indoraptor-jump");
@@ -95,10 +95,20 @@ test("Brontosaurus uses dedicated walking and running GIFs instead of a missing 
   assert.equal(REFERENCE_PNG_CHARACTERS.ligocristus.file, "ligocristus-innocens.png");
 });
 
-test("Rosa's controllable prologue uses her dedicated idle, jump and run GIFs", () => {
-  assert.equal(PROLOGUE_ROSA_ANIMATIONS.idle, "juvenile-velociraptor-abyssomirabilis-idle.gif");
-  assert.equal(PROLOGUE_ROSA_ANIMATIONS.jump, "juvenile-velociraptor-abyssomirabilis-jump.gif");
-  assert.equal(PROLOGUE_ROSA_ANIMATIONS.run, "juvenile-velociraptor-abyssomirabilis-run.gif");
+test("Brisa uses her dedicated juvenile Velociraptor idle, jump and run GIFs", () => {
+  assert.equal(BRISA_ANIMATIONS.idle, "juvenile-velociraptor-abyssomirabilis-idle.gif");
+  assert.equal(BRISA_ANIMATIONS.jump, "juvenile-velociraptor-abyssomirabilis-jump.gif");
+  assert.equal(BRISA_ANIMATIONS.run, "juvenile-velociraptor-abyssomirabilis-run.gif");
+  assert.ok(CAMPAIGN_ANIMATED_REFERENCE_FILES.includes(BRISA_ANIMATIONS.idle));
+  assert.ok(CAMPAIGN_ANIMATED_REFERENCE_FILES.includes(BRISA_ANIMATIONS.jump));
+  assert.ok(CAMPAIGN_ANIMATED_REFERENCE_FILES.includes(BRISA_ANIMATIONS.run));
+});
+
+test("Gala and Basilio use their dedicated adult PNG reference artwork", () => {
+  assert.equal(REFERENCE_PNG_CHARACTERS.gala.file, "adult-velociraptor-nublarensis.png");
+  assert.equal(REFERENCE_PNG_CHARACTERS.basilio.file, "vastatosaurus-rex.png");
+  assert.equal(REFERENCE_PNG_CHARACTERS.blue, REFERENCE_PNG_CHARACTERS.gala);
+  assert.equal(REFERENCE_PNG_CHARACTERS.vasti, REFERENCE_PNG_CHARACTERS.basilio);
 });
 
 
@@ -181,19 +191,18 @@ test("campaign dinosaur manifests only reference files present in public/referen
   await Promise.all(CAMPAIGN_ANIMATED_REFERENCE_FILES.map((file) =>
     access(new URL("../public/references/" + file, import.meta.url))
   ));
-  assert.equal(REFERENCE_PNG_CHARACTERS.beta, undefined);
+  assert.equal(REFERENCE_PNG_CHARACTERS.brisa, undefined);
   assert.equal(REFERENCE_PNG_CHARACTERS.rosa, undefined);
-  assert.equal(JUVENILE_ANIMATED_CHARACTERS.beta.scale, DINOSAUR_REFERENCE_SCALES.rosa);
+  assert.equal(JUVENILE_ANIMATED_CHARACTERS.brisa.scale, DINOSAUR_REFERENCE_SCALES.brisa);
 });
 
-test("campaign Beta and Rosa route through the available juvenile reference GIFs", () => {
+test("Brisa routes through the available juvenile reference GIFs", () => {
   const renderer = Object.create(SpriteRenderer.prototype);
   const calls = [];
   renderer.drawAnimatedJuvenile = (_context, character) => {
     calls.push(character);
     return true;
   };
-  assert.equal(renderer.drawAnimated({}, "beta", 0, 0, 90, 70, {}, 0), true);
-  assert.equal(renderer.drawAnimated({}, "rosa", 0, 0, 90, 70, {}, 0), true);
-  assert.deepEqual(calls, ["beta", "rosa"]);
+  assert.equal(renderer.drawAnimated({}, "brisa", 0, 0, 90, 70, {}, 0), true);
+  assert.deepEqual(calls, ["brisa"]);
 });

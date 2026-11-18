@@ -490,7 +490,7 @@ function drawFacilityConsole(consoleEntity, context = ctx) {
   context.restore();
 
 }
-function drawBetaContainmentFrame(context, entity) {
+function drawBrisaContainmentFrame(context, entity) {
   if (!entity || entity.state !== "confined") return;
   const x = entity.x;
   const y = entity.y;
@@ -503,10 +503,10 @@ function drawBetaContainmentFrame(context, entity) {
   context.restore();
 }
 
-function drawBeta(entity) {
+function drawBrisa(entity) {
   if (!entity) return;
   const drawn = spriteRenderer.drawAnimated(
-    ctx, "beta", entity.x, entity.y, entity.w, entity.h,
+    ctx, "brisa", entity.x, entity.y, entity.w, entity.h,
     entity, elapsed, { facing: entity.facing }
   );
   if (!drawn) {
@@ -2893,10 +2893,10 @@ function render() {
   }
   if (beta?.state === "confined") {
     objectRenderer.drawLayer(ctx, "containment-shell", objectLayerOptions, (layerContext) => {
-      drawBetaContainmentFrame(layerContext, beta);
+      drawBrisaContainmentFrame(layerContext, beta);
     });
   }
-  if (beta) drawBeta(beta);
+  if (beta) drawBrisa(beta);
   if (stegoceratops) spriteRenderer.drawAnimated(ctx, "stegoceratops", stegoceratops.x, stegoceratops.y, stegoceratops.w, stegoceratops.h, stegoceratops, elapsed, { facing: 1 });
   drawCampaignPrologueActors();
   effectsRenderer.drawParticles(ctx, {
@@ -2916,18 +2916,18 @@ function render() {
   }
   const blink = player.invulnerable > 0 && Math.floor(elapsed * 18) % 2 === 0;
   if (campaignPrologue?.active && ["rest", "explore", "capture", "capture-dialog"].includes(campaignPrologue.phase)) {
-    const rosaSleeping = campaignPrologue.phase === "rest";
-    const rosaY = player.y + (rosaSleeping ? 5 : 0);
-    const rosaAnimationElapsed = rosaSleeping
+    const brisaSleeping = campaignPrologue.phase === "rest";
+    const brisaY = player.y + (brisaSleeping ? 5 : 0);
+    const brisaAnimationElapsed = brisaSleeping
       ? 0
       : Math.max(0, elapsed - (campaignPrologue.rosaAnimationStartedAt ?? elapsed));
-    const rosaDrawn = spriteRenderer.drawPrologueRosa(
-      ctx, player.x, rosaY, player.w, player.h, player,
-      rosaAnimationElapsed, blink ? 0.35 : 1, rosaSleeping
+    const brisaDrawn = spriteRenderer.drawPrologueBrisa(
+      ctx, player.x, brisaY, player.w, player.h, player,
+      brisaAnimationElapsed, blink ? 0.35 : 1, brisaSleeping
     );
-    if (!rosaDrawn) {
+    if (!brisaDrawn) {
       drawDino(
-        player.x, rosaY, player.w, player.h, "#75a99b", "rosa", rosaAnimationElapsed,
+        player.x, brisaY, player.w, player.h, "#75a99b", "brisa", brisaAnimationElapsed,
         blink ? 0.35 : 1, player.facing, player
       );
     }

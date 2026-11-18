@@ -3,31 +3,46 @@ import { getAnimatedFrameIndex, loadAnimatedGif } from "../minigames/AnimatedGif
 
 const REFERENCE_OUTLINE_WIDTH = 2;
 const REFERENCE_OUTLINE_COLOR = "#000000";
-export const PROLOGUE_ROSA_REFERENCE = "juvenile-velociraptor-abyssomirabilis-idle.gif";
-export const PROLOGUE_ROSA_ANIMATIONS = Object.freeze({
+export const BRISA_ANIMATIONS = Object.freeze({
   idle: "juvenile-velociraptor-abyssomirabilis-idle.gif",
   jump: "juvenile-velociraptor-abyssomirabilis-jump.gif",
   run: "juvenile-velociraptor-abyssomirabilis-run.gif"
 });
-const PROLOGUE_ROSA_SCALE = 1.8;
-const ANIMATED_REFERENCE_VERSION = "20261117-campaign-juvenile-gif-routing-2";
+export const BRISA_REFERENCE = BRISA_ANIMATIONS.idle;
+const PROLOGUE_BRISA_SCALE = 1.8;
+const ANIMATED_REFERENCE_VERSION = "20261117-campaign-brisa-juvenile-gif-routing-3";
 
 export const DINOSAUR_REFERENCE_SCALES = Object.freeze({
+  gala: 1.6,
   violeta: 1.6,
+  brisa: 1.56,
   rosa: 1.56,
+  basilio: 1.95,
   vastatosaurusRex: 1.95,
   ligocristusInnocens: 0.9,
   venatosaurusImpavidus: 0.94
 });
 
 export const JUVENILE_ANIMATED_CHARACTERS = Object.freeze({
-  beta: Object.freeze({ scale: DINOSAUR_REFERENCE_SCALES.rosa, sourceFacing: 1 }),
-  rosa: Object.freeze({ scale: PROLOGUE_ROSA_SCALE, sourceFacing: 1 })
+  brisa: Object.freeze({ scale: DINOSAUR_REFERENCE_SCALES.brisa, sourceFacing: 1 })
+});
+
+const GALA_REFERENCE = Object.freeze({
+  file: "adult-velociraptor-nublarensis.png",
+  sourceFacing: 1,
+  scale: DINOSAUR_REFERENCE_SCALES.gala
+});
+const BASILIO_REFERENCE = Object.freeze({
+  file: "vastatosaurus-rex.png",
+  sourceFacing: -1,
+  scale: DINOSAUR_REFERENCE_SCALES.basilio
 });
 
 export const REFERENCE_PNG_CHARACTERS = Object.freeze({
-  blue: { file: "adult-velociraptor-nublarensis.png", sourceFacing: 1, scale: DINOSAUR_REFERENCE_SCALES.violeta },
-  vasti: { file: "vastatosaurus-rex.png", sourceFacing: -1, scale: DINOSAUR_REFERENCE_SCALES.vastatosaurusRex },
+  gala: GALA_REFERENCE,
+  blue: GALA_REFERENCE,
+  basilio: BASILIO_REFERENCE,
+  vasti: BASILIO_REFERENCE,
   ferrucutus: { file: "ferrucutus-cerastes.png", sourceFacing: -1, scale: 1.08 },
   indoraptor: { first: "indoraptor-first-generation.png", second: "indoraptor-second-generation.png", sourceFacing: 1, scale: 1.34 },
   indominus: { first: "indominus-rex-first-generation.png", second: "indominus-rex-second-generation.png", sourceFacing: -1, scale: 1.18 },
@@ -79,7 +94,7 @@ export function selectVenatosaurusAnimation(character, actor = {}) {
 }
 
 export const CAMPAIGN_ANIMATED_REFERENCE_FILES = Object.freeze([
-  ...Object.values(PROLOGUE_ROSA_ANIMATIONS),
+  ...Object.values(BRISA_ANIMATIONS),
   BRONTOSAURUS_ANIMATION_ASSETS.walk,
   BRONTOSAURUS_ANIMATION_ASSETS.run,
   ...Object.values(VENATOSAURUS_ANIMATION_ASSETS).flatMap((assets) => [
@@ -100,7 +115,7 @@ export const REFERENCE_PRELOAD_FILES = [
   "stegoceratops.png"
 ];
 
-const SPRITE_ASSET_VERSION = "20261116-prologue-rosa-abyssomirabilis-1";
+const SPRITE_ASSET_VERSION = "20261117-campaign-brisa-reference-routing-1";
 const ROSA_RIG_PARTS = [
   "rosa-rig-body",
   "rosa-rig-tail",
@@ -391,7 +406,7 @@ export class SpriteRenderer {
       ["following", "running", "chasing", "retreating", "moving"].includes(state);
     const animationKey = options.animationKey ??
       (sleeping ? "idle" : airborne ? "jump" : moving ? "run" : "idle");
-    const file = PROLOGUE_ROSA_ANIMATIONS[animationKey] ?? PROLOGUE_ROSA_ANIMATIONS.idle;
+    const file = BRISA_ANIMATIONS[animationKey] ?? BRISA_ANIMATIONS.idle;
     const animation = this.animatedReferences.get(file);
     if (!animation?.frames?.length) {
       this.loadAnimatedReference(file);
@@ -405,7 +420,7 @@ export class SpriteRenderer {
     const frame = animation.frames[frameIndex];
     if (!frame?.image || !(animation.width > 0) || !(animation.height > 0)) return false;
 
-    const drawWidth = Math.max(1, Math.round(width * definition.scale));
+    const drawWidth = Math.max(1, Math.round(width * (options.scale ?? definition.scale)));
     const drawHeight = Math.max(1, Math.round(drawWidth * animation.height / animation.width));
     const bottomPadding = Math.max(
       0,
@@ -430,10 +445,11 @@ export class SpriteRenderer {
     return true;
   }
 
-  drawPrologueRosa(context, x, y, width, height, actor = {}, elapsed = 0, alpha = 1, sleeping = false) {
-    return this.drawAnimatedJuvenile(context, "rosa", x, y, width, height, actor, elapsed, {
+  drawPrologueBrisa(context, x, y, width, height, actor = {}, elapsed = 0, alpha = 1, sleeping = false) {
+    return this.drawAnimatedJuvenile(context, "brisa", x, y, width, height, actor, elapsed, {
       alpha,
-      sleeping
+      sleeping,
+      scale: PROLOGUE_BRISA_SCALE
     });
   }
 
@@ -759,10 +775,10 @@ export class SpriteRenderer {
     return drawn;
   }
 
-  drawReferenceRosa(context, x, y, width, height, actor, elapsed, alpha = 1, poseOverride = null) {
+  drawReferenceBrisa(context, x, y, width, height, actor, elapsed, alpha = 1, poseOverride = null) {
     const pose = poseOverride ?? (actor?.onGround === false && !actor.animationState
       ? "rosa-jump"
-      : selectActorPose("beta", actor, elapsed));
+      : selectActorPose("brisa", actor, elapsed));
     const phase = phaseOf(actor, "rosa");
     const gait = Math.sin(elapsed * 8.2 * Math.PI + phase);
     let bob = 0;
@@ -800,7 +816,7 @@ export class SpriteRenderer {
     }
 
     // Keep the juvenile proportions; this visual scale never changes collision geometry.
-    const renderWidth = Math.max(1, Math.round(width * DINOSAUR_REFERENCE_SCALES.rosa * scaleX));
+    const renderWidth = Math.max(1, Math.round(width * DINOSAUR_REFERENCE_SCALES.brisa * scaleX));
     const renderHeight = Math.max(1, Math.round(renderWidth * 61 / 100 * scaleY));
     const dx = Math.round(x + (width - renderWidth) / 2);
     const dy = Math.round(y + height - renderHeight + bob + 2);
@@ -1709,11 +1725,12 @@ export class SpriteRenderer {
   }
 
   drawDinosaur(context, kind, x, y, width, height, player, elapsed, alpha = 1) {
-    const character = kind === "blue" ? "blue" : kind === "rosa" ? "beta" : "vasti";
-    const prefix = kind === "blue" ? "violeta" : kind === "rosa" ? "rosa" : "vasti";
+    const isBrisa = kind === "brisa" || kind === "rosa";
+    const character = kind === "blue" ? "blue" : isBrisa ? "brisa" : "vasti";
+    const prefix = kind === "blue" ? "violeta" : isBrisa ? "rosa" : "vasti";
     let pose = selectActorPose(character, player, elapsed);
     if (player?.dashTimer > 0 && kind === "blue") pose = "violeta-dash";
-    else if (player?.dashTimer > 0 && kind === "rosa") pose = "rosa-attack";
+    else if (player?.dashTimer > 0 && isBrisa) pose = "rosa-attack";
     else if (player && !player.onGround && !player.animationState) pose = prefix + "-jump";
     else if (player && Math.abs(player.vx) > 30 && !player.animationState) {
       const fps = kind === "vasti" ? 5.4 : Math.max(8, Math.min(13, Math.abs(player.vx) / 27));
