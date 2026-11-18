@@ -3391,6 +3391,7 @@ body:has(#survival-panel.active:not(.playing)) .canvas-wrap {
 #empty-stomach-button,
 #time-attack-button,
 #survival-button,
+#breaking-race-button,
 #continue-campaign-button,
 #minigames-button *,
 #new-campaign-button *,
@@ -3398,6 +3399,7 @@ body:has(#survival-panel.active:not(.playing)) .canvas-wrap {
 #empty-stomach-button *,
 #time-attack-button *,
 #survival-button *,
+#breaking-race-button *,
 #continue-campaign-button * {
   font-family: var(--font-mono) !important;
   font-weight: 400 !important;
@@ -3557,7 +3559,8 @@ body:has(#dino-modal:not(.hidden)) .dino-dialog {
 /* Keep the menu toggle tucked away only on minigame staging screens before play begins. */
 body:has(#empty-stomach-panel.active:not(.playing)) .menu-toggle,
 body:has(#time-attack-panel.active:not(.playing)) .menu-toggle,
-body:has(#survival-panel.active:not(.playing)) .menu-toggle {
+body:has(#survival-panel.active:not(.playing)) .menu-toggle,
+body:has(#breaking-race-panel.active:not(.playing)) .menu-toggle {
   display: none !important;
 }
 
@@ -4639,22 +4642,146 @@ html.site-mode-gray .survival-intro button {
 }
 
 
-/* Breaking Race — four-lane precision sprint. */
-
-.breaking-race-panel{position:absolute;inset:0;z-index:25;display:none;padding:clamp(12px,2.4vw,28px);background:radial-gradient(ellipse at 50% 35%,#66513a,#171b17 75%);color:#f4eddf}
-.breaking-race-panel.active{display:grid;grid-template-rows:minmax(0,1fr);gap:12px;min-width:0;min-height:0}
-.breaking-race-stage{position:relative;min-height:0;display:grid;place-items:center;overflow:hidden;border:1px solid #b99b70;background:#c4b08a}
-.breaking-race-stage canvas{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated;touch-action:manipulation}
-.breaking-race-top{position:absolute;z-index:2;top:12px;left:16px;right:16px;display:flex;justify-content:space-between;font:9px var(--font-mono);letter-spacing:.12em;color:#f8f0df;text-shadow:0 1px 3px #292016}
-.breaking-race-intro{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;background:linear-gradient(135deg,rgba(15,20,16,.88),rgba(33,29,21,.78))}
-.breaking-race-panel.playing .breaking-race-intro{pointer-events:none;background:transparent}
-.breaking-race-panel.playing .breaking-race-intro>*{display:none}
-.breaking-race-intro h2{margin:10px 0;color:#fff1d7;font:400 clamp(42px,8vw,84px)/.9 var(--font-condensed);letter-spacing:.04em}
-.breaking-race-intro p{max-width:70ch;color:#e6dfd0;font-size:12px;line-height:1.6}
-.breaking-race-instructions{font:10px var(--font-mono)!important}
-.breaking-race-result{padding:10px 16px;border:1px solid #e0b77d;background:#28241d;color:#ffe0a9;font:11px var(--font-mono)}
-.breaking-race-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px}
-.breaking-race-actions button{padding:10px 14px;border:1px solid #c49a68;background:#30271e;color:#fff0d8;font:9px var(--font-mono);letter-spacing:.1em;cursor:pointer}
-.breaking-race-actions button:first-child,.breaking-race-actions button:nth-child(2){border-color:#f0c27c;background:#f0c27c;color:#241d16}
-.breaking-race-actions button[hidden]{display:none!important}
-@media(max-width:700px){.breaking-race-panel{padding:8px}.breaking-race-intro h2{font-size:40px}}
+/* Breaking Race uses the same foreground depth lanes and intro treatment as Empty Stomach. */
+.breaking-race-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  display: none;
+  padding: clamp(12px, 2.4vw, 28px);
+  background: radial-gradient(ellipse at 50% 35%, #34483a, #101a18 72%);
+  color: #edf2e7;
+}
+.breaking-race-panel.active { display: block; }
+.breaking-race-stage {
+  position: absolute;
+  inset: 0;
+  min-width: 0;
+  min-height: 0;
+  display: block;
+  overflow: hidden;
+  border: 1px solid #77866a;
+  background: #b8d0c4;
+}
+.breaking-race-stage canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  aspect-ratio: auto;
+  object-fit: fill;
+  image-rendering: pixelated;
+  touch-action: manipulation;
+}
+.breaking-race-top {
+  position: absolute;
+  z-index: 2;
+  top: 12px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #d7e5c8;
+  font: 400 9px var(--font-mono);
+  letter-spacing: .15em;
+  text-shadow: 0 1px 3px rgba(10, 20, 14, .55);
+}
+.breaking-race-panel:not(.playing) .breaking-race-top { display: none; }
+.breaking-race-intro {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(18px, 3vw, 30px);
+  text-align: center;
+  background: linear-gradient(135deg, rgba(8,17,14,.83), rgba(18,29,22,.76));
+}
+.breaking-race-panel.playing .breaking-race-intro {
+  pointer-events: none;
+  background: transparent;
+}
+.breaking-race-panel.playing .breaking-race-intro > * { display: none; }
+.breaking-race-intro h2 {
+  margin: 10px 0;
+  color: #f3f1df;
+  font: 400 clamp(42px, 8vw, 84px)/.9 var(--font-condensed);
+  letter-spacing: .04em;
+}
+.breaking-race-intro p {
+  max-width: 54ch;
+  color: #d6dfd1;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.breaking-race-instructions {
+  max-width: 100%;
+  font: clamp(6px, .85vw, 10px)/1.5 var(--font-mono) !important;
+  letter-spacing: .025em;
+  text-align: center;
+}
+.breaking-race-result {
+  padding: 10px 16px;
+  border: 1px solid #d28d79;
+  background: #1b2823;
+  color: #ffd1b4;
+  font: 400 11px var(--font-mono);
+}
+.breaking-race-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 520px);
+  margin-top: 8px;
+}
+.breaking-race-actions button {
+  display: inline-flex;
+  flex: 1 1 150px;
+  align-items: center;
+  justify-content: center;
+  min-width: 130px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid #8c9d77;
+  border-radius: 2px;
+  background: #1d2b26;
+  color: #e9f0dc;
+  font: 400 9px/1.35 var(--font-mono);
+  letter-spacing: .1em;
+  text-align: center;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+.breaking-race-actions button:first-child,
+.breaking-race-actions button:nth-child(2) {
+  border-color: #e1a17f;
+  background: #e1a17f;
+  color: #1b211a;
+}
+.breaking-race-actions button:hover {
+  border-color: #d8f36a;
+  background: #354c3e;
+  color: #eff3e5;
+  transform: translateY(-1px);
+}
+.breaking-race-actions button[hidden],
+.breaking-race-intro [hidden] { display: none !important; }
+@media (max-width: 700px) {
+  .breaking-race-panel { padding: 8px; }
+  .breaking-race-intro h2 { font-size: 40px; }
+  .breaking-race-intro p { font-size: 11px; }
+  .breaking-race-actions { gap: 6px; }
+  .breaking-race-actions button {
+    flex-basis: 145px;
+    min-width: 120px;
+    padding: 9px 10px;
+    font-size: 8px;
+  }
+}
