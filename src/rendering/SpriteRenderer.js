@@ -68,15 +68,19 @@ export function selectBrontosaurusAnimation(actor = {}) {
 export const VENATOSAURUS_ANIMATION_ASSETS = Object.freeze({
   "venatosaurus-impavidus": Object.freeze({
     attack: "venatosaurus-impavidus-attack.gif",
+    idle: "venatosaurus-impavidus-idle.gif",
     jump: "venatosaurus-impavidus-jump.gif",
     run: "venatosaurus-impavidus-run.gif",
+    walk: "venatosaurus-impavidus-walk.gif",
     sourceFacing: 1,
     scale: DINOSAUR_REFERENCE_SCALES.venatosaurusImpavidus
   }),
   "venatosaurus-saevidicus": Object.freeze({
     attack: "venatosaurus-saevidicus-attack.gif",
+    idle: "venatosaurus-saevidicus-idle.gif",
     jump: "venatosaurus-saevidicus-jump.gif",
     run: "venatosaurus-saevidicus-run.gif",
+    walk: "venatosaurus-saevidicus-walk.gif",
     sourceFacing: 1,
     scale: 1.18
   })
@@ -90,7 +94,10 @@ export function selectVenatosaurusAnimation(character, actor = {}) {
     return assets.attack;
   }
   if (actor?.onGround === false) return assets.jump;
-  return assets.run;
+  if (["stunned", "defeated"].includes(actor?.state)) return assets.idle;
+  if (actor?.state === "pursuit" || Math.abs(actor?.motionSpeed ?? actor?.vx ?? 0) > 70) return assets.run;
+  if (actor?.state === "patrol") return assets.walk;
+  return assets.idle;
 }
 
 export const CAMPAIGN_ANIMATED_REFERENCE_FILES = Object.freeze([
@@ -98,7 +105,7 @@ export const CAMPAIGN_ANIMATED_REFERENCE_FILES = Object.freeze([
   BRONTOSAURUS_ANIMATION_ASSETS.walk,
   BRONTOSAURUS_ANIMATION_ASSETS.run,
   ...Object.values(VENATOSAURUS_ANIMATION_ASSETS).flatMap((assets) => [
-    assets.attack, assets.jump, assets.run
+    assets.attack, assets.idle, assets.jump, assets.run, assets.walk
   ])
 ]);
 

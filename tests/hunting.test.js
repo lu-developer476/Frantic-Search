@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { canCompleteSection, createWavePlan, formatHunterLabel, formatTime, nearestTarget } from "../src/minigames/TimeAttack.js";
+import { canCompleteSection, createWavePlan, formatHunterLabel, formatTime, nearestTarget } from "../src/minigames/Hunting.js";
 
 test("Time Attack plans four ordered waves containing fourteen dinosaurs", () => {
   const waves = createWavePlan();

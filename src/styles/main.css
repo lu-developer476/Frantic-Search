@@ -907,14 +907,14 @@ body.game-paused .brand,body.game-paused .navbar-separator{display:none!importan
    or keyboard-focused, across the main menu and every nested menu page. */
 #start-screen:has(.start-screen-copy button:hover, .start-screen-copy button:focus-visible) .start-screen-artwork,
 .start-screen-artwork.is-minigame-preview{
-  filter:drop-shadow(0 18px 38px rgba(0,0,0,.34)) drop-shadow(0 0 16px rgba(255,255,255,.12));
+  filter:drop-shadow(0 18px 38px rgba(0,0,0,.34)) drop-shadow(0 0 10px rgba(255,255,255,.78)) drop-shadow(0 0 24px rgba(255,255,255,.58)) drop-shadow(0 0 48px rgba(255,255,255,.34));
 }
 
 /* Character illustrations are also menu artwork: give each portrait the same
    yellow halo while its selection card is hovered or keyboard-focused. */
 .character-card:hover .character-art img,
 .character-card:focus-visible .character-art img{
-  filter:drop-shadow(0 0 16px rgba(255,255,255,.12));
+  filter:drop-shadow(0 0 9px rgba(255,255,255,.8)) drop-shadow(0 0 22px rgba(255,255,255,.55)) drop-shadow(0 0 42px rgba(255,255,255,.3));
 }
 @keyframes startPing{0%,100%{transform:scale(.86);opacity:.78}50%{transform:scale(1.12);opacity:1}}
 @media(max-width:1200px) and (min-width:1024px){
@@ -2562,124 +2562,124 @@ html.site-mode-gray .story-card .story-actions span{
 @media(max-height:720px) and (min-width:1024px) and (hover:hover) and (pointer:fine){.panel-head{min-height:58px}}
 
 
-/* Empty Stomach: standalone endless-run survival mode. */
-.start-screen-copy #empty-stomach-button{
+/* Empty Stomach: standalone endless-run ambush mode. */
+.start-screen-copy #persecution-button{
   display:inline-flex;align-items:center;justify-content:center;gap:16px;
   min-width:150px;min-height:52px;padding:14px 18px;margin:0;
   border:1px solid #d28d79;border-radius:2px;background:#342622;color:#f2c5a9;
   font-family:var(--font-mono);font-size:10px;font-weight: 400;letter-spacing:.12em;cursor:pointer;
 }
-.start-screen-copy #empty-stomach-button:hover{background:#50352d;border-color:#f0b08e}
-.start-screen-copy #empty-stomach-button:disabled{opacity:.45;cursor:not-allowed}
-.empty-stomach-panel{position:absolute;inset:0;z-index:24;display:none;padding:clamp(12px,2.4vw,28px);background:radial-gradient(ellipse at 50% 35%,#34483a,#101a18 72%);color:#edf2e7}
-.empty-stomach-panel.active{display:block}
+.start-screen-copy #persecution-button:hover{background:#50352d;border-color:#f0b08e}
+.start-screen-copy #persecution-button:disabled{opacity:.45;cursor:not-allowed}
+.persecution-panel{position:absolute;inset:0;z-index:24;display:none;padding:clamp(12px,2.4vw,28px);background:radial-gradient(ellipse at 50% 35%,#34483a,#101a18 72%);color:#edf2e7}
+.persecution-panel.active{display:block}
 
-.empty-stomach-actions button{padding:10px 14px;border:1px solid #8c9d77;background:#1d2b26;color:#e9f0dc;font: 400 9px var(--font-mono);letter-spacing:.1em;cursor:pointer}
-.empty-stomach-stage{position:absolute;inset:0;min-width:0;min-height:0;display:block;overflow:hidden;border:1px solid #77866a;background:#b8d0c4}
-.empty-stomach-stage canvas{position:absolute;inset:0;display:block;width:100%;height:100%;max-width:none;max-height:none;aspect-ratio:auto;object-fit:fill;image-rendering:pixelated}
-.empty-stomach-bottom{position:absolute;z-index:4;left:0;right:0;bottom:0;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:14px;min-height:42px;margin:0;padding:4px 12px;border:1px solid #77866a;background:#182820;color:#e9f0dc}
-.empty-stomach-bottom[hidden]{display:none}
-.empty-stomach-bottom span{font: 400 9px var(--font-mono);letter-spacing:.04em;text-transform:uppercase}
-.empty-stomach-bottom button{grid-column:3;justify-self:end;flex:0 0 auto;padding:5px 12px;border:1px solid #e1a17f;background:#e1a17f;color:#1b211a;font: 400 9px var(--font-mono);letter-spacing:.08em;cursor:pointer}
-.empty-stomach-bottom button:hover{background:#efb392}
-.empty-stomach-pause-overlay{position:absolute;inset:0;z-index:3;display:grid;place-items:center;background:rgba(7,13,12,.55);pointer-events:none}
-.empty-stomach-pause-overlay[hidden]{display:none}
-.empty-stomach-pause-overlay span{padding:16px 28px;border:1px solid #e1a17f;background:rgba(20,31,25,.92);color:#f3f1df;font: 400 clamp(30px,6vw,56px)/1 var(--font-condensed);letter-spacing:.08em}
-.empty-stomach-intro{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;background:linear-gradient(135deg,rgba(8,17,14,.83),rgba(18,29,22,.76))}
-.empty-stomach-panel.playing .empty-stomach-intro{pointer-events:none;background:transparent}
-.empty-stomach-panel.playing .empty-stomach-intro>*{display:none}
+.persecution-actions button{padding:10px 14px;border:1px solid #8c9d77;background:#1d2b26;color:#e9f0dc;font: 400 9px var(--font-mono);letter-spacing:.1em;cursor:pointer}
+.persecution-stage{position:absolute;inset:0;min-width:0;min-height:0;display:block;overflow:hidden;border:1px solid #77866a;background:#b8d0c4}
+.persecution-stage canvas{position:absolute;inset:0;display:block;width:100%;height:100%;max-width:none;max-height:none;aspect-ratio:auto;object-fit:fill;image-rendering:pixelated}
+.persecution-bottom{position:absolute;z-index:4;left:0;right:0;bottom:0;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:14px;min-height:42px;margin:0;padding:4px 12px;border:1px solid #77866a;background:#182820;color:#e9f0dc}
+.persecution-bottom[hidden]{display:none}
+.persecution-bottom span{font: 400 9px var(--font-mono);letter-spacing:.04em;text-transform:uppercase}
+.persecution-bottom button{grid-column:3;justify-self:end;flex:0 0 auto;padding:5px 12px;border:1px solid #e1a17f;background:#e1a17f;color:#1b211a;font: 400 9px var(--font-mono);letter-spacing:.08em;cursor:pointer}
+.persecution-bottom button:hover{background:#efb392}
+.persecution-pause-overlay{position:absolute;inset:0;z-index:3;display:grid;place-items:center;background:rgba(7,13,12,.55);pointer-events:none}
+.persecution-pause-overlay[hidden]{display:none}
+.persecution-pause-overlay span{padding:16px 28px;border:1px solid #e1a17f;background:rgba(20,31,25,.92);color:#f3f1df;font: 400 clamp(30px,6vw,56px)/1 var(--font-condensed);letter-spacing:.08em}
+.persecution-intro{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;background:linear-gradient(135deg,rgba(8,17,14,.83),rgba(18,29,22,.76))}
+.persecution-panel.playing .persecution-intro{pointer-events:none;background:transparent}
+.persecution-panel.playing .persecution-intro>*{display:none}
 
-.empty-stomach-intro h2{margin:10px 0;color:#f3f1df;font: 400 clamp(42px,8vw,84px)/.9 var(--font-condensed);letter-spacing:.04em}
-.empty-stomach-intro p{max-width:54ch;color:#d6dfd1;font-size:13px;line-height:1.6}
-.empty-stomach-instructions{
+.persecution-intro h2{margin:10px 0;color:#f3f1df;font: 400 clamp(42px,8vw,84px)/.9 var(--font-condensed);letter-spacing:.04em}
+.persecution-intro p{max-width:54ch;color:#d6dfd1;font-size:13px;line-height:1.6}
+.persecution-instructions{
   display:block;max-width:100%;white-space:nowrap;text-align:center;
   font:clamp(5px,.9vw,10px)/1.3 var(--font-mono)!important;letter-spacing:0;
 }
-.empty-stomach-bottom span{
+.persecution-bottom span{
   grid-column:2;min-width:0;white-space:nowrap;text-align:center;
   font-size:clamp(6px,.9vw,10px);letter-spacing:0;
 }
-.empty-stomach-actions [data-empty-start]{min-width:112px;white-space:nowrap;}
-.empty-stomach-result{padding:10px 16px;border:1px solid #d28d79;background:#1b2823;color:#ffd1b4;font: 400 11px var(--font-mono)}
-.empty-stomach-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px}
-.empty-stomach-actions button:first-child,.empty-stomach-actions button:nth-child(2),.empty-stomach-actions [data-empty-checkpoint]{border-color:#e1a17f;background:#e1a17f;color:#1b211a}
-.empty-stomach-actions [data-empty-checkpoint]{border-color:#d8f36a;background:#d8f36a;color:#17201a}
-.empty-stomach-actions [data-empty-checkpoint]:hover{background:#e8ff8a}
-.empty-stomach-actions button[hidden],.empty-stomach-intro [hidden]{display:none!important}
-@media(max-width:700px){.empty-stomach-panel{padding:8px}.empty-stomach-intro h2{font-size:40px}.empty-stomach-intro p{font-size:11px}.empty-stomach-bottom{align-items:stretch;grid-template-columns:minmax(0,1fr);gap:7px}.empty-stomach-bottom span{grid-column:1;text-align:center;font-size:clamp(5px,1.4vw,8px);white-space:nowrap}.empty-stomach-bottom button{grid-column:1;justify-self:stretch;width:100%}}
+.persecution-actions [data-empty-start]{min-width:112px;white-space:nowrap;}
+.persecution-result{padding:10px 16px;border:1px solid #d28d79;background:#1b2823;color:#ffd1b4;font: 400 11px var(--font-mono)}
+.persecution-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.persecution-actions button:first-child,.persecution-actions button:nth-child(2),.persecution-actions [data-empty-checkpoint]{border-color:#e1a17f;background:#e1a17f;color:#1b211a}
+.persecution-actions [data-empty-checkpoint]{border-color:#d8f36a;background:#d8f36a;color:#17201a}
+.persecution-actions [data-empty-checkpoint]:hover{background:#e8ff8a}
+.persecution-actions button[hidden],.persecution-intro [hidden]{display:none!important}
+@media(max-width:700px){.persecution-panel{padding:8px}.persecution-intro h2{font-size:40px}.persecution-intro p{font-size:11px}.persecution-bottom{align-items:stretch;grid-template-columns:minmax(0,1fr);gap:7px}.persecution-bottom span{grid-column:1;text-align:center;font-size:clamp(5px,1.4vw,8px);white-space:nowrap}.persecution-bottom button{grid-column:1;justify-self:stretch;width:100%}}
 
 
 /* Time Attack — a self-contained timed hunting section. */
-.start-screen-copy #time-attack-button{
+.start-screen-copy #hunting-button{
   display:flex;align-items:center;justify-content:space-between;width:100%;min-height:46px;
   padding:13px 15px;border:1px solid #8c9d77;background:#26372f;color:#eff3e5;
   font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;cursor:pointer;transition:.18s;
 }
-.start-screen-copy #time-attack-button:hover{background:#354c3e;border-color:#d8f36a;transform:translateY(-1px)}
-.start-screen-copy #time-attack-button:disabled{opacity:.45;cursor:not-allowed;transform:none}
-.start-screen-copy #time-attack-button b{font-size:17px;line-height:1}
-.time-attack-panel{
+.start-screen-copy #hunting-button:hover{background:#354c3e;border-color:#d8f36a;transform:translateY(-1px)}
+.start-screen-copy #hunting-button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.start-screen-copy #hunting-button b{font-size:17px;line-height:1}
+.hunting-panel{
   position:absolute;inset:0;z-index:25;display:none;padding:clamp(12px,2.4vw,28px);
   background:radial-gradient(ellipse at 50% 35%,#34483a,#101a18 72%);color:#edf2e7;
 }
-.time-attack-panel.active{display:grid;grid-template-rows:auto minmax(0,1fr);gap:12px;min-width:0;min-height:0}
-.time-attack-top{display:flex;justify-content:space-between;align-items:center;gap:12px;font: 400 9px var(--font-mono);letter-spacing:.15em;color:#d7e5c8}
-.time-attack-stage{position:relative;flex:1;min-height:0;display:grid;place-items:center;overflow:hidden;border:1px solid #77866a;background:#a9c6bd}
-.time-attack-stage canvas{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated;touch-action:none}
-.time-attack-intro{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;background:linear-gradient(135deg,rgba(8,17,14,.87),rgba(18,29,22,.78))}
-.time-attack-panel.playing .time-attack-intro{pointer-events:none;background:transparent}
-.time-attack-panel.playing .time-attack-intro>*{display:none}
-.time-attack-intro small{color:#e8b18f;font: 400 9px var(--font-mono);letter-spacing:.2em}
-.time-attack-intro h2{margin:10px 0;color:#f3f1df;font: 400 clamp(42px,8vw,84px)/.9 var(--font-condensed);letter-spacing:.04em}
-.time-attack-intro p{max-width:68ch;color:#d6dfd1;font-size:12px;line-height:1.6}
-.time-attack-instructions{font:10px var(--font-mono)!important}
-.time-attack-result{padding:10px 16px;border:1px solid #d28d79;background:#1b2823;color:#ffd1b4;font: 400 11px var(--font-mono)}
-.time-attack-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px}
-.time-attack-actions button{padding:10px 14px;border:1px solid #8c9d77;background:#1d2b26;color:#e9f0dc;font: 400 9px var(--font-mono);letter-spacing:.1em;cursor:pointer}
-.time-attack-actions button:first-child,.time-attack-actions button:nth-child(2){border-color:#d8f36a;background:#d8f36a;color:#1b211a}
-.time-attack-actions button[hidden],.time-attack-intro [hidden]{display:none!important}
-@media(max-width:700px){.time-attack-panel{padding:8px}.time-attack-top{font-size:7px}.time-attack-intro h2{font-size:40px}.time-attack-intro p{font-size:11px}}
+.hunting-panel.active{display:grid;grid-template-rows:auto minmax(0,1fr);gap:12px;min-width:0;min-height:0}
+.hunting-top{display:flex;justify-content:space-between;align-items:center;gap:12px;font: 400 9px var(--font-mono);letter-spacing:.15em;color:#d7e5c8}
+.hunting-stage{position:relative;flex:1;min-height:0;display:grid;place-items:center;overflow:hidden;border:1px solid #77866a;background:#a9c6bd}
+.hunting-stage canvas{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated;touch-action:none}
+.hunting-intro{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;background:linear-gradient(135deg,rgba(8,17,14,.87),rgba(18,29,22,.78))}
+.hunting-panel.playing .hunting-intro{pointer-events:none;background:transparent}
+.hunting-panel.playing .hunting-intro>*{display:none}
+.hunting-intro small{color:#e8b18f;font: 400 9px var(--font-mono);letter-spacing:.2em}
+.hunting-intro h2{margin:10px 0;color:#f3f1df;font: 400 clamp(42px,8vw,84px)/.9 var(--font-condensed);letter-spacing:.04em}
+.hunting-intro p{max-width:68ch;color:#d6dfd1;font-size:12px;line-height:1.6}
+.hunting-instructions{font:10px var(--font-mono)!important}
+.hunting-result{padding:10px 16px;border:1px solid #d28d79;background:#1b2823;color:#ffd1b4;font: 400 11px var(--font-mono)}
+.hunting-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.hunting-actions button{padding:10px 14px;border:1px solid #8c9d77;background:#1d2b26;color:#e9f0dc;font: 400 9px var(--font-mono);letter-spacing:.1em;cursor:pointer}
+.hunting-actions button:first-child,.hunting-actions button:nth-child(2){border-color:#d8f36a;background:#d8f36a;color:#1b211a}
+.hunting-actions button[hidden],.hunting-intro [hidden]{display:none!important}
+@media(max-width:700px){.hunting-panel{padding:8px}.hunting-top{font-size:7px}.hunting-intro h2{font-size:40px}.hunting-intro p{font-size:11px}}
 
 
-/* Survival — endless progressive arena with hunter and dinosaur loadouts. */
-.start-screen-copy #survival-button{
+/* Ambush — endless progressive arena with hunter and dinosaur loadouts. */
+.start-screen-copy #ambush-button{
   display:flex;align-items:center;justify-content:space-between;width:100%;min-height:46px;
   padding:13px 15px;border:1px solid #8c9d77;background:#303c32;color:#eff3e5;
   font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;cursor:pointer;transition:.18s;
 }
-.start-screen-copy #survival-button:hover{background:#40503c;border-color:#d8f36a;transform:translateY(-1px)}
-.start-screen-copy #survival-button:disabled{opacity:.45;cursor:not-allowed;transform:none}
-.start-screen-copy #survival-button b{font-size:17px;line-height:1}
-.survival-panel{
+.start-screen-copy #ambush-button:hover{background:#40503c;border-color:#d8f36a;transform:translateY(-1px)}
+.start-screen-copy #ambush-button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.start-screen-copy #ambush-button b{font-size:17px;line-height:1}
+.ambush-panel{
   position:absolute;inset:0;z-index:26;display:none;padding:clamp(12px,2.4vw,28px);
   background:radial-gradient(ellipse at 50% 35%,#34483a,#101a18 72%);color:#edf2e7;
 }
-.survival-panel.active{display:grid;grid-template-rows:auto minmax(0,1fr);gap:12px;min-width:0;min-height:0}
-.survival-top{display:flex;justify-content:space-between;align-items:center;gap:12px;font: 400 9px var(--font-mono);letter-spacing:.15em;color:#d7e5c8}
-.survival-stage{position:relative;flex:1;min-height:0;display:grid;place-items:center;overflow:hidden;border:1px solid #77866a;background:#9cbdb6}
-.survival-stage canvas{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated;touch-action:none}
-.survival-intro{
+.ambush-panel.active{display:grid;grid-template-rows:auto minmax(0,1fr);gap:12px;min-width:0;min-height:0}
+.ambush-top{display:flex;justify-content:space-between;align-items:center;gap:12px;font: 400 9px var(--font-mono);letter-spacing:.15em;color:#d7e5c8}
+.ambush-stage{position:relative;flex:1;min-height:0;display:grid;place-items:center;overflow:hidden;border:1px solid #77866a;background:#9cbdb6}
+.ambush-stage canvas{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated;touch-action:none}
+.ambush-intro{
   position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:24px;text-align:center;background:linear-gradient(135deg,rgba(8,17,14,.88),rgba(18,29,22,.78));
 }
-.survival-panel.playing .survival-intro{pointer-events:none;background:transparent}
-.survival-panel.playing .survival-intro>*{display:none}
-.survival-intro small{color:#e8b18f;font: 400 9px var(--font-mono);letter-spacing:.2em}
-.survival-intro h2{margin:10px 0;color:#f3f1df;font: 400 clamp(42px,8vw,84px)/.9 var(--font-condensed);letter-spacing:.04em}
-.survival-intro p{max-width:72ch;color:#d6dfd1;font-size:12px;line-height:1.6}
-.survival-instructions{font:10px var(--font-mono)!important}
-.survival-result{padding:10px 16px;border:1px solid #d28d79;background:#1b2823;color:#ffd1b4;font: 400 11px var(--font-mono)}
-.survival-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px}
-.survival-actions button{
+.ambush-panel.playing .ambush-intro{pointer-events:none;background:transparent}
+.ambush-panel.playing .ambush-intro>*{display:none}
+.ambush-intro small{color:#e8b18f;font: 400 9px var(--font-mono);letter-spacing:.2em}
+.ambush-intro h2{margin:10px 0;color:#f3f1df;font: 400 clamp(42px,8vw,84px)/.9 var(--font-condensed);letter-spacing:.04em}
+.ambush-intro p{max-width:72ch;color:#d6dfd1;font-size:12px;line-height:1.6}
+.ambush-instructions{font:10px var(--font-mono)!important}
+.ambush-result{padding:10px 16px;border:1px solid #d28d79;background:#1b2823;color:#ffd1b4;font: 400 11px var(--font-mono)}
+.ambush-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.ambush-actions button{
   padding:10px 14px;border:1px solid #8c9d77;background:#1d2b26;color:#e9f0dc;
   font: 400 9px var(--font-mono);letter-spacing:.1em;cursor:pointer;
 }
-.survival-actions button:first-child{border-color:#d8f36a;background:#d8f36a;color:#1b211a}
-.survival-actions button[hidden],.survival-intro [hidden]{display:none!important}
+.ambush-actions button:first-child{border-color:#d8f36a;background:#d8f36a;color:#1b211a}
+.ambush-actions button[hidden],.ambush-intro [hidden]{display:none!important}
 @media(max-width:700px){
-  .survival-panel{padding:8px}.survival-top{font-size:7px}
-  .survival-intro h2{font-size:40px}.survival-intro p{font-size:11px}
-  .survival-actions{gap:6px}.survival-actions button{padding:9px 10px;font-size:8px}
+  .ambush-panel{padding:8px}.ambush-top{font-size:7px}
+  .ambush-intro h2{font-size:40px}.ambush-intro p{font-size:11px}
+  .ambush-actions{gap:6px}.ambush-actions button{padding:9px 10px;font-size:8px}
 }
 
 
@@ -2711,9 +2711,9 @@ html.site-mode-gray .story-card .story-actions span{
   align-self:flex-start;width:auto;min-width:120px;min-height:40px;margin-top:4px;
   justify-content:center;border-color:rgba(222,237,221,.24);background:transparent;color:#b6c3b5
 }
-.start-screen-copy .start-menu-view #empty-stomach-button,
-.start-screen-copy .start-menu-view #time-attack-button,
-.start-screen-copy .start-menu-view #survival-button,
+.start-screen-copy .start-menu-view #persecution-button,
+.start-screen-copy .start-menu-view #hunting-button,
+.start-screen-copy .start-menu-view #ambush-button,
 .start-screen-copy .start-menu-view #continue-campaign-button{
   display:flex;width:100%;min-width:0;min-height:48px;margin:0;
 }
@@ -2773,8 +2773,8 @@ button.character-card {
 }
 
 .start-screen-copy .start-menu-view button,
-.start-screen-copy .start-menu-view #time-attack-button,
-.start-screen-copy .start-menu-view #survival-button {
+.start-screen-copy .start-menu-view #hunting-button,
+.start-screen-copy .start-menu-view #ambush-button {
   align-self: stretch;
   display: flex;
   justify-content: center;
@@ -2793,9 +2793,9 @@ button.character-card {
 }
 
 .overlay-actions > button,
-.empty-stomach-actions > button,
-.time-attack-actions > button,
-.survival-actions > button {
+.persecution-actions > button,
+.hunting-actions > button,
+.ambush-actions > button {
   display: flex;
   flex: 1 1 0;
   align-items: center;
@@ -2811,13 +2811,13 @@ button.character-card {
   width: auto;
 }
 
-.empty-stomach-intro .empty-stomach-instructions{
+.persecution-intro .persecution-instructions{
   width:100%;
   max-width:none;
   text-align:center;
 }
-.empty-stomach-actions{width:min(100%,420px)}
-.empty-stomach-actions > button{
+.persecution-actions{width:min(100%,420px)}
+.persecution-actions > button{
   flex:1 1 160px;
   min-width:150px;
   min-height:44px;
@@ -2922,9 +2922,9 @@ button.character-card {
 body:has(#start-screen:not(.hidden)),
 body:has(#dino-modal:not(.hidden)),
 body:has(#character-confirmation:not(.hidden)),
-body:has(#empty-stomach-panel.active:not(.playing)),
-body:has(#time-attack-panel.active:not(.playing)),
-body:has(#survival-panel.active:not(.playing)) {
+body:has(#persecution-panel.active:not(.playing)),
+body:has(#hunting-panel.active:not(.playing)),
+body:has(#ambush-panel.active:not(.playing)) {
   background: #000 !important;
   color: #fff5cf;
 }
@@ -2932,18 +2932,18 @@ body:has(#survival-panel.active:not(.playing)) {
 body:has(#start-screen:not(.hidden)) #app,
 body:has(#dino-modal:not(.hidden)) #app,
 body:has(#character-confirmation:not(.hidden)) #app,
-body:has(#empty-stomach-panel.active:not(.playing)) #app,
-body:has(#time-attack-panel.active:not(.playing)) #app,
-body:has(#survival-panel.active:not(.playing)) #app {
+body:has(#persecution-panel.active:not(.playing)) #app,
+body:has(#hunting-panel.active:not(.playing)) #app,
+body:has(#ambush-panel.active:not(.playing)) #app {
   grid-template-rows: 0 minmax(0, 1fr) !important;
 }
 
 body:has(#start-screen:not(.hidden)) .topbar,
 body:has(#dino-modal:not(.hidden)) .topbar,
 body:has(#character-confirmation:not(.hidden)) .topbar,
-body:has(#empty-stomach-panel.active:not(.playing)) .topbar,
-body:has(#time-attack-panel.active:not(.playing)) .topbar,
-body:has(#survival-panel.active:not(.playing)) .topbar {
+body:has(#persecution-panel.active:not(.playing)) .topbar,
+body:has(#hunting-panel.active:not(.playing)) .topbar,
+body:has(#ambush-panel.active:not(.playing)) .topbar {
   height: 0 !important;
   min-height: 0 !important;
   padding: 0 !important;
@@ -2955,18 +2955,18 @@ body:has(#survival-panel.active:not(.playing)) .topbar {
 body:has(#start-screen:not(.hidden)) .navbar-identity,
 body:has(#dino-modal:not(.hidden)) .navbar-identity,
 body:has(#character-confirmation:not(.hidden)) .navbar-identity,
-body:has(#empty-stomach-panel.active:not(.playing)) .navbar-identity,
-body:has(#time-attack-panel.active:not(.playing)) .navbar-identity,
-body:has(#survival-panel.active:not(.playing)) .navbar-identity {
+body:has(#persecution-panel.active:not(.playing)) .navbar-identity,
+body:has(#hunting-panel.active:not(.playing)) .navbar-identity,
+body:has(#ambush-panel.active:not(.playing)) .navbar-identity {
   display: none !important;
 }
 
 body:has(#start-screen:not(.hidden)) .nav-actions,
 body:has(#dino-modal:not(.hidden)) .nav-actions,
 body:has(#character-confirmation:not(.hidden)) .nav-actions,
-body:has(#empty-stomach-panel.active:not(.playing)) .nav-actions,
-body:has(#time-attack-panel.active:not(.playing)) .nav-actions,
-body:has(#survival-panel.active:not(.playing)) .nav-actions {
+body:has(#persecution-panel.active:not(.playing)) .nav-actions,
+body:has(#hunting-panel.active:not(.playing)) .nav-actions,
+body:has(#ambush-panel.active:not(.playing)) .nav-actions {
   position: fixed !important;
   top: 12px;
   right: 16px;
@@ -2976,18 +2976,18 @@ body:has(#survival-panel.active:not(.playing)) .nav-actions {
 body:has(#start-screen:not(.hidden)) .panel-head,
 body:has(#dino-modal:not(.hidden)) .panel-head,
 body:has(#character-confirmation:not(.hidden)) .panel-head,
-body:has(#empty-stomach-panel.active:not(.playing)) .panel-head,
-body:has(#time-attack-panel.active:not(.playing)) .panel-head,
-body:has(#survival-panel.active:not(.playing)) .panel-head {
+body:has(#persecution-panel.active:not(.playing)) .panel-head,
+body:has(#hunting-panel.active:not(.playing)) .panel-head,
+body:has(#ambush-panel.active:not(.playing)) .panel-head {
   display: none !important;
 }
 
 body:has(#start-screen:not(.hidden)) .game-panel,
 body:has(#dino-modal:not(.hidden)) .game-panel,
 body:has(#character-confirmation:not(.hidden)) .game-panel,
-body:has(#empty-stomach-panel.active:not(.playing)) .game-panel,
-body:has(#time-attack-panel.active:not(.playing)) .game-panel,
-body:has(#survival-panel.active:not(.playing)) .game-panel {
+body:has(#persecution-panel.active:not(.playing)) .game-panel,
+body:has(#hunting-panel.active:not(.playing)) .game-panel,
+body:has(#ambush-panel.active:not(.playing)) .game-panel {
   grid-template-rows: minmax(0, 1fr) !important;
   border-color: #000 !important;
   background: #000 !important;
@@ -2997,15 +2997,15 @@ body:has(#survival-panel.active:not(.playing)) .game-panel {
 body:has(#start-screen:not(.hidden)) .layout,
 body:has(#dino-modal:not(.hidden)) .layout,
 body:has(#character-confirmation:not(.hidden)) .layout,
-body:has(#empty-stomach-panel.active:not(.playing)) .layout,
-body:has(#time-attack-panel.active:not(.playing)) .layout,
-body:has(#survival-panel.active:not(.playing)) .layout,
+body:has(#persecution-panel.active:not(.playing)) .layout,
+body:has(#hunting-panel.active:not(.playing)) .layout,
+body:has(#ambush-panel.active:not(.playing)) .layout,
 body:has(#start-screen:not(.hidden)) .canvas-wrap,
 body:has(#dino-modal:not(.hidden)) .canvas-wrap,
 body:has(#character-confirmation:not(.hidden)) .canvas-wrap,
-body:has(#empty-stomach-panel.active:not(.playing)) .canvas-wrap,
-body:has(#time-attack-panel.active:not(.playing)) .canvas-wrap,
-body:has(#survival-panel.active:not(.playing)) .canvas-wrap {
+body:has(#persecution-panel.active:not(.playing)) .canvas-wrap,
+body:has(#hunting-panel.active:not(.playing)) .canvas-wrap,
+body:has(#ambush-panel.active:not(.playing)) .canvas-wrap {
   background: #000 !important;
 }
 
@@ -3024,28 +3024,28 @@ body:has(#survival-panel.active:not(.playing)) .canvas-wrap {
   backdrop-filter: none !important;
 }
 
-.empty-stomach-panel.active:not(.playing),
-.time-attack-panel.active:not(.playing),
-.survival-panel.active:not(.playing) {
+.persecution-panel.active:not(.playing),
+.hunting-panel.active:not(.playing),
+.ambush-panel.active:not(.playing) {
   background: #000 !important;
 }
 
-.empty-stomach-panel:not(.playing) .empty-stomach-stage,
-.time-attack-panel:not(.playing) .time-attack-stage,
-.survival-panel:not(.playing) .survival-stage {
+.persecution-panel:not(.playing) .persecution-stage,
+.hunting-panel:not(.playing) .hunting-stage,
+.ambush-panel:not(.playing) .ambush-stage {
   border-color: #000 !important;
   background: #000 !important;
 }
 
-.empty-stomach-panel:not(.playing) .empty-stomach-stage canvas,
-.time-attack-panel:not(.playing) .time-attack-stage canvas,
-.survival-panel:not(.playing) .survival-stage canvas {
+.persecution-panel:not(.playing) .persecution-stage canvas,
+.hunting-panel:not(.playing) .hunting-stage canvas,
+.ambush-panel:not(.playing) .ambush-stage canvas {
   visibility: hidden;
 }
 
-.empty-stomach-panel:not(.playing) .empty-stomach-intro,
-.time-attack-panel:not(.playing) .time-attack-intro,
-.survival-panel:not(.playing) .survival-intro {
+.persecution-panel:not(.playing) .persecution-intro,
+.hunting-panel:not(.playing) .hunting-intro,
+.ambush-panel:not(.playing) .ambush-intro {
   background: #000 !important;
 }
 
@@ -3062,10 +3062,10 @@ body:has(#survival-panel.active:not(.playing)) .canvas-wrap {
   #continue-campaign-button,
   #new-campaign-button,
   #delete-campaign-save-button,
-  #empty-stomach-button,
-  #time-attack-button,
-  #survival-button,
-  #free-roam-button,
+  #persecution-button,
+  #hunting-button,
+  #ambush-button,
+  #exploration-button,
   #campaign-back-button,
   #minigames-back-button
 ),
@@ -3077,10 +3077,10 @@ body:has(#survival-panel.active:not(.playing)) .canvas-wrap {
   #continue-campaign-button,
   #new-campaign-button,
   #delete-campaign-save-button,
-  #empty-stomach-button,
-  #time-attack-button,
-  #survival-button,
-  #free-roam-button,
+  #persecution-button,
+  #hunting-button,
+  #ambush-button,
+  #exploration-button,
   #campaign-back-button,
   #minigames-back-button
 ) * {
@@ -3185,9 +3185,9 @@ body:has(#survival-panel.active:not(.playing)) .canvas-wrap {
 .canvas-wrap > #overlay,
 .canvas-wrap > #start-screen,
 .canvas-wrap > #story-panel,
-.canvas-wrap > #empty-stomach-panel,
-.canvas-wrap > #time-attack-panel,
-.canvas-wrap > #survival-panel {
+.canvas-wrap > #persecution-panel,
+.canvas-wrap > #hunting-panel,
+.canvas-wrap > #ambush-panel {
   box-sizing:border-box;
   width:100%;
   height:100%;
@@ -3204,25 +3204,25 @@ body:has(#survival-panel.active:not(.playing)) .canvas-wrap {
   max-width:none;
   aspect-ratio:auto;
 }
-.empty-stomach-panel,
-.time-attack-panel,
-.survival-panel {
+.persecution-panel,
+.hunting-panel,
+.ambush-panel {
   min-width:0;
   min-height:0;
   max-width:none;
   max-height:none;
   aspect-ratio:auto;
 }
-.time-attack-stage,
-.survival-stage {
+.hunting-stage,
+.ambush-stage {
   width:100%;
   height:100%;
   min-width:0;
   min-height:0;
   aspect-ratio:auto;
 }
-.time-attack-stage canvas,
-.survival-stage canvas {
+.hunting-stage canvas,
+.ambush-stage canvas {
   position:absolute;
   inset:0;
   display:block;
@@ -3233,9 +3233,9 @@ body:has(#survival-panel.active:not(.playing)) .canvas-wrap {
   aspect-ratio:auto;
   object-fit:fill;
 }
-.empty-stomach-intro,
-.time-attack-intro,
-.survival-intro {
+.persecution-intro,
+.hunting-intro,
+.ambush-intro {
   box-sizing:border-box;
   width:100%;
   height:100%;
@@ -3387,19 +3387,19 @@ body:has(#survival-panel.active:not(.playing)) .canvas-wrap {
 /* Menu labels use the lighter mono face instead of the chunkier display font. */
 #minigames-button,
 #new-campaign-button,
-#free-roam-button,
-#empty-stomach-button,
-#time-attack-button,
-#survival-button,
-#breaking-race-button,
+#exploration-button,
+#persecution-button,
+#hunting-button,
+#ambush-button,
+#race-button,
 #continue-campaign-button,
 #minigames-button *,
 #new-campaign-button *,
-#free-roam-button *,
-#empty-stomach-button *,
-#time-attack-button *,
-#survival-button *,
-#breaking-race-button *,
+#exploration-button *,
+#persecution-button *,
+#hunting-button *,
+#ambush-button *,
+#race-button *,
 #continue-campaign-button * {
   font-family: var(--font-mono) !important;
   font-weight: 400 !important;
@@ -3409,7 +3409,7 @@ body:has(#survival-panel.active:not(.playing)) .canvas-wrap {
 
 /* Control bars have been replaced by the contextual pre-game reminder and tutorial. */
 .hud-strip,
-.empty-stomach-bottom {
+.persecution-bottom {
   display: none !important;
 }
 
@@ -3557,28 +3557,28 @@ body:has(#dino-modal:not(.hidden)) .dino-dialog {
 
 
 /* Keep the menu toggle tucked away only on minigame staging screens before play begins. */
-body:has(#empty-stomach-panel.active:not(.playing)) .menu-toggle,
-body:has(#time-attack-panel.active:not(.playing)) .menu-toggle,
-body:has(#survival-panel.active:not(.playing)) .menu-toggle,
-body:has(#breaking-race-panel.active:not(.playing)) .menu-toggle {
+body:has(#persecution-panel.active:not(.playing)) .menu-toggle,
+body:has(#hunting-panel.active:not(.playing)) .menu-toggle,
+body:has(#ambush-panel.active:not(.playing)) .menu-toggle,
+body:has(#race-panel.active:not(.playing)) .menu-toggle {
   display: none !important;
 }
 
-/* All four minigame/free-roam choices share the same muted green button treatment. */
-.start-screen-copy .start-menu-view #empty-stomach-button,
-.start-screen-copy .start-menu-view #time-attack-button,
-.start-screen-copy .start-menu-view #survival-button,
-.start-screen-copy .start-menu-view #breaking-race-button,
-.start-screen-copy .start-menu-view #free-roam-button {
+/* All four minigame/exploration choices share the same muted green button treatment. */
+.start-screen-copy .start-menu-view #persecution-button,
+.start-screen-copy .start-menu-view #hunting-button,
+.start-screen-copy .start-menu-view #ambush-button,
+.start-screen-copy .start-menu-view #race-button,
+.start-screen-copy .start-menu-view #exploration-button {
   border: 1px solid #8c9d77;
   background: #26372f;
   color: #eff3e5;
 }
-.start-screen-copy .start-menu-view #empty-stomach-button:hover,
-.start-screen-copy .start-menu-view #time-attack-button:hover,
-.start-screen-copy .start-menu-view #survival-button:hover,
-.start-screen-copy .start-menu-view #breaking-race-button:hover,
-.start-screen-copy .start-menu-view #free-roam-button:hover {
+.start-screen-copy .start-menu-view #persecution-button:hover,
+.start-screen-copy .start-menu-view #hunting-button:hover,
+.start-screen-copy .start-menu-view #ambush-button:hover,
+.start-screen-copy .start-menu-view #race-button:hover,
+.start-screen-copy .start-menu-view #exploration-button:hover {
   border-color: #d8f36a;
   background: #354c3e;
 }
@@ -3925,68 +3925,68 @@ html.site-mode-gray .game-panel > .panel-head #game-state {
 
 
 /* === Shared minigame intro: Estómago Vacío is the visual reference. === */
-.empty-stomach-panel,
-.time-attack-panel,
-.survival-panel {
+.persecution-panel,
+.hunting-panel,
+.ambush-panel {
   background: radial-gradient(ellipse at 50% 35%, #34483a, #101a18 72%);
   color: #edf2e7;
 }
-.empty-stomach-stage,
-.time-attack-stage,
-.survival-stage {
+.persecution-stage,
+.hunting-stage,
+.ambush-stage {
   border: 1px solid #77866a;
   background: #b8d0c4;
 }
-.time-attack-panel:not(.playing) .time-attack-top,
-.survival-panel:not(.playing) .survival-top {
+.hunting-panel:not(.playing) .hunting-top,
+.ambush-panel:not(.playing) .ambush-top {
   display: none;
 }
-.time-attack-panel.playing .time-attack-top,
-.survival-panel.playing .survival-top {
+.hunting-panel.playing .hunting-top,
+.ambush-panel.playing .ambush-top {
   display: flex;
 }
-.empty-stomach-intro,
-.time-attack-intro,
-.survival-intro {
+.persecution-intro,
+.hunting-intro,
+.ambush-intro {
   padding: clamp(18px, 3vw, 30px);
   background: linear-gradient(135deg, rgba(8,17,14,.83), rgba(18,29,22,.76));
 }
-.empty-stomach-intro h2,
-.time-attack-intro h2,
-.survival-intro h2 {
+.persecution-intro h2,
+.hunting-intro h2,
+.ambush-intro h2 {
   margin: 10px 0;
   color: #f3f1df;
   font: 400 clamp(42px, 8vw, 84px)/.9 var(--font-condensed);
   letter-spacing: .04em;
 }
-.empty-stomach-intro p,
-.time-attack-intro p,
-.survival-intro p {
+.persecution-intro p,
+.hunting-intro p,
+.ambush-intro p {
   max-width: 54ch;
   color: #d6dfd1;
   font-size: 13px;
   line-height: 1.6;
 }
-.empty-stomach-instructions,
-.time-attack-instructions,
-.survival-instructions {
+.persecution-instructions,
+.hunting-instructions,
+.ambush-instructions {
   max-width: 100%;
   font: clamp(6px, .85vw, 10px)/1.5 var(--font-mono) !important;
   letter-spacing: .025em;
   text-align: center;
 }
-.empty-stomach-result,
-.time-attack-result,
-.survival-result {
+.persecution-result,
+.hunting-result,
+.ambush-result {
   padding: 10px 16px;
   border: 1px solid #d28d79;
   background: #1b2823;
   color: #ffd1b4;
   font: 400 11px var(--font-mono);
 }
-.empty-stomach-actions,
-.time-attack-actions,
-.survival-actions {
+.persecution-actions,
+.hunting-actions,
+.ambush-actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -3995,9 +3995,9 @@ html.site-mode-gray .game-panel > .panel-head #game-state {
   width: min(100%, 520px);
   margin-top: 8px;
 }
-.empty-stomach-actions button,
-.time-attack-actions button,
-.survival-actions button {
+.persecution-actions button,
+.hunting-actions button,
+.ambush-actions button {
   display: inline-flex;
   flex: 1 1 150px;
   align-items: center;
@@ -4015,44 +4015,44 @@ html.site-mode-gray .game-panel > .panel-head #game-state {
   cursor: pointer;
   transition: background .18s ease, border-color .18s ease, transform .18s ease;
 }
-.empty-stomach-actions button:first-child,
-.empty-stomach-actions button:nth-child(2),
-.time-attack-actions button:first-child,
-.time-attack-actions button:nth-child(2),
-.survival-actions[data-survival-options] button {
+.persecution-actions button:first-child,
+.persecution-actions button:nth-child(2),
+.hunting-actions button:first-child,
+.hunting-actions button:nth-child(2),
+.ambush-actions[data-ambush-options] button {
   border-color: #e1a17f;
   background: #e1a17f;
   color: #1b211a;
 }
-.empty-stomach-actions button:hover,
-.time-attack-actions button:hover,
-.survival-actions button:hover {
+.persecution-actions button:hover,
+.hunting-actions button:hover,
+.ambush-actions button:hover {
   border-color: #d8f36a;
   background: #354c3e;
   color: #eff3e5;
   transform: translateY(-1px);
 }
-.empty-stomach-actions button[hidden],
-.time-attack-actions button[hidden],
-.survival-actions button[hidden],
-.empty-stomach-intro [hidden],
-.time-attack-intro [hidden],
-.survival-intro [hidden] {
+.persecution-actions button[hidden],
+.hunting-actions button[hidden],
+.ambush-actions button[hidden],
+.persecution-intro [hidden],
+.hunting-intro [hidden],
+.ambush-intro [hidden] {
   display: none !important;
 }
 @media (max-width: 700px) {
-  .empty-stomach-intro h2,
-  .time-attack-intro h2,
-  .survival-intro h2 { font-size: 40px; }
-  .empty-stomach-intro p,
-  .time-attack-intro p,
-  .survival-intro p { font-size: 11px; }
-  .empty-stomach-actions,
-  .time-attack-actions,
-  .survival-actions { gap: 6px; }
-  .empty-stomach-actions button,
-  .time-attack-actions button,
-  .survival-actions button {
+  .persecution-intro h2,
+  .hunting-intro h2,
+  .ambush-intro h2 { font-size: 40px; }
+  .persecution-intro p,
+  .hunting-intro p,
+  .ambush-intro p { font-size: 11px; }
+  .persecution-actions,
+  .hunting-actions,
+  .ambush-actions { gap: 6px; }
+  .persecution-actions button,
+  .hunting-actions button,
+  .ambush-actions button {
     flex-basis: 145px;
     min-width: 120px;
     padding: 9px 10px;
@@ -4270,54 +4270,54 @@ html.site-mode-gray .retry-options .retry-back-button {
 }
 
 /* Ambient mode also recolors the minigame title cards and Free Roam's brief. */
-html.site-mode-beige .empty-stomach-panel,
-html.site-mode-gray .empty-stomach-panel,
-html.site-mode-beige .time-attack-panel,
-html.site-mode-gray .time-attack-panel,
-html.site-mode-beige .survival-panel,
-html.site-mode-gray .survival-panel {
+html.site-mode-beige .persecution-panel,
+html.site-mode-gray .persecution-panel,
+html.site-mode-beige .hunting-panel,
+html.site-mode-gray .hunting-panel,
+html.site-mode-beige .ambush-panel,
+html.site-mode-gray .ambush-panel {
   background: var(--site-surface);
   color: var(--site-text);
 }
-html.site-mode-beige .empty-stomach-stage,
-html.site-mode-gray .empty-stomach-stage,
-html.site-mode-beige .time-attack-stage,
-html.site-mode-gray .time-attack-stage,
-html.site-mode-beige .survival-stage,
-html.site-mode-gray .survival-stage {
+html.site-mode-beige .persecution-stage,
+html.site-mode-gray .persecution-stage,
+html.site-mode-beige .hunting-stage,
+html.site-mode-gray .hunting-stage,
+html.site-mode-beige .ambush-stage,
+html.site-mode-gray .ambush-stage {
   border-color: var(--line);
   background: var(--site-card);
 }
-html.site-mode-beige .empty-stomach-intro,
-html.site-mode-gray .empty-stomach-intro,
-html.site-mode-beige .time-attack-intro,
-html.site-mode-gray .time-attack-intro,
-html.site-mode-beige .survival-intro,
-html.site-mode-gray .survival-intro {
+html.site-mode-beige .persecution-intro,
+html.site-mode-gray .persecution-intro,
+html.site-mode-beige .hunting-intro,
+html.site-mode-gray .hunting-intro,
+html.site-mode-beige .ambush-intro,
+html.site-mode-gray .ambush-intro {
   background: color-mix(in srgb, var(--site-surface-raised) 94%, transparent);
 }
-html.site-mode-beige .empty-stomach-intro h2,
-html.site-mode-gray .empty-stomach-intro h2,
-html.site-mode-beige .time-attack-intro h2,
-html.site-mode-gray .time-attack-intro h2,
-html.site-mode-beige .survival-intro h2,
-html.site-mode-gray .survival-intro h2 {
+html.site-mode-beige .persecution-intro h2,
+html.site-mode-gray .persecution-intro h2,
+html.site-mode-beige .hunting-intro h2,
+html.site-mode-gray .hunting-intro h2,
+html.site-mode-beige .ambush-intro h2,
+html.site-mode-gray .ambush-intro h2 {
   color: var(--site-text);
 }
-html.site-mode-beige .empty-stomach-intro p,
-html.site-mode-gray .empty-stomach-intro p,
-html.site-mode-beige .time-attack-intro p,
-html.site-mode-gray .time-attack-intro p,
-html.site-mode-beige .survival-intro p,
-html.site-mode-gray .survival-intro p {
+html.site-mode-beige .persecution-intro p,
+html.site-mode-gray .persecution-intro p,
+html.site-mode-beige .hunting-intro p,
+html.site-mode-gray .hunting-intro p,
+html.site-mode-beige .ambush-intro p,
+html.site-mode-gray .ambush-intro p {
   color: var(--site-muted);
 }
-html.site-mode-beige .empty-stomach-intro button,
-html.site-mode-gray .empty-stomach-intro button,
-html.site-mode-beige .time-attack-intro button,
-html.site-mode-gray .time-attack-intro button,
-html.site-mode-beige .survival-intro button,
-html.site-mode-gray .survival-intro button {
+html.site-mode-beige .persecution-intro button,
+html.site-mode-gray .persecution-intro button,
+html.site-mode-beige .hunting-intro button,
+html.site-mode-gray .hunting-intro button,
+html.site-mode-beige .ambush-intro button,
+html.site-mode-gray .ambush-intro button {
   border-color: var(--site-accent);
   background: var(--site-accent);
   color: var(--site-accent-contrast);
@@ -4344,12 +4344,12 @@ html.site-mode-gray .survival-intro button {
   text-align: center;
 }
 
-.time-attack-panel.active,
-.survival-panel.active {
+.hunting-panel.active,
+.ambush-panel.active {
   display: block;
 }
-.time-attack-stage.game-mode-stage,
-.survival-stage.game-mode-stage {
+.hunting-stage.game-mode-stage,
+.ambush-stage.game-mode-stage {
   position: absolute;
   inset: 0;
   display: block;
@@ -4359,8 +4359,8 @@ html.site-mode-gray .survival-intro button {
   border: 1px solid #77866a;
   background: #a9c6bd;
 }
-.time-attack-stage.game-mode-stage canvas,
-.survival-stage.game-mode-stage canvas {
+.hunting-stage.game-mode-stage canvas,
+.ambush-stage.game-mode-stage canvas {
   position: absolute;
   inset: 0;
   max-width: none;
@@ -4440,12 +4440,12 @@ html.site-mode-gray .survival-intro button {
 .game-mode-intro [hidden] {
   display: none !important;
 }
-.time-attack-top,
-.survival-top {
+.hunting-top,
+.ambush-top {
   display: none;
 }
-.time-attack-panel.playing .time-attack-top,
-.survival-panel.playing .survival-top {
+.hunting-panel.playing .hunting-top,
+.ambush-panel.playing .ambush-top {
   position: absolute;
   z-index: 4;
   top: 0;
@@ -4464,12 +4464,12 @@ html.site-mode-gray .survival-intro button {
 }
 
 /* Free Roam's localized controls use the same centered intro screen treatment. */
-.gameplay-brief-dialog.free-roam-brief {
+.gameplay-brief-dialog.exploration-brief {
   padding: clamp(18px, 4vw, 40px);
   background: linear-gradient(135deg, rgba(8, 17, 14, .88), rgba(18, 29, 22, .86));
   backdrop-filter: none;
 }
-.gameplay-brief-dialog.free-roam-brief .gameplay-brief-card {
+.gameplay-brief-dialog.exploration-brief .gameplay-brief-card {
   display: flex;
   width: min(100%, 1120px);
   flex-direction: column;
@@ -4480,13 +4480,13 @@ html.site-mode-gray .survival-intro button {
   box-shadow: none;
   text-align: center;
 }
-.gameplay-brief-dialog.free-roam-brief .gameplay-brief-card h2 {
+.gameplay-brief-dialog.exploration-brief .gameplay-brief-card h2 {
   margin: 10px 0;
   color: #f3f1df;
   font: 400 clamp(42px, 8vw, 84px)/.9 var(--font-condensed);
   letter-spacing: .04em;
 }
-.gameplay-brief-dialog.free-roam-brief .gameplay-brief-context.game-mode-instructions {
+.gameplay-brief-dialog.exploration-brief .gameplay-brief-context.game-mode-instructions {
   display: block;
   max-width: min(100%, 1000px);
   margin: 10px auto 0;
@@ -4496,11 +4496,11 @@ html.site-mode-gray .survival-intro button {
   text-align: center;
   line-height: 1.65;
 }
-.gameplay-brief-dialog.free-roam-brief .gameplay-brief-list,
-.gameplay-brief-dialog.free-roam-brief .gameplay-brief-note {
+.gameplay-brief-dialog.exploration-brief .gameplay-brief-list,
+.gameplay-brief-dialog.exploration-brief .gameplay-brief-note {
   display: none !important;
 }
-.gameplay-brief-dialog.free-roam-brief .gameplay-brief-continue {
+.gameplay-brief-dialog.exploration-brief .gameplay-brief-continue {
   width: auto;
   min-width: 150px;
   margin-top: 18px;
@@ -4522,13 +4522,13 @@ html.site-mode-gray .survival-intro button {
   .game-mode-intro p {
     font-size: 11px;
   }
-  .gameplay-brief-dialog.free-roam-brief {
+  .gameplay-brief-dialog.exploration-brief {
     padding: 12px;
   }
-  .gameplay-brief-dialog.free-roam-brief .gameplay-brief-card {
+  .gameplay-brief-dialog.exploration-brief .gameplay-brief-card {
     padding: 14px;
   }
-  .gameplay-brief-dialog.free-roam-brief .gameplay-brief-card h2 {
+  .gameplay-brief-dialog.exploration-brief .gameplay-brief-card h2 {
     font-size: 40px;
   }
 }
@@ -4592,7 +4592,7 @@ html.site-mode-gray .survival-intro button {
 .gameplay-brief-exit[hidden] {
   display: none !important;
 }
-.gameplay-brief-dialog.free-roam-brief .gameplay-brief-actions {
+.gameplay-brief-dialog.exploration-brief .gameplay-brief-actions {
   width: auto;
   flex-direction: row;
   flex-wrap: wrap;
@@ -4600,41 +4600,41 @@ html.site-mode-gray .survival-intro button {
   gap: 10px;
   margin-top: 18px;
 }
-.gameplay-brief-dialog.free-roam-brief .gameplay-brief-continue,
-.gameplay-brief-dialog.free-roam-brief .gameplay-brief-exit {
+.gameplay-brief-dialog.exploration-brief .gameplay-brief-continue,
+.gameplay-brief-dialog.exploration-brief .gameplay-brief-exit {
   width: auto;
   min-width: 150px;
   min-height: 48px;
   margin: 0;
   padding: 12px 18px;
 }
-.gameplay-brief-dialog.free-roam-brief .gameplay-brief-exit {
+.gameplay-brief-dialog.exploration-brief .gameplay-brief-exit {
   border-color: #8c9d77;
 }
-.survival-actions[hidden] {
+.ambush-actions[hidden] {
   display: none !important;
 }
-.survival-actions[data-survival-options],
-.survival-actions[data-survival-dinosaurs] {
+.ambush-actions[data-ambush-options],
+.ambush-actions[data-ambush-dinosaurs] {
   width: min(100%, 520px);
 }
-.survival-actions[data-survival-options] [data-survival-back-to-entry],
-.survival-actions[data-survival-dinosaurs] [data-survival-back-to-roles] {
+.ambush-actions[data-ambush-options] [data-ambush-back-to-entry],
+.ambush-actions[data-ambush-dinosaurs] [data-ambush-back-to-roles] {
   border-color: #8c9d77;
   background: #1d2b26;
   color: #e9f0dc;
 }
-.survival-actions[data-survival-dinosaurs] [data-survival-role] {
+.ambush-actions[data-ambush-dinosaurs] [data-ambush-role] {
   border-color: #e1a17f;
   background: #e1a17f;
   color: #1b211a;
 }
 @media (max-width: 700px) {
-  .gameplay-brief-dialog.free-roam-brief .gameplay-brief-actions {
+  .gameplay-brief-dialog.exploration-brief .gameplay-brief-actions {
     gap: 6px;
   }
-  .gameplay-brief-dialog.free-roam-brief .gameplay-brief-continue,
-  .gameplay-brief-dialog.free-roam-brief .gameplay-brief-exit {
+  .gameplay-brief-dialog.exploration-brief .gameplay-brief-continue,
+  .gameplay-brief-dialog.exploration-brief .gameplay-brief-exit {
     min-width: 132px;
     padding: 9px 12px;
     font-size: 8px;
@@ -4643,7 +4643,7 @@ html.site-mode-gray .survival-intro button {
 
 
 /* Breaking Race shares Empty Stomach's generated prairie and depth-lane layout. */
-.breaking-race-panel {
+.race-panel {
   position: absolute;
   inset: 0;
   z-index: 25;
@@ -4652,8 +4652,8 @@ html.site-mode-gray .survival-intro button {
   background: radial-gradient(ellipse at 50% 35%, #34483a, #101a18 72%);
   color: #edf2e7;
 }
-.breaking-race-panel.active { display: block; }
-.breaking-race-stage {
+.race-panel.active { display: block; }
+.race-stage {
   position: absolute;
   inset: 0;
   min-width: 0;
@@ -4663,7 +4663,7 @@ html.site-mode-gray .survival-intro button {
   border: 1px solid #77866a;
   background: #b8d0c4;
 }
-.breaking-race-stage canvas {
+.race-stage canvas {
   position: absolute;
   inset: 0;
   display: block;
@@ -4676,7 +4676,7 @@ html.site-mode-gray .survival-intro button {
   image-rendering: pixelated;
   touch-action: manipulation;
 }
-.breaking-race-top {
+.race-top {
   position: absolute;
   z-index: 2;
   top: 12px;
@@ -4690,8 +4690,8 @@ html.site-mode-gray .survival-intro button {
   letter-spacing: .15em;
   text-shadow: 0 1px 3px rgba(10, 20, 14, .55);
 }
-.breaking-race-panel:not(.playing) .breaking-race-top { display: none; }
-.breaking-race-intro {
+.race-panel:not(.playing) .race-top { display: none; }
+.race-intro {
   position: absolute;
   inset: 0;
   display: flex;
@@ -4702,36 +4702,36 @@ html.site-mode-gray .survival-intro button {
   text-align: center;
   background: linear-gradient(135deg, rgba(8,17,14,.83), rgba(18,29,22,.76));
 }
-.breaking-race-panel.playing .breaking-race-intro {
+.race-panel.playing .race-intro {
   pointer-events: none;
   background: transparent;
 }
-.breaking-race-panel.playing .breaking-race-intro > * { display: none; }
-.breaking-race-intro h2 {
+.race-panel.playing .race-intro > * { display: none; }
+.race-intro h2 {
   margin: 10px 0;
   color: #f3f1df;
   font: 400 clamp(42px, 8vw, 84px)/.9 var(--font-condensed);
   letter-spacing: .04em;
 }
-.breaking-race-intro p {
+.race-intro p {
   max-width: 58ch;
   color: #d6dfd1;
   font-size: 13px;
   line-height: 1.6;
 }
-.breaking-race-dinosaur-picker {
+.race-dinosaur-picker {
   display: grid;
   gap: 8px;
   width: min(100%, 460px);
   margin: 8px 0 4px;
   text-align: left;
 }
-.breaking-race-dinosaur-picker label {
+.race-dinosaur-picker label {
   color: #e8b18f;
   font: 400 9px var(--font-mono);
   letter-spacing: .14em;
 }
-.breaking-race-dinosaur-picker select {
+.race-dinosaur-picker select {
   width: 100%;
   min-height: 44px;
   padding: 10px 38px 10px 12px;
@@ -4744,25 +4744,25 @@ html.site-mode-gray .survival-intro button {
   letter-spacing: .02em;
   cursor: pointer;
 }
-.breaking-race-dinosaur-picker select:focus-visible {
+.race-dinosaur-picker select:focus-visible {
   border-color: #d8f36a;
   outline: 2px solid #d8f36a;
   outline-offset: 2px;
 }
-.breaking-race-instructions {
+.race-instructions {
   max-width: 100%;
   font: clamp(6px, .85vw, 10px)/1.5 var(--font-mono) !important;
   letter-spacing: .025em;
   text-align: center;
 }
-.breaking-race-result {
+.race-result {
   padding: 10px 16px;
   border: 1px solid #d28d79;
   background: #1b2823;
   color: #ffd1b4;
   font: 400 11px var(--font-mono);
 }
-.breaking-race-actions {
+.race-actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -4771,7 +4771,7 @@ html.site-mode-gray .survival-intro button {
   width: min(100%, 520px);
   margin-top: 8px;
 }
-.breaking-race-actions button {
+.race-actions button {
   display: inline-flex;
   flex: 1 1 150px;
   align-items: center;
@@ -4789,28 +4789,28 @@ html.site-mode-gray .survival-intro button {
   cursor: pointer;
   transition: background .18s ease, border-color .18s ease, transform .18s ease;
 }
-.breaking-race-actions button:first-child,
-.breaking-race-actions button:nth-child(2) {
+.race-actions button:first-child,
+.race-actions button:nth-child(2) {
   border-color: #e1a17f;
   background: #e1a17f;
   color: #1b211a;
 }
-.breaking-race-actions button:hover {
+.race-actions button:hover {
   border-color: #d8f36a;
   background: #354c3e;
   color: #eff3e5;
   transform: translateY(-1px);
 }
-.breaking-race-actions button[hidden],
-.breaking-race-intro [hidden] { display: none !important; }
+.race-actions button[hidden],
+.race-intro [hidden] { display: none !important; }
 @media (max-width: 700px) {
-  .breaking-race-panel { padding: 8px; }
-  .breaking-race-intro h2 { font-size: 40px; }
-  .breaking-race-intro p { font-size: 11px; }
-  .breaking-race-dinosaur-picker { gap: 6px; }
-  .breaking-race-dinosaur-picker select { min-height: 40px; font-size: 9px; }
-  .breaking-race-actions { gap: 6px; }
-  .breaking-race-actions button {
+  .race-panel { padding: 8px; }
+  .race-intro h2 { font-size: 40px; }
+  .race-intro p { font-size: 11px; }
+  .race-dinosaur-picker { gap: 6px; }
+  .race-dinosaur-picker select { min-height: 40px; font-size: 9px; }
+  .race-actions { gap: 6px; }
+  .race-actions button {
     flex-basis: 145px;
     min-width: 120px;
     padding: 9px 10px;

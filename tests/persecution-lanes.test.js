@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  EmptyStomach,
+  Persecution,
   createPredator,
   DEFAULT_LANE,
   LANE_COUNT,
@@ -13,7 +13,7 @@ import {
   CHECKPOINT_INTERVAL_DISTANCE,
   createEgg,
   getMudShimmerOpacity
-} from "../src/minigames/EmptyStomach.js";
+} from "../src/minigames/Persecution.js";
 
 function makeSimulation({
   player = {},
@@ -25,7 +25,7 @@ function makeSimulation({
   mudPuddles = [],
   bushes = []
 } = {}) {
-  const simulation = Object.create(EmptyStomach.prototype);
+  const simulation = Object.create(Persecution.prototype);
   Object.assign(simulation, {
     elapsed: 0,
     distance: 0,

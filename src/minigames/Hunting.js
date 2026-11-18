@@ -8,7 +8,7 @@ let WIDTH = 960;
 const HEIGHT = 540;
 const FLOOR = 438;
 const SECTION_END = 3680;
-const BEST_KEY = "frantic-time-attack-best";
+const BEST_KEY = "frantic-hunting-best";
 const WAVES = Object.freeze([
   { at: 620, kinds: ["venatosaurus-impavidus", "venatosaurus-saevidicus", "venatosaurus-impavidus"] },
   { at: 1370, kinds: ["venatosaurus-saevidicus", "venatosaurus-impavidus", "venatosaurus-saevidicus"] },
@@ -72,7 +72,7 @@ function clamp(value, min, max) {
 function hunterActor(index, x) {
   const isPlayer = index === 0;
   return {
-    id: isPlayer ? "time-attack-player" : "time-attack-ai-" + index,
+    id: isPlayer ? "hunting-player" : "hunting-ai-" + index,
     squadIndex: index,
     x, y: FLOOR - 64, w: 38, h: 64, direction: 1,
     health: isPlayer ? 4 : 3, maxHealth: isPlayer ? 4 : 3,
@@ -81,12 +81,12 @@ function hunterActor(index, x) {
   };
 }
 
-export class TimeAttack {
+export class Hunting {
   constructor(root, onExit = () => {}, spriteRenderer = null, onBeforeStart = (_mode, proceed) => proceed()) {
     this.root = root;
     this.canvas = root.querySelector("canvas");
     this.ctx = this.canvas.getContext("2d");
-    this.canvasViewport = observeCanvasViewport(root.querySelector(".time-attack-stage"), this.canvas, (width) => {
+    this.canvasViewport = observeCanvasViewport(root.querySelector(".hunting-stage"), this.canvas, (width) => {
       WIDTH = width;
       this.ctx.imageSmoothingEnabled = false;
     });
@@ -95,7 +95,7 @@ export class TimeAttack {
     this.locale = "es";
     this.sprites = spriteRenderer ?? new SpriteRenderer(import.meta.env.BASE_URL);
     this.environmentRenderer = new MinigameEnvironmentRenderer({
-      scene: MINIGAME_ENVIRONMENT_SCENES.timeAttack,
+      scene: MINIGAME_ENVIRONMENT_SCENES.hunting,
       groundY: FLOOR,
       seed: 6207,
       sectionLength: SECTION_END + 1200
@@ -154,7 +154,7 @@ export class TimeAttack {
 
   setLocale(locale) {
     this.locale = locale === "en" ? "en" : "es";
-    this.root.querySelector("[data-ta-title]").textContent = this.text("HORA DE ATACAR", "TIME ATTACK");
+    this.root.querySelector("[data-ta-title]").textContent = this.text("CACERÍA", "HUNTING");
     this.root.querySelector("[data-ta-subtitle]").textContent = this.text(
       "Una escuadra. Múltiples presas. Despejá el camino y llegá a la extracción cuanto antes.",
       "One squad. Multiple targets. Clear the path and reach extraction as soon as possible."
@@ -212,7 +212,7 @@ export class TimeAttack {
 
   requestStart() {
     if (!this.root.classList.contains("active")) return;
-    this.onBeforeStart("timeAttack", () => this.start());
+    this.onBeforeStart("hunting", () => this.start());
   }
 
   start() {
@@ -261,7 +261,7 @@ export class TimeAttack {
     for (let i = 0; i < wave.kinds.length; i += 1) {
       const kind = wave.kinds[i];
       const dinosaur = new WildDinosaur({
-        id: "time-attack-" + (this.dinosaurs.length + 1),
+        id: "hunting-" + (this.dinosaurs.length + 1),
         kind,
         x: wave.at + i * 112,
         groundY: FLOOR,

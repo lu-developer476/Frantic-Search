@@ -32,9 +32,9 @@ const PRAIRIE_SCENE = Object.freeze({
 });
 
 export const MINIGAME_ENVIRONMENT_SCENES = Object.freeze({
-  emptyStomach: PRAIRIE_SCENE,
-  timeAttack: LEVELS[1],
-  survival: LEVELS[1]
+  persecution: PRAIRIE_SCENE,
+  hunting: LEVELS[1],
+  ambush: LEVELS[1]
 });
 
 function canCreateLayerCanvases() {

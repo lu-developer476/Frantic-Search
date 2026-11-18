@@ -180,10 +180,10 @@ test("the upper operation HUD is hidden in non-campaign modes and restored on ex
   const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
 
   assert.match(css, /\.panel-head\.is-hidden\{display:none !important\}/);
-  assert.match(main, /operationHeader\?\.classList\.toggle\("is-hidden", freeRoamMode\)/);
-  assert.match(main, /operationHeader\?\.classList\.add\("is-hidden"\);\s*campaignBriefHeader\?\.classList\.add\("is-hidden"\);\s*emptyStomach\.open\(\)/);
-  assert.match(main, /operationHeader\?\.classList\.add\("is-hidden"\);\s*campaignBriefHeader\?\.classList\.add\("is-hidden"\);\s*timeAttack\.open\(\)/);
-  assert.match(main, /operationHeader\?\.classList\.add\("is-hidden"\);\s*campaignBriefHeader\?\.classList\.add\("is-hidden"\);\s*survival\.open\(\)/);
+  assert.match(main, /operationHeader\?\.classList\.toggle\("is-hidden", explorationMode\)/);
+  assert.match(main, /operationHeader\?\.classList\.add\("is-hidden"\);\s*campaignBriefHeader\?\.classList\.add\("is-hidden"\);\s*persecution\.open\(\)/);
+  assert.match(main, /operationHeader\?\.classList\.add\("is-hidden"\);\s*campaignBriefHeader\?\.classList\.add\("is-hidden"\);\s*hunting\.open\(\)/);
+  assert.match(main, /operationHeader\?\.classList\.add\("is-hidden"\);\s*campaignBriefHeader\?\.classList\.add\("is-hidden"\);\s*ambush\.open\(\)/);
   assert.match(main, /operationHeader\?\.classList\.remove\("is-hidden"\)/);
   assert.match(main, /campaignBriefHeader\?\.classList\.remove\("is-hidden"\)/);
 });
@@ -191,9 +191,9 @@ test("the upper operation HUD is hidden in non-campaign modes and restored on ex
 
 test("minigame canvases expand to match their active stage", async () => {
   for (const [file, stage] of [
-    ["EmptyStomach.js", ".empty-stomach-stage"],
-    ["TimeAttack.js", ".time-attack-stage"],
-    ["Survival.js", ".survival-stage"]
+    ["Persecution.js", ".persecution-stage"],
+    ["Hunting.js", ".hunting-stage"],
+    ["Ambush.js", ".ambush-stage"]
   ]) {
     const source = await readFile(new URL("../src/minigames/" + file, import.meta.url), "utf8");
     assert.ok(source.includes('observeCanvasViewport(root.querySelector("' + stage + '")'));
@@ -213,16 +213,16 @@ test("main screens and dialogs fill the active canvas frame", async () => {
 test("Empty Stomach keeps its playfield fixed while the lower controls strip appears", async () => {
   const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
   const rules = css.slice(css.indexOf("/* Empty Stomach:"));
-  assert.match(rules, /\.empty-stomach-panel\.active\s*\{display:block\}/);
-  assert.match(rules, /\.empty-stomach-stage\s*\{position:absolute;inset:0/);
-  assert.match(rules, /\.empty-stomach-bottom\s*\{position:absolute;z-index:4;left:0;right:0;bottom:0/);
+  assert.match(rules, /\.persecution-panel\.active\s*\{display:block\}/);
+  assert.match(rules, /\.persecution-stage\s*\{position:absolute;inset:0/);
+  assert.match(rules, /\.persecution-bottom\s*\{position:absolute;z-index:4;left:0;right:0;bottom:0/);
 });
 
-test("Time Attack and Survival keep a fixed stage row beneath their mode header", async () => {
+test("Time Attack and Ambush keep a fixed stage row beneath their mode header", async () => {
   const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
-  assert.match(css, /\.time-attack-panel\.active\s*\{display:grid;grid-template-rows:auto minmax\(0,1fr\)/);
-  assert.match(css, /\.survival-panel\.active\s*\{display:grid;grid-template-rows:auto minmax\(0,1fr\)/);
-  assert.match(css, /\.time-attack-stage canvas,[\s\S]*?aspect-ratio:auto;object-fit:fill/);
+  assert.match(css, /\.hunting-panel\.active\s*\{display:grid;grid-template-rows:auto minmax\(0,1fr\)/);
+  assert.match(css, /\.ambush-panel\.active\s*\{display:grid;grid-template-rows:auto minmax\(0,1fr\)/);
+  assert.match(css, /\.hunting-stage canvas,[\s\S]*?aspect-ratio:auto;object-fit:fill/);
 });
 
 
@@ -234,8 +234,8 @@ test("free roam and minigames keep the canvas in one full-height track when the 
   assert.match(rules, /\.game-panel:has\(> \.panel-head\.is-hidden\)\s*\{[^}]*grid-template-rows:minmax\(0,1fr\)/s);
   assert.match(rules, /\.game-panel:has\(> \.panel-head\.is-hidden\) > \.canvas-wrap\s*\{[^}]*grid-row:1[^}]*height:100%[^}]*min-height:0/s);
   assert.match(css, /\.canvas-wrap \.hud-strip\s*\{[^}]*position:absolute[^}]*inset:auto 0 0/s);
-  assert.match(main, /operationHeader\?\.classList\.toggle\("is-hidden", freeRoamMode\)/);
-  assert.match(main, /operationHeader\?\.classList\.add\("is-hidden"\);\s*campaignBriefHeader\?\.classList\.add\("is-hidden"\);\s*emptyStomach\.open\(\)/);
-  assert.match(main, /operationHeader\?\.classList\.add\("is-hidden"\);\s*campaignBriefHeader\?\.classList\.add\("is-hidden"\);\s*timeAttack\.open\(\)/);
-  assert.match(main, /operationHeader\?\.classList\.add\("is-hidden"\);\s*campaignBriefHeader\?\.classList\.add\("is-hidden"\);\s*survival\.open\(\)/);
+  assert.match(main, /operationHeader\?\.classList\.toggle\("is-hidden", explorationMode\)/);
+  assert.match(main, /operationHeader\?\.classList\.add\("is-hidden"\);\s*campaignBriefHeader\?\.classList\.add\("is-hidden"\);\s*persecution\.open\(\)/);
+  assert.match(main, /operationHeader\?\.classList\.add\("is-hidden"\);\s*campaignBriefHeader\?\.classList\.add\("is-hidden"\);\s*hunting\.open\(\)/);
+  assert.match(main, /operationHeader\?\.classList\.add\("is-hidden"\);\s*campaignBriefHeader\?\.classList\.add\("is-hidden"\);\s*ambush\.open\(\)/);
 });

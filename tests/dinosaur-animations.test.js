@@ -136,17 +136,21 @@ test("all reference PNG dinosaurs receive a complete two-pixel black silhouette 
   assert.match(renderer, /outlinedReferenceImages\.size > 48/);
 });
 
-test("Venatosaurus variants render their dedicated attack, jump and run GIF references", () => {
+test("Venatosaurus variants render their dedicated idle, walk, run, jump and attack GIF references", () => {
   const variants = {
     "venatosaurus-impavidus": {
       attack: "venatosaurus-impavidus-attack.gif",
+      idle: "venatosaurus-impavidus-idle.gif",
       jump: "venatosaurus-impavidus-jump.gif",
-      run: "venatosaurus-impavidus-run.gif"
+      run: "venatosaurus-impavidus-run.gif",
+      walk: "venatosaurus-impavidus-walk.gif"
     },
     "venatosaurus-saevidicus": {
       attack: "venatosaurus-saevidicus-attack.gif",
+      idle: "venatosaurus-saevidicus-idle.gif",
       jump: "venatosaurus-saevidicus-jump.gif",
-      run: "venatosaurus-saevidicus-run.gif"
+      run: "venatosaurus-saevidicus-run.gif",
+      walk: "venatosaurus-saevidicus-walk.gif"
     }
   };
 
@@ -154,8 +158,10 @@ test("Venatosaurus variants render their dedicated attack, jump and run GIF refe
     assert.deepEqual(
       {
         attack: VENATOSAURUS_ANIMATION_ASSETS[species].attack,
+        idle: VENATOSAURUS_ANIMATION_ASSETS[species].idle,
         jump: VENATOSAURUS_ANIMATION_ASSETS[species].jump,
-        run: VENATOSAURUS_ANIMATION_ASSETS[species].run
+        run: VENATOSAURUS_ANIMATION_ASSETS[species].run,
+        walk: VENATOSAURUS_ANIMATION_ASSETS[species].walk
       },
       poses
     );
@@ -163,7 +169,9 @@ test("Venatosaurus variants render their dedicated attack, jump and run GIF refe
     assert.equal(selectVenatosaurusAnimation(species, { state: "windup", onGround: true }), poses.attack);
     assert.equal(selectVenatosaurusAnimation(species, { state: "attack", onGround: false }), poses.attack);
     assert.equal(selectVenatosaurusAnimation(species, { state: "patrol", onGround: false }), poses.jump);
-    assert.equal(selectVenatosaurusAnimation(species, { state: "patrol", onGround: true }), poses.run);
+    assert.equal(selectVenatosaurusAnimation(species, { state: "patrol", onGround: true }), poses.walk);
+    assert.equal(selectVenatosaurusAnimation(species, { state: "pursuit", onGround: true }), poses.run);
+    assert.equal(selectVenatosaurusAnimation(species, { state: "stunned", onGround: true }), poses.idle);
   }
 
   assert.equal(selectVenatosaurusAnimation("unknown", {}), null);

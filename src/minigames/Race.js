@@ -1,4 +1,4 @@
-import { createEgg, getLaneBaseline, getLaneScale, normalizeLane, LANE_COUNT } from "./EmptyStomach.js";
+import { createEgg, getLaneBaseline, getLaneScale, normalizeLane, LANE_COUNT } from "./Persecution.js";
 import { observeCanvasViewport } from "../rendering/CanvasUtils.js";
 import { MinigameEnvironmentRenderer, MINIGAME_ENVIRONMENT_SCENES } from "./MinigameEnvironment.js";
 
@@ -19,9 +19,9 @@ export const BREAKING_RACE_ROSTER = Object.freeze([
   { id: "brisa", name: "Brisa", species: "Velociraptor abyssomirabilis", run: "references/juvenile-velociraptor-abyssomirabilis-run.gif", jump: "references/juvenile-velociraptor-abyssomirabilis-jump.gif", speed: 88 },
   { id: "venatosaurus-impavidus", name: "Venatosaurus impavidus", species: "Venatosaurus impavidus", run: "references/venatosaurus-impavidus-run.gif", jump: "references/venatosaurus-impavidus-jump.gif", speed: 86 },
   { id: "venatosaurus-saevidicus", name: "Venatosaurus saevidicus", species: "Venatosaurus saevidicus", run: "references/venatosaurus-saevidicus-run.gif", jump: "references/venatosaurus-saevidicus-jump.gif", speed: 84 },
-  { id: "coral", name: "Coral", species: "Miniraptor", run: "minigame/empty-stomach/gif/main/miniraptor-run.gif", jump: "minigame/empty-stomach/gif/main/miniraptor-jump.gif", speed: 94 },
-  { id: "umbraraptor-silvis", name: "Umbraraptor silvis", species: "Umbraraptor silvis", run: "minigame/empty-stomach/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-walk.gif", jump: "minigame/empty-stomach/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-jump.gif", speed: 82 },
-  { id: "xenoraptor-crypticus", name: "Xenoraptor crypticus", species: "Xenoraptor crypticus", run: "minigame/empty-stomach/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-run.gif", jump: "minigame/empty-stomach/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-jump.gif", speed: 90 }
+  { id: "coral", name: "Coral", species: "Miniraptor", run: "minigame/persecution/gif/main/miniraptor-run.gif", jump: "minigame/persecution/gif/main/miniraptor-jump.gif", speed: 94 },
+  { id: "umbraraptor-silvis", name: "Umbraraptor silvis", species: "Umbraraptor silvis", run: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-walk.gif", jump: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-jump.gif", speed: 82 },
+  { id: "xenoraptor-crypticus", name: "Xenoraptor crypticus", species: "Xenoraptor crypticus", run: "minigame/persecution/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-run.gif", jump: "minigame/persecution/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-jump.gif", speed: 90 }
 ]);
 
 const laneX = (ratio) => WIDTH * ratio;
@@ -44,7 +44,7 @@ function isClearOfCheckpoints(progress) {
   return checkpointProgress.every((checkpoint) => Math.abs(progress - checkpoint) >= CHECKPOINT_CLEARANCE);
 }
 
-export function generateBreakingRaceCourse(seed = Date.now()) {
+export function generateRaceCourse(seed = Date.now()) {
   const random = createSeededRandom(seed);
   const hazards = [];
   const pickups = [];
@@ -102,7 +102,7 @@ export function generateBreakingRaceCourse(seed = Date.now()) {
   return { seed: Number(seed) >>> 0, hazards, pickups };
 }
 
-export function createBreakingRaceLineup(selectedDinosaurId, random = Math.random) {
+export function createRaceLineup(selectedDinosaurId, random = Math.random) {
   const selected = BREAKING_RACE_ROSTER.find((dinosaur) => dinosaur.id === selectedDinosaurId)
     ?? BREAKING_RACE_ROSTER[0];
   const opponents = BREAKING_RACE_ROSTER.filter((dinosaur) => dinosaur.id !== selected.id);
@@ -115,7 +115,7 @@ export function createBreakingRaceLineup(selectedDinosaurId, random = Math.rando
   return [selected, ...opponents.slice(0, LANE_COUNT - 1)];
 }
 
-export function getBreakingRaceLaneLayout(lane = 0) {
+export function getRaceLaneLayout(lane = 0) {
   const normalizedLane = normalizeLane(lane);
   return {
     lane: normalizedLane,
@@ -147,7 +147,7 @@ function createHazard(kind, lane, progress, x) {
   };
 }
 
-export class BreakingRace {
+export class Race {
   constructor(root, onExit = () => {}) {
     this.root = root;
     this.canvas = root.querySelector("canvas");
@@ -202,7 +202,7 @@ export class BreakingRace {
     root.querySelector("[data-br-retry]").addEventListener("click", () => this.start());
     root.querySelector("[data-br-exit]").addEventListener("click", () => this.exit());
     this.canvasViewport = observeCanvasViewport(
-      root.querySelector(".breaking-race-stage"),
+      root.querySelector(".race-stage"),
       this.canvas,
       (width) => this.resizeCanvas(width)
     );
@@ -224,7 +224,7 @@ export class BreakingRace {
 
   createEnvironmentRenderer(seed) {
     return new MinigameEnvironmentRenderer({
-      scene: MINIGAME_ENVIRONMENT_SCENES.emptyStomach,
+      scene: MINIGAME_ENVIRONMENT_SCENES.persecution,
       groundY: 438,
       seed,
       sectionLength: 6200,
@@ -268,7 +268,7 @@ export class BreakingRace {
 
   setLocale(locale) {
     this.locale = locale === "en" ? "en" : "es";
-    this.root.querySelector("[data-br-title]").textContent = this.text("CARRERA DE FRENADO", "BREAKING RACE");
+    this.root.querySelector("[data-br-title]").textContent = this.text("CARRERA", "RACE");
     this.root.querySelector("[data-br-subtitle]").textContent = this.text(
       "Elegí tu dinosaurio, esquivá el terreno y cruzá la meta antes que tus rivales.",
       "Choose your dinosaur, dodge the terrain and reach the finish before your rivals."
@@ -306,7 +306,7 @@ export class BreakingRace {
     this.paused = false;
     this.racers = [];
     this.courseSeed = Math.floor(Math.random() * 0xffffffff) || 1;
-    const course = generateBreakingRaceCourse(this.courseSeed);
+    const course = generateRaceCourse(this.courseSeed);
     this.environmentRenderer = this.createEnvironmentRenderer(this.courseSeed);
     const trackLength = this.finishX - this.startX;
 
@@ -353,7 +353,7 @@ export class BreakingRace {
   start() {
     this.canvasViewport();
     this.reset();
-    const lineup = createBreakingRaceLineup(this.selectedDinosaurId);
+    const lineup = createRaceLineup(this.selectedDinosaurId);
     const laneOrder = [0, 1, 2, 3];
     for (let index = laneOrder.length - 1; index > 0; index -= 1) {
       const swapIndex = Math.floor(Math.random() * (index + 1));
@@ -511,7 +511,7 @@ export class BreakingRace {
   }
 
   resolveHazards(racer) {
-    const layout = getBreakingRaceLaneLayout(racer.lane);
+    const layout = getRaceLaneLayout(racer.lane);
     const racerRadius = 19 * layout.scale;
     for (const hazard of this.hazards) {
       if (hazard.lane !== racer.lane || racer.hitHazards.has(hazard.id)) continue;
@@ -604,7 +604,7 @@ export class BreakingRace {
     context.setLineDash([]);
 
     for (let lane = 0; lane < LANE_COUNT; lane += 1) {
-      const layout = getBreakingRaceLaneLayout(lane);
+      const layout = getRaceLaneLayout(lane);
       context.fillStyle = "rgba(28, 48, 31, 0.58)";
       context.beginPath();
       context.ellipse(40, layout.baseline - 1, 12 * layout.scale, 7 * layout.scale, 0, 0, Math.PI * 2);
@@ -620,7 +620,7 @@ export class BreakingRace {
   drawStartAndFinish() {
     const context = this.ctx;
     for (let lane = 0; lane < LANE_COUNT; lane += 1) {
-      const layout = getBreakingRaceLaneLayout(lane);
+      const layout = getRaceLaneLayout(lane);
       const markerHeight = 18 * layout.scale;
       context.fillStyle = "#f4efd7";
       context.fillRect(this.startX - 2, layout.baseline - markerHeight, 4, markerHeight);
@@ -642,7 +642,7 @@ export class BreakingRace {
   drawCheckpoint(checkpoint) {
     const context = this.ctx;
     for (let lane = 0; lane < LANE_COUNT; lane += 1) {
-      const layout = getBreakingRaceLaneLayout(lane);
+      const layout = getRaceLaneLayout(lane);
       const top = layout.baseline - 27 * layout.scale;
       context.fillStyle = checkpoint.hit ? "#8eb36c" : "#e7b65c";
       context.fillRect(checkpoint.x - 2 * layout.scale, top, 4 * layout.scale, 27 * layout.scale);
@@ -860,7 +860,7 @@ export class BreakingRace {
 
   drawDino(racer) {
     const context = this.ctx;
-    const layout = getBreakingRaceLaneLayout(racer.lane);
+    const layout = getRaceLaneLayout(racer.lane);
     const width = 64 * layout.scale;
     const height = 48 * layout.scale;
     const baseline = layout.baseline;

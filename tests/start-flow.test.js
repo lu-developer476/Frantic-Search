@@ -55,7 +55,7 @@ test("chapter arrival dialogue opens automatically at the level boundary", async
   const updateStart = main.indexOf("function update(delta) {");
   const distanceUpdate = main.indexOf("distance = Math.max(0, player.x - GAME.playerX);", updateStart);
   const locationUpdate = main.indexOf("campaign.updateLocation(player.x);", updateStart);
-  const sceneGuard = main.indexOf("if (!freeRoamMode && campaign.sceneOpen)", locationUpdate);
+  const sceneGuard = main.indexOf("if (!explorationMode && campaign.sceneOpen)", locationUpdate);
   const interactStart = main.indexOf('if (input.consume("interact"))', sceneGuard);
 
   assert.ok(updateStart >= 0 && distanceUpdate > updateStart && distanceUpdate < locationUpdate);
@@ -107,8 +107,8 @@ test("the title screen and menu previews use the canonical artwork filenames", a
   assert.ok(html.includes("https://franticsearch.vercel.app/artwork/8bits-artwork.png"));
   assert.ok(main.includes("${import.meta.env.BASE_URL}artwork/8bits-artwork.png"));
   assert.ok(main.includes("${import.meta.env.BASE_URL}artwork/coral-8bits-artwork.png"));
-  assert.ok(main.includes("${import.meta.env.BASE_URL}artwork/survival-artwork.png"));
-  assert.ok(main.includes("${import.meta.env.BASE_URL}artwork/free-roam-artwork.png"));
+  assert.ok(main.includes("${import.meta.env.BASE_URL}artwork/ambush-artwork.png"));
+  assert.ok(main.includes("${import.meta.env.BASE_URL}artwork/exploration-artwork.png"));
   assert.ok(main.includes('activeStartMenuPage === "minigames"'));
 });
 
@@ -222,10 +222,10 @@ test("the hamburger menu is the only in-session tutorial entry point and remains
   assert.equal(html.includes('id="game-tutorial-button"'), false);
   assert.equal(main.includes("gameTutorialButton"), false);
   assert.doesNotMatch(styles, /game-tutorial-fab/);
-  assert.ok(main.includes('document.body.classList.toggle("free-roam-session", freeRoamMode)'));
-  assert.ok(main.includes('document.body.classList.remove("game-session-active", "free-roam-session")'));
-  assert.doesNotMatch(styles, /body\.free-roam-session\s+\.menu-toggle/);
-  for (const panel of ["empty-stomach-panel", "time-attack-panel", "survival-panel"]) {
+  assert.ok(main.includes('document.body.classList.toggle("exploration-session", explorationMode)'));
+  assert.ok(main.includes('document.body.classList.remove("game-session-active", "exploration-session")'));
+  assert.doesNotMatch(styles, /body\.exploration-session\s+\.menu-toggle/);
+  for (const panel of ["persecution-panel", "hunting-panel", "ambush-panel"]) {
     assert.ok(styles.includes("#" + panel + ".active:not(.playing)"), "missing pre-game staging rule for " + panel);
   }
 });
@@ -248,8 +248,8 @@ test("the brand returns to the root start screen and environmental modes cover n
 });
 test("Empty Stomach shares the minigame menu button color palette", async () => {
   const styles = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
-  const palette = styles.slice(styles.lastIndexOf("/* All four minigame/free-roam choices"));
-  for (const button of ["empty-stomach", "time-attack", "survival", "free-roam"]) {
+  const palette = styles.slice(styles.lastIndexOf("/* All four minigame/exploration choices"));
+  for (const button of ["persecution", "hunting", "ambush", "exploration"]) {
     assert.ok(palette.includes(`#${button}-button`), `missing shared palette for ${button}`);
   }
   assert.ok(palette.includes("background: #26372f;"));
@@ -273,7 +273,7 @@ test("a new campaign schedules its first frame immediately while free roam keeps
       desktopPlayback: { matches: true },
       running: false,
       paused: false,
-      freeRoamMode: false,
+      explorationMode: false,
       document: { body: { classList } },
       save: { update: noOp },
       operationHeader: { classList },
@@ -329,9 +329,9 @@ test("a new campaign schedules its first frame immediately while free roam keeps
   assert.equal(campaign.globals.running, true);
   assert.equal(campaign.globals.paused, false);
 
-  const freeRoam = runStart("free-roam");
-  assert.deepEqual(freeRoam.events, ["reset", "render", "brief:freeRoam"]);
-  assert.equal(freeRoam.events.includes("schedule"), false);
+  const exploration = runStart("exploration");
+  assert.deepEqual(exploration.events, ["reset", "render", "brief:exploration"]);
+  assert.equal(exploration.events.includes("schedule"), false);
 });
 
 

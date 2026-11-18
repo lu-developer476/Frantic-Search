@@ -22,26 +22,26 @@ const PRAIRIE_HERD = [
   { x: 905, y: 354, w: 92, h: 66 }
 ];
 export const CORAL_ANIMATION_ASSETS = Object.freeze({
-  idle: "minigame/empty-stomach/gif/main/miniraptor-idle.gif",
-  run: "minigame/empty-stomach/gif/main/miniraptor-run.gif",
-  jump: "minigame/empty-stomach/gif/main/miniraptor-jump.gif"
+  idle: "minigame/persecution/gif/main/miniraptor-idle.gif",
+  run: "minigame/persecution/gif/main/miniraptor-run.gif",
+  jump: "minigame/persecution/gif/main/miniraptor-jump.gif"
 });
 
 export const ASSETS = {
   coral: CORAL_ANIMATION_ASSETS.run,
   coralIdle: CORAL_ANIMATION_ASSETS.idle,
   coralJump: CORAL_ANIMATION_ASSETS.jump,
-  xenoraptorRun: "minigame/empty-stomach/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-run.gif",
-  xenoraptorJump: "minigame/empty-stomach/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-jump.gif",
-  xenoraptorAttack: "minigame/empty-stomach/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-attack.gif",
-  umbraraptorWalk: "minigame/empty-stomach/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-walk.gif",
-  umbraraptorJump: "minigame/empty-stomach/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-jump.gif",
-  umbraraptorEat: "minigame/empty-stomach/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-eat.gif",
-  umbraraptorIdle: "minigame/empty-stomach/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-idle.gif",
-  parasaurRun: "minigame/empty-stomach/gif/parasaurolophus/parasaurolophus-run.gif",
-  parasaurWalk: "minigame/empty-stomach/gif/parasaurolophus/parasaurolophus-walk.gif",
-  parasaurIdle: "minigame/empty-stomach/gif/parasaurolophus/parasaurolophus-idle.gif",
-  parasaurPerturbed: "minigame/empty-stomach/gif/parasaurolophus/parasaurolophus-attack.gif",
+  xenoraptorRun: "minigame/persecution/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-run.gif",
+  xenoraptorJump: "minigame/persecution/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-jump.gif",
+  xenoraptorAttack: "minigame/persecution/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-attack.gif",
+  umbraraptorWalk: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-walk.gif",
+  umbraraptorJump: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-jump.gif",
+  umbraraptorEat: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-eat.gif",
+  umbraraptorIdle: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-idle.gif",
+  parasaurRun: "minigame/persecution/gif/parasaurolophus/parasaurolophus-run.gif",
+  parasaurWalk: "minigame/persecution/gif/parasaurolophus/parasaurolophus-walk.gif",
+  parasaurIdle: "minigame/persecution/gif/parasaurolophus/parasaurolophus-idle.gif",
+  parasaurPerturbed: "minigame/persecution/gif/parasaurolophus/parasaurolophus-attack.gif",
   brontosaurusRun: "references/brontosaurus-excelsus-basteri-run.gif",
   brontosaurusWalk: "references/brontosaurus-excelsus-basteri-walk.gif"
 };
@@ -225,12 +225,12 @@ export function enemyAnimationKey(enemy, elapsed = 0) {
   return jumping ? "umbraraptorJump" : "umbraraptorWalk";
 }
 
-export class EmptyStomach {
+export class Persecution {
   constructor(root, onExit = () => {}, onBeforeStart = (_mode, proceed) => proceed()) {
     this.root = root;
     this.canvas = root.querySelector("canvas");
     this.ctx = this.canvas.getContext("2d");
-    this.canvasViewport = observeCanvasViewport(root.querySelector(".empty-stomach-stage"), this.canvas, (width) => {
+    this.canvasViewport = observeCanvasViewport(root.querySelector(".persecution-stage"), this.canvas, (width) => {
       WIDTH = width;
       this.ctx.imageSmoothingEnabled = false;
     });
@@ -257,7 +257,7 @@ export class EmptyStomach {
     this.animationClock = 0;
     this.sceneryOffset = 0;
     this.environmentRenderer = new MinigameEnvironmentRenderer({
-      scene: MINIGAME_ENVIRONMENT_SCENES.emptyStomach,
+      scene: MINIGAME_ENVIRONMENT_SCENES.persecution,
       groundY: FLOOR,
       seed: 4021,
       sectionLength: 6200,
@@ -292,7 +292,7 @@ export class EmptyStomach {
     this.bushSpawnTimer = 5.1;
     this.player = createPlayer();
     this.best = 0;
-    try { this.best = Number(localStorage.getItem("frantic-empty-stomach-best")) || 0; } catch {}
+    try { this.best = Number(localStorage.getItem("frantic-persecution-best")) || 0; } catch {}
     this.handleKeyDown = (event) => {
       if (!this.root.classList.contains("active")) return;
       if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Space", "KeyP", "KeyX", "KeyE", "KeyQ", "KeyW", "KeyS"].includes(event.code)) event.preventDefault();
@@ -314,7 +314,7 @@ export class EmptyStomach {
     root.querySelector("[data-empty-retry]").addEventListener("click", () => this.requestStart());
     root.querySelector("[data-empty-exit]").addEventListener("click", () => this.exit());
     this.pauseButton.addEventListener("click", () => this.togglePause());
-    this.checkpointButton.addEventListener("click", () => this.onBeforeStart("emptyStomach", () => this.continueFromCheckpoint()));
+    this.checkpointButton.addEventListener("click", () => this.onBeforeStart("persecution", () => this.continueFromCheckpoint()));
 
   }
 
@@ -407,7 +407,7 @@ export class EmptyStomach {
     this.locale = locale === "en" ? "en" : "es";
     this.root.querySelector("[data-empty-title]").textContent = this.phase === "finished"
       ? this.text("PARTIDA FINALIZADA", "GAME OVER")
-      : this.text("ESTÓMAGO VACÍO", "EMPTY STOMACH");
+      : this.text("PERSECUSIÓN", "PURSUIT");
     this.root.querySelector("[data-empty-subtitle]").textContent = this.text("Coral corre por su vida. Los depredadores no van a detenerse.", "Coral is running for her life. The predators won't stop.");
     this.root.querySelector("[data-empty-instructions]").textContent = this.text("A / D O ← / →: MOVERSE · W / S O ↑ / ↓: CAMBIAR CARRIL · ESPACIO: SALTAR · X: EMBESTIR · E: TOMAR / SOLTAR · Q: COMER HUEVO · P: PAUSAR · ESC: SALIR", "A / D OR ← / →: MOVE · W / S OR ↑ / ↓: CHANGE LANE · SPACE: JUMP · X: DASH · E: PICK UP / DROP · Q: EAT EGG · P: PAUSE · ESC: EXIT");
     this.root.querySelector("[data-empty-controls-text]").textContent = this.text("A / D O ← / →: MOVERSE · W / S O ↑ / ↓: CARRILES · ESPACIO: SALTAR · X: EMBESTIR · E: OBJETO · Q: HUEVO · ESC: SALIR", "A / D OR ← / →: MOVE · W / S OR ↑ / ↓: LANES · SPACE: JUMP · X: DASH · E: ITEM · Q: EGG · ESC: EXIT");
@@ -444,7 +444,7 @@ export class EmptyStomach {
     this.root.classList.remove("paused");
     this.pauseOverlay.hidden = true;
     this.controlsStrip.hidden = true;
-    this.root.querySelector("[data-empty-title]").textContent = this.text("ESTÓMAGO VACÍO", "EMPTY STOMACH");
+    this.root.querySelector("[data-empty-title]").textContent = this.text("PERSECUSIÓN", "PURSUIT");
     this.root.querySelector("[data-empty-subtitle]").hidden = false;
     this.root.querySelector("[data-empty-instructions]").hidden = false;
     const checkpointButton = this.root.querySelector("[data-empty-checkpoint]");
@@ -488,7 +488,7 @@ export class EmptyStomach {
 
   requestStart() {
     if (!this.root.classList.contains("active")) return;
-    this.onBeforeStart("emptyStomach", () => this.start());
+    this.onBeforeStart("persecution", () => this.start());
   }
 
   start() {
@@ -1220,7 +1220,7 @@ export class EmptyStomach {
     this.root.classList.add("playing");
     this.pauseOverlay.hidden = true;
     this.controlsStrip.hidden = false;
-    this.root.querySelector("[data-empty-title]").textContent = this.text("ESTÓMAGO VACÍO", "EMPTY STOMACH");
+    this.root.querySelector("[data-empty-title]").textContent = this.text("PERSECUSIÓN", "PURSUIT");
     this.root.querySelector("[data-empty-subtitle]").hidden = true;
     this.root.querySelector("[data-empty-instructions]").hidden = true;
     this.root.querySelector("[data-empty-result]").hidden = true;
@@ -1249,7 +1249,7 @@ export class EmptyStomach {
     this.updatePauseButton();
     const score = scoreForDistance(this.distance);
     this.best = Math.max(this.best, score);
-    try { localStorage.setItem("frantic-empty-stomach-best", String(this.best)); } catch {}
+    try { localStorage.setItem("frantic-persecution-best", String(this.best)); } catch {}
     this.root.querySelector("[data-empty-title]").textContent = this.text("PARTIDA FINALIZADA", "GAME OVER");
     this.root.querySelector("[data-empty-subtitle]").hidden = true;
     this.root.querySelector("[data-empty-instructions]").hidden = true;

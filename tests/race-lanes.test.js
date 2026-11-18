@@ -1,14 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  getBreakingRaceLaneLayout,
-  generateBreakingRaceCourse,
-  createBreakingRaceLineup,
+  getRaceLaneLayout,
+  generateRaceCourse,
+  createRaceLineup,
   BREAKING_RACE_ROSTER
-} from "../src/minigames/BreakingRace.js";
+} from "../src/minigames/Race.js";
 
 test("Breaking Race shares Empty Stomach's four depth-lane baselines and scales", () => {
-  const lanes = [0, 1, 2, 3].map((lane) => getBreakingRaceLaneLayout(lane));
+  const lanes = [0, 1, 2, 3].map((lane) => getRaceLaneLayout(lane));
 
   assert.deepEqual(lanes, [
     { lane: 0, baseline: 448, scale: 0.82 },
@@ -19,14 +19,14 @@ test("Breaking Race shares Empty Stomach's four depth-lane baselines and scales"
 });
 
 test("Breaking Race clamps invalid lane indices to the nearest depth lane", () => {
-  assert.deepEqual(getBreakingRaceLaneLayout(-1), { lane: 0, baseline: 448, scale: 0.82 });
-  assert.deepEqual(getBreakingRaceLaneLayout(8), { lane: 3, baseline: 526, scale: 1.18 });
-  assert.deepEqual(getBreakingRaceLaneLayout("invalid"), { lane: 3, baseline: 526, scale: 1.18 });
+  assert.deepEqual(getRaceLaneLayout(-1), { lane: 0, baseline: 448, scale: 0.82 });
+  assert.deepEqual(getRaceLaneLayout(8), { lane: 3, baseline: 526, scale: 1.18 });
+  assert.deepEqual(getRaceLaneLayout("invalid"), { lane: 3, baseline: 526, scale: 1.18 });
 });
 
 test("the player-selected dinosaur is always included in a four-dinosaur lineup", () => {
   for (const dinosaur of BREAKING_RACE_ROSTER) {
-    const lineup = createBreakingRaceLineup(dinosaur.id, () => 0.5);
+    const lineup = createRaceLineup(dinosaur.id, () => 0.5);
     assert.equal(lineup.length, 4);
     assert.equal(lineup[0].id, dinosaur.id);
     assert.equal(new Set(lineup.map((entry) => entry.id)).size, 4);
@@ -34,8 +34,8 @@ test("the player-selected dinosaur is always included in a four-dinosaur lineup"
 });
 
 test("generated race terrain is deterministic for a seed and includes every hazard and pickup type", () => {
-  const first = generateBreakingRaceCourse(123456);
-  const second = generateBreakingRaceCourse(123456);
+  const first = generateRaceCourse(123456);
+  const second = generateRaceCourse(123456);
   assert.deepEqual(first, second);
 
   const hazardKinds = new Set(first.hazards.map((hazard) => hazard.kind));
@@ -52,5 +52,5 @@ test("generated race terrain is deterministic for a seed and includes every haza
 });
 
 test("different course seeds generate different terrain layouts", () => {
-  assert.notDeepEqual(generateBreakingRaceCourse(123), generateBreakingRaceCourse(456));
+  assert.notDeepEqual(generateRaceCourse(123), generateRaceCourse(456));
 });

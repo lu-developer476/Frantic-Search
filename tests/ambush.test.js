@@ -2,21 +2,21 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import {
-  bestSurvivalWave,
+  bestAmbushWave,
   difficultyForWave,
   enemiesInWave,
   isWaveCleared,
   overlaps,
-  Survival
-} from "../src/minigames/Survival.js";
+  Ambush
+} from "../src/minigames/Ambush.js";
 
-test("Survival increases enemy counts by wave and caps the simultaneous wave size", () => {
+test("Ambush increases enemy counts by wave and caps the simultaneous wave size", () => {
   assert.equal(enemiesInWave(1), 3);
   assert.equal(enemiesInWave(5), 7);
   assert.equal(enemiesInWave(20), 12);
 });
 
-test("Survival difficulty increases health and speed while tightening spawn intervals", () => {
+test("Ambush difficulty increases health and speed while tightening spawn intervals", () => {
   const first = difficultyForWave(1);
   const fourth = difficultyForWave(4);
   const tenth = difficultyForWave(10);
@@ -28,7 +28,7 @@ test("Survival difficulty increases health and speed while tightening spawn inte
   assert.ok(tenth.spawnInterval >= 0.3);
 });
 
-test("A Survival wave clears only after every enemy has spawned and been defeated", () => {
+test("A Ambush wave clears only after every enemy has spawned and been defeated", () => {
   const enemies = [{ defeated: true }, { defeated: true }];
   assert.equal(isWaveCleared(1, enemies), false);
   assert.equal(isWaveCleared(0, [...enemies, { defeated: false }]), false);
@@ -36,19 +36,19 @@ test("A Survival wave clears only after every enemy has spawned and been defeate
   assert.equal(isWaveCleared(0, []), true);
 });
 
-test("Survival records never decrease and remain non-negative integers", () => {
-  assert.equal(bestSurvivalWave(4, 7), 7);
-  assert.equal(bestSurvivalWave(8, 3), 8);
-  assert.equal(bestSurvivalWave(-2, 0), 0);
+test("Ambush records never decrease and remain non-negative integers", () => {
+  assert.equal(bestAmbushWave(4, 7), 7);
+  assert.equal(bestAmbushWave(8, 3), 8);
+  assert.equal(bestAmbushWave(-2, 0), 0);
 });
 
-test("Survival uses strict rectangle overlap for contact and projectile checks", () => {
+test("Ambush uses strict rectangle overlap for contact and projectile checks", () => {
   assert.equal(overlaps({x:0,y:0,w:20,h:20},{x:19,y:4,w:10,h:10}), true);
   assert.equal(overlaps({x:0,y:0,w:20,h:20},{x:20,y:4,w:10,h:10}), false);
 });
 
 
-test("Survival initializes and renders its menu before a player role is selected", () => {
+test("Ambush initializes and renders its menu before a player role is selected", () => {
   const context = {
     clearRect() {},
     createLinearGradient() {
@@ -68,7 +68,7 @@ test("Survival initializes and renders its menu before a player role is selected
       if (selector === "canvas") return canvas;
       if (!elements.has(selector)) {
         elements.set(selector, {
-          hidden: selector === "[data-survival-result]",
+          hidden: selector === "[data-ambush-result]",
           textContent: "",
           addEventListener() {},
           focus() {},
@@ -89,7 +89,7 @@ test("Survival initializes and renders its menu before a player role is selected
   };
 
   try {
-    const game = new Survival(root);
+    const game = new Ambush(root);
     assert.equal(game.player, null);
     assert.equal(game.running, false);
   } finally {
@@ -99,7 +99,7 @@ test("Survival initializes and renders its menu before a player role is selected
 });
 
 test("Empty Stomach references the shipped velociraptor walk animation", async () => {
-  const source = await readFile(new URL("../src/minigames/EmptyStomach.js", import.meta.url), "utf8");
+  const source = await readFile(new URL("../src/minigames/Persecution.js", import.meta.url), "utf8");
   assert.match(source, /velociraptor-walk\.gif/);
-  await access(new URL("../public/minigame/empty-stomach/gif/enemies/velociraptor/velociraptor-walk.gif", import.meta.url));
+  await access(new URL("../public/minigame/persecution/gif/enemies/velociraptor/velociraptor-walk.gif", import.meta.url));
 });

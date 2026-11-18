@@ -7,29 +7,29 @@ test("all minigame intros share the Empty Stomach presentation without losing th
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
   const styles = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
 
-  for (const id of ["empty-stomach-panel", "time-attack-panel", "survival-panel"]) {
+  for (const id of ["persecution-panel", "hunting-panel", "ambush-panel"]) {
     assert.ok(html.includes(`id="${id}" class="${id.replace("-panel", "")}-panel game-mode-panel`) ||
-      html.includes(`id="${id}" class="${id === "empty-stomach-panel" ? "empty-stomach-panel" : id} game-mode-panel`));
+      html.includes(`id="${id}" class="${id === "persecution-panel" ? "persecution-panel" : id} game-mode-panel`));
   }
-  for (const stage of ["empty-stomach-stage", "time-attack-stage", "survival-stage"]) {
+  for (const stage of ["persecution-stage", "hunting-stage", "ambush-stage"]) {
     assert.ok(html.includes(`class="${stage} game-mode-stage"`));
   }
-  for (const intro of ["empty-stomach-intro", "time-attack-intro", "survival-intro"]) {
+  for (const intro of ["persecution-intro", "hunting-intro", "ambush-intro"]) {
     assert.ok(html.includes(`class="${intro} game-mode-intro"`));
   }
 
-  assert.ok(html.includes("data-ta-title>TIME ATTACK</h2>"));
+  assert.ok(html.includes("data-ta-title>HUNTING</h2>"));
   assert.ok(html.includes("data-ta-subtitle>"));
-  assert.ok(html.includes('class="time-attack-instructions game-mode-instructions" data-ta-instructions'));
-  assert.ok(html.includes("data-survival-title>SURVIVAL</h2>"));
-  assert.ok(html.includes("data-survival-subtitle>"));
-  assert.ok(html.includes('class="survival-instructions game-mode-instructions" data-survival-instructions'));
-  assert.ok(html.includes("data-empty-title>ESTÓMAGO VACÍO</h2>"));
+  assert.ok(html.includes('class="hunting-instructions game-mode-instructions" data-ta-instructions'));
+  assert.ok(html.includes("data-ambush-title>AMBUSH</h2>"));
+  assert.ok(html.includes("data-ambush-subtitle>"));
+  assert.ok(html.includes('class="ambush-instructions game-mode-instructions" data-ambush-instructions'));
+  assert.ok(html.includes("data-empty-title>PERSECUSIÓN</h2>"));
   assert.ok(styles.includes(".game-mode-intro {"));
-  assert.ok(styles.includes(".time-attack-panel.active,"));
-  assert.ok(styles.includes(".survival-panel.active"));
-  assert.ok(styles.includes(".time-attack-panel.playing .time-attack-top"));
-  assert.ok(styles.includes(".survival-panel.playing .survival-top"));
+  assert.ok(styles.includes(".hunting-panel.active,"));
+  assert.ok(styles.includes(".ambush-panel.active"));
+  assert.ok(styles.includes(".hunting-panel.playing .hunting-top"));
+  assert.ok(styles.includes(".ambush-panel.playing .ambush-top"));
 });
 
 test("Free Roam displays its localized title and controls in the shared full-screen intro", async () => {
@@ -58,8 +58,8 @@ test("Free Roam displays its localized title and controls in the shared full-scr
   const dialog = { classList: dialogClasses };
   const continueButton = { focus() {} };
 
-  runInNewContext(handler + String.fromCharCode(10) + 'showGameplayBrief("freeRoam");', {
-    getTutorialLines: () => ["RECORRIDO LIBRE", "MOVE A / D", "JUMP WITH SPACE", "PAUSE WITH P"],
+  runInNewContext(handler + String.fromCharCode(10) + 'showGameplayBrief("exploration");', {
+    getTutorialLines: () => ["EXPLORACIÓN", "MOVE A / D", "JUMP WITH SPACE", "PAUSE WITH P"],
     pendingGameplayBriefAction: null,
     running: false,
     paused: false,
@@ -73,14 +73,14 @@ test("Free Roam displays its localized title and controls in the shared full-scr
     populateInstructionList() {}
   });
 
-  assert.equal(title.textContent, "RECORRIDO LIBRE");
-  assert.equal(dialogClasses.contains("free-roam-brief"), true);
+  assert.equal(title.textContent, "EXPLORACIÓN");
+  assert.equal(dialogClasses.contains("exploration-brief"), true);
   assert.equal(contextClasses.contains("game-mode-instructions"), true);
   assert.equal(context.textContent, "MOVE A / D · JUMP WITH SPACE · PAUSE WITH P");
   assert.equal(context.hidden, false);
   assert.equal(list.hidden, true);
   assert.equal(note.hidden, true);
-  assert.ok(styles.includes(".gameplay-brief-dialog.free-roam-brief"));
+  assert.ok(styles.includes(".gameplay-brief-dialog.exploration-brief"));
 });
 
 test("the copyright footer is part of the start screen and remains independent of menu navigation", async () => {

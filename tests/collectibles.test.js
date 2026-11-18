@@ -4,11 +4,12 @@ import { generateSectionCollectibles, COLLECTIBLE_TOTALS } from "../src/world/Co
 import { PlatformWorld } from "../src/world/PlatformWorld.js";
 import { GAME, WORLD } from "../src/config/GameConfig.js";
 test("field survey contains twelve amber fossils and three research drives",()=>{
- assert.deepEqual(COLLECTIBLE_TOTALS,{amber:12,intel:3});
+ assert.deepEqual(COLLECTIBLE_TOTALS,{amber:12,intel:3,egg:7});
  const world=new PlatformWorld(GAME.groundY,{seed:314159});world.extendTo(WORLD.totalLength+1);
  assert.equal(world.collectibleSpawns.filter(x=>x.type==="amber").length,12);
  assert.equal(world.collectibleSpawns.filter(x=>x.type==="intel").length,3);
- assert.equal(new Set(world.collectibleSpawns.map(x=>x.id)).size,15);
+ assert.equal(world.collectibleSpawns.filter(x=>x.type==="egg").length,7);
+ assert.equal(new Set(world.collectibleSpawns.map(x=>x.id)).size,22);
 });
 test("collectible generation is deterministic and varies across seeds",()=>{
  const args={seed:271828,sectionIndex:2,sectionStart:13000,sectionLength:7600,groundY:430};

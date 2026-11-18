@@ -3,13 +3,13 @@ import assert from "node:assert/strict";
 import { hasTranslation, t, supportedLocales, translateText, getModalTutorialCopy, getCampaignSceneCopy } from "../src/i18n.js";
 
 test("Spanish Latin American menu labels are localized", () => {
-  assert.equal(t("timeAttack", "es"), "HORA DE ATACAR");
-  assert.equal(t("survival", "es"), "SUPERVIVENCIA");
+  assert.equal(t("hunting", "es"), "CACERÍA");
+  assert.equal(t("ambush", "es"), "EMBOSCADA");
 });
 
 test("English menu labels remain unchanged", () => {
-  assert.equal(t("timeAttack", "en"), "TIME ATTACK");
-  assert.equal(t("survival", "en"), "SURVIVAL");
+  assert.equal(t("hunting", "en"), "HUNTING");
+  assert.equal(t("ambush", "en"), "AMBUSH");
 });
 
 test("the start-screen title and subtitle follow the selected language", () => {
@@ -20,9 +20,18 @@ test("the start-screen title and subtitle follow the selected language", () => {
 });
 
 
-test("Empty Stomach uses the localized Spanish title and keeps the English title", () => {
-  assert.equal(t("emptyStomach", "es"), "ESTÓMAGO VACÍO");
-  assert.equal(t("emptyStomach", "en"), "EMPTY STOMACH");
+test("Persecusión uses the localized Spanish title and keeps the English title", () => {
+  assert.equal(t("persecution", "es"), "PERSECUSIÓN");
+  assert.equal(t("persecution", "en"), "PURSUIT");
+});
+
+test("all renamed minigame labels and egg pickup text are localized", () => {
+  assert.equal(t("hunting", "es"), "CACERÍA");
+  assert.equal(t("ambush", "es"), "EMBOSCADA");
+  assert.equal(t("race", "es"), "CARRERA");
+  assert.equal(t("exploration", "es"), "EXPLORACIÓN");
+  assert.equal(t("eggRecovered", "es"), "HUEVO RECUPERADO");
+  assert.equal(t("eggRecovered", "en"), "EGG RECOVERED");
 });
 
 test("Every localization reference in the interface is defined in both languages", async () => {
@@ -92,7 +101,7 @@ test("the minigames title remains localized and has no subtitle copy", () => {
 
 
 test("modal tutorials are centralized and localized in both languages", () => {
-  const modes = ["campaign", "freeRoam", "emptyStomach", "timeAttack", "survival"];
+  const modes = ["campaign", "exploration", "persecution", "hunting", "ambush"];
   for (const mode of modes) {
     const spanish = getModalTutorialCopy(mode, "es");
     const english = getModalTutorialCopy(mode, "en");

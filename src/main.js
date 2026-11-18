@@ -43,10 +43,10 @@ import { ObjectRenderer } from "./rendering/ObjectRenderer.js";
 import { EnvironmentalEffectsRenderer } from "./rendering/EnvironmentalEffectsRenderer.js";
 import { roundedRect, observeCanvasViewport } from "./rendering/CanvasUtils.js";
 import { t as uiText, translateText, getModalTutorialCopy, getCampaignSceneCopy } from "./i18n.js";
-import { EmptyStomach } from "./minigames/EmptyStomach.js";
-import { TimeAttack } from "./minigames/TimeAttack.js";
-import { Survival } from "./minigames/Survival.js";
-import { BreakingRace } from "./minigames/BreakingRace.js";
+import { Persecution } from "./minigames/Persecution.js";
+import { Hunting } from "./minigames/Hunting.js";
+import { Ambush } from "./minigames/Ambush.js";
+import { Race } from "./minigames/Race.js";
 
 const canvas = document.querySelector("#game");
 const nativeDesktopPlayback = window.matchMedia("(min-width: 768px) and (any-pointer: fine)");
@@ -100,25 +100,25 @@ const campaignBackButton = document.querySelector("#campaign-back-button");
 const minigamesButton = document.querySelector("#minigames-button");
 const startMenuBackButton = document.querySelector("#start-menu-back-button");
 const minigamesBackButton = document.querySelector("#minigames-back-button");
-const freeRoamButton = document.querySelector("#free-roam-button");
-const emptyStomachButton = document.querySelector("#empty-stomach-button");
-const emptyStomachPanel = document.querySelector("#empty-stomach-panel");
-const timeAttackButton = document.querySelector("#time-attack-button");
-const timeAttackPanel = document.querySelector("#time-attack-panel");
-const survivalButton = document.querySelector("#survival-button");
-const breakingRaceButton = document.querySelector("#breaking-race-button");
-const breakingRacePanel = document.querySelector("#breaking-race-panel");
-const survivalPanel = document.querySelector("#survival-panel");
+const explorationButton = document.querySelector("#exploration-button");
+const persecutionButton = document.querySelector("#persecution-button");
+const persecutionPanel = document.querySelector("#persecution-panel");
+const huntingButton = document.querySelector("#hunting-button");
+const huntingPanel = document.querySelector("#hunting-panel");
+const ambushButton = document.querySelector("#ambush-button");
+const raceButton = document.querySelector("#race-button");
+const racePanel = document.querySelector("#race-panel");
+const ambushPanel = document.querySelector("#ambush-panel");
 const startScreenArtwork = document.querySelector(".start-screen-artwork");
 const defaultStartScreenArtwork = `${import.meta.env.BASE_URL}artwork/8bits-artwork.png`;
 const minigamesStartScreenArtwork = `${import.meta.env.BASE_URL}artwork/coral-8bits-artwork.png`;
 // Keep one entry per minigame; null falls back to the current menu page artwork.
 const minigamePreviewSources = new Map([
-  [emptyStomachButton, minigamesStartScreenArtwork],
-  [timeAttackButton, `${import.meta.env.BASE_URL}artwork/time-attack-artwork.png`],
-  [survivalButton, `${import.meta.env.BASE_URL}artwork/survival-artwork.png`],
-  [breakingRaceButton, `${import.meta.env.BASE_URL}artwork/bracking-race-artwork.png`],
-  [freeRoamButton, `${import.meta.env.BASE_URL}artwork/free-roam-artwork.png`]
+  [persecutionButton, minigamesStartScreenArtwork],
+  [huntingButton, `${import.meta.env.BASE_URL}artwork/hunting-artwork.png`],
+  [ambushButton, `${import.meta.env.BASE_URL}artwork/ambush-artwork.png`],
+  [raceButton, `${import.meta.env.BASE_URL}artwork/race-artwork.png`],
+  [explorationButton, `${import.meta.env.BASE_URL}artwork/exploration-artwork.png`]
 ]);
 let hoveredMinigameButton = null;
 let focusedMinigameButton = null;
@@ -209,10 +209,10 @@ const returnFromMinigame = () => {
     showStartMenuPage("minigames");
   }
 };
-const emptyStomach = new EmptyStomach(emptyStomachPanel, returnFromMinigame, showGameplayBrief);
-const timeAttack = new TimeAttack(timeAttackPanel, returnFromMinigame, spriteRenderer, showGameplayBrief);
-const survival = new Survival(survivalPanel, returnFromMinigame, spriteRenderer, showGameplayBrief);
-const breakingRace = new BreakingRace(breakingRacePanel, returnFromMinigame);
+const persecution = new Persecution(persecutionPanel, returnFromMinigame, showGameplayBrief);
+const hunting = new Hunting(huntingPanel, returnFromMinigame, spriteRenderer, showGameplayBrief);
+const ambush = new Ambush(ambushPanel, returnFromMinigame, spriteRenderer, showGameplayBrief);
+const race = new Race(racePanel, returnFromMinigame);
 const audio = new AudioManager();
 const music = new AdaptiveMusic();
 let locale = save.get("language") || "es";
@@ -229,7 +229,7 @@ let selected = savedCharacter === "vasti" ? "vasti" : "blue";
 if (savedCharacter !== selected) save.update({ selectedCharacter: selected });
 let running = false;
 let paused = false;
-let freeRoamMode = false;
+let explorationMode = false;
 let last = 0;
 let accumulator = 0;
 let frameRequestId = null;
@@ -1141,10 +1141,10 @@ function drawPickupNotice(){
 }
 
 function updateCampaignHud() {
-  if (freeRoamMode) {
-    if (campaignObjectiveLabel) campaignObjectiveLabel.textContent = ui("freeRoamObjective");
-    if (campaignChapterLabel) campaignChapterLabel.textContent = ui("freeRoam");
-    if (secondaryObjectivesLabel) secondaryObjectivesLabel.textContent = ui("freeRoamHint");
+  if (explorationMode) {
+    if (campaignObjectiveLabel) campaignObjectiveLabel.textContent = ui("explorationObjective");
+    if (campaignChapterLabel) campaignChapterLabel.textContent = ui("exploration");
+    if (secondaryObjectivesLabel) secondaryObjectivesLabel.textContent = ui("explorationHint");
   } else {
     if (campaignObjectiveLabel) campaignObjectiveLabel.textContent = tr(campaign.objective);
     if (campaignChapterLabel) campaignChapterLabel.textContent = tr(campaign.chapter);
@@ -1969,7 +1969,7 @@ function advanceStory() {
 }
 
 function interactWithFacility() {
-  if (!freeRoamMode) {
+  if (!explorationMode) {
   const captive = ferrucutusCaptives.find((entry) => entry.canInteract(player));
   if (captive && captive.rescue(player)) {
     rescuedFerrucutusCageIds.add(captive.id);
@@ -2303,7 +2303,7 @@ function damageBoss(boss, amount, source) {
     bossCueTitle = boss.title || (boss.kind === "indoraptor" ? "INDORAPTOR DEFEATED" : "INDOMINUS DEFEATED");
     bossCueTimer = 2.4;
     audio.bossDefeat();
-    if (!freeRoamMode) {
+    if (!explorationMode) {
       campaign.onBossDefeated(boss.kind, boss.id);
       renderStoryPanel();
     }
@@ -2382,7 +2382,7 @@ function updateLevelTransition(delta) {
     distance = levelTransition.nextDistance;
     levelTransition = null;
     saveLevelEntrySnapshot(enteredLevelIndex);
-    if (!freeRoamMode) showGameplayBrief("campaign", null, LEVELS[enteredLevelIndex].name);
+    if (!explorationMode) showGameplayBrief("campaign", null, LEVELS[enteredLevelIndex].name);
   }
 }
 
@@ -2418,7 +2418,7 @@ function updateStegoceratops(delta) {
 }
 
 function update(delta) {
-  if (!running || paused || prologueCharacterSelectionPending || (!freeRoamMode && campaign.sceneOpen)) return;
+  if (!running || paused || prologueCharacterSelectionPending || (!explorationMode && campaign.sceneOpen)) return;
   if (campaignPrologue?.active) {
     updateCampaignPrologue(delta);
     return;
@@ -2511,9 +2511,9 @@ function update(delta) {
   syncFacility();
   music.setTheme(currentMusicTheme());
   distance = Math.max(0, player.x - GAME.playerX);
-  if (!freeRoamMode) campaign.updateLocation(player.x);
+  if (!explorationMode) campaign.updateLocation(player.x);
   updateCampaignHud();
-  if (!freeRoamMode && campaign.sceneOpen) {
+  if (!explorationMode && campaign.sceneOpen) {
     distanceLabel.textContent = Math.floor(distance).toString().padStart(4, "0") + " m";
     bestLabel.textContent = Math.floor(best()).toString().padStart(4, "0") + " m";
     renderStoryPanel();
@@ -3009,7 +3009,7 @@ function currentCampaignLevelIndex() {
 function captureRestartSnapshot(levelIndex, distanceValue = distance) {
   return {
     schemaVersion: 1,
-    freeRoamMode,
+    explorationMode,
     selectedCharacter: selected,
     levelIndex,
     distance: Math.max(0, Math.round(distanceValue)),
@@ -3039,7 +3039,7 @@ function refreshContinueCampaignButton() {
   deleteCampaignSaveButton.disabled = !available || !checkpointReached || !desktopPlayback.matches;
 }
 function persistCampaignProgressSnapshot(snapshot) {
-  if (freeRoamMode || !snapshot || campaign.flags.completed) return false;
+  if (explorationMode || !snapshot || campaign.flags.completed) return false;
   const saved = save.saveCampaignProgress({
     snapshot,
     levelStartSnapshot: levelStartSnapshot ?? snapshot,
@@ -3054,7 +3054,7 @@ function persistCampaignProgressSnapshot(snapshot) {
 function saveCurrentCampaignSafely({ allowNarration = false } = {}) {
   if (
     !running ||
-    freeRoamMode ||
+    explorationMode ||
     campaignPrologue?.active ||
     campaign.flags.completed ||
     !player.onGround ||
@@ -3069,7 +3069,7 @@ function saveCurrentCampaignSafely({ allowNarration = false } = {}) {
 function updateCampaignAutosave(delta) {
   if (
     !running ||
-    freeRoamMode ||
+    explorationMode ||
     campaignPrologue?.active ||
     campaign.flags.completed ||
     campaign.sceneOpen ||
@@ -3088,13 +3088,13 @@ function updateCampaignAutosave(delta) {
   persistCampaignProgressSnapshot(captureRestartSnapshot(currentCampaignLevelIndex()));
 }
 function saveLevelEntrySnapshot(levelIndex) {
-  if (freeRoamMode) return;
+  if (explorationMode) return;
   levelStartSnapshot = captureRestartSnapshot(levelIndex, LEVELS[levelIndex].distance);
   latestLevelCheckpoint = levelStartSnapshot;
   persistCampaignProgressSnapshot(levelStartSnapshot);
 }
 function updateLevelCheckpoint() {
-  if (!running || freeRoamMode || campaign.sceneOpen || campaign.flags.completed || !player.onGround) return;
+  if (!running || explorationMode || campaign.sceneOpen || campaign.flags.completed || !player.onGround) return;
   const levelIndex = currentCampaignLevelIndex();
   if (!canActivateLevelCheckpoint(levelIndex, campaign.flags)) return;
   const checkpointDistance = getLevelCheckpointDistance(levelIndex, { levels: LEVELS, world: WORLD, game: GAME });
@@ -3109,10 +3109,10 @@ function updateLevelCheckpoint() {
 }
 function restoreRestartSnapshot(snapshot, savedProgress = null) {
   if (!snapshot || !desktopPlayback.matches) return false;
-  freeRoamMode = Boolean(snapshot.freeRoamMode);
-  document.body.classList.toggle("free-roam-session", freeRoamMode);
-  operationHeader?.classList.toggle("is-hidden", freeRoamMode);
-  campaignBriefHeader?.classList.toggle("is-hidden", freeRoamMode);
+  explorationMode = Boolean(snapshot.explorationMode);
+  document.body.classList.toggle("exploration-session", explorationMode);
+  operationHeader?.classList.toggle("is-hidden", explorationMode);
+  campaignBriefHeader?.classList.toggle("is-hidden", explorationMode);
   if (snapshot.selectedCharacter === "blue" || snapshot.selectedCharacter === "vasti") {
     selected = snapshot.selectedCharacter;
     save.update({ selectedCharacter: selected });
@@ -3191,11 +3191,11 @@ function restoreRestartSnapshot(snapshot, savedProgress = null) {
   pauseMenu.classList.add("hidden"); pauseConfirmation.classList.add("hidden");
   pendingPauseAction = null; pauseActionTrigger = null;
   updatePlayerHealthHud(); updateCampaignHud(); renderStoryPanel();
-  stateLabel.textContent = freeRoamMode ? ui("inProgress") : "";
+  stateLabel.textContent = explorationMode ? ui("inProgress") : "";
   music.start(audio.context, currentMusicTheme()); music.setPaused(false); music.setEnabled(audio.enabled);
   document.body.classList.add("game-session-active");
   render();
-  showGameplayBrief(freeRoamMode ? "freeRoam" : "campaign");
+  showGameplayBrief(explorationMode ? "exploration" : "campaign");
   return true;
 }
 function openRetryOptions() {
@@ -3320,13 +3320,13 @@ function resetPlayer(worldSeed = undefined) {
 function start(mode = "campaign") {
   if (!desktopPlayback.matches) return;
   const restartingCurrentSession = running && paused;
-  freeRoamMode = mode === "free-roam";
-  document.body.classList.toggle("free-roam-session", freeRoamMode);
-  if (!freeRoamMode && !restartingCurrentSession) {
+  explorationMode = mode === "exploration";
+  document.body.classList.toggle("exploration-session", explorationMode);
+  if (!explorationMode && !restartingCurrentSession) {
     save.update({ campaignCheckpointReached: false });
   }
-  operationHeader?.classList.toggle("is-hidden", freeRoamMode);
-  campaignBriefHeader?.classList.toggle("is-hidden", freeRoamMode);
+  operationHeader?.classList.toggle("is-hidden", explorationMode);
+  campaignBriefHeader?.classList.toggle("is-hidden", explorationMode);
   cancelScheduledFrame();
   audio.unlock();
   startScreen.classList.add("hidden");
@@ -3346,7 +3346,7 @@ function start(mode = "campaign") {
   pendingPauseAction = null;
   pauseActionTrigger = null;
   resetPlayer();
-  if (!freeRoamMode) beginCampaignPrologue();
+  if (!explorationMode) beginCampaignPrologue();
   updatePlayerHealthHud();
   music.start(audio.context, currentMusicTheme());
   music.setPaused(false);
@@ -3360,9 +3360,9 @@ function start(mode = "campaign") {
   distance = 0;
   rescues = 0;
   campaignAutosaveElapsed = 0;
-  stateLabel.textContent = freeRoamMode ? ui("inProgress") : "";
+  stateLabel.textContent = explorationMode ? ui("inProgress") : "";
   rescuesLabel.textContent = "00";
-  if (!freeRoamMode && !campaignPrologue) {
+  if (!explorationMode && !campaignPrologue) {
     campaign.begin();
     levelStartSnapshot = captureRestartSnapshot(0, 0);
     latestLevelCheckpoint = levelStartSnapshot;
@@ -3377,8 +3377,8 @@ function start(mode = "campaign") {
   last = performance.now();
   document.body.classList.add("game-session-active");
   render();
-  if (freeRoamMode) {
-    showGameplayBrief("freeRoam");
+  if (explorationMode) {
+    showGameplayBrief("exploration");
   } else {
     // The campaign prologue provides its own opening narration. Start its frame
     // loop immediately instead of making the first playable scene wait behind
@@ -3430,7 +3430,7 @@ function togglePause() {
     overlay.classList.remove("pause-mode");
     overlay.classList.add("hidden");
     music.setPaused(false);
-    stateLabel.textContent = freeRoamMode ? ui("inProgress") : "";
+    stateLabel.textContent = explorationMode ? ui("inProgress") : "";
     accumulator = 0;
     last = performance.now();
     scheduleFrame();
@@ -3483,8 +3483,8 @@ function returnToMainMenu() {
   storyPanel.classList.add("hidden");
   startScreenMessage.textContent = "";
   startScreenMessage.hidden = true;
-  freeRoamMode = false;
-  document.body.classList.remove("game-session-active", "free-roam-session");
+  explorationMode = false;
+  document.body.classList.remove("game-session-active", "exploration-session");
   operationHeader?.classList.remove("is-hidden");
   campaignBriefHeader?.classList.remove("is-hidden");
   pendingGameMode = "campaign";
@@ -3506,7 +3506,7 @@ function confirmPendingPauseAction() {
   if (!action || !paused) return;
   closePauseConfirmation(false);
   if (action === "restart") {
-    start(freeRoamMode ? "free-roam" : "campaign");
+    start(explorationMode ? "exploration" : "campaign");
     return;
   }
   if (action === "exit") returnToMainMenu();
@@ -3607,45 +3607,45 @@ for (const button of minigamePreviewSources.keys()) {
     }
   });
 }
-freeRoamButton.addEventListener("click", () => {
+explorationButton.addEventListener("click", () => {
   if (!desktopPlayback.matches || desktopBlocked) return;
-  openDinoModal("start", "free-roam");
+  openDinoModal("start", "exploration");
 });
-emptyStomachButton.addEventListener("click", () => {
+persecutionButton.addEventListener("click", () => {
   if (!desktopPlayback.matches || desktopBlocked) return;
   startScreen.classList.add("hidden");
   setMenuOpen(false);
   document.body.classList.add("game-session-active");
   operationHeader?.classList.add("is-hidden");
   campaignBriefHeader?.classList.add("is-hidden");
-  emptyStomach.open();
+  persecution.open();
 });
-timeAttackButton.addEventListener("click", () => {
+huntingButton.addEventListener("click", () => {
   if (!desktopPlayback.matches || desktopBlocked) return;
   startScreen.classList.add("hidden");
   setMenuOpen(false);
   document.body.classList.add("game-session-active");
   operationHeader?.classList.add("is-hidden");
   campaignBriefHeader?.classList.add("is-hidden");
-  timeAttack.open();
+  hunting.open();
 });
-survivalButton.addEventListener("click", () => {
+ambushButton.addEventListener("click", () => {
   if (!desktopPlayback.matches || desktopBlocked) return;
   startScreen.classList.add("hidden");
   setMenuOpen(false);
   document.body.classList.add("game-session-active");
   operationHeader?.classList.add("is-hidden");
   campaignBriefHeader?.classList.add("is-hidden");
-  survival.open();
+  ambush.open();
 });
-breakingRaceButton.addEventListener("click", () => {
+raceButton.addEventListener("click", () => {
   if (!desktopPlayback.matches || desktopBlocked) return;
   startScreen.classList.add("hidden");
   setMenuOpen(false);
   document.body.classList.add("game-session-active");
   operationHeader?.classList.add("is-hidden");
   campaignBriefHeader?.classList.add("is-hidden");
-  breakingRace.open();
+  race.open();
 });
 overlayActionButton.addEventListener("click", () => {
   if (paused) {
@@ -3656,7 +3656,7 @@ overlayActionButton.addEventListener("click", () => {
     openRetryOptions();
     return;
   }
-  if (!running) openDinoModal("overlay", freeRoamMode ? "free-roam" : "campaign");
+  if (!running) openDinoModal("overlay", explorationMode ? "exploration" : "campaign");
 });
 overlayExitButton.addEventListener("click", returnToMainMenu);
 retryLevelStartButton.addEventListener("click", () => restoreRestartSnapshot(levelStartSnapshot));
@@ -3826,11 +3826,11 @@ function getTutorialLines(mode) {
 }
 
 function getActiveTutorialMode() {
-  if (emptyStomachPanel.classList.contains("active")) return "emptyStomach";
-  if (timeAttackPanel.classList.contains("active")) return "timeAttack";
-  if (survivalPanel.classList.contains("active")) return "survival";
-  if (breakingRacePanel.classList.contains("active")) return "breakingRace";
-  return running && freeRoamMode ? "freeRoam" : "campaign";
+  if (persecutionPanel.classList.contains("active")) return "persecution";
+  if (huntingPanel.classList.contains("active")) return "hunting";
+  if (ambushPanel.classList.contains("active")) return "ambush";
+  if (racePanel.classList.contains("active")) return "race";
+  return running && explorationMode ? "exploration" : "campaign";
 }
 
 function populateInstructionList(list, lines) {
@@ -3843,7 +3843,7 @@ function populateInstructionList(list, lines) {
 
 function showGameplayBrief(mode, proceed = null, context = "") {
   const lines = getTutorialLines(mode);
-  const isFreeRoamBrief = mode === "freeRoam";
+  const isExplorationBrief = mode === "exploration";
   pendingGameplayBriefAction = typeof proceed === "function" ? proceed : null;
   gameplayBriefPausedGame = running && !paused;
   if (gameplayBriefPausedGame) {
@@ -3853,15 +3853,15 @@ function showGameplayBrief(mode, proceed = null, context = "") {
     document.body.classList.add("game-paused");
   }
   gameplayBriefTitle.textContent = lines[0];
-  gameplayBriefContinueButton.textContent = isFreeRoamBrief ? ui("play") : ui("gameplayBriefContinue");
+  gameplayBriefContinueButton.textContent = isExplorationBrief ? ui("play") : ui("gameplayBriefContinue");
   gameplayBriefExitButton.textContent = ui("exit");
-  gameplayBriefExitButton.hidden = !isFreeRoamBrief;
-  gameplayBriefDialog.classList.toggle("free-roam-brief", isFreeRoamBrief);
-  gameplayBriefContext.classList.toggle("game-mode-instructions", isFreeRoamBrief);
-  gameplayBriefContext.textContent = isFreeRoamBrief ? lines.slice(1).join(" · ") : context;
-  gameplayBriefContext.hidden = isFreeRoamBrief ? false : !context;
-  gameplayBriefList.hidden = isFreeRoamBrief;
-  gameplayBriefNote.hidden = isFreeRoamBrief;
+  gameplayBriefExitButton.hidden = !isExplorationBrief;
+  gameplayBriefDialog.classList.toggle("exploration-brief", isExplorationBrief);
+  gameplayBriefContext.classList.toggle("game-mode-instructions", isExplorationBrief);
+  gameplayBriefContext.textContent = isExplorationBrief ? lines.slice(1).join(" · ") : context;
+  gameplayBriefContext.hidden = isExplorationBrief ? false : !context;
+  gameplayBriefList.hidden = isExplorationBrief;
+  gameplayBriefNote.hidden = isExplorationBrief;
   populateInstructionList(gameplayBriefList, lines);
   gameplayBriefDialog.classList.remove("hidden");
   gameplayBriefContinueButton.focus();
@@ -3870,7 +3870,7 @@ function showGameplayBrief(mode, proceed = null, context = "") {
 function closeGameplayBrief() {
   if (gameplayBriefDialog.classList.contains("hidden")) return;
   gameplayBriefDialog.classList.add("hidden");
-  gameplayBriefDialog.classList.remove("free-roam-brief");
+  gameplayBriefDialog.classList.remove("exploration-brief");
   gameplayBriefExitButton.hidden = true;
   gameplayBriefContext.classList.remove("game-mode-instructions");
   gameplayBriefContext.hidden = true;
@@ -3890,8 +3890,8 @@ function closeGameplayBrief() {
   if (action) action();
 }
 
-function exitFreeRoamBrief() {
-  if (!gameplayBriefDialog.classList.contains("free-roam-brief")) return;
+function exitExplorationBrief() {
+  if (!gameplayBriefDialog.classList.contains("exploration-brief")) return;
   pendingGameplayBriefAction = null;
   closeGameplayBrief();
   returnToMainMenu();
@@ -3905,17 +3905,17 @@ function openTutorial(trigger = null) {
   tutorialReturnFocus = trigger;
   tutorialPausedMode = null;
 
-  if ((mode === "campaign" || mode === "freeRoam") && running && !paused && !campaign.sceneOpen) {
+  if ((mode === "campaign" || mode === "exploration") && running && !paused && !campaign.sceneOpen) {
     togglePause();
     tutorialPausedMode = mode;
-  } else if (mode === "emptyStomach" && emptyStomach.running && !emptyStomach.paused) {
-    emptyStomach.togglePause();
+  } else if (mode === "persecution" && persecution.running && !persecution.paused) {
+    persecution.togglePause();
     tutorialPausedMode = mode;
-  } else if (mode === "timeAttack" && timeAttack.running && !timeAttack.paused) {
-    timeAttack.togglePause();
+  } else if (mode === "hunting" && hunting.running && !hunting.paused) {
+    hunting.togglePause();
     tutorialPausedMode = mode;
-  } else if (mode === "survival" && survival.running && !survival.paused) {
-    survival.togglePause();
+  } else if (mode === "ambush" && ambush.running && !ambush.paused) {
+    ambush.togglePause();
     tutorialPausedMode = mode;
   }
 
@@ -3925,14 +3925,14 @@ function openTutorial(trigger = null) {
 }
 function closeTutorial() {
   document.querySelector("#tutorial-dialog").classList.add("hidden");
-  if (tutorialPausedMode === "campaign" || tutorialPausedMode === "freeRoam") {
+  if (tutorialPausedMode === "campaign" || tutorialPausedMode === "exploration") {
     if (running && paused) togglePause();
-  } else if (tutorialPausedMode === "emptyStomach" && emptyStomach.running && emptyStomach.paused) {
-    emptyStomach.togglePause();
-  } else if (tutorialPausedMode === "timeAttack" && timeAttack.running && timeAttack.paused) {
-    timeAttack.togglePause();
-  } else if (tutorialPausedMode === "survival" && survival.running && survival.paused) {
-    survival.togglePause();
+  } else if (tutorialPausedMode === "persecution" && persecution.running && persecution.paused) {
+    persecution.togglePause();
+  } else if (tutorialPausedMode === "hunting" && hunting.running && hunting.paused) {
+    hunting.togglePause();
+  } else if (tutorialPausedMode === "ambush" && ambush.running && ambush.paused) {
+    ambush.togglePause();
   }
   tutorialPausedMode = null;
   if (tutorialReturnFocus?.isConnected && !tutorialReturnFocus.hidden) tutorialReturnFocus.focus();
@@ -3956,10 +3956,10 @@ function setLanguage(nextLocale) {
   if (!["es", "en"].includes(nextLocale) || nextLocale === locale) return;
 
   locale = nextLocale;
-  emptyStomach.setLocale(locale);
-  timeAttack.setLocale(locale);
-  survival.setLocale(locale);
-  breakingRace.setLocale(locale);
+  persecution.setLocale(locale);
+  hunting.setLocale(locale);
+  ambush.setLocale(locale);
+  race.setLocale(locale);
   save.update({ language: locale });
   applyLanguage();
   updateCampaignHud();
@@ -3971,10 +3971,10 @@ function setLanguage(nextLocale) {
 }
 
 function applyLanguage() {
-  emptyStomach.setLocale(locale);
-  timeAttack.setLocale(locale);
-  survival.setLocale(locale);
-  breakingRace.setLocale(locale);
+  persecution.setLocale(locale);
+  hunting.setLocale(locale);
+  ambush.setLocale(locale);
+  race.setLocale(locale);
   document.documentElement.lang = locale;
   document.title = ui("documentTitle");
   document.querySelector('meta[name="description"]')?.setAttribute("content", ui("metaDescription"));
@@ -4006,7 +4006,7 @@ function applyLanguage() {
     stateLabel.textContent = ui("paused");
     updatePauseConfirmationCopy();
   } else if (running) {
-    stateLabel.textContent = freeRoamMode ? ui("inProgress") : "";
+    stateLabel.textContent = explorationMode ? ui("inProgress") : "";
   } else if (campaign.flags.completed) {
     showCampaignEnding();
   } else if (failureScreenActive || ["SIGNAL LOST", "SEÑAL PERDIDA"].includes(stateLabel.textContent)) {
@@ -4047,13 +4047,13 @@ menuToggle.addEventListener("click", () => setMenuOpen(navMenu.classList.contain
 document.querySelector("#tutorial-button").addEventListener("click", () => openTutorial());
 document.querySelector("#tutorial-close").addEventListener("click", closeTutorial);
 gameplayBriefContinueButton.addEventListener("click", closeGameplayBrief);
-gameplayBriefExitButton.addEventListener("click", exitFreeRoamBrief);
+gameplayBriefExitButton.addEventListener("click", exitExplorationBrief);
 document.addEventListener("keydown", (event) => {
   if (gameplayBriefDialog.classList.contains("hidden")) return;
   event.stopPropagation();
   if (event.key === "Escape") {
     event.preventDefault();
-    if (gameplayBriefDialog.classList.contains("free-roam-brief")) exitFreeRoamBrief();
+    if (gameplayBriefDialog.classList.contains("exploration-brief")) exitExplorationBrief();
     else closeGameplayBrief();
   }
 });
@@ -4122,7 +4122,7 @@ window.addEventListener("keydown", (event) => {
       !prologueCharacterSelectionPending && pauseConfirmation.classList.contains("hidden")) togglePause();
   if (event.code === "Enter" && !event.repeat && campaign.sceneOpen) advanceStory();
   else if (event.code === "Enter" && !event.repeat && !running && !paused && !desktopBlocked && dinoModal.classList.contains("hidden") && navMenu.classList.contains("hidden")) {
-    if (!overlay.classList.contains("hidden")) openDinoModal("overlay", freeRoamMode ? "free-roam" : "campaign");
+    if (!overlay.classList.contains("hidden")) openDinoModal("overlay", explorationMode ? "exploration" : "campaign");
     else if (activeStartMenuPage === "home") showStartMenuPage("options");
     else if (activeStartMenuPage === "options") openDinoModal("start", "campaign");
     else minigamesButton.focus();
@@ -4144,10 +4144,10 @@ function syncDesktopAccess() {
   const canPlay = desktopPlayback.matches;
   startButton.disabled = !canPlay;
   continueCampaignButton.disabled = !canPlay;
-  emptyStomachButton.disabled = !canPlay;
-  timeAttackButton.disabled = !canPlay;
-  survivalButton.disabled = !canPlay;
-  breakingRaceButton.disabled = !canPlay;
+  persecutionButton.disabled = !canPlay;
+  huntingButton.disabled = !canPlay;
+  ambushButton.disabled = !canPlay;
+  raceButton.disabled = !canPlay;
 
   if (!canPlay) {
     if (running) {

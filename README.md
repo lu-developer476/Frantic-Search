@@ -1,14 +1,14 @@
 # Frantic Search — Operation: Lost Hatchling #
 
-**Version 1.3.1 · 2D pixel-art survival-platformer · HTML5 Canvas · JavaScript · Vite**
+**Version 1.3.1 · 2D pixel-art ambush-platformer · HTML5 Canvas · JavaScript · Vite**
 
-Frantic Search is an unofficial fan-made dinosaur survival-platformer. Play as Gala or Basilio, keep the other protagonist by your side, and rescue Brisa from a clandestine poaching and research operation.
+Frantic Search is an unofficial fan-made dinosaur ambush-platformer. Play as Gala or Basilio, keep the other protagonist by your side, and rescue Brisa from a clandestine poaching and research operation.
 
 ## Additional game modes
 
-- **Empty Stomach** is an endless survival minigame starring Coral, the miniraptor in `miniraptor-run.gif`. Escape the xenoraptors and velociraptors while Parasaurolophus herds flee through the environment. The run has no finish line: it ends only when a predator catches Coral. Distance is scored and the personal best is stored locally.
+- **Empty Stomach** is an endless ambush minigame starring Coral, the miniraptor in `miniraptor-run.gif`. Escape the xenoraptors and velociraptors while Parasaurolophus herds flee through the environment. The run has no finish line: it ends only when a predator catches Coral. Distance is scored and the personal best is stored locally.
 - **Time Attack** is a finite hunting time trial. Control one hunter alongside three AI teammates, eliminate all 14 Venatosaurus across four waves, and reach extraction. The fastest successful completion is stored locally.
-- **Survival** is an endless arena with progressive waves. Play as an armed hunter against Venatosaurus, or choose Gala / Basilio to fight poachers. Enemy count, health and pressure increase over time; every second cleared wave restores one health point. Personal bests are saved separately for each role.
+- **Ambush** is an endless arena with progressive waves. Play as an armed hunter against Venatosaurus, or choose Gala / Basilio to fight poachers. Enemy count, health and pressure increase over time; every second cleared wave restores one health point. Personal bests are saved separately for each role.
 
 ## Campaign
 
@@ -106,7 +106,7 @@ Narrator interludes pause the simulation so the player can read the story and ev
 | Pause / resume | P |
 | Exit minigame | Esc |
 
-## Survival controls
+## Ambush controls
 
 | Role | Controls |
 |---|---|
@@ -147,7 +147,7 @@ npm run preview
 npm run check
 ```
 
-The automated suite covers campaign gating, facility terminal interaction, Brisa escort, finite world generation, deterministic collectible placement and save validation, chapter-scaled Ferrucutus captive counts, wildlife enemy behaviour, boss phases, attack patterns, dodge recovery and hitboxes, Time Attack wave planning and completion timing, Survival wave scaling, wave-clear gates and record handling, sprite availability, sprite loading and adaptive music scheduling.
+The automated suite covers campaign gating, facility terminal interaction, Brisa escort, finite world generation, deterministic collectible placement and save validation, chapter-scaled Ferrucutus captive counts, wildlife enemy behaviour, boss phases, attack patterns, dodge recovery and hitboxes, Time Attack wave planning and completion timing, Ambush wave scaling, wave-clear gates and record handling, sprite availability, sprite loading and adaptive music scheduling.
 
 ## Deploy to Vercel
 

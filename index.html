@@ -202,12 +202,12 @@
                   <button id="campaign-back-button" class="menu-back" type="button" data-i18n="back">VOLVER</button>
                 </div>
                 <div id="minigames-menu" class="start-menu-view" hidden aria-label="Minijuegos" data-i18n-aria="minigames">
-                  <button id="empty-stomach-button" type="button" data-i18n="emptyStomach">ESTÓMAGO VACÍO</button>
-                  <button id="time-attack-button" type="button"><span data-i18n="timeAttack">HORA DE ATACAR</span></button>
-                  <button id="survival-button" type="button"><span data-i18n="survival">SUPERVIVENCIA</span></button>
-                  <button id="breaking-race-button" type="button"><span data-i18n="breakingRace">CARRERA DE FRENADO</span></button>
-                  <button id="free-roam-button" type="button">
-                    <span data-i18n="freeRoam">RECORRIDO LIBRE</span>
+                  <button id="persecution-button" type="button" data-i18n="persecution">PERSECUSIÓN</button>
+                  <button id="hunting-button" type="button"><span data-i18n="hunting">CACERÍA</span></button>
+                  <button id="ambush-button" type="button"><span data-i18n="ambush">EMBOSCADA</span></button>
+                  <button id="race-button" type="button"><span data-i18n="race">CARRERA</span></button>
+                  <button id="exploration-button" type="button">
+                    <span data-i18n="exploration">EXPLORACIÓN</span>
                   </button>
                   <button id="minigames-back-button" class="menu-back" type="button" data-i18n="back">VOLVER</button>
                 </div>
@@ -227,18 +227,18 @@
                 </div>
               </section>
             </section>
-            <section id="empty-stomach-panel" class="empty-stomach-panel game-mode-panel" aria-label="Estómago vacío" data-i18n-aria="emptyStomach" aria-hidden="true">
-              <div class="empty-stomach-stage game-mode-stage">
-                <canvas width="960" height="540" aria-label="Minijuego de supervivencia: Estómago vacío" data-i18n-aria="emptyStomachCanvas"></canvas>
-                <div class="empty-stomach-pause-overlay" data-empty-pause-overlay hidden>
+            <section id="persecution-panel" class="persecution-panel game-mode-panel" aria-label="Estómago vacío" data-i18n-aria="persecution" aria-hidden="true">
+              <div class="persecution-stage game-mode-stage">
+                <canvas width="960" height="540" aria-label="Minijuego de supervivencia: Estómago vacío" data-i18n-aria="persecutionCanvas"></canvas>
+                <div class="persecution-pause-overlay" data-empty-pause-overlay hidden>
                   <span data-empty-pause-label>PAUSA</span>
                 </div>
-                <div class="empty-stomach-intro game-mode-intro">
-                  <h2 data-empty-title>ESTÓMAGO VACÍO</h2>
+                <div class="persecution-intro game-mode-intro">
+                  <h2 data-empty-title>PERSECUSIÓN</h2>
                   <p data-empty-subtitle>Coral corre por su vida. Los depredadores no van a detenerse.</p>
-                  <p class="empty-stomach-instructions game-mode-instructions" data-empty-instructions></p>
-                  <p class="empty-stomach-result" data-empty-result hidden></p>
-                  <div class="empty-stomach-actions game-mode-actions">
+                  <p class="persecution-instructions game-mode-instructions" data-empty-instructions></p>
+                  <p class="persecution-result" data-empty-result hidden></p>
+                  <div class="persecution-actions game-mode-actions">
                     <button type="button" data-empty-start>INICIAR</button>
                     <button type="button" data-empty-retry hidden>RETOMAR</button>
                     <button type="button" data-empty-checkpoint hidden>USAR CHECKPOINT</button>
@@ -246,24 +246,24 @@
                   </div>
                 </div>
               </div>
-              <div class="empty-stomach-bottom" data-empty-controls hidden>
+              <div class="persecution-bottom" data-empty-controls hidden>
                 <span data-empty-controls-text>A / D O ← / →: MOVERSE · W / S O ↑ / ↓: CARRILES · ESPACIO: SALTAR · X: EMBESTIR · E: OBJETO · Q: HUEVO · ESC: SALIR</span>
                 <button type="button" data-empty-pause>P: PAUSAR</button>
               </div>
             </section>
-            <section id="time-attack-panel" class="time-attack-panel game-mode-panel" aria-label="Time Attack" data-i18n-aria="timeAttack" aria-hidden="true">
-              <div class="time-attack-stage game-mode-stage">
-                <canvas width="960" height="540" aria-label="Minijuego de caza Time Attack" data-i18n-aria="timeAttackCanvas"></canvas>
-                <div class="time-attack-top">
+            <section id="hunting-panel" class="hunting-panel game-mode-panel" aria-label="Time Attack" data-i18n-aria="hunting" aria-hidden="true">
+              <div class="hunting-stage game-mode-stage">
+                <canvas width="960" height="540" aria-label="Minijuego de caza Time Attack" data-i18n-aria="huntingCanvas"></canvas>
+                <div class="hunting-top">
                   <span data-i18n="huntingMode">FRANTIC SEARCH // MODO DE CAZA</span>
                   <span data-ta-status>SECTION 01 // EXTRACTION</span>
                 </div>
-                <div class="time-attack-intro game-mode-intro">
-                  <h2 data-ta-title>TIME ATTACK</h2>
+                <div class="hunting-intro game-mode-intro">
+                  <h2 data-ta-title>HUNTING</h2>
                   <p data-ta-subtitle>Una escuadra. Múltiples presas. Despejá el camino y llegá a la extracción cuanto antes.</p>
-                  <p class="time-attack-instructions game-mode-instructions" data-ta-instructions></p>
-                  <p class="time-attack-result" data-ta-result hidden></p>
-                  <div class="time-attack-actions game-mode-actions">
+                  <p class="hunting-instructions game-mode-instructions" data-ta-instructions></p>
+                  <p class="hunting-result" data-ta-result hidden></p>
+                  <div class="hunting-actions game-mode-actions">
                     <button type="button" data-ta-start>INICIAR</button>
                     <button type="button" data-ta-retry hidden>REPETIR SECCIÓN</button>
                     <button type="button" data-ta-exit>VOLVER AL MENÚ</button>
@@ -271,20 +271,20 @@
                 </div>
               </div>
             </section>
-            <section id="breaking-race-panel" class="breaking-race-panel game-mode-panel" aria-label="Breaking Race" data-i18n-aria="breakingRace" aria-hidden="true">
-              <div class="breaking-race-stage game-mode-stage">
-                <canvas width="960" height="540" aria-label="Carrera de dinosaurios" data-i18n-aria="breakingRaceCanvas"></canvas>
-                <div class="breaking-race-top"><span>FRANTIC SEARCH // TRACK MEET</span><span data-br-status>RACE // READY</span></div>
-                <div class="breaking-race-intro game-mode-intro">
-                  <h2 data-br-title>BREAKING RACE</h2>
+            <section id="race-panel" class="race-panel game-mode-panel" aria-label="Breaking Race" data-i18n-aria="race" aria-hidden="true">
+              <div class="race-stage game-mode-stage">
+                <canvas width="960" height="540" aria-label="Carrera de dinosaurios" data-i18n-aria="raceCanvas"></canvas>
+                <div class="race-top"><span>FRANTIC SEARCH // TRACK MEET</span><span data-br-status>RACE // READY</span></div>
+                <div class="race-intro game-mode-intro">
+                  <h2 data-br-title>RACE</h2>
                   <p data-br-subtitle>Elegí tu dinosaurio, esquivá el terreno y cruzá la meta antes que tus rivales.</p>
-                  <div class="breaking-race-dinosaur-picker">
-                    <label for="breaking-race-dinosaur-select" data-br-select-label>DINOSAURIO A CONTROLAR</label>
-                    <select id="breaking-race-dinosaur-select" data-br-dinosaur-select aria-label="Dinosaurio a controlar"></select>
+                  <div class="race-dinosaur-picker">
+                    <label for="race-dinosaur-select" data-br-select-label>DINOSAURIO A CONTROLAR</label>
+                    <select id="race-dinosaur-select" data-br-dinosaur-select aria-label="Dinosaurio a controlar"></select>
                   </div>
-                  <p class="breaking-race-instructions game-mode-instructions" data-br-instructions></p>
-                  <p class="breaking-race-result" data-br-result hidden></p>
-                  <div class="breaking-race-actions game-mode-actions">
+                  <p class="race-instructions game-mode-instructions" data-br-instructions></p>
+                  <p class="race-result" data-br-result hidden></p>
+                  <div class="race-actions game-mode-actions">
                     <button type="button" data-br-start>INICIAR CARRERA</button>
                     <button type="button" data-br-retry hidden>OTRA CARRERA</button>
                     <button type="button" data-br-exit>VOLVER AL MENÚ</button>
@@ -292,33 +292,33 @@
                 </div>
               </div>
             </section>
-            <section id="survival-panel" class="survival-panel game-mode-panel" aria-label="Supervivencia" data-i18n-aria="survival" aria-hidden="true">
-              <div class="survival-stage game-mode-stage">
-                <canvas width="960" height="540" aria-label="Minijuego de supervivencia por oleadas" data-i18n-aria="survivalCanvas"></canvas>
-                <div class="survival-top">
+            <section id="ambush-panel" class="ambush-panel game-mode-panel" aria-label="Supervivencia" data-i18n-aria="ambush" aria-hidden="true">
+              <div class="ambush-stage game-mode-stage">
+                <canvas width="960" height="540" aria-label="Minijuego de supervivencia por oleadas" data-i18n-aria="ambushCanvas"></canvas>
+                <div class="ambush-top">
                   <span data-i18n="endlessWavesMode">FRANTIC SEARCH // OLEADAS INFINITAS</span>
-                  <span data-survival-status>SURVIVAL // WAVE 01</span>
+                  <span data-ambush-status>AMBUSH // WAVE 01</span>
                 </div>
-                <div class="survival-intro game-mode-intro">
-                  <h2 data-survival-title>SURVIVAL</h2>
-                  <p data-survival-subtitle>Elegí al personaje y aguantá todo lo que puedas. Cada ronda aumenta la dificultad.</p>
-                  <p class="survival-instructions game-mode-instructions" data-survival-instructions></p>
-                  <p class="survival-result" data-survival-result hidden></p>
-                  <div class="survival-actions game-mode-actions" data-survival-entry>
-                    <button type="button" data-survival-start>INICIAR</button>
-                    <button type="button" data-survival-retry hidden>VOLVER A INTENTAR</button>
-                    <button type="button" data-survival-exit>SALIR</button>
+                <div class="ambush-intro game-mode-intro">
+                  <h2 data-ambush-title>AMBUSH</h2>
+                  <p data-ambush-subtitle>Elegí al personaje y aguantá todo lo que puedas. Cada ronda aumenta la dificultad.</p>
+                  <p class="ambush-instructions game-mode-instructions" data-ambush-instructions></p>
+                  <p class="ambush-result" data-ambush-result hidden></p>
+                  <div class="ambush-actions game-mode-actions" data-ambush-entry>
+                    <button type="button" data-ambush-start>INICIAR</button>
+                    <button type="button" data-ambush-retry hidden>VOLVER A INTENTAR</button>
+                    <button type="button" data-ambush-exit>SALIR</button>
                   </div>
-                  <div class="survival-actions game-mode-actions" data-survival-options hidden>
-                    <button type="button" data-survival-role="hunter" data-survival-hunter>SER CAZADOR</button>
-                    <button type="button" data-survival-show-dinosaurs>SER DINOSAURIO</button>
-                    <button type="button" data-survival-back-to-entry>VOLVER</button>
+                  <div class="ambush-actions game-mode-actions" data-ambush-options hidden>
+                    <button type="button" data-ambush-role="hunter" data-ambush-hunter>SER CAZADOR</button>
+                    <button type="button" data-ambush-show-dinosaurs>SER DINOSAURIO</button>
+                    <button type="button" data-ambush-back-to-entry>VOLVER</button>
                   </div>
-                  <div class="survival-actions game-mode-actions" data-survival-dinosaurs hidden>
-                    <button type="button" data-survival-role="blue" data-survival-gala>GALA</button>
-                    <button type="button" data-survival-role="vasti" data-survival-basilio>BASILIO</button>
-                    <button type="button" data-survival-role="rosa" data-survival-brisa>BRISA</button>
-                    <button type="button" data-survival-back-to-roles>VOLVER</button>
+                  <div class="ambush-actions game-mode-actions" data-ambush-dinosaurs hidden>
+                    <button type="button" data-ambush-role="blue" data-ambush-gala>GALA</button>
+                    <button type="button" data-ambush-role="vasti" data-ambush-basilio>BASILIO</button>
+                    <button type="button" data-ambush-role="rosa" data-ambush-brisa>BRISA</button>
+                    <button type="button" data-ambush-back-to-roles>VOLVER</button>
                   </div>
                 </div>
               </div>

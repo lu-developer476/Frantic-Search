@@ -99,7 +99,7 @@ test("browser tab title and campaign operation header are standardized", async (
   const typography = await readFile(new URL("../src/styles/typography.css", import.meta.url), "utf8");
 
   assert.match(html, /<title>Indie pixel art 8-bits<\/title>/);
-  assert.match(main, /stateLabel\.textContent = freeRoamMode \? ui\("inProgress"\) : "";/);
+  assert.match(main, /stateLabel\.textContent = explorationMode \? ui\("inProgress"\) : "";/);
   assert.match(typography, /\.game-panel \.panel-head,[\s\S]*?font-family: var\(--font-display\)/);
   assert.match(css, /\.game-panel \.panel-head\s*\{[^}]*min-height:\s*44px;[^}]*padding-block:\s*2px;/s);
 });
@@ -107,8 +107,8 @@ test("browser tab title and campaign operation header are standardized", async (
 
 test("canvas gameplay overlays no longer draw framed message panels or full-width HUD bands", async () => {
   const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
-  const timeAttack = await readFile(new URL("../src/minigames/TimeAttack.js", import.meta.url), "utf8");
-  const survival = await readFile(new URL("../src/minigames/Survival.js", import.meta.url), "utf8");
+  const hunting = await readFile(new URL("../src/minigames/Hunting.js", import.meta.url), "utf8");
+  const ambush = await readFile(new URL("../src/minigames/Ambush.js", import.meta.url), "utf8");
 
   assert.ok(!main.includes("ctx.fillRect(260,464,440,46)"));
   assert.ok(!main.includes("ctx.strokeRect(260,464,440,46)"));
@@ -120,8 +120,8 @@ test("canvas gameplay overlays no longer draw framed message panels or full-widt
   assert.ok(!main.includes('ctx.strokeRect(x-14,y-42,w+28,86)'));
   assert.ok(!main.includes("ctx.fillRect(215,185,530,90)"));
   assert.ok(!main.includes("ctx.strokeRect(215,185,530,90)"));
-  assert.ok(!timeAttack.includes("ctx.fillRect(0, 0, WIDTH, 54)"));
-  assert.ok(!survival.includes("ctx.fillRect(0, 0, WIDTH, 58)"));
+  assert.ok(!hunting.includes("ctx.fillRect(0, 0, WIDTH, 54)"));
+  assert.ok(!ambush.includes("ctx.fillRect(0, 0, WIDTH, 58)"));
 });
 
 test("ambient modes style the navbar and the full campaign status strip", async () => {
@@ -152,8 +152,8 @@ test("campaign header stays in one line and selected character health remains vi
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
   const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
   const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
-  const timeAttack = await readFile(new URL("../src/minigames/TimeAttack.js", import.meta.url), "utf8");
-  const survival = await readFile(new URL("../src/minigames/Survival.js", import.meta.url), "utf8");
+  const hunting = await readFile(new URL("../src/minigames/Hunting.js", import.meta.url), "utf8");
+  const ambush = await readFile(new URL("../src/minigames/Ambush.js", import.meta.url), "utf8");
 
   assert.ok(html.includes('id="player-health-damage"'));
   assert.ok(main.includes("displayedPlayerHealthRatio !== null && ratio < displayedPlayerHealthRatio"));
@@ -161,8 +161,8 @@ test("campaign header stays in one line and selected character health remains vi
   assert.ok(css.includes("grid-template-rows: minmax(30px, auto)"));
   assert.ok(css.includes("@keyframes player-health-damage-fade"));
   assert.ok(css.includes("background: #4cdb70 !important"));
-  assert.ok(timeAttack.includes('i < this.player.health ? "#4cdb70"'));
-  assert.ok(survival.includes('i < this.player.health ? "#4cdb70"'));
+  assert.ok(hunting.includes('i < this.player.health ? "#4cdb70"'));
+  assert.ok(ambush.includes('i < this.player.health ? "#4cdb70"'));
   assert.ok(main.includes('ctx.fillStyle="#4cdb70";ctx.fillRect(x,y,w*(activeBoss.health/activeBoss.maxHealth),10)'));
 });
 
@@ -183,15 +183,15 @@ test("story, pause, retry and pre-game briefing surfaces respond to both ambient
   assert.ok(themeRules.includes("color: var(--site-accent-contrast)"));
 });
 
-test("Time Attack and Survival reuse the Empty Stomach pre-game intro layout; Free Roam uses its shared briefing card", async () => {
+test("Time Attack and Ambush reuse the Empty Stomach pre-game intro layout; Free Roam uses its shared briefing card", async () => {
   const css = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
   const sharedIntro = css.slice(css.lastIndexOf("/* === Shared minigame intro"));
 
-  for (const selector of [".empty-stomach-intro", ".time-attack-intro", ".survival-intro"]) {
+  for (const selector of [".persecution-intro", ".hunting-intro", ".ambush-intro"]) {
     assert.ok(sharedIntro.includes(selector));
   }
-  assert.ok(sharedIntro.includes(".time-attack-panel:not(.playing) .time-attack-top"));
-  assert.ok(sharedIntro.includes(".survival-panel:not(.playing) .survival-top"));
+  assert.ok(sharedIntro.includes(".hunting-panel:not(.playing) .hunting-top"));
+  assert.ok(sharedIntro.includes(".ambush-panel:not(.playing) .ambush-top"));
   assert.ok(sharedIntro.includes(".gameplay-brief-card"));
   assert.ok(sharedIntro.includes(".gameplay-brief-continue"));
 });

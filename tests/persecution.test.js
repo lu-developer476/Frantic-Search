@@ -2,11 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   overlaps, scoreForDistance, getGroundAlignedY, getAnimationDrawRect, createPredator, enemyAnimationKey, ASSETS, CORAL_ANIMATION_ASSETS, coralAnimationKey, shouldFlipMinigameSprite,
-  EmptyStomach, ENEMY_CHASE_DURATION, INTRO_DURATION, PLAYER_WIDTH, PLAYER_HEIGHT,
+  Persecution, ENEMY_CHASE_DURATION, INTRO_DURATION, PLAYER_WIDTH, PLAYER_HEIGHT,
   DASH_DURATION, DASH_COOLDOWN, DASH_SPEED_MULTIPLIER, ENEMY_STUN_DURATION,
   EGG_INVULNERABILITY_DURATION, ENEMY_TRIP_FADE_DURATION, createEgg,
   CHECKPOINT_INTERVAL_METERS, CHECKPOINT_INTERVAL_DISTANCE, EGGS_PER_CHECKPOINT_CONTINUE
-} from "../src/minigames/EmptyStomach.js";
+} from "../src/minigames/Persecution.js";
 import { removeEdgeBackground, getBottomTransparentPadding } from "../src/minigames/AnimatedGif.js";
 
 test("Empty Stomach resolves every animation from the current GIF asset directory", async () => {
@@ -20,9 +20,9 @@ test("Empty Stomach resolves every animation from the current GIF asset director
 
 test("Coral uses the dedicated Miniraptor idle, run and jump GIF assets", () => {
   assert.deepEqual(CORAL_ANIMATION_ASSETS, {
-    idle: "minigame/empty-stomach/gif/main/miniraptor-idle.gif",
-    run: "minigame/empty-stomach/gif/main/miniraptor-run.gif",
-    jump: "minigame/empty-stomach/gif/main/miniraptor-jump.gif"
+    idle: "minigame/persecution/gif/main/miniraptor-idle.gif",
+    run: "minigame/persecution/gif/main/miniraptor-run.gif",
+    jump: "minigame/persecution/gif/main/miniraptor-jump.gif"
   });
   assert.equal(ASSETS.coralIdle, CORAL_ANIMATION_ASSETS.idle);
   assert.equal(ASSETS.coral, CORAL_ANIMATION_ASSETS.run);
@@ -113,16 +113,16 @@ test("Empty Stomach leaves already-transparent GIF frames unchanged", () => {
 
 test("Empty Stomach uses decoded GIF frames instead of static Image objects", async () => {
   const { readFile } = await import("node:fs/promises");
-  const source = await readFile(new URL("../src/minigames/EmptyStomach.js", import.meta.url), "utf8");
+  const source = await readFile(new URL("../src/minigames/Persecution.js", import.meta.url), "utf8");
   assert.match(source, /loadAnimatedGif/);
   assert.match(source, /getAnimatedFrameIndex/);
   assert.doesNotMatch(source, /new Image\(\)/);
 });
 
-test("Empty Stomach removes the Coral survival caption and keeps the death result concise", async () => {
+test("Empty Stomach removes the Coral ambush caption and keeps the death result concise", async () => {
   const { readFile } = await import("node:fs/promises");
-  const source = await readFile(new URL("../src/minigames/EmptyStomach.js", import.meta.url), "utf8");
-  assert.doesNotMatch(source, /CORAL \/\/ SUPERVIVENCIA|CORAL \/\/ SURVIVAL/);
+  const source = await readFile(new URL("../src/minigames/Persecution.js", import.meta.url), "utf8");
+  assert.doesNotMatch(source, /CORAL \/\/ EMBOSCADA|CORAL \/\/ AMBUSH/);
   assert.match(source, /"CORAL FUE DEVORADA", "CORAL WAS EATEN"/);
   assert.match(source, /"CORAL CAYÓ AL POZO", "CORAL FELL INTO THE PIT"/);
   assert.doesNotMatch(source, /CORAL FUE DEVORADA · DISTANCIA|CORAL WAS EATEN · DISTANCE/);
@@ -130,7 +130,7 @@ test("Empty Stomach removes the Coral survival caption and keeps the death resul
 
 test("Empty Stomach hides intro description and controls after death, then restores them on retry", () => {
   const nodes = {
-    "[data-empty-title]": { hidden: false, textContent: "ESTÓMAGO VACÍO" },
+    "[data-empty-title]": { hidden: false, textContent: "PERSECUSIÓN" },
     "[data-empty-subtitle]": { hidden: false },
     "[data-empty-instructions]": { hidden: false },
     "[data-empty-result]": { hidden: true, textContent: "" },
@@ -139,7 +139,7 @@ test("Empty Stomach hides intro description and controls after death, then resto
     "[data-empty-exit]": { hidden: true }
   };
   const classes = new Set(["playing"]);
-  const simulation = Object.create(EmptyStomach.prototype);
+  const simulation = Object.create(Persecution.prototype);
   Object.assign(simulation, {
     running: true,
     paused: false,
@@ -185,7 +185,7 @@ test("Empty Stomach hides intro description and controls after death, then resto
 
   simulation.reset();
 
-  assert.equal(nodes["[data-empty-title]"].textContent, "ESTÓMAGO VACÍO");
+  assert.equal(nodes["[data-empty-title]"].textContent, "PERSECUSIÓN");
   assert.equal(nodes["[data-empty-subtitle]"].hidden, false);
   assert.equal(nodes["[data-empty-instructions]"].hidden, false);
 });
@@ -197,7 +197,7 @@ test("Empty Stomach pauses and resumes its animation loop from the keyboard or p
     textContent: "",
     setAttribute(name, value) { this[name] = value; }
   };
-  const simulation = Object.create(EmptyStomach.prototype);
+  const simulation = Object.create(Persecution.prototype);
   Object.assign(simulation, {
     running: true,
     paused: false,
@@ -249,7 +249,7 @@ test("Empty Stomach pauses and resumes its animation loop from the keyboard or p
 
 
 function makeSimulation({ player, enemies = [], herd = [] }) {
-  const simulation = Object.create(EmptyStomach.prototype);
+  const simulation = Object.create(Persecution.prototype);
   Object.assign(simulation, {
     elapsed: 0,
     distance: 0,
@@ -276,12 +276,12 @@ function makeSimulation({ player, enemies = [], herd = [] }) {
   return simulation;
 }
 
-test("Empty Stomach uses a five-second entrance before the survival run begins", () => {
+test("Empty Stomach uses a five-second entrance before the ambush run begins", () => {
   assert.equal(INTRO_DURATION, 5);
   assert.equal(PLAYER_WIDTH, 80);
   assert.equal(PLAYER_HEIGHT, 66);
 
-  const simulation = Object.create(EmptyStomach.prototype);
+  const simulation = Object.create(Persecution.prototype);
   Object.assign(simulation, {
     phase: "intro",
     introElapsed: 0,
@@ -302,7 +302,7 @@ test("Empty Stomach uses a five-second entrance before the survival run begins",
   simulation.updateIntro(2.5);
   assert.equal(simulation.phase, "playing");
   assert.equal(simulation.player.x, 250);
-  assert.equal(simulation.elapsed, 0, "the survival timer starts after the intro");
+  assert.equal(simulation.elapsed, 0, "the ambush timer starts after the intro");
   assert.equal(simulation.distance, 0, "intro travel is excluded from the score");
   assert.equal(simulation.spawnTimer, 1.2);
   assert.equal(simulation.preyTimer, 0.8);
@@ -316,7 +316,7 @@ test("Empty Stomach starts the intro with Coral fully outside the left edge", ()
   ];
   const nodes = Object.fromEntries(selectors.map((selector) => [selector, { hidden: true, textContent: "" }]));
   const classes = new Set(["active"]);
-  const simulation = Object.create(EmptyStomach.prototype);
+  const simulation = Object.create(Persecution.prototype);
   Object.assign(simulation, {
     root: {
       querySelector(selector) { return nodes[selector]; },
@@ -454,7 +454,7 @@ test("Empty Stomach grounds every Parasaurolophus animation frame independently"
     { image: { id: "lowered-feet" }, delay: 100, bottomPadding: 10 }
   ];
   const drawCalls = [];
-  const simulation = Object.create(EmptyStomach.prototype);
+  const simulation = Object.create(Persecution.prototype);
   Object.assign(simulation, {
     elapsed: 0,
     animations: Object.fromEntries(
@@ -514,7 +514,7 @@ test("Empty Stomach includes the pause key in both instruction labels for Spanis
     "[data-empty-exit]"
   ];
   const nodes = new Map(selectors.map((selector) => [selector, { textContent: "" }]));
-  const simulation = Object.create(EmptyStomach.prototype);
+  const simulation = Object.create(Persecution.prototype);
   Object.assign(simulation, {
     locale: "es",
     pauseButton: {
@@ -555,7 +555,7 @@ test("Empty Stomach updates the game-over message when the locale changes after 
     "[data-empty-start]", "[data-empty-retry]", "[data-empty-exit]"
   ];
   const nodes = new Map(selectors.map((selector) => [selector, { textContent: "", hidden: false }]));
-  const simulation = Object.create(EmptyStomach.prototype);
+  const simulation = Object.create(Persecution.prototype);
   Object.assign(simulation, {
     locale: "es",
     phase: "finished",
@@ -662,8 +662,8 @@ test("Empty Stomach's dash dust stuns predators in place and lets Coral pass saf
 test("Empty Stomach keeps both instruction labels on a single line", async () => {
   const { readFile } = await import("node:fs/promises");
   const source = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
-  assert.ok(source.includes(".empty-stomach-instructions{"));
-  assert.ok(source.includes(".empty-stomach-bottom span{"));
+  assert.ok(source.includes(".persecution-instructions{"));
+  assert.ok(source.includes(".persecution-bottom span{"));
   assert.ok(source.includes("white-space:nowrap"));
   assert.ok(source.includes("grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)"));
   assert.ok(source.includes("grid-column:2;min-width:0;white-space:nowrap;text-align:center"));

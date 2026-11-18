@@ -7,12 +7,12 @@ import {
 } from "../src/minigames/MinigameEnvironment.js";
 
 test("mini-game scenes keep distinct prairie and Redwood identities with campaign palettes", () => {
-  assert.equal(MINIGAME_ENVIRONMENT_SCENES.emptyStomach.environment, "prairie");
-  assert.equal(MINIGAME_ENVIRONMENT_SCENES.timeAttack.environment, "redwood");
-  assert.equal(MINIGAME_ENVIRONMENT_SCENES.survival.environment, "redwood");
-  assert.ok(MINIGAME_ENVIRONMENT_SCENES.emptyStomach.sky);
-  assert.ok(MINIGAME_ENVIRONMENT_SCENES.timeAttack.tree);
-  assert.ok(MINIGAME_ENVIRONMENT_SCENES.survival.platformTop);
+  assert.equal(MINIGAME_ENVIRONMENT_SCENES.persecution.environment, "prairie");
+  assert.equal(MINIGAME_ENVIRONMENT_SCENES.hunting.environment, "redwood");
+  assert.equal(MINIGAME_ENVIRONMENT_SCENES.ambush.environment, "redwood");
+  assert.ok(MINIGAME_ENVIRONMENT_SCENES.persecution.sky);
+  assert.ok(MINIGAME_ENVIRONMENT_SCENES.hunting.tree);
+  assert.ok(MINIGAME_ENVIRONMENT_SCENES.ambush.platformTop);
 });
 
 test("layered mini-game environment composes campaign atmosphere, scenery, terrain and effects", async () => {
@@ -34,9 +34,9 @@ test("layered mini-game environment composes campaign atmosphere, scenery, terra
 
 test("all three mini-games delegate their environment backgrounds to the shared renderer", async () => {
   const paths = [
-    "../src/minigames/EmptyStomach.js",
-    "../src/minigames/TimeAttack.js",
-    "../src/minigames/Survival.js"
+    "../src/minigames/Persecution.js",
+    "../src/minigames/Hunting.js",
+    "../src/minigames/Ambush.js"
   ];
   const sources = await Promise.all(paths.map(path =>
     readFile(new URL(path, import.meta.url), "utf8")
@@ -64,7 +64,7 @@ test("prairie is a first-class atmosphere, vegetation and ambient-effects biome"
 
 test("procedural environment coverage extends the ground and scenery for long-running modes", () => {
   const renderer = new MinigameEnvironmentRenderer({
-    scene: MINIGAME_ENVIRONMENT_SCENES.emptyStomach,
+    scene: MINIGAME_ENVIRONMENT_SCENES.persecution,
     groundY: 438,
     seed: 41,
     sectionLength: 1600,
@@ -78,7 +78,7 @@ test("procedural environment coverage extends the ground and scenery for long-ru
 
 test("layer allocation failure safely falls back to native mini-game drawing", () => {
   const renderer = new MinigameEnvironmentRenderer({
-    scene: MINIGAME_ENVIRONMENT_SCENES.emptyStomach,
+    scene: MINIGAME_ENVIRONMENT_SCENES.persecution,
     groundY: 438,
     sectionLength: 6200
   });
@@ -91,9 +91,9 @@ test("layer allocation failure safely falls back to native mini-game drawing", (
 
 test("hidden minigames do not render during application bootstrap", async () => {
   const paths = [
-    "../src/minigames/EmptyStomach.js",
-    "../src/minigames/TimeAttack.js",
-    "../src/minigames/Survival.js"
+    "../src/minigames/Persecution.js",
+    "../src/minigames/Hunting.js",
+    "../src/minigames/Ambush.js"
   ];
   for (const path of paths) {
     const source = await readFile(new URL(path, import.meta.url), "utf8");
@@ -121,7 +121,7 @@ test("hidden minigames do not render during application bootstrap", async () => 
 
 test("a layered environment rendering error falls back without breaking the minigame", () => {
   const renderer = new MinigameEnvironmentRenderer({
-    scene: MINIGAME_ENVIRONMENT_SCENES.emptyStomach,
+    scene: MINIGAME_ENVIRONMENT_SCENES.persecution,
     groundY: 438,
     seed: 17,
     sectionLength: 1200,
