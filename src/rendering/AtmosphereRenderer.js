@@ -332,6 +332,25 @@ function drawIndoorContainment(context, scene, cameraX, width) {
   }
 }
 
+function drawPrairieHorizon(context, scene, cameraX, width) {
+  pixelRect(context, scene.ridge, 0, 316, width, 114);
+  drawMountainRange(context, {
+    cameraX, width, baseY: 430, height: 82, spacing: 380, parallax: 0.065,
+    color: shiftColor(scene.ridge, -0.08), profile: MOUNTAIN_PROFILE_B
+  });
+  drawMountainRange(context, {
+    cameraX, width, baseY: 430, height: 53, spacing: 286, parallax: 0.15,
+    color: scene.mountain, profile: MOUNTAIN_PROFILE_C
+  });
+  for (let index = 0; index < Math.ceil(width / 164) + 2; index += 1) {
+    const x = wrap(index * 164 - cameraX * 0.24, width + 164) - 82;
+    const height = 12 + (index % 3) * 5;
+    pixelRect(context, scene.tree, x, 414 - height, 24, height, 0.72);
+    pixelRect(context, scene.treeLight, x - 6, 410 - height, 36, 8, 0.82);
+  }
+  pixelRect(context, scene.grass, 0, 414, width, 16, 0.16);
+}
+
 function drawExtractionHorizon(context, scene, cameraX, width) {
   pixelRect(context, scene.ridge, 0, 310, width, 120);
   drawMountainRange(context, {
@@ -365,6 +384,7 @@ function drawExtractionHorizon(context, scene, cameraX, width) {
 
 function drawBiomeHorizon(context, scene, environment, cameraX, width, elapsed) {
   switch (environment) {
+    case "prairie": drawPrairieHorizon(context, scene, cameraX, width); break;
     case "coastal": drawCoastalHorizon(context, scene, cameraX, width); break;
     case "redwood": drawRedwoodHorizon(context, scene, cameraX, width); break;
     case "black-site": drawBlackSiteHorizon(context, scene, cameraX, width, elapsed); break;
@@ -376,7 +396,7 @@ function drawBiomeHorizon(context, scene, environment, cameraX, width, elapsed) 
 }
 
 function drawAtmosphericLighting(context, scene, environment, width, height, elapsed) {
-  const tint = environment === "extraction"
+  const tint = environment === "extraction" || environment === "prairie"
     ? scene.sunShade
     : environment === "redwood"
       ? scene.tree
@@ -388,6 +408,9 @@ function drawAtmosphericLighting(context, scene, environment, width, height, ela
     pixelRect(context, scene.sunShade, 0, 230, width, 90, 0.13);
     pixelRect(context, scene.sun, 0, 310, width, 55, 0.10);
     pixelRect(context, shiftColor(scene.sky, -0.22), 0, 0, width, 72, 0.08);
+  } else if (environment === "prairie") {
+    pixelRect(context, scene.sun, 0, 286, width, 82, 0.075);
+    pixelRect(context, scene.grass, 0, 382, width, 38, 0.08);
   } else if (environment === "coastal") {
     pixelRect(context, scene.cloud, 0, 320, width, 72, 0.11);
   } else if (environment === "redwood") {

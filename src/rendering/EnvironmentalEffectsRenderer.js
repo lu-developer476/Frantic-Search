@@ -2,6 +2,7 @@ export const EFFECTS_PIXEL_SCALE = 3;
 export const EFFECTS_LAYER_NAMES = Object.freeze(["back-motes", "wind", "weather", "dust", "particles"]);
 
 const ENVIRONMENT_EFFECTS = Object.freeze({
+  prairie: { leaves: 5, motes: 18, wind: 15, rain: 0, ash: 0, dust: 9, windSpeed: 24, leafColor: "#a5b968", leafAccent: "#e0c979", moteColor: "#f0e5af", windColor: "#e0d9a4", dustColor: "#c6b27b" },
   coastal: { leaves: 0, motes: 17, wind: 14, rain: 18, ash: 0, dust: 3, windSpeed: 28, moteColor: "#d8f0e7", windColor: "#c0e7e4", rainColor: "#c3e5e8", dustColor: "#d4d3bd" },
   redwood: { leaves: 18, motes: 12, wind: 10, rain: 0, ash: 0, dust: 6, windSpeed: 19, leafColor: "#8eaa61", leafAccent: "#c6a16a", moteColor: "#e3d9a0", windColor: "#b5cda0", dustColor: "#b7a17b" },
   "black-site": { leaves: 1, motes: 5, wind: 15, rain: 0, ash: 20, dust: 24, windSpeed: 24, leafColor: "#827e57", leafAccent: "#b08a59", moteColor: "#d0ae80", windColor: "#9b8d78", ashColor: "#c5a38a", dustColor: "#a38a70" },

@@ -1,0 +1,89 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import {
+  MINIGAME_ENVIRONMENT_SCENES,
+  MinigameEnvironmentRenderer
+} from "../src/minigames/MinigameEnvironment.js";
+
+test("mini-game scenes keep distinct prairie and Redwood identities with campaign palettes", () => {
+  assert.equal(MINIGAME_ENVIRONMENT_SCENES.emptyStomach.environment, "prairie");
+  assert.equal(MINIGAME_ENVIRONMENT_SCENES.timeAttack.environment, "redwood");
+  assert.equal(MINIGAME_ENVIRONMENT_SCENES.survival.environment, "redwood");
+  assert.ok(MINIGAME_ENVIRONMENT_SCENES.emptyStomach.sky);
+  assert.ok(MINIGAME_ENVIRONMENT_SCENES.timeAttack.tree);
+  assert.ok(MINIGAME_ENVIRONMENT_SCENES.survival.platformTop);
+});
+
+test("layered mini-game environment composes campaign atmosphere, scenery, terrain and effects", async () => {
+  const source = await readFile(new URL("../src/minigames/MinigameEnvironment.js", import.meta.url), "utf8");
+  for (const renderer of [
+    "AtmosphereRenderer",
+    "VegetationRenderer",
+    "TerrainRenderer",
+    "EnvironmentalEffectsRenderer"
+  ]) assert.match(source, new RegExp(renderer));
+  assert.match(source, /atmosphere\.draw\(targetContext/);
+  assert.match(source, /vegetation\.drawBackground\(targetContext/);
+  assert.match(source, /terrain\.drawBackdrop\(targetContext/);
+  assert.match(source, /terrain\.drawPlatforms\(targetContext/);
+  assert.match(source, /vegetation\.drawGround\(targetContext/);
+  assert.match(source, /effects\.drawWind\(targetContext/);
+  assert.match(source, /effects\.drawWeather\(targetContext/);
+});
+
+test("all three mini-games delegate their environment backgrounds to the shared renderer", async () => {
+  const paths = [
+    "../src/minigames/EmptyStomach.js",
+    "../src/minigames/TimeAttack.js",
+    "../src/minigames/Survival.js"
+  ];
+  const sources = await Promise.all(paths.map(path =>
+    readFile(new URL(path, import.meta.url), "utf8")
+  ));
+  for (const source of sources) {
+    assert.match(source, /new MinigameEnvironmentRenderer\(/);
+    assert.match(source, /environmentRenderer\?\.draw\(ctx/);
+    assert.match(source, /MINIGAME_ENVIRONMENT_SCENES\./);
+  }
+});
+
+test("prairie is a first-class atmosphere, vegetation and ambient-effects biome", async () => {
+  const paths = [
+    "../src/rendering/AtmosphereRenderer.js",
+    "../src/world/SceneryGenerator.js",
+    "../src/rendering/EnvironmentalEffectsRenderer.js"
+  ];
+  const sources = await Promise.all(paths.map(path =>
+    readFile(new URL(path, import.meta.url), "utf8")
+  ));
+  assert.match(sources[0], /case "prairie": drawPrairieHorizon/);
+  assert.match(sources[1], /prairie:\s*\{/);
+  assert.match(sources[2], /prairie:\s*\{/);
+});
+
+test("procedural environment coverage extends the ground and scenery for long-running modes", () => {
+  const renderer = new MinigameEnvironmentRenderer({
+    scene: MINIGAME_ENVIRONMENT_SCENES.emptyStomach,
+    groundY: 438,
+    seed: 41,
+    sectionLength: 1600,
+    sectionCount: 1
+  });
+  const initialLength = renderer.worldLength;
+  renderer.ensureCoverage(initialLength + 900, 960);
+  assert.ok(renderer.worldLength > initialLength + 900);
+  assert.ok(renderer.scenery.some(prop => prop.x >= initialLength));
+});
+
+test("layer allocation failure safely falls back to native mini-game drawing", () => {
+  const renderer = new MinigameEnvironmentRenderer({
+    scene: MINIGAME_ENVIRONMENT_SCENES.emptyStomach,
+    groundY: 438,
+    sectionLength: 6200
+  });
+  if (typeof OffscreenCanvas !== "function" &&
+      !(typeof document !== "undefined" && typeof document.createElement === "function")) {
+    assert.equal(renderer.draw({ canvas: { width: 960, height: 540 } }), false);
+  }
+});

@@ -1,4 +1,16 @@
 const BIOME_PROFILES = Object.freeze({
+  prairie: {
+    farSpacing: 720,
+    midSpacing: 430,
+    groundSpacing: 215,
+    farSpecies: ["broadleaf", "pine", "broadleaf"],
+    midSpecies: ["broadleaf", "broadleaf", "pine"],
+    farWidth: [42, 68],
+    farHeight: [88, 142],
+    midWidth: [48, 82],
+    midHeight: [108, 172],
+    groundKinds: ["dune-grass", "dune-grass", "shrub", "boulder", "driftwood"]
+  },
   coastal: {
     farSpacing: 760,
     midSpacing: 410,

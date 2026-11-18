@@ -3,6 +3,7 @@ import { observeCanvasViewport } from "../rendering/CanvasUtils.js";
 import { HunterProjectile } from "../entities/HunterProjectile.js";
 import { Player } from "../entities/Player.js";
 import { WildDinosaur } from "../entities/WildDinosaur.js";
+import { MinigameEnvironmentRenderer, MINIGAME_ENVIRONMENT_SCENES } from "./MinigameEnvironment.js";
 
 let WIDTH = 960;
 const HEIGHT = 540;
@@ -92,6 +93,13 @@ export class Survival {
     this.onExit = onExit;
     this.onBeforeStart = onBeforeStart;
     this.spriteRenderer = spriteRenderer;
+    this.environmentRenderer = new MinigameEnvironmentRenderer({
+      scene: MINIGAME_ENVIRONMENT_SCENES.survival,
+      groundY: FLOOR,
+      seed: 9031,
+      sectionLength: 6200,
+      sectionCount: 2
+    });
     this.locale = "es";
     this.keys = new Set();
     this.pressed = new Set();
@@ -626,7 +634,15 @@ export class Survival {
 
   drawBackground() {
     const ctx = this.ctx;
-    const gradient = ctx.createLinearGradient(0, 0, 0, HEIGHT);
+    const layeredBackground = this.environmentRenderer?.draw(ctx, {
+      cameraX: this.elapsed * 12,
+      viewportWidth: WIDTH,
+      viewportHeight: HEIGHT,
+      elapsed: this.elapsed
+    }) ?? false;
+
+    if (!layeredBackground) {
+      const gradient = ctx.createLinearGradient(0, 0, 0, HEIGHT);
     gradient.addColorStop(0, "#9cbdb6");
     gradient.addColorStop(0.62, "#d2d2ae");
     gradient.addColorStop(1, "#788d68");
@@ -646,6 +662,7 @@ export class Survival {
     ctx.fillStyle = "#a8a16f";
     for (let i = 0; i < 48; i += 1) {
       ctx.fillRect(i * 23, FLOOR + 8 + (i % 4) * 10, 12 + (i % 5) * 4, 3);
+    }
     }
   }
 

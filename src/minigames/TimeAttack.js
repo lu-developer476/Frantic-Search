@@ -2,6 +2,7 @@ import { HunterProjectile } from "../entities/HunterProjectile.js";
 import { observeCanvasViewport } from "../rendering/CanvasUtils.js";
 import { WildDinosaur } from "../entities/WildDinosaur.js";
 import { SpriteRenderer } from "../rendering/SpriteRenderer.js";
+import { MinigameEnvironmentRenderer, MINIGAME_ENVIRONMENT_SCENES } from "./MinigameEnvironment.js";
 
 let WIDTH = 960;
 const HEIGHT = 540;
@@ -93,6 +94,12 @@ export class TimeAttack {
     this.onBeforeStart = onBeforeStart;
     this.locale = "es";
     this.sprites = spriteRenderer ?? new SpriteRenderer(import.meta.env.BASE_URL);
+    this.environmentRenderer = new MinigameEnvironmentRenderer({
+      scene: MINIGAME_ENVIRONMENT_SCENES.timeAttack,
+      groundY: FLOOR,
+      seed: 6207,
+      sectionLength: SECTION_END + 1200
+    });
     this.keys = new Set();
     this.pointer = { x: WIDTH * 0.72, y: FLOOR - 60, active: false };
     this.pointerDown = false;
@@ -466,7 +473,15 @@ export class TimeAttack {
 
   drawBackground() {
     const ctx = this.ctx;
-    const gradient = ctx.createLinearGradient(0, 0, 0, HEIGHT);
+    const layeredBackground = this.environmentRenderer?.draw(ctx, {
+      cameraX: this.cameraX,
+      viewportWidth: WIDTH,
+      viewportHeight: HEIGHT,
+      elapsed: this.elapsed
+    }) ?? false;
+
+    if (!layeredBackground) {
+      const gradient = ctx.createLinearGradient(0, 0, 0, HEIGHT);
     gradient.addColorStop(0, "#a9c6bd");
     gradient.addColorStop(0.63, "#d5d3b0");
     gradient.addColorStop(1, "#84906a");
@@ -495,6 +510,7 @@ export class TimeAttack {
     for (let i = 0; i < 48; i += 1) {
       const x = ((i * 37 - this.cameraX * 1.1) % 1050 + 1050) % 1050;
       ctx.fillRect(x, FLOOR + 8 + (i % 4) * 10, 12 + (i % 5) * 4, 3);
+    }
     }
     for (let i = 0; i < 7; i += 1) {
       const x = i * 600 - this.cameraX;

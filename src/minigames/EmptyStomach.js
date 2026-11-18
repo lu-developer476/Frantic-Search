@@ -1,5 +1,6 @@
 import { loadAnimatedGif, getAnimatedFrameIndex } from "./AnimatedGif.js";
 import { observeCanvasViewport } from "../rendering/CanvasUtils.js";
+import { MinigameEnvironmentRenderer, MINIGAME_ENVIRONMENT_SCENES } from "./MinigameEnvironment.js";
 let WIDTH = 960;
 const HEIGHT = 540;
 const FLOOR = 438;
@@ -255,6 +256,13 @@ export class EmptyStomach {
     this.introElapsed = 0;
     this.animationClock = 0;
     this.sceneryOffset = 0;
+    this.environmentRenderer = new MinigameEnvironmentRenderer({
+      scene: MINIGAME_ENVIRONMENT_SCENES.emptyStomach,
+      groundY: FLOOR,
+      seed: 4021,
+      sectionLength: 6200,
+      sectionCount: 8
+    });
     this.frame = null;
     this.last = 0;
     this.elapsed = 0;
@@ -1315,12 +1323,36 @@ export class EmptyStomach {
     this.ctx.restore();
   }
 
+  drawPrairieHerd(scroll = 0) {
+    for (let i = 0; i < PRAIRIE_HERD.length; i += 1) {
+      const animal = PRAIRIE_HERD[i];
+      const x = ((animal.x - scroll * 0.12) % (WIDTH + 180) + (WIDTH + 180)) % (WIDTH + 180) - 90;
+      const isBrontosaurus = i === 1 || i === 3;
+      const pose = isBrontosaurus
+        ? (i === 1 ? "brontosaurusWalk" : "brontosaurusRun")
+        : (i % 2 === 0 ? "parasaurIdle" : "parasaurWalk");
+      this.drawSprite(
+        pose, x, animal.y, animal.w, animal.h, "#82975e",
+        (this.animationClock ?? 0) * 1000 + i * 310, -1
+      );
+    }
+  }
+
   render() {
     const ctx = this.ctx;
     const scroll = Number.isFinite(this.sceneryOffset) ? this.sceneryOffset : 0;
     ctx.clearRect(0, 0, WIDTH, HEIGHT);
 
-    // A sunlit open prairie replaces the previous muted woodland backdrop.
+    const layeredBackground = this.environmentRenderer?.draw(ctx, {
+      cameraX: scroll,
+      viewportWidth: WIDTH,
+      viewportHeight: HEIGHT,
+      elapsed: this.animationClock ?? this.elapsed,
+      drawMidground: () => this.drawPrairieHerd(scroll)
+    }) ?? false;
+
+    if (!layeredBackground) {
+      // Native Canvas fallback for constrained/headless environments.
     const sky = ctx.createLinearGradient(0, 0, 0, HEIGHT);
     sky.addColorStop(0, "#72c9e8");
     sky.addColorStop(0.56, "#c4e8d2");
@@ -1382,25 +1414,7 @@ export class EmptyStomach {
       ctx.fill();
     }
 
-    // Parasaurolophus and Brontosaurus share the prairie as ambient herd animals.
-    for (let i = 0; i < PRAIRIE_HERD.length; i += 1) {
-      const animal = PRAIRIE_HERD[i];
-      const x = ((animal.x - scroll * 0.12) % (WIDTH + 180) + (WIDTH + 180)) % (WIDTH + 180) - 90;
-      const isBrontosaurus = i === 1 || i === 3;
-      const pose = isBrontosaurus
-        ? (i === 1 ? "brontosaurusWalk" : "brontosaurusRun")
-        : (i % 2 === 0 ? "parasaurIdle" : "parasaurWalk");
-      this.drawSprite(
-        pose,
-        x,
-        animal.y,
-        animal.w,
-        animal.h,
-        "#82975e",
-        (this.animationClock ?? 0) * 1000 + i * 310,
-        -1
-      );
-    }
+    this.drawPrairieHerd(scroll);
 
     const ground = ctx.createLinearGradient(0, FLOOR, 0, HEIGHT);
     ground.addColorStop(0, "#83b947");
@@ -1425,6 +1439,7 @@ export class EmptyStomach {
         ctx.arc(x + 3, y - 5, 2, 0, Math.PI * 2);
         ctx.fill();
       }
+    }
     }
 
     for (const pit of this.pits ?? []) this.drawPit(pit);
