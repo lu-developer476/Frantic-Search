@@ -1,13 +1,4 @@
-imp
-breakingRaceButton.addEventListener("click", () => {
-  if (!desktopPlayback.matches || desktopBlocked) return;
-  startScreen.classList.add("hidden");
-  setMenuOpen(false);
-  document.body.classList.add("game-session-active");
-  operationHeader?.classList.add("is-hidden");
-  campaignBriefHeader?.classList.add("is-hidden");
-  breakingRace.open();
-});ort "./styles/main.css";
+import "./styles/main.css";
 import "./styles/typography.css";
 import { inject } from "@vercel/analytics";
 import { GAME, LEVELS, WORLD } from "./config/GameConfig.js";
@@ -3647,6 +3638,15 @@ survivalButton.addEventListener("click", () => {
   campaignBriefHeader?.classList.add("is-hidden");
   survival.open();
 });
+breakingRaceButton.addEventListener("click", () => {
+  if (!desktopPlayback.matches || desktopBlocked) return;
+  startScreen.classList.add("hidden");
+  setMenuOpen(false);
+  document.body.classList.add("game-session-active");
+  operationHeader?.classList.add("is-hidden");
+  campaignBriefHeader?.classList.add("is-hidden");
+  breakingRace.open();
+});
 overlayActionButton.addEventListener("click", () => {
   if (paused) {
     togglePause();
@@ -4147,6 +4147,7 @@ function syncDesktopAccess() {
   emptyStomachButton.disabled = !canPlay;
   timeAttackButton.disabled = !canPlay;
   survivalButton.disabled = !canPlay;
+  breakingRaceButton.disabled = !canPlay;
 
   if (!canPlay) {
     if (running) {
