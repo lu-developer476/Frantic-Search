@@ -311,7 +311,7 @@ export class Race {
     );
     this.root.querySelector("[data-br-start]").textContent = this.text("INICIAR", "START");
     this.root.querySelector("[data-br-retry]").textContent = this.text("OTRA CARRERA", "RACE AGAIN");
-    this.root.querySelector("[data-br-exit]").textContent = this.text("VOLVER AL MENÚ", "BACK TO MENU");
+    this.root.querySelector("[data-br-exit]").textContent = this.text("SALIR", "EXIT");
     this.setStatus("CARRERA // LISTA", "RACE // READY");
     if (this.root.classList.contains("active")) this.render();
   }
