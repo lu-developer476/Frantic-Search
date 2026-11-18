@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  overlaps, scoreForDistance, getGroundAlignedY, createPredator, enemyAnimationKey, ASSETS, coralAnimationKey, shouldFlipMinigameSprite,
+  overlaps, scoreForDistance, getGroundAlignedY, getAnimationDrawRect, createPredator, enemyAnimationKey, ASSETS, coralAnimationKey, shouldFlipMinigameSprite,
   EmptyStomach, ENEMY_CHASE_DURATION, INTRO_DURATION, PLAYER_WIDTH, PLAYER_HEIGHT,
   DASH_DURATION, DASH_COOLDOWN, DASH_SPEED_MULTIPLIER, ENEMY_STUN_DURATION,
   EGG_INVULNERABILITY_DURATION, ENEMY_TRIP_FADE_DURATION, createEgg,
@@ -28,9 +28,12 @@ test("Coral switches between idle, running and jumping GIF assets", () => {
 test("Empty Stomach includes both Brontosaurus movement GIFs and mirrors them for leftward travel", () => {
   assert.equal(ASSETS.brontosaurusWalk, "references/brontosaurus-excelsus-basteri-walk.gif");
   assert.equal(ASSETS.brontosaurusRun, "references/brontosaurus-excelsus-basteri-run.gif");
-  assert.equal(shouldFlipMinigameSprite("brontosaurusWalk"), true);
-  assert.equal(shouldFlipMinigameSprite("brontosaurusRun"), true);
+  assert.equal(shouldFlipMinigameSprite("brontosaurusWalk"), false);
+  assert.equal(shouldFlipMinigameSprite("brontosaurusRun"), false);
+  assert.equal(shouldFlipMinigameSprite("brontosaurusRun", -1), true);
   assert.equal(shouldFlipMinigameSprite("parasaurRun"), false);
+  assert.equal(shouldFlipMinigameSprite("parasaurRun", -1), true);
+  assert.equal(shouldFlipMinigameSprite("coral", -1), true);
 });
 
 test("Empty Stomach uses rectangle overlap for predator contact", () => {
@@ -807,4 +810,16 @@ test("eggs retain their ovoid speckled shell when picked up and carried", () => 
   assert.equal(simulation.carriedItem, egg);
   assert.ok(egg.h > egg.w);
   assert.ok(egg.spots.length >= 10);
+});
+
+
+test("Empty Stomach preserves source GIF proportions and aligns each frame's visible feet", () => {
+  const rect = getAnimationDrawRect(
+    10, 20, 160, 100,
+    { width: 200, height: 100, bottomPadding: 0 },
+    { bottomPadding: 20 }
+  );
+  assert.deepEqual(rect, { x: 10, y: 56, width: 160, height: 80 });
+  const visibleBottom = rect.y + rect.height * (100 - 20) / 100;
+  assert.equal(visibleBottom, 120, "visible feet stay on the entity baseline");
 });

@@ -1,10 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { IndoraptorBoss } from "../src/entities/IndoraptorBoss.js";
 import { IndominusRexBoss } from "../src/entities/IndominusRexBoss.js";
 import {
   DINOSAUR_REFERENCE_SCALES,
   REFERENCE_PNG_CHARACTERS,
+  REFERENCE_PRELOAD_FILES,
+  CAMPAIGN_ANIMATED_REFERENCE_FILES,
+  JUVENILE_ANIMATED_CHARACTERS,
   VENATOSAURUS_ANIMATION_ASSETS,
   BRONTOSAURUS_ANIMATION_ASSETS,
   PROLOGUE_ROSA_ANIMATIONS,
@@ -112,8 +116,9 @@ test("all reference PNG dinosaurs receive a complete two-pixel black silhouette 
   assert.match(renderer, /getOutlinedReferenceImage\(file, image, bounds, drawWidth, drawHeight\)/);
   assert.match(renderer, /const border = 2/);
   assert.match(renderer, /outline-" \+ border/);
+  assert.match(renderer, /const REFERENCE_OUTLINE_COLOR = "#000000"/);
   assert.match(renderer, /maskContext\.globalCompositeOperation = "source-in"/);
-  assert.match(renderer, /maskContext\.fillStyle = "#050706"/);
+  assert.match(renderer, /maskContext\.fillStyle = REFERENCE_OUTLINE_COLOR/);
   assert.match(renderer, /for \(let offsetY = -border; offsetY <= border; offsetY \+= 1\)/);
   assert.match(renderer, /for \(let offsetX = -border; offsetX <= border; offsetX \+= 1\)/);
   assert.match(renderer, /outlineContext\.drawImage\(mask, offsetX, offsetY\)/);
@@ -161,4 +166,34 @@ test("Venatosaurus variants render their dedicated attack, jump and run GIF refe
   };
   assert.equal(renderer.drawAnimated({}, "venatosaurus-impavidus", 0, 0, 112, 92, { state: "patrol" }, 1), true);
   assert.equal(routedCharacter, "venatosaurus-impavidus");
+});
+
+
+test("campaign dinosaur manifests only reference files present in public/references", async () => {
+  const { access } = await import("node:fs/promises");
+  const pngFiles = Object.values(REFERENCE_PNG_CHARACTERS).flatMap((definition) =>
+    [definition.file, definition.first, definition.second].filter(Boolean)
+  );
+  const referenceFiles = [...new Set([...REFERENCE_PRELOAD_FILES, ...pngFiles])];
+  await Promise.all(referenceFiles.map((file) =>
+    access(new URL("../public/references/" + file, import.meta.url))
+  ));
+  await Promise.all(CAMPAIGN_ANIMATED_REFERENCE_FILES.map((file) =>
+    access(new URL("../public/references/" + file, import.meta.url))
+  ));
+  assert.equal(REFERENCE_PNG_CHARACTERS.beta, undefined);
+  assert.equal(REFERENCE_PNG_CHARACTERS.rosa, undefined);
+  assert.equal(JUVENILE_ANIMATED_CHARACTERS.beta.scale, DINOSAUR_REFERENCE_SCALES.rosa);
+});
+
+test("campaign Beta and Rosa route through the available juvenile reference GIFs", () => {
+  const renderer = Object.create(SpriteRenderer.prototype);
+  const calls = [];
+  renderer.drawAnimatedJuvenile = (_context, character) => {
+    calls.push(character);
+    return true;
+  };
+  assert.equal(renderer.drawAnimated({}, "beta", 0, 0, 90, 70, {}, 0), true);
+  assert.equal(renderer.drawAnimated({}, "rosa", 0, 0, 90, 70, {}, 0), true);
+  assert.deepEqual(calls, ["beta", "rosa"]);
 });

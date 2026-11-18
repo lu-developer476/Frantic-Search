@@ -10,7 +10,7 @@ export const PROLOGUE_ROSA_ANIMATIONS = Object.freeze({
   run: "juvenile-velociraptor-abyssomirabilis-run.gif"
 });
 const PROLOGUE_ROSA_SCALE = 1.8;
-const ANIMATED_REFERENCE_VERSION = "20261117-brontosaurus-rides-jeep-chases-facing-1";
+const ANIMATED_REFERENCE_VERSION = "20261117-campaign-juvenile-gif-routing-2";
 
 export const DINOSAUR_REFERENCE_SCALES = Object.freeze({
   violeta: 1.6,
@@ -20,16 +20,19 @@ export const DINOSAUR_REFERENCE_SCALES = Object.freeze({
   venatosaurusImpavidus: 0.94
 });
 
+export const JUVENILE_ANIMATED_CHARACTERS = Object.freeze({
+  beta: Object.freeze({ scale: DINOSAUR_REFERENCE_SCALES.rosa, sourceFacing: 1 }),
+  rosa: Object.freeze({ scale: PROLOGUE_ROSA_SCALE, sourceFacing: 1 })
+});
+
 export const REFERENCE_PNG_CHARACTERS = Object.freeze({
   blue: { file: "adult-velociraptor-nublarensis.png", sourceFacing: 1, scale: DINOSAUR_REFERENCE_SCALES.violeta },
-  beta: { file: "juvenile-velociraptor-nublarensis.png", sourceFacing: 1, scale: DINOSAUR_REFERENCE_SCALES.rosa },
-  rosa: { file: "juvenile-velociraptor-nublarensis.png", sourceFacing: 1, scale: DINOSAUR_REFERENCE_SCALES.rosa },
   vasti: { file: "vastatosaurus-rex.png", sourceFacing: -1, scale: DINOSAUR_REFERENCE_SCALES.vastatosaurusRex },
   ferrucutus: { file: "ferrucutus-cerastes.png", sourceFacing: -1, scale: 1.08 },
   indoraptor: { first: "indoraptor-first-generation.png", second: "indoraptor-second-generation.png", sourceFacing: 1, scale: 1.34 },
   indominus: { first: "indominus-rex-first-generation.png", second: "indominus-rex-second-generation.png", sourceFacing: -1, scale: 1.18 },
   "indominus-variant": { file: "indominus-rex-second-generation-variant.png", sourceFacing: -1, scale: 1.18 },
-  ligocristus: { file: "ligocristus-innocens.png", sourceFacing: -1, scale: DINOSAUR_REFERENCE_SCALES.ligocristusInnocens },
+  ligocristus: { file: "ligocristus-innocens.png", sourceFacing: 1, scale: DINOSAUR_REFERENCE_SCALES.ligocristusInnocens },
   stegoceratops: { file: "stegoceratops.png", sourceFacing: -1, scale: 1.18 }
 });
 
@@ -75,9 +78,17 @@ export function selectVenatosaurusAnimation(character, actor = {}) {
   return assets.run;
 }
 
-const REFERENCE_PRELOAD_FILES = [
+export const CAMPAIGN_ANIMATED_REFERENCE_FILES = Object.freeze([
+  ...Object.values(PROLOGUE_ROSA_ANIMATIONS),
+  BRONTOSAURUS_ANIMATION_ASSETS.walk,
+  BRONTOSAURUS_ANIMATION_ASSETS.run,
+  ...Object.values(VENATOSAURUS_ANIMATION_ASSETS).flatMap((assets) => [
+    assets.attack, assets.jump, assets.run
+  ])
+]);
+
+export const REFERENCE_PRELOAD_FILES = [
   "adult-velociraptor-nublarensis.png",
-  "juvenile-velociraptor-nublarensis.png",
   "vastatosaurus-rex.png",
   "ferrucutus-cerastes.png",
   "indoraptor-first-generation.png",
@@ -189,24 +200,18 @@ export class SpriteRenderer {
     this.referenceFailed = new Set();
     this.animatedReferences = new Map();
     this.animatedReferencePromises = new Map();
+    this.animatedReferenceFailed = new Set();
     this.onAssetChange = typeof onAssetChange === "function" ? onAssetChange : null;
     this.preload();
   }
 
   preload() {
     for (const file of REFERENCE_PRELOAD_FILES) this.getReferenceImage(file);
-
-    // Decode campaign character GIFs before their first visible appearance.
-    for (const file of Object.values(PROLOGUE_ROSA_ANIMATIONS)) this.loadAnimatedReference(file);
-    for (const file of [BRONTOSAURUS_ANIMATION_ASSETS.walk, BRONTOSAURUS_ANIMATION_ASSETS.run]) {
-      this.loadAnimatedReference(file);
-    }
-    for (const assets of Object.values(VENATOSAURUS_ANIMATION_ASSETS)) {
-      for (const file of [assets.attack, assets.jump, assets.run]) this.loadAnimatedReference(file);
-    }
+    for (const file of CAMPAIGN_ANIMATED_REFERENCE_FILES) this.loadAnimatedReference(file);
   }
 
   loadAnimatedReference(file) {
+    if (this.animatedReferenceFailed?.has(file)) return Promise.resolve(null);
     if (this.animatedReferences.has(file)) {
       return Promise.resolve(this.animatedReferences.get(file));
     }
@@ -220,6 +225,7 @@ export class SpriteRenderer {
       this.onAssetChange?.(file, this.readiness(), "loaded");
       return animation;
     }).catch((error) => {
+      this.animatedReferenceFailed?.add(file);
       this.onAssetChange?.(file, this.readiness(), "error");
       console.error("[SpriteRenderer] Failed to decode " + file + " GIF:", error);
       return null;
@@ -374,15 +380,18 @@ export class SpriteRenderer {
     }
   }
 
-  drawPrologueRosa(context, x, y, width, height, actor = {}, elapsed = 0, alpha = 1, sleeping = false) {
-    const animationKey = sleeping
-      ? "idle"
-      : actor?.onGround === false
-        ? "jump"
-        : Math.abs(actor?.vx ?? actor?.motionSpeed ?? 0) > 24
-          ? "run"
-          : "idle";
-    const file = PROLOGUE_ROSA_ANIMATIONS[animationKey];
+  drawAnimatedJuvenile(context, character, x, y, width, height, actor = {}, elapsed = 0, options = {}) {
+    const definition = JUVENILE_ANIMATED_CHARACTERS[character];
+    if (!definition || !(this.animatedReferences instanceof Map)) return false;
+
+    const state = actor?.state;
+    const sleeping = Boolean(options.sleeping);
+    const airborne = actor?.onGround === false || state === "jumping" || state === "jump";
+    const moving = Math.abs(actor?.vx ?? actor?.motionSpeed ?? actor?.speed ?? 0) > 24 ||
+      ["following", "running", "chasing", "retreating", "moving"].includes(state);
+    const animationKey = options.animationKey ??
+      (sleeping ? "idle" : airborne ? "jump" : moving ? "run" : "idle");
+    const file = PROLOGUE_ROSA_ANIMATIONS[animationKey] ?? PROLOGUE_ROSA_ANIMATIONS.idle;
     const animation = this.animatedReferences.get(file);
     if (!animation?.frames?.length) {
       this.loadAnimatedReference(file);
@@ -394,30 +403,38 @@ export class SpriteRenderer {
       (sleeping ? 0 : Math.max(0, elapsed)) * 1000
     );
     const frame = animation.frames[frameIndex];
-    if (!frame?.image) return false;
+    if (!frame?.image || !(animation.width > 0) || !(animation.height > 0)) return false;
 
-    const drawWidth = Math.max(1, Math.round(width * PROLOGUE_ROSA_SCALE));
+    const drawWidth = Math.max(1, Math.round(width * definition.scale));
     const drawHeight = Math.max(1, Math.round(drawWidth * animation.height / animation.width));
-    const bottomPadding = frame.bottomPadding ?? animation.bottomPadding ?? 0;
+    const bottomPadding = Math.max(
+      0,
+      Math.min(animation.height, Number(frame.bottomPadding ?? animation.bottomPadding) || 0)
+    );
     const scaledBottomPadding = drawHeight * bottomPadding / animation.height;
-    const phase = phaseOf(actor, "rosa");
-    const bob = sleeping ? 0 : actor?.state === "resting"
-      ? Math.sin(elapsed * 2.1 + phase) * 0.35
-      : Math.abs(Math.sin(elapsed * 7.2 + phase)) * 0.65;
+    const phase = phaseOf(actor, character);
+    const bob = sleeping || airborne
+      ? 0
+      : Math.abs(Math.sin(elapsed * 7.2 + phase)) * 0.45;
     const groundAlignedY = y + height - drawHeight + scaledBottomPadding + bob;
-    const facing = Math.sign(actor?.facing ?? 1) || 1;
+    const facing = options.facing ?? actor?.facing ?? actor?.direction ?? 1;
+    const flip = Math.sign(facing || 1) !== definition.sourceFacing;
 
     context.save();
-    context.globalAlpha *= alpha;
+    context.globalAlpha *= options.alpha ?? 1;
     context.imageSmoothingEnabled = false;
-    context.translate(
-      Math.round(x + width / 2),
-      Math.round(groundAlignedY)
-    );
-    context.scale(facing < 0 ? -1 : 1, 1);
+    context.translate(Math.round(x + width / 2), Math.round(groundAlignedY));
+    context.scale(flip ? -1 : 1, 1);
     context.drawImage(frame.image, -drawWidth / 2, 0, drawWidth, drawHeight);
     context.restore();
     return true;
+  }
+
+  drawPrologueRosa(context, x, y, width, height, actor = {}, elapsed = 0, alpha = 1, sleeping = false) {
+    return this.drawAnimatedJuvenile(context, "rosa", x, y, width, height, actor, elapsed, {
+      alpha,
+      sleeping
+    });
   }
 
   drawAnimatedVenatosaurus(context, character, x, y, width, height, actor = {}, elapsed = 0, options = {}) {
@@ -1652,6 +1669,9 @@ export class SpriteRenderer {
   }
 
   drawAnimated(context, character, x, y, width, height, actor, elapsed, options = {}) {
+    if (JUVENILE_ANIMATED_CHARACTERS[character]) {
+      return this.drawAnimatedJuvenile(context, character, x, y, width, height, actor ?? {}, elapsed, options);
+    }
     if (character === "brontosaurus") {
       return this.drawAnimatedBrontosaurus(context, x, y, width, height, actor ?? {}, elapsed, options);
     }
@@ -1665,7 +1685,6 @@ export class SpriteRenderer {
     // native Canvas fallback until the reference image is ready.
     if (character === "hunter" || REFERENCE_PNG_CHARACTERS[character]) return false;
 
-    if (character === "beta" && this.drawReferenceRosa(context, x, y, width, height, actor, elapsed, options.alpha ?? 1)) return true;
     if (character === "vasti" && this.drawVasti(context, x, y, width, height, actor, elapsed, options.alpha ?? 1)) return true;
     if (character === "ferrucutus" && this.drawReferenceFerrucutus(context, x, y, width, height, actor, elapsed, options.alpha ?? 1)) return true;
     if (character === "indominus" && this.drawReferenceIndominus(context, x, y, width, height, actor, elapsed, options.alpha ?? 1, null, options.facing)) return true;
@@ -1705,6 +1724,10 @@ export class SpriteRenderer {
 
     const naturalHeight = height;
     const drawY = y;
+    if (this.drawAnimatedJuvenile(context, character, x, drawY, width, naturalHeight, player ?? {}, elapsed, {
+      alpha,
+      facing: player?.facing ?? 1
+    })) return true;
     if (this.drawReferencePng(context, character, x, drawY, width, naturalHeight, player ?? {}, elapsed, {
       alpha,
       facing: player?.facing ?? 1
@@ -1717,9 +1740,9 @@ export class SpriteRenderer {
 
   readiness() {
     return {
-      ready: this.referenceLoaded.size + this.loaded.size,
-      total: REFERENCE_PRELOAD_FILES.length,
-      failed: this.referenceFailed.size + this.failed.size
+      ready: this.referenceLoaded.size + this.loaded.size + this.animatedReferences.size,
+      total: REFERENCE_PRELOAD_FILES.length + CAMPAIGN_ANIMATED_REFERENCE_FILES.length,
+      failed: this.referenceFailed.size + this.failed.size + (this.animatedReferenceFailed?.size ?? 0)
     };
   }
 }

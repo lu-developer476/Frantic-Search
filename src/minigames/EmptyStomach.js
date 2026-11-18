@@ -45,8 +45,10 @@ export function coralAnimationKey(player = {}, phase = "playing") {
   return "coral";
 }
 
-export function shouldFlipMinigameSprite(key) {
-  return typeof key === "string" && key.startsWith("brontosaurus");
+export function shouldFlipMinigameSprite(key, facing = 1) {
+  if (typeof key !== "string") return false;
+  const sourceFacing = 1;
+  return Math.sign(facing || 1) !== sourceFacing;
 }
 
 export function overlaps(a, b) {
@@ -65,6 +67,25 @@ export function getGroundAlignedY(y, renderedHeight, sourceHeight, bottomPadding
   if (![y, renderedHeight, sourceHeight].every(Number.isFinite) || sourceHeight <= 0) return y;
   const padding = Math.max(0, Math.min(sourceHeight, Number(bottomPadding) || 0));
   return y + renderedHeight * padding / sourceHeight;
+}
+
+export function getAnimationDrawRect(x, y, width, height, animation = {}, frame = {}) {
+  const sourceWidth = Number(animation.width) > 0 ? Number(animation.width) : Math.max(1, width);
+  const sourceHeight = Number(animation.height) > 0 ? Number(animation.height) : Math.max(1, height);
+  const scale = Math.min(Math.max(1, width) / sourceWidth, Math.max(1, height) / sourceHeight);
+  const drawWidth = Math.max(1, Math.round(sourceWidth * scale));
+  const drawHeight = Math.max(1, Math.round(sourceHeight * scale));
+  const bottomPadding = Math.max(
+    0,
+    Math.min(sourceHeight, Number(frame.bottomPadding ?? animation.bottomPadding) || 0)
+  );
+
+  return {
+    x: x + (width - drawWidth) / 2,
+    y: y + height - drawHeight + drawHeight * bottomPadding / sourceHeight,
+    width: drawWidth,
+    height: drawHeight
+  };
 }
 
 export function normalizeLane(lane = DEFAULT_LANE) {
@@ -1241,25 +1262,20 @@ export class EmptyStomach {
     this.onExit();
   }
 
-  drawSprite(key, x, y, w, h, fallback, animationTime = (this.animationClock ?? this.elapsed ?? 0) * 1000) {
+  drawSprite(key, x, y, w, h, fallback, animationTime = (this.animationClock ?? this.elapsed ?? 0) * 1000, facing = 1) {
     const animation = this.animations[key];
     if (animation?.frames.length) {
       const index = getAnimatedFrameIndex(animation.frames, animationTime);
       const frame = animation.frames[index];
-      const bottomPadding = key.startsWith("parasaur") || key.startsWith("brontosaurus")
-        ? frame.bottomPadding ?? animation.bottomPadding
-        : animation.bottomPadding;
-      const drawY = key.startsWith("coral") || key.startsWith("parasaur") || key.startsWith("brontosaurus")
-        ? getGroundAlignedY(y, h, animation.height, bottomPadding)
-        : y;
-      if (shouldFlipMinigameSprite(key)) {
+      const rect = getAnimationDrawRect(x, y, w, h, animation, frame);
+      if (shouldFlipMinigameSprite(key, facing)) {
         this.ctx.save();
-        this.ctx.translate(x + w, 0);
+        this.ctx.translate(rect.x + rect.width, 0);
         this.ctx.scale(-1, 1);
-        this.ctx.drawImage(frame.image, 0, drawY, w, h);
+        this.ctx.drawImage(frame.image, 0, rect.y, rect.width, rect.height);
         this.ctx.restore();
       } else {
-        this.ctx.drawImage(frame.image, x, drawY, w, h);
+        this.ctx.drawImage(frame.image, rect.x, rect.y, rect.width, rect.height);
       }
     } else {
       this.ctx.fillStyle = fallback;
@@ -1375,7 +1391,8 @@ export class EmptyStomach {
         animal.w,
         animal.h,
         "#82975e",
-        (this.animationClock ?? 0) * 1000 + i * 310
+        (this.animationClock ?? 0) * 1000 + i * 310,
+        -1
       );
     }
 
@@ -1418,7 +1435,7 @@ export class EmptyStomach {
             ? (prey.beingEatenElapsed < 0.65 ? "parasaurPerturbed" : "parasaurIdle")
             : prey.animationState === "perturbed" ? "parasaurPerturbed" : "parasaurRun";
         const sink = (prey.trappedTimer ?? 0) > 0 ? 9 * getLaneScale(lane) : 0;
-        this.drawSprite(pose, prey.x, prey.y + sink, prey.w, prey.h, "#8e9b72");
+        this.drawSprite(pose, prey.x, prey.y + sink, prey.w, prey.h, "#8e9b72", undefined, prey.direction ?? -1);
       }
       for (const enemy of this.enemies.filter((item) => this.getEntityLane(item) === lane)) {
         const pose = enemyAnimationKey(enemy, this.elapsed);
@@ -1433,7 +1450,8 @@ export class EmptyStomach {
           enemy.w,
           enemy.h,
           enemy.kind === "xenoraptor" ? "#6c524b" : "#34433c",
-          frozenPose ? 0 : this.animationClock * 1000
+          frozenPose ? 0 : this.animationClock * 1000,
+          enemy.direction
         );
         ctx.restore();
         if (enemy.state === "stunned") {
@@ -1448,7 +1466,7 @@ export class EmptyStomach {
         ctx.save();
         if (this.invulnerabilityTimer > 0) ctx.globalAlpha = Math.floor(this.invulnerabilityTimer * 12) % 2 ? 0.42 : 1;
         if (this.isPlayerHidden()) ctx.globalAlpha *= 0.78;
-        this.drawSprite(coralAnimationKey(this.player, this.phase), this.player.x, playerY, this.player.w, this.player.h, "#e7a7a0");
+        this.drawSprite(coralAnimationKey(this.player, this.phase), this.player.x, playerY, this.player.w, this.player.h, "#e7a7a0", undefined, this.player.facing);
         ctx.restore();
         if (this.carriedItem) this.drawCarriedItem(this.carriedItem);
       }

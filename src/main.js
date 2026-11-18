@@ -505,10 +505,13 @@ function drawBetaContainmentFrame(context, entity) {
 
 function drawBeta(entity) {
   if (!entity) return;
-  spriteRenderer.drawAnimated(
+  const drawn = spriteRenderer.drawAnimated(
     ctx, "beta", entity.x, entity.y, entity.w, entity.h,
-    entity, entity.animation, { facing: entity.facing }
+    entity, elapsed, { facing: entity.facing }
   );
+  if (!drawn) {
+    drawDino(entity.x, entity.y, entity.w, entity.h, "#75a99b", "rosa", elapsed, 1, entity.facing ?? 1, entity);
+  }
 }
 
 function drawExtractionMarker(x, context = ctx) {
