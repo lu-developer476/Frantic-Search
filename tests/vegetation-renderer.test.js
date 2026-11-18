@@ -5,7 +5,7 @@ import {
   VEGETATION_LAYER_NAMES,
   VEGETATION_PIXEL_SCALE,
   VegetationRenderer,
-  isPixelVegetationProp
+  isPixelGroundSceneryProp
 } from "../src/rendering/VegetationRenderer.js";
 
 function createCanvasFactory() {
@@ -102,23 +102,22 @@ test("ground vegetation is pixel-rendered in world space and camera-compensated 
     scene
   });
 
-  assert.deepEqual(groundCalls, ["fern", "grass"]);
+  assert.deepEqual(groundCalls, ["fern", "grass", "rock"]);
   assert.deepEqual(canvases[2].calls.find((call) => call[0] === "translate"), ["translate", -322, 0]);
   assert.deepEqual(target.draws[0].args, [322, 0, 960, 540]);
   assert.equal(target.draws[0].smoothing, false);
 });
 
-test("tree trunks, foliage, ferns, grass and fallen wood are selected without rasterizing rocks", () => {
+test("ground vegetation, fallen wood and decorative rocks share the pixel renderer", () => {
   for (const kind of [
     "dune-grass", "driftwood", "shrub", "fern", "fallen-log",
-    "dead-shrub", "stump", "planter", "clipped-shrub"
+    "dead-shrub", "stump", "planter", "clipped-shrub",
+    "boulder", "moss-rock", "rubble", "broken-concrete"
   ]) {
-    assert.equal(isPixelVegetationProp({ layer: "ground", kind }), true, kind);
+    assert.equal(isPixelGroundSceneryProp({ layer: "ground", kind }), true, kind);
   }
-  for (const kind of ["boulder", "moss-rock", "rubble", "broken-concrete"]) {
-    assert.equal(isPixelVegetationProp({ layer: "ground", kind }), false, kind);
-  }
-  assert.equal(isPixelVegetationProp({ layer: "background", species: "redwood" }), false);
+  assert.equal(isPixelGroundSceneryProp({ layer: "background", species: "redwood" }), false);
+  assert.equal(isPixelGroundSceneryProp({ layer: "ground", kind: "unclassified" }), false);
 });
 
 test("vegetation layer dimensions adapt to wide canvases without changing world scale", () => {

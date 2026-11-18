@@ -37,7 +37,8 @@ import { FacilityConsole } from "./entities/FacilityConsole.js";
 import { SpriteRenderer } from "./rendering/SpriteRenderer.js";
 import { AtmosphereRenderer } from "./rendering/AtmosphereRenderer.js";
 import { drawGroundScenery } from "./rendering/SceneryRenderer.js";
-import { VegetationRenderer, isPixelVegetationProp } from "./rendering/VegetationRenderer.js";
+import { VegetationRenderer, isPixelGroundSceneryProp } from "./rendering/VegetationRenderer.js";
+import { TerrainRenderer } from "./rendering/TerrainRenderer.js";
 import { roundedRect, observeCanvasViewport } from "./rendering/CanvasUtils.js";
 import { t as uiText, translateText, getModalTutorialCopy, getCampaignSceneCopy } from "./i18n.js";
 import { EmptyStomach } from "./minigames/EmptyStomach.js";
@@ -62,6 +63,7 @@ ctx.strokeText = () => {};
 ctx.imageSmoothingEnabled = false;
 const atmosphereRenderer = new AtmosphereRenderer();
 const vegetationRenderer = new VegetationRenderer();
+const terrainRenderer = new TerrainRenderer();
 const resizeMainCanvas = observeCanvasViewport(canvas.parentElement, canvas, (width) => {
   GAME.width = width;
   ctx.imageSmoothingEnabled = false;
@@ -384,57 +386,16 @@ function drawBackground() {
     scene
   });
 
-  // Ground decoration stays on the native Canvas; it is independent from the
-  // atmospheric pixel buffer and does not participate in collision geometry.
-  ctx.fillStyle = scene.under;
-  ctx.fillRect(0, 430, GAME.width, 110);
-  ctx.fillStyle = scene.detail;
-  const groundDetailSpan = GAME.width + 80;
-  for (let index = 0; index < Math.ceil(groundDetailSpan / 67); index += 1) {
-    const x = ((index * 67 - cameraX * 0.48) % groundDetailSpan + groundDetailSpan) % groundDetailSpan;
-    const y = 408 + (index % 4) * 6;
-    ctx.fillRect(x, y, 5, 3);
-    if (index % 3 === 0) ctx.fillRect(x + 4, y - 4, 3, 5);
-  }
+  terrainRenderer.drawBackdrop(ctx, {
+    cameraX,
+    viewportWidth: GAME.width,
+    viewportHeight: GAME.height,
+    groundY: GAME.groundY,
+    scene
+  });
 }
 
-function drawPlatform(platform) {
-  const scene = level();
-  if (platform.kind === "rock-ledge") return;
-  if (platform.kind === "ground") {
-    ctx.fillStyle = scene.soil;
-    ctx.fillRect(platform.x, platform.y, platform.w, platform.h);
-    ctx.fillStyle = scene.grass;
-    ctx.fillRect(platform.x, platform.y, platform.w, 8);
-    ctx.fillStyle = scene.detail;
-    for (let i = 0; i < Math.floor(platform.w / 52); i += 1) {
-      const x = platform.x + i * 52 + 13;
-      ctx.fillRect(x, platform.y + 17 + (i % 3) * 8, 11, 3);
-      if (i % 2 === 0) ctx.fillRect(x + 7, platform.y + 13 + (i % 3) * 8, 4, 5);
-    }
-    ctx.fillStyle = scene.rock;
-    for (let i = 0; i < Math.floor(platform.w / 145); i += 1) {
-      ctx.fillRect(platform.x + i * 145 + 72, platform.y + 34, 8, 4);
-      ctx.fillRect(platform.x + i * 145 + 80, platform.y + 31, 5, 3);
-    }
-    return;
-  }
-  if (platform.kind === "ally-bridge") {
-    ctx.fillStyle = "#8b9b70";
-    ctx.fillRect(platform.x, platform.y, platform.w, platform.h);
-    ctx.fillStyle = "#f1d66a";
-    ctx.fillRect(platform.x, platform.y, platform.w, 5);
-    ctx.fillStyle = "#47563b";
-    for (let x = platform.x + 8; x < platform.x + platform.w - 4; x += 24) ctx.fillRect(x, platform.y + 8, 11, 4);
-    return;
-  }
-  ctx.fillStyle = scene.platform;
-  ctx.fillRect(platform.x, platform.y, platform.w, platform.h);
-  ctx.fillStyle = scene.platformTop;
-  ctx.fillRect(platform.x, platform.y, platform.w, 5);
-  ctx.fillStyle = scene.platformShadow;
-  ctx.fillRect(platform.x + 8, platform.y + platform.h, platform.w - 16, 6);
-}
+
 
 
 function drawFacilityProp(prop) {
@@ -2820,7 +2781,13 @@ function render() {
       spriteRenderer.drawAnimated(ctx, "brontosaurus", animal.x, animal.y, animal.w, animal.h, animal, elapsed, { alpha: 0.9, facing: animal.facing });
     }
   }
-  for (const platform of world.visiblePlatforms(cameraX, GAME.width)) drawPlatform(platform);
+  terrainRenderer.drawPlatforms(ctx, {
+    platforms: world.visiblePlatforms(cameraX, GAME.width),
+    cameraX,
+    viewportWidth: GAME.width,
+    viewportHeight: GAME.height,
+    scene: level()
+  });
   const sceneryScene = level();
   const groundScenery = world.visibleScenery(cameraX, GAME.width, "ground", sceneryScene.environment);
   vegetationRenderer.drawGround(ctx, {
@@ -2831,7 +2798,7 @@ function render() {
     scene: sceneryScene
   });
   for (const prop of groundScenery) {
-    if (!isPixelVegetationProp(prop)) drawGroundScenery(ctx, prop, sceneryScene);
+    if (!isPixelGroundSceneryProp(prop)) drawGroundScenery(ctx, prop, sceneryScene);
   }
   for(const item of collectibles){
     if(item.x+item.w>=cameraX-50&&item.x-item.w<=cameraX+GAME.width+50)drawCollectible(ctx,item);
@@ -2842,7 +2809,17 @@ function render() {
   drawBossArenaBoundary();
   for (const terminal of facilityConsoles) drawFacilityConsole(terminal);
   drawExtractionMarker(extractionX);
-  for (const obstacle of world.visibleObstacles(cameraX, GAME.width)) drawObstacle(obstacle);
+  const visibleObstacles = world.visibleObstacles(cameraX, GAME.width);
+  terrainRenderer.drawRockFormations(ctx, {
+    obstacles: visibleObstacles.filter((obstacle) => obstacle.type === "rock"),
+    cameraX,
+    viewportWidth: GAME.width,
+    viewportHeight: GAME.height,
+    scene: level()
+  });
+  for (const obstacle of visibleObstacles) {
+    if (obstacle.type !== "rock") drawObstacle(obstacle);
+  }
   for (const captive of ferrucutusCaptives) {
     if (captive.x + captive.w >= cameraX - 70 && captive.x <= cameraX + GAME.width + 70) drawFerrucutusCage(captive);
   }

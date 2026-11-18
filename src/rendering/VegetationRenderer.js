@@ -13,7 +13,11 @@ const PIXEL_GROUND_PROP_KINDS = new Set([
   "dead-shrub",
   "stump",
   "planter",
-  "clipped-shrub"
+  "clipped-shrub",
+  "boulder",
+  "moss-rock",
+  "rubble",
+  "broken-concrete"
 ]);
 
 function createLayerCanvas() {
@@ -149,6 +153,6 @@ export class VegetationRenderer {
   }
 }
 
-export function isPixelVegetationProp(prop) {
+export function isPixelGroundSceneryProp(prop) {
   return prop?.layer === "ground" && PIXEL_GROUND_PROP_KINDS.has(prop.kind);
 }
