@@ -907,14 +907,14 @@ body.game-paused .brand,body.game-paused .navbar-separator{display:none!importan
    or keyboard-focused, across the main menu and every nested menu page. */
 #start-screen:has(.start-screen-copy button:hover, .start-screen-copy button:focus-visible) .start-screen-artwork,
 .start-screen-artwork.is-minigame-preview{
-  filter:drop-shadow(0 18px 38px rgba(0,0,0,.34)) drop-shadow(0 0 16px rgba(216,243,106,.12));
+  filter:drop-shadow(0 18px 38px rgba(0,0,0,.34)) drop-shadow(0 0 16px rgba(255,255,255,.12));
 }
 
 /* Character illustrations are also menu artwork: give each portrait the same
    yellow halo while its selection card is hovered or keyboard-focused. */
 .character-card:hover .character-art img,
 .character-card:focus-visible .character-art img{
-  filter:drop-shadow(0 0 16px rgba(216,243,106,.12));
+  filter:drop-shadow(0 0 16px rgba(255,255,255,.12));
 }
 @keyframes startPing{0%,100%{transform:scale(.86);opacity:.78}50%{transform:scale(1.12);opacity:1}}
 @media(max-width:1200px) and (min-width:1024px){
@@ -3565,6 +3565,7 @@ body:has(#survival-panel.active:not(.playing)) .menu-toggle {
 .start-screen-copy .start-menu-view #empty-stomach-button,
 .start-screen-copy .start-menu-view #time-attack-button,
 .start-screen-copy .start-menu-view #survival-button,
+.start-screen-copy .start-menu-view #breaking-race-button,
 .start-screen-copy .start-menu-view #free-roam-button {
   border: 1px solid #8c9d77;
   background: #26372f;
@@ -3573,6 +3574,7 @@ body:has(#survival-panel.active:not(.playing)) .menu-toggle {
 .start-screen-copy .start-menu-view #empty-stomach-button:hover,
 .start-screen-copy .start-menu-view #time-attack-button:hover,
 .start-screen-copy .start-menu-view #survival-button:hover,
+.start-screen-copy .start-menu-view #breaking-race-button:hover,
 .start-screen-copy .start-menu-view #free-roam-button:hover {
   border-color: #d8f36a;
   background: #354c3e;
@@ -4638,8 +4640,7 @@ html.site-mode-gray .survival-intro button {
 
 
 /* Breaking Race — four-lane precision sprint. */
-.start-screen-copy #breaking-race-button{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:46px;padding:13px 15px;border:1px solid #c49a68;background:#3b3025;color:#fff0d8;font:9px var(--font-mono);letter-spacing:.12em;cursor:pointer;transition:.18s}
-.start-screen-copy #breaking-race-button:hover{background:#57422e;border-color:#f0c27c;transform:translateY(-1px)}
+
 .breaking-race-panel{position:absolute;inset:0;z-index:25;display:none;padding:clamp(12px,2.4vw,28px);background:radial-gradient(ellipse at 50% 35%,#66513a,#171b17 75%);color:#f4eddf}
 .breaking-race-panel.active{display:grid;grid-template-rows:minmax(0,1fr);gap:12px;min-width:0;min-height:0}
 .breaking-race-stage{position:relative;min-height:0;display:grid;place-items:center;overflow:hidden;border:1px solid #b99b70;background:#c4b08a}
