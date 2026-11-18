@@ -121,25 +121,21 @@ test("the HUD status combines dash and Stegoceratops readiness with the requeste
   assert.match(css, /\.stegoceratops-readout::before\s*\{[^}]*content:"◦"/s);
 });
 
-test("all dinosaur PNG and GIF renderers apply a one-pixel black silhouette outline", async () => {
+test("PNG and GIF dinosaurs share cached one-pixel black outlines", async () => {
   const [renderer, canvasUtils] = await Promise.all([
     readFile(new URL("../src/rendering/SpriteRenderer.js", import.meta.url), "utf8"),
     readFile(new URL("../src/rendering/CanvasUtils.js", import.meta.url), "utf8")
   ]);
-  assert.match(renderer, /REFERENCE_OUTLINE_WIDTH = 1/);
-  assert.match(renderer, /getOutlinedReferenceImage\(file, image, bounds, drawWidth, drawHeight\)/);
-  assert.match(renderer, /outline-" \+ border/);
-  assert.match(renderer, /const REFERENCE_OUTLINE_COLOR = "#000000"/);
-  assert.match(renderer, /maskContext\.globalCompositeOperation = "source-in"/);
-  assert.match(renderer, /maskContext\.fillStyle = REFERENCE_OUTLINE_COLOR/);
-  assert.match(renderer, /for \(let offsetY = -border; offsetY <= border; offsetY \+= 1\)/);
-  assert.match(renderer, /for \(let offsetX = -border; offsetX <= border; offsetX \+= 1\)/);
-  assert.match(renderer, /outlineContext\.drawImage\(mask, offsetX, offsetY\)/);
+  assert.match(renderer, /drawOutlinedImage\(context, image,[\s\S]*?bounds\)/);
   assert.match(renderer, /drawOutlinedImage\(context, frame\.image/);
-  assert.match(canvasUtils, /export function drawOutlinedImage\(/);
-  assert.match(canvasUtils, /context\.filter = "brightness\(0\)"/);
-  assert.match(canvasUtils, /context\.drawImage\(image, x, y, width, height\)/);
-  assert.match(renderer, /outlinedReferenceImages\.size > 48/);
+  assert.doesNotMatch(renderer, /outlinedReferenceImages|getOutlinedReferenceImage|REFERENCE_OUTLINE_WIDTH/);
+  assert.match(canvasUtils, /const OUTLINED_IMAGE_CACHE = new WeakMap\(\)/);
+  assert.match(canvasUtils, /MAX_OUTLINED_IMAGE_CACHE_ENTRIES = 128/);
+  assert.match(canvasUtils, /globalCompositeOperation = "source-in"/);
+  assert.match(canvasUtils, /fillStyle = "#000000"/);
+  assert.match(canvasUtils, /drawImage\(mask, 1 \+ offsetX, 1 \+ offsetY\)/);
+  assert.match(canvasUtils, /context\.drawImage\(outlined, x - 1, y - 1, width \+ 2, height \+ 2\)/);
+  assert.doesNotMatch(canvasUtils, /context\.filter/);
 });
 
 test("Venatosaurus variants render their dedicated idle, walk, run, jump and attack GIF references", () => {

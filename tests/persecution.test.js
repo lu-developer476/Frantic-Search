@@ -72,13 +72,19 @@ test("Animated GIF bottom-padding measurement ignores transparent rows below the
 
 test("Empty Stomach advances through decoded GIF frames using their frame delays", async () => {
   const { getAnimatedFrameIndex } = await import("../src/minigames/AnimatedGif.js");
-  const frames = [{ delay: 100 }, { delay: 200 }, { delay: 50 }];
+  let delayReads = 0;
+  const frames = [
+    { get delay() { delayReads += 1; return 100; } },
+    { get delay() { delayReads += 1; return 200; } },
+    { get delay() { delayReads += 1; return 50; } }
+  ];
   assert.equal(getAnimatedFrameIndex(frames, 0), 0);
   assert.equal(getAnimatedFrameIndex(frames, 99), 0);
   assert.equal(getAnimatedFrameIndex(frames, 100), 1);
   assert.equal(getAnimatedFrameIndex(frames, 299), 1);
   assert.equal(getAnimatedFrameIndex(frames, 300), 2);
   assert.equal(getAnimatedFrameIndex(frames, 350), 0);
+  assert.equal(delayReads, frames.length, "GIF frame delays are cached instead of recalculated on every draw");
 });
 
 test("Empty Stomach removes edge-connected GIF backgrounds without erasing matching colors inside the sprite", () => {

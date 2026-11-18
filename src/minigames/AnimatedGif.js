@@ -1,15 +1,34 @@
 import { parseGIF, decompressFrames } from "gifuct-js";
 
-export function getAnimatedFrameIndex(frames, elapsedMs) {
-  if (!frames.length) return -1;
-  const durations = frames.map((frame) => Math.max(20, Number(frame.delay) || 100));
-  const total = durations.reduce((sum, duration) => sum + duration, 0);
-  let position = ((Math.max(0, elapsedMs) % total) + total) % total;
-  for (let index = 0; index < durations.length; index += 1) {
-    if (position < durations[index]) return index;
-    position -= durations[index];
+const FRAME_TIMING_CACHE = new WeakMap();
+
+function getFrameTiming(frames) {
+  let timing = FRAME_TIMING_CACHE.get(frames);
+  if (timing) return timing;
+
+  const endTimes = new Float64Array(frames.length);
+  let total = 0;
+  for (let index = 0; index < frames.length; index += 1) {
+    total += Math.max(20, Number(frames[index]?.delay) || 100);
+    endTimes[index] = total;
   }
-  return frames.length - 1;
+  timing = { endTimes, total };
+  FRAME_TIMING_CACHE.set(frames, timing);
+  return timing;
+}
+
+export function getAnimatedFrameIndex(frames, elapsedMs) {
+  if (!frames?.length) return -1;
+  const { endTimes, total } = getFrameTiming(frames);
+  const position = ((Math.max(0, elapsedMs) % total) + total) % total;
+  let low = 0;
+  let high = endTimes.length;
+  while (low < high) {
+    const middle = (low + high) >>> 1;
+    if (position < endTimes[middle]) high = middle;
+    else low = middle + 1;
+  }
+  return Math.min(low, frames.length - 1);
 }
 
 /**

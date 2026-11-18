@@ -2,8 +2,6 @@ import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.j
 import { getAnimatedFrameIndex, loadAnimatedGif } from "../minigames/AnimatedGif.js";
 import { drawOutlinedImage } from "./CanvasUtils.js";
 
-const REFERENCE_OUTLINE_WIDTH = 1;
-const REFERENCE_OUTLINE_COLOR = "#000000";
 export const BRISA_ANIMATIONS = Object.freeze({
   idle: "juvenile-velociraptor-abyssomirabilis-idle.gif",
   jump: "juvenile-velociraptor-abyssomirabilis-jump.gif",
@@ -218,7 +216,6 @@ export class SpriteRenderer {
     this.loaded = new Set();
     this.referenceImages = new Map();
     this.referenceBounds = new Map();
-    this.outlinedReferenceImages = new Map();
     this.referenceLoaded = new Set();
     this.referenceFailed = new Set();
     this.animatedReferences = new Map();
@@ -335,72 +332,6 @@ export class SpriteRenderer {
     this.referenceImages.set(file, image);
     image.src = this.baseUrl + "references/" + file + "?v=" + SPRITE_ASSET_VERSION;
     return image;
-  }
-
-  getOutlinedReferenceImage(file, image, bounds, drawWidth, drawHeight) {
-    if (!(this.outlinedReferenceImages instanceof Map)) this.outlinedReferenceImages = new Map();
-    const border = REFERENCE_OUTLINE_WIDTH;
-    const key = file + ":" + drawWidth + "x" + drawHeight + ":outline-" + border + "px";
-    if (this.outlinedReferenceImages.has(key)) return this.outlinedReferenceImages.get(key);
-
-    // Expand the complete opaque silhouette by one pixel in every direction.
-    // The original artwork is composited last, preserving all interior details.
-    const canvasWidth = drawWidth + border * 2;
-    const canvasHeight = drawHeight + border * 2;
-
-    try {
-      const createSurface = () => {
-        const surface = typeof OffscreenCanvas === "function"
-          ? new OffscreenCanvas(canvasWidth, canvasHeight)
-          : document.createElement("canvas");
-        surface.width = canvasWidth;
-        surface.height = canvasHeight;
-        return surface;
-      };
-
-      const mask = createSurface();
-      const maskContext = mask.getContext("2d");
-      if (!maskContext) return null;
-      maskContext.imageSmoothingEnabled = false;
-      maskContext.drawImage(
-        image,
-        bounds.x, bounds.y, bounds.width, bounds.height,
-        border, border, drawWidth, drawHeight
-      );
-      maskContext.globalCompositeOperation = "source-in";
-      maskContext.fillStyle = REFERENCE_OUTLINE_COLOR;
-      maskContext.fillRect(0, 0, canvasWidth, canvasHeight);
-
-      const outlined = createSurface();
-      const outlineContext = outlined.getContext("2d");
-      if (!outlineContext) return null;
-      outlineContext.imageSmoothingEnabled = false;
-
-      // Use a one-pixel eight-neighbour dilation for a continuous, crisp contour.
-      for (let offsetY = -border; offsetY <= border; offsetY += 1) {
-        for (let offsetX = -border; offsetX <= border; offsetX += 1) {
-          if (offsetX === 0 && offsetY === 0) continue;
-          outlineContext.drawImage(mask, offsetX, offsetY);
-        }
-      }
-
-      // Keep the source sprite crisp and centred over its generated contour.
-      outlineContext.drawImage(
-        image,
-        bounds.x, bounds.y, bounds.width, bounds.height,
-        border, border, drawWidth, drawHeight
-      );
-
-      this.outlinedReferenceImages.set(key, outlined);
-      if (this.outlinedReferenceImages.size > 48) {
-        const oldestKey = this.outlinedReferenceImages.keys().next().value;
-        if (oldestKey !== key) this.outlinedReferenceImages.delete(oldestKey);
-      }
-      return outlined;
-    } catch {
-      // Browsers without an available offscreen 2D surface still render the source PNG.
-      return null;
-    }
   }
 
   drawAnimatedJuvenile(context, character, x, y, width, height, actor = {}, elapsed = 0, options = {}) {
@@ -576,9 +507,6 @@ export class SpriteRenderer {
 
     const drawWidth = Math.max(1, Math.round(width * definition.scale));
     const drawHeight = Math.max(1, Math.round(drawWidth * bounds.height / bounds.width));
-    const outlinedImage = this.getOutlinedReferenceImage(definition.file, image, bounds, drawWidth, drawHeight);
-    const renderedWidth = outlinedImage?.width ?? drawWidth;
-    const renderedHeight = outlinedImage?.height ?? drawHeight;
     const drawCenterX = x + width / 2;
     const drawCenterY = y + height + bob - drawHeight * scaleY / 2;
     const facing = options.facing ?? actor?.facing ?? actor?.direction ?? 1;
@@ -590,18 +518,15 @@ export class SpriteRenderer {
     context.translate(drawCenterX, drawCenterY);
     context.rotate(rotation * Math.sign(facing || 1));
     context.scale((flip ? -1 : 1) * scaleX, scaleY);
-    if (outlinedImage) {
-      context.drawImage(
-        outlinedImage,
-        -renderedWidth / 2, -renderedHeight / 2, renderedWidth, renderedHeight
-      );
-    } else {
-      context.drawImage(
-        image,
-        bounds.x, bounds.y, bounds.width, bounds.height,
-        -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight
-      );
-    }
+    drawOutlinedImage(
+      context,
+      image,
+      -drawWidth / 2,
+      -drawHeight / 2,
+      drawWidth,
+      drawHeight,
+      bounds
+    );
     context.restore();
     return true;
   }

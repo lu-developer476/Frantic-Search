@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { getCanvasViewportWidth, roundedRect } from "../src/rendering/CanvasUtils.js";
+import { drawOutlinedImage, getCanvasViewportWidth, roundedRect } from "../src/rendering/CanvasUtils.js";
 
 function createPathContext() {
   const commands = [];
@@ -61,4 +61,63 @@ test("canvas viewport width keeps the native size for narrow or unmeasured stage
   assert.equal(getCanvasViewportWidth(1024, 800), 960);
   assert.equal(getCanvasViewportWidth(0, 0), 960);
   assert.equal(getCanvasViewportWidth(Number.NaN, 540), 960);
+});
+
+
+test("drawOutlinedImage builds a PNG/GIF outline once and reuses the cached surface", () => {
+  const previousDocument = Object.getOwnPropertyDescriptor(globalThis, "document");
+  const previousOffscreenCanvas = Object.getOwnPropertyDescriptor(globalThis, "OffscreenCanvas");
+  const surfaces = [];
+
+  class MockCanvas {
+    constructor() {
+      this.operations = [];
+      this.context = {
+        drawImage: (...args) => this.operations.push(["drawImage", ...args]),
+        fillRect: (...args) => this.operations.push(["fillRect", ...args])
+      };
+    }
+    getContext() { return this.context; }
+  }
+
+  Object.defineProperty(globalThis, "OffscreenCanvas", {
+    configurable: true,
+    value: undefined
+  });
+  Object.defineProperty(globalThis, "document", {
+    configurable: true,
+    value: {
+      createElement(name) {
+        assert.equal(name, "canvas");
+        const surface = new MockCanvas();
+        surfaces.push(surface);
+        return surface;
+      }
+    }
+  });
+
+  try {
+    const frame = { width: 12, height: 10 };
+    const calls = [];
+    const context = { drawImage: (...args) => calls.push(args) };
+    const bounds = { x: 2, y: 1, width: 8, height: 7 };
+
+    assert.equal(drawOutlinedImage(context, frame, 20, 30, 40, 32, bounds), true);
+    assert.equal(surfaces.length, 2, "one mask and one reusable outlined surface are created");
+    assert.equal(surfaces[0].operations[0][1], frame);
+    assert.deepEqual(surfaces[0].operations[0].slice(2), [2, 1, 8, 7, 0, 0, 40, 32]);
+    assert.equal(surfaces[1].operations.filter(([name]) => name === "drawImage").length, 9);
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0][0], surfaces[1]);
+    assert.deepEqual(calls[0].slice(1), [19, 29, 42, 34]);
+
+    drawOutlinedImage(context, frame, 20, 30, 40, 32, bounds);
+    assert.equal(surfaces.length, 2, "the second draw reuses the cached contour");
+    assert.equal(calls.length, 2, "cached sprites need only one drawImage on the game canvas");
+  } finally {
+    if (previousDocument) Object.defineProperty(globalThis, "document", previousDocument);
+    else delete globalThis.document;
+    if (previousOffscreenCanvas) Object.defineProperty(globalThis, "OffscreenCanvas", previousOffscreenCanvas);
+    else delete globalThis.OffscreenCanvas;
+  }
 });
