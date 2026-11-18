@@ -4642,7 +4642,7 @@ html.site-mode-gray .survival-intro button {
 }
 
 
-/* Breaking Race uses the same foreground depth lanes and intro treatment as Empty Stomach. */
+/* Breaking Race shares Empty Stomach's generated prairie and depth-lane layout. */
 .breaking-race-panel {
   position: absolute;
   inset: 0;
@@ -4714,10 +4714,40 @@ html.site-mode-gray .survival-intro button {
   letter-spacing: .04em;
 }
 .breaking-race-intro p {
-  max-width: 54ch;
+  max-width: 58ch;
   color: #d6dfd1;
   font-size: 13px;
   line-height: 1.6;
+}
+.breaking-race-dinosaur-picker {
+  display: grid;
+  gap: 8px;
+  width: min(100%, 460px);
+  margin: 8px 0 4px;
+  text-align: left;
+}
+.breaking-race-dinosaur-picker label {
+  color: #e8b18f;
+  font: 400 9px var(--font-mono);
+  letter-spacing: .14em;
+}
+.breaking-race-dinosaur-picker select {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 38px 10px 12px;
+  border: 1px solid #8c9d77;
+  border-radius: 2px;
+  outline: none;
+  background: #1d2b26;
+  color: #eff3e5;
+  font: 400 11px var(--font-mono);
+  letter-spacing: .02em;
+  cursor: pointer;
+}
+.breaking-race-dinosaur-picker select:focus-visible {
+  border-color: #d8f36a;
+  outline: 2px solid #d8f36a;
+  outline-offset: 2px;
 }
 .breaking-race-instructions {
   max-width: 100%;
@@ -4777,6 +4807,8 @@ html.site-mode-gray .survival-intro button {
   .breaking-race-panel { padding: 8px; }
   .breaking-race-intro h2 { font-size: 40px; }
   .breaking-race-intro p { font-size: 11px; }
+  .breaking-race-dinosaur-picker { gap: 6px; }
+  .breaking-race-dinosaur-picker select { min-height: 40px; font-size: 9px; }
   .breaking-race-actions { gap: 6px; }
   .breaking-race-actions button {
     flex-basis: 145px;
