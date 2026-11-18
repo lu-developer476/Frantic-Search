@@ -3372,7 +3372,14 @@ function start(mode = "campaign") {
   last = performance.now();
   document.body.classList.add("game-session-active");
   render();
-  showGameplayBrief(freeRoamMode ? "freeRoam" : "campaign");
+  if (freeRoamMode) {
+    showGameplayBrief("freeRoam");
+  } else {
+    // The campaign prologue provides its own opening narration. Start its frame
+    // loop immediately instead of making the first playable scene wait behind
+    // a second, blocking briefing dialog.
+    scheduleFrame();
+  }
 }
 
 function endGame() {
@@ -4046,7 +4053,10 @@ document.addEventListener("keydown", (event) => {
   }
 });
 const markSiteLoaded = () => {
-  requestAnimationFrame(() => document.documentElement.classList.add("site-loaded"));
+  requestAnimationFrame(() => {
+    document.documentElement.classList.remove("site-loading");
+    document.documentElement.classList.add("site-loaded");
+  });
 };
 if (document.readyState === "complete") markSiteLoaded();
 else window.addEventListener("load", markSiteLoaded, { once: true });

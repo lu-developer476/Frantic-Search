@@ -255,3 +255,112 @@ test("Empty Stomach shares the minigame menu button color palette", async () => 
   assert.ok(palette.includes("background: #26372f;"));
   assert.ok(palette.includes("color: #eff3e5;"));
 });
+
+
+
+test("a new campaign schedules its first frame immediately while free roam keeps its briefing", async () => {
+  const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
+  const start = main.indexOf('function start(mode = "campaign")');
+  const end = main.indexOf("\nfunction endGame()", start);
+  assert.ok(start >= 0 && end > start, "the game start routine must exist");
+  const handler = main.slice(start, end);
+
+  const runStart = (mode) => {
+    const events = [];
+    const noOp = () => {};
+    const classList = { add: noOp, remove: noOp, toggle: noOp };
+    const globals = {
+      desktopPlayback: { matches: true },
+      running: false,
+      paused: false,
+      freeRoamMode: false,
+      document: { body: { classList } },
+      save: { update: noOp },
+      operationHeader: { classList },
+      campaignBriefHeader: { classList },
+      cancelScheduledFrame: noOp,
+      audio: { context: {}, unlock: noOp },
+      startScreen: { classList },
+      setCharacterSelectionModalOpen: noOp,
+      prologueCharacterSelectionPending: false,
+      dinoModal: { classList },
+      cancelCharacterButton: { hidden: false },
+      overlayActionButton: { hidden: false },
+      overlayContent: { hidden: true },
+      retryOptions: { classList },
+      overlayExitButton: { hidden: false },
+      failureScreenActive: false,
+      pauseMenu: { classList },
+      pauseConfirmation: { classList },
+      pendingPauseAction: null,
+      pauseActionTrigger: null,
+      resetPlayer: () => events.push("reset"),
+      beginCampaignPrologue: () => {
+        events.push("prologue");
+        globals.campaignPrologue = { active: true };
+      },
+      campaignPrologue: null,
+      updatePlayerHealthHud: noOp,
+      music: { start: noOp, setPaused: noOp, setEnabled: noOp },
+      overlay: { classList },
+      elapsed: 0,
+      accumulator: 0,
+      distance: 0,
+      rescues: 0,
+      campaignAutosaveElapsed: 0,
+      stateLabel: { textContent: "" },
+      rescuesLabel: { textContent: "" },
+      updateCampaignHud: noOp,
+      renderStoryPanel: noOp,
+      performance: { now: () => 1 },
+      render: () => events.push("render"),
+      showGameplayBrief: (briefMode) => events.push("brief:" + briefMode),
+      scheduleFrame: () => events.push("schedule")
+    };
+    globals.mode = mode;
+    globals.currentMusicTheme = () => "forest";
+    globals.audio.enabled = true;
+    runInNewContext(handler + "\nstart(mode);", globals);
+    return { events, globals };
+  };
+
+  const campaign = runStart("campaign");
+  assert.deepEqual(campaign.events, ["reset", "prologue", "render", "schedule"]);
+  assert.equal(campaign.globals.running, true);
+  assert.equal(campaign.globals.paused, false);
+
+  const freeRoam = runStart("free-roam");
+  assert.deepEqual(freeRoam.events, ["reset", "render", "brief:freeRoam"]);
+  assert.equal(freeRoam.events.includes("schedule"), false);
+});
+
+
+test("the page stays black until load completes, then reveals all start-screen elements with one animation", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../src/styles/main.css", import.meta.url), "utf8");
+
+  assert.ok(html.includes('<html lang="es" class="site-loading">'));
+  assert.match(html, /html\.site-loading,\s*html\.site-loading body\s*\{\s*background:\s*#000/i);
+  assert.match(html, /html\.site-loading body\s*\{\s*visibility:\s*hidden/i);
+
+  const loaderStart = main.indexOf("const markSiteLoaded = () =>");
+  const loaderEnd = main.indexOf("\ndocument.querySelectorAll", loaderStart);
+  assert.ok(loaderStart >= 0 && loaderEnd > loaderStart);
+  const loader = main.slice(loaderStart, loaderEnd);
+  assert.ok(loader.includes('classList.remove("site-loading")'));
+  assert.ok(loader.includes('classList.add("site-loaded")'));
+
+  const revealStart = styles.indexOf("@keyframes arriveFromBelow");
+  const revealEnd = styles.indexOf("/* Start-screen identity", revealStart);
+  assert.ok(revealStart >= 0 && revealEnd > revealStart);
+  const reveal = styles.slice(revealStart, revealEnd);
+  for (const selector of [
+    ".site-loaded #start-screen-title",
+    ".site-loaded #start-screen-subtitle",
+    ".site-loaded #start-button",
+    ".site-loaded .start-screen-artwork",
+    ".site-loaded #menu-toggle"
+  ]) assert.ok(reveal.includes(selector), "missing shared reveal for " + selector);
+  assert.ok(reveal.includes("animation:arriveFromBelow .72s cubic-bezier(.16,1,.3,1) both"));
+});

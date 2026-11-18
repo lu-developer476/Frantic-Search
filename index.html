@@ -1,8 +1,17 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" class="site-loading">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <style id="critical-loading-screen">
+      html.site-loading,
+      html.site-loading body {
+        background: #000 !important;
+      }
+      html.site-loading body {
+        visibility: hidden !important;
+      }
+    </style>
     <meta name="theme-color" content="#101a1b" />
     <link rel="icon" href="/favicon/favicon.png" type="image/png" />
     <meta name="description" content="Juego indie pixel art de 8 bits para navegador. Búsqueda Frenética combina aventura arcade, plataformas y supervivencia: elegí a Gala o Basilio y rescatá a Brisa." />
