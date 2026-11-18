@@ -43,13 +43,47 @@ export const ASSETS = {
   parasaurIdle: "minigame/persecution/gif/parasaurolophus/parasaurolophus-idle.gif",
   parasaurPerturbed: "minigame/persecution/gif/parasaurolophus/parasaurolophus-attack.gif",
   brontosaurusRun: "references/brontosaurus-excelsus-basteri-run.gif",
-  brontosaurusWalk: "references/brontosaurus-excelsus-basteri-walk.gif"
+  brontosaurusWalk: "references/brontosaurus-excelsus-basteri-walk.gif",
+  ligocristusIdle: "references/ligocristus-innocens-idle.gif",
+  ligocristusJump: "references/ligocristus-innocens-jump.gif",
+  ligocristusRun: "references/ligocristus-innocens-run.gif",
+  ligocristusWalk: "references/ligocristus-innocens-walk.gif"
 };
 
 export function coralAnimationKey(player = {}, phase = "playing") {
   if (phase !== "playing" || (player.trappedTimer ?? 0) > 0) return "coralIdle";
   if (player.grounded === false || player.onGround === false) return "coralJump";
   return "coral";
+}
+
+export function selectHerdPreySpecies(random = Math.random()) {
+  if (random < 0.2) return "ligocristus";
+  if (random < 0.52) return "brontosaurus";
+  return "parasaur";
+}
+
+export function herdPreyAnimationKey(prey = {}, elapsed = 0) {
+  if (prey.species === "ligocristus") {
+    if (prey.beingEaten || prey.pitfallDefeated || (prey.trappedTimer ?? 0) > 0) {
+      return "ligocristusIdle";
+    }
+    if (prey.onGround === false || prey.animationState === "jumping") return "ligocristusJump";
+    if (prey.animationState === "perturbed") return "ligocristusRun";
+    return Math.sin(elapsed * 2.2 + (prey.phase ?? 0)) > 0.97
+      ? "ligocristusJump"
+      : "ligocristusWalk";
+  }
+
+  if (prey.species === "brontosaurus") {
+    return prey.animationState === "perturbed" || prey.beingEaten
+      ? "brontosaurusWalk"
+      : "brontosaurusRun";
+  }
+
+  if (prey.beingEaten) {
+    return prey.beingEatenElapsed < 0.65 ? "parasaurPerturbed" : "parasaurIdle";
+  }
+  return prey.animationState === "perturbed" ? "parasaurPerturbed" : "parasaurRun";
 }
 
 export function shouldFlipMinigameSprite(key, facing = 1) {
@@ -758,9 +792,9 @@ export class Persecution {
       const count = 1 + (Math.random() < 0.42 ? 1 : 0);
       for (let i = 0; i < count; i += 1) {
         const lane = randomLane();
-        const species = Math.random() < 0.32 ? "brontosaurus" : "parasaur";
-        const baseW = species === "brontosaurus" ? 142 : 100;
-        const baseH = species === "brontosaurus" ? 92 : 72;
+        const species = selectHerdPreySpecies(Math.random());
+        const baseW = species === "brontosaurus" ? 142 : species === "ligocristus" ? 76 : 100;
+        const baseH = species === "brontosaurus" ? 92 : species === "ligocristus" ? 54 : 72;
         this.herd.push(applyLane({
           species,
           x: WIDTH + i * 94,
@@ -1465,12 +1499,7 @@ export class Persecution {
 
     for (let lane = 0; lane < LANE_COUNT; lane += 1) {
       for (const prey of this.herd.filter((item) => this.getEntityLane(item) === lane)) {
-        const isBrontosaurus = prey.species === "brontosaurus";
-        const pose = isBrontosaurus
-          ? (prey.animationState === "perturbed" || prey.beingEaten ? "brontosaurusWalk" : "brontosaurusRun")
-          : prey.beingEaten
-            ? (prey.beingEatenElapsed < 0.65 ? "parasaurPerturbed" : "parasaurIdle")
-            : prey.animationState === "perturbed" ? "parasaurPerturbed" : "parasaurRun";
+        const pose = herdPreyAnimationKey(prey, this.animationClock ?? this.elapsed ?? 0);
         const sink = (prey.trappedTimer ?? 0) > 0 ? 9 * getLaneScale(lane) : 0;
         this.drawSprite(pose, prey.x, prey.y + sink, prey.w, prey.h, "#8e9b72", undefined, prey.direction ?? -1);
       }

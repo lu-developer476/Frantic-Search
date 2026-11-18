@@ -8,8 +8,14 @@ export const BRISA_ANIMATIONS = Object.freeze({
   run: "juvenile-velociraptor-abyssomirabilis-run.gif"
 });
 export const BRISA_REFERENCE = BRISA_ANIMATIONS.idle;
+export const LIGOCRISTUS_ANIMATION_ASSETS = Object.freeze({
+  idle: "ligocristus-innocens-idle.gif",
+  jump: "ligocristus-innocens-jump.gif",
+  run: "ligocristus-innocens-run.gif",
+  walk: "ligocristus-innocens-walk.gif"
+});
 const PROLOGUE_BRISA_SCALE = 1.8;
-const ANIMATED_REFERENCE_VERSION = "20261117-campaign-brisa-juvenile-gif-routing-3";
+const ANIMATED_REFERENCE_VERSION = "20261118-campaign-ligocristus-four-gif-routing-1";
 
 export const DINOSAUR_REFERENCE_SCALES = Object.freeze({
   gala: 1.6,
@@ -46,7 +52,6 @@ export const REFERENCE_PNG_CHARACTERS = Object.freeze({
   indoraptor: { first: "indoraptor-first-generation.png", second: "indoraptor-second-generation.png", sourceFacing: 1, scale: 1.34 },
   indominus: { first: "indominus-rex-first-generation.png", second: "indominus-rex-second-generation.png", sourceFacing: -1, scale: 1.18 },
   "indominus-variant": { file: "indominus-rex-second-generation-variant.png", sourceFacing: -1, scale: 1.18 },
-  ligocristus: { file: "ligocristus-innocens.png", sourceFacing: 1, scale: DINOSAUR_REFERENCE_SCALES.ligocristusInnocens },
   stegoceratops: { file: "stegoceratops.png", sourceFacing: -1, scale: 1.18 }
 });
 
@@ -62,6 +67,25 @@ export function selectBrontosaurusAnimation(actor = {}) {
     ["running", "retreating", "run"].includes(actor?.state)
     ? BRONTOSAURUS_ANIMATION_ASSETS.run
     : BRONTOSAURUS_ANIMATION_ASSETS.walk;
+}
+
+export function selectLigocristusAnimation(actor = {}) {
+  const state = actor?.state;
+  if (actor?.consumed || actor?.defeated || ["consumed", "defeated", "grazing", "stunned"].includes(state)) {
+    return LIGOCRISTUS_ANIMATION_ASSETS.idle;
+  }
+  if (actor?.onGround === false || state === "jump" || state === "jumping") {
+    return LIGOCRISTUS_ANIMATION_ASSETS.jump;
+  }
+
+  const motionSpeed = Math.abs(Number(actor?.motionSpeed ?? actor?.vx ?? actor?.speed ?? 0));
+  if (["fleeing", "running", "chasing", "retreating"].includes(state) || motionSpeed > 55) {
+    return LIGOCRISTUS_ANIMATION_ASSETS.run;
+  }
+  if (["foraging", "walking", "patrol"].includes(state) || motionSpeed > 1) {
+    return LIGOCRISTUS_ANIMATION_ASSETS.walk;
+  }
+  return LIGOCRISTUS_ANIMATION_ASSETS.idle;
 }
 
 export const VENATOSAURUS_ANIMATION_ASSETS = Object.freeze({
@@ -101,6 +125,7 @@ export function selectVenatosaurusAnimation(character, actor = {}) {
 
 export const CAMPAIGN_ANIMATED_REFERENCE_FILES = Object.freeze([
   ...Object.values(BRISA_ANIMATIONS),
+  ...Object.values(LIGOCRISTUS_ANIMATION_ASSETS),
   BRONTOSAURUS_ANIMATION_ASSETS.walk,
   BRONTOSAURUS_ANIMATION_ASSETS.run,
   ...Object.values(VENATOSAURUS_ANIMATION_ASSETS).flatMap((assets) => [
@@ -117,11 +142,10 @@ export const REFERENCE_PRELOAD_FILES = [
   "indominus-rex-first-generation.png",
   "indominus-rex-second-generation.png",
   "indominus-rex-second-generation-variant.png",
-  "ligocristus-innocens.png",
   "stegoceratops.png"
 ];
 
-const SPRITE_ASSET_VERSION = "20261117-campaign-brisa-reference-routing-1";
+const SPRITE_ASSET_VERSION = "20261118-campaign-ligocristus-gif-routing-1";
 const ROSA_RIG_PARTS = [
   "rosa-rig-body",
   "rosa-rig-tail",
@@ -427,6 +451,40 @@ export class SpriteRenderer {
     );
     context.scale(flip ? -1 : 1, 1);
     drawOutlinedImage(context, frame.image, -renderedWidth / 2, 0, renderedWidth, renderedHeight);
+    context.restore();
+    return true;
+  }
+
+  drawAnimatedLigocristus(context, x, y, width, height, actor = {}, elapsed = 0, options = {}) {
+    if (!(this.animatedReferences instanceof Map)) return false;
+
+    const file = selectLigocristusAnimation(actor);
+    const animation = this.animatedReferences.get(file);
+    if (!animation?.frames?.length) {
+      this.loadAnimatedReference(file);
+      return false;
+    }
+
+    const frameIndex = getAnimatedFrameIndex(animation.frames, Math.max(0, elapsed) * 1000);
+    const frame = animation.frames[frameIndex];
+    if (!frame?.image || !(animation.width > 0) || !(animation.height > 0)) return false;
+
+    const drawWidth = Math.max(1, Math.round(width * DINOSAUR_REFERENCE_SCALES.ligocristusInnocens));
+    const drawHeight = Math.max(1, Math.round(drawWidth * animation.height / animation.width));
+    const bottomPadding = frame.bottomPadding ?? animation.bottomPadding ?? 0;
+    const scaledBottomPadding = drawHeight * bottomPadding / animation.height;
+    const facing = options.facing ?? actor?.facing ?? actor?.direction ?? 1;
+    const flip = Math.sign(facing || 1) !== 1;
+
+    context.save();
+    context.globalAlpha *= options.alpha ?? 1;
+    context.imageSmoothingEnabled = false;
+    context.translate(
+      Math.round(x + width / 2),
+      Math.round(y + height - drawHeight + scaledBottomPadding)
+    );
+    context.scale(flip ? -1 : 1, 1);
+    drawOutlinedImage(context, frame.image, -drawWidth / 2, 0, drawWidth, drawHeight);
     context.restore();
     return true;
   }
@@ -1621,6 +1679,9 @@ export class SpriteRenderer {
   }
 
   drawAnimated(context, character, x, y, width, height, actor, elapsed, options = {}) {
+    if (character === "ligocristus") {
+      return this.drawAnimatedLigocristus(context, x, y, width, height, actor ?? {}, elapsed, options);
+    }
     if (JUVENILE_ANIMATED_CHARACTERS[character]) {
       return this.drawAnimatedJuvenile(context, character, x, y, width, height, actor ?? {}, elapsed, options);
     }
@@ -1632,9 +1693,8 @@ export class SpriteRenderer {
     }
     if (this.drawReferencePng(context, character, x, y, width, height, actor ?? {}, elapsed, options)) return true;
 
-    // The repository ships PNG reference artwork, not the legacy SVG sprite sheet.
-    // Avoid requesting unavailable SVGs while a PNG is loading; callers keep their
-    // native Canvas fallback until the reference image is ready.
+    // Static PNG references and animated GIF references are registered separately.
+    // Avoid requesting unavailable legacy SVGs while an image asset is loading.
     if (character === "hunter" || REFERENCE_PNG_CHARACTERS[character]) return false;
 
     if (character === "vasti" && this.drawVasti(context, x, y, width, height, actor, elapsed, options.alpha ?? 1)) return true;

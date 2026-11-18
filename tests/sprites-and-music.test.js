@@ -3,7 +3,16 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { AdaptiveMusic } from "../src/audio/AdaptiveMusic.js";
-import { DINOSAUR_REFERENCE_SCALES, PROLOGUE_ROSA_REFERENCE, REFERENCE_PNG_CHARACTERS, SpriteRenderer } from "../src/rendering/SpriteRenderer.js";
+import {
+  CAMPAIGN_ANIMATED_REFERENCE_FILES,
+  DINOSAUR_REFERENCE_SCALES,
+  LIGOCRISTUS_ANIMATION_ASSETS,
+  PROLOGUE_ROSA_REFERENCE,
+  REFERENCE_PNG_CHARACTERS,
+  REFERENCE_PRELOAD_FILES,
+  selectLigocristusAnimation,
+  SpriteRenderer
+} from "../src/rendering/SpriteRenderer.js";
 import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "../src/rendering/AnimationProfiles.js";
 import { Player } from "../src/entities/Player.js";
 import { Beta } from "../src/entities/Beta.js";
@@ -83,12 +92,13 @@ test("active characters resolve their intended reference images", () => {
   assert.equal(REFERENCE_PNG_CHARACTERS.ferrucutus.file, "ferrucutus-cerastes.png");
   assert.equal(REFERENCE_PNG_CHARACTERS.indoraptor.first, "indoraptor-first-generation.png");
   assert.equal(REFERENCE_PNG_CHARACTERS.indominus.first, "indominus-rex-first-generation.png");
+  assert.equal(REFERENCE_PNG_CHARACTERS.ligocristus, undefined);
 });
 
 test("the requested dinosaur silhouettes use consistent, species-specific visual scales", () => {
   assert.equal(REFERENCE_PNG_CHARACTERS.blue.scale, DINOSAUR_REFERENCE_SCALES.violeta);
   assert.equal(REFERENCE_PNG_CHARACTERS.vasti.scale, DINOSAUR_REFERENCE_SCALES.vastatosaurusRex);
-  assert.equal(REFERENCE_PNG_CHARACTERS.ligocristus.scale, DINOSAUR_REFERENCE_SCALES.ligocristusInnocens);
+  assert.equal(DINOSAUR_REFERENCE_SCALES.ligocristusInnocens, 0.9);
   assert.equal(REFERENCE_PNG_CHARACTERS["venatosaurus-impavidus"].scale, DINOSAUR_REFERENCE_SCALES.venatosaurusImpavidus);
 
   assert.equal(REFERENCE_PNG_CHARACTERS.beta.scale, DINOSAUR_REFERENCE_SCALES.rosa);
@@ -100,6 +110,43 @@ test("the requested dinosaur silhouettes use consistent, species-specific visual
   assert.ok(DINOSAUR_REFERENCE_SCALES.vastatosaurusRex > 1.45);
   assert.ok(DINOSAUR_REFERENCE_SCALES.ligocristusInnocens < 1.18);
   assert.ok(DINOSAUR_REFERENCE_SCALES.venatosaurusImpavidus < REFERENCE_PNG_CHARACTERS["venatosaurus-saevidicus"].scale);
+});
+
+test("Ligocristus uses its four animated reference GIFs instead of the removed PNG", () => {
+  const files = Object.values(LIGOCRISTUS_ANIMATION_ASSETS);
+  const referenceDirectory = new Set(readdirSync(resolve("public/references")));
+  assert.deepEqual(LIGOCRISTUS_ANIMATION_ASSETS, {
+    idle: "ligocristus-innocens-idle.gif",
+    jump: "ligocristus-innocens-jump.gif",
+    run: "ligocristus-innocens-run.gif",
+    walk: "ligocristus-innocens-walk.gif"
+  });
+  for (const file of files) {
+    assert.ok(referenceDirectory.has(file), `Missing Ligocristus GIF: ${file}`);
+    assert.ok(CAMPAIGN_ANIMATED_REFERENCE_FILES.includes(file));
+  }
+  assert.equal(REFERENCE_PRELOAD_FILES.some((file) => /ligocristus.*\.png/.test(file)), false);
+  assert.equal(selectLigocristusAnimation({ state: "grazing" }), LIGOCRISTUS_ANIMATION_ASSETS.idle);
+  assert.equal(selectLigocristusAnimation({ state: "foraging", motionSpeed: 25 }), LIGOCRISTUS_ANIMATION_ASSETS.walk);
+  assert.equal(selectLigocristusAnimation({ state: "fleeing", motionSpeed: 74 }), LIGOCRISTUS_ANIMATION_ASSETS.run);
+  assert.equal(selectLigocristusAnimation({ onGround: false }), LIGOCRISTUS_ANIMATION_ASSETS.jump);
+
+  const frame = { image: { id: "ligocristus-gif-frame" }, delay: 100, bottomPadding: 2 };
+  const renderer = Object.create(SpriteRenderer.prototype);
+  renderer.animatedReferences = new Map([[LIGOCRISTUS_ANIMATION_ASSETS.run, {
+    width: 120,
+    height: 68,
+    bottomPadding: 0,
+    frames: [frame]
+  }]]);
+  renderer.animatedReferencePromises = new Map();
+  const context = createRenderContext();
+  assert.equal(renderer.drawAnimated(context, "ligocristus", 10, 20, 76, 54, {
+    state: "fleeing",
+    motionSpeed: 74,
+    direction: 1
+  }, 0.4), true);
+  assert.ok(context.calls.some(([name, image]) => name === "drawImage" && image === frame.image));
 });
 
 test("phase-aware reference selection switches both bosses to their second-generation PNG", () => {
@@ -121,10 +168,10 @@ test("reference images are loaded from the Vite base path and cached", () => {
     const first = renderer.getReferenceImage("adult-velociraptor-nublarensis.png");
     const second = renderer.getReferenceImage("adult-velociraptor-nublarensis.png");
     assert.equal(first, second);
-    assert.equal(first.src, "/game/references/adult-velociraptor-nublarensis.png?v=20261116-prologue-rosa-abyssomirabilis-1");
-    assert.equal(renderer.referenceImages.size, 14);
+    assert.equal(first.src, "/game/references/adult-velociraptor-nublarensis.png?v=20261118-campaign-ligocristus-gif-routing-1");
+    assert.equal(renderer.referenceImages.size, REFERENCE_PRELOAD_FILES.length);
     assert.ok([...renderer.referenceImages.values()].every((image) => /\.png\?v=/.test(image.src)));
-    assert.equal(renderer.readiness().total, 14);
+    assert.equal(renderer.readiness().total, REFERENCE_PRELOAD_FILES.length + CAMPAIGN_ANIMATED_REFERENCE_FILES.length);
     assert.equal(renderer.referenceImages.has(PROLOGUE_ROSA_REFERENCE), false);
   } finally {
     if (previousImage === undefined) delete globalThis.Image;
@@ -303,7 +350,7 @@ test("failed reference-image loads are reported without retrying the missing ass
     instances[0].onerror();
     assert.deepEqual(notifications[0], { file, status: "error" });
     assert.equal(renderer.getReferenceImage(file), null);
-    assert.equal(instances.length, 14);
+    assert.equal(instances.length, REFERENCE_PRELOAD_FILES.length);
   } finally {
     if (previousImage === undefined) delete globalThis.Image;
     else globalThis.Image = previousImage;

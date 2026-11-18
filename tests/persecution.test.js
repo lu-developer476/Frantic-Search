@@ -5,7 +5,8 @@ import {
   Persecution, ENEMY_CHASE_DURATION, INTRO_DURATION, PLAYER_WIDTH, PLAYER_HEIGHT,
   DASH_DURATION, DASH_COOLDOWN, DASH_SPEED_MULTIPLIER, ENEMY_STUN_DURATION,
   EGG_INVULNERABILITY_DURATION, ENEMY_TRIP_FADE_DURATION, createEgg,
-  CHECKPOINT_INTERVAL_METERS, CHECKPOINT_INTERVAL_DISTANCE, EGGS_PER_CHECKPOINT_CONTINUE
+  CHECKPOINT_INTERVAL_METERS, CHECKPOINT_INTERVAL_DISTANCE, EGGS_PER_CHECKPOINT_CONTINUE,
+  selectHerdPreySpecies, herdPreyAnimationKey
 } from "../src/minigames/Persecution.js";
 import { removeEdgeBackground, getBottomTransparentPadding } from "../src/minigames/AnimatedGif.js";
 
@@ -16,6 +17,20 @@ test("Empty Stomach resolves every animation from the current GIF asset director
       throw new Error(`Missing Empty Stomach asset for ${key}: public/${path}`);
     })
   ));
+});
+
+test("PERSECUSIÓN can spawn Ligocristus as edible prey and uses all four GIF poses", () => {
+  assert.equal(ASSETS.ligocristusIdle, "references/ligocristus-innocens-idle.gif");
+  assert.equal(ASSETS.ligocristusJump, "references/ligocristus-innocens-jump.gif");
+  assert.equal(ASSETS.ligocristusRun, "references/ligocristus-innocens-run.gif");
+  assert.equal(ASSETS.ligocristusWalk, "references/ligocristus-innocens-walk.gif");
+  assert.equal(selectHerdPreySpecies(0.1), "ligocristus");
+  assert.equal(selectHerdPreySpecies(0.35), "brontosaurus");
+  assert.equal(selectHerdPreySpecies(0.8), "parasaur");
+  assert.equal(herdPreyAnimationKey({ species: "ligocristus", animationState: "running", phase: 0 }, 0), "ligocristusWalk");
+  assert.equal(herdPreyAnimationKey({ species: "ligocristus", animationState: "perturbed" }, 0), "ligocristusRun");
+  assert.equal(herdPreyAnimationKey({ species: "ligocristus", beingEaten: true }, 0), "ligocristusIdle");
+  assert.equal(herdPreyAnimationKey({ species: "ligocristus", onGround: false }, 0), "ligocristusJump");
 });
 
 test("Coral uses the dedicated Miniraptor idle, run and jump GIF assets", () => {
