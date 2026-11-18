@@ -36,7 +36,8 @@ import { Beta } from "./entities/Beta.js";
 import { FacilityConsole } from "./entities/FacilityConsole.js";
 import { SpriteRenderer } from "./rendering/SpriteRenderer.js";
 import { AtmosphereRenderer } from "./rendering/AtmosphereRenderer.js";
-import { drawBackgroundScenery, drawGroundScenery } from "./rendering/SceneryRenderer.js";
+import { drawGroundScenery } from "./rendering/SceneryRenderer.js";
+import { VegetationRenderer, isPixelVegetationProp } from "./rendering/VegetationRenderer.js";
 import { roundedRect, observeCanvasViewport } from "./rendering/CanvasUtils.js";
 import { t as uiText, translateText, getModalTutorialCopy, getCampaignSceneCopy } from "./i18n.js";
 import { EmptyStomach } from "./minigames/EmptyStomach.js";
@@ -60,6 +61,7 @@ ctx.fillText = () => {};
 ctx.strokeText = () => {};
 ctx.imageSmoothingEnabled = false;
 const atmosphereRenderer = new AtmosphereRenderer();
+const vegetationRenderer = new VegetationRenderer();
 const resizeMainCanvas = observeCanvasViewport(canvas.parentElement, canvas, (width) => {
   GAME.width = width;
   ctx.imageSmoothingEnabled = false;
@@ -374,13 +376,13 @@ function drawBackground() {
     elapsed
   });
 
-  drawBackgroundScenery(
-    ctx,
-    world.visibleScenery(cameraX, GAME.width, "background", scene.environment),
+  vegetationRenderer.drawBackground(ctx, {
+    props: world.visibleScenery(cameraX, GAME.width, "background", scene.environment),
     cameraX,
-    GAME.width,
+    viewportWidth: GAME.width,
+    viewportHeight: GAME.height,
     scene
-  );
+  });
 
   // Ground decoration stays on the native Canvas; it is independent from the
   // atmospheric pixel buffer and does not participate in collision geometry.
@@ -2820,8 +2822,16 @@ function render() {
   }
   for (const platform of world.visiblePlatforms(cameraX, GAME.width)) drawPlatform(platform);
   const sceneryScene = level();
-  for (const prop of world.visibleScenery(cameraX, GAME.width, "ground", sceneryScene.environment)) {
-    drawGroundScenery(ctx, prop, sceneryScene);
+  const groundScenery = world.visibleScenery(cameraX, GAME.width, "ground", sceneryScene.environment);
+  vegetationRenderer.drawGround(ctx, {
+    props: groundScenery,
+    cameraX,
+    viewportWidth: GAME.width,
+    viewportHeight: GAME.height,
+    scene: sceneryScene
+  });
+  for (const prop of groundScenery) {
+    if (!isPixelVegetationProp(prop)) drawGroundScenery(ctx, prop, sceneryScene);
   }
   for(const item of collectibles){
     if(item.x+item.w>=cameraX-50&&item.x-item.w<=cameraX+GAME.width+50)drawCollectible(ctx,item);
