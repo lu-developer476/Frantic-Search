@@ -166,7 +166,7 @@ export class Survival {
     root.querySelector("[data-survival-retry]").addEventListener("click", () => this.requestStart(this.role));
     root.querySelector("[data-survival-exit]").addEventListener("click", () => this.exit());
     this.setLocale("es");
-    this.render();
+
   }
 
   text(es, en) {
@@ -195,7 +195,7 @@ export class Survival {
     this.root.querySelector("[data-survival-retry]").textContent = this.text("VOLVER A INTENTAR", "TRY AGAIN");
     this.root.querySelector("[data-survival-exit]").textContent = this.text("SALIR", "EXIT");
     this.root.querySelector("[data-survival-status]").textContent = this.text("SUPERVIVENCIA // OLEADA 01", "SURVIVAL // WAVE 01");
-    this.render();
+    if (this.root.classList.contains("active")) this.render();
   }
 
   showEntry() {

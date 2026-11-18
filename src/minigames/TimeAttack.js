@@ -147,7 +147,7 @@ export class TimeAttack {
     root.querySelector("[data-ta-retry]").addEventListener("click", () => this.requestStart());
     root.querySelector("[data-ta-exit]").addEventListener("click", () => this.exit());
     this.setLocale(this.locale);
-    this.render();
+
   }
 
   text(es, en) { return this.locale === "es" ? es : en; }
@@ -167,7 +167,7 @@ export class TimeAttack {
     this.root.querySelector("[data-ta-retry]").textContent = this.text("VOLVER A INTENTAR", "TRY AGAIN");
     this.root.querySelector("[data-ta-exit]").textContent = this.text("SALIR", "EXIT");
     this.root.querySelector("[data-ta-status]").textContent = this.text("SECCIÓN 01 // EXTRACCIÓN", "SECTION 01 // EXTRACTION");
-    this.render();
+    if (this.root.classList.contains("active")) this.render();
   }
 
   open() {

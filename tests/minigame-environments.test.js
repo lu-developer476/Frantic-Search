@@ -87,3 +87,56 @@ test("layer allocation failure safely falls back to native mini-game drawing", (
     assert.equal(renderer.draw({ canvas: { width: 960, height: 540 } }), false);
   }
 });
+
+
+test("hidden minigames do not render during application bootstrap", async () => {
+  const paths = [
+    "../src/minigames/EmptyStomach.js",
+    "../src/minigames/TimeAttack.js",
+    "../src/minigames/Survival.js"
+  ];
+  for (const path of paths) {
+    const source = await readFile(new URL(path, import.meta.url), "utf8");
+    const constructorStart = source.indexOf("  constructor(root");
+    const constructorEnd = source.indexOf("\n  text(", constructorStart);
+    assert.ok(constructorStart >= 0 && constructorEnd > constructorStart);
+    const constructor = source.slice(constructorStart, constructorEnd);
+    assert.equal(constructor.includes("this.render();"), false, path + " must defer its first frame until opened");
+
+    const localeStart = source.indexOf("  setLocale(locale) {");
+    const nextMethod = source.slice(localeStart + 4).search(/\n  [A-Za-z_$][\w$]*\s*\(/);
+    assert.ok(localeStart >= 0 && nextMethod > 0);
+    const localeHandler = source.slice(localeStart, localeStart + 4 + nextMethod);
+    assert.ok(localeHandler.includes('this.root.classList.contains("active")'));
+    assert.ok(localeHandler.includes("this.render();"));
+
+    const openStart = source.indexOf("  open() {");
+    const openNext = source.slice(openStart + 4).search(/\n  [A-Za-z_$][\w$]*\s*\(/);
+    assert.ok(openStart >= 0 && openNext > 0);
+    const openHandler = source.slice(openStart, openStart + 4 + openNext);
+    assert.ok(openHandler.includes('this.root.classList.add("active")'));
+    assert.ok(openHandler.includes("this.render()"), path + " must render when opened");
+  }
+});
+
+test("a layered environment rendering error falls back without breaking the minigame", () => {
+  const renderer = new MinigameEnvironmentRenderer({
+    scene: MINIGAME_ENVIRONMENT_SCENES.emptyStomach,
+    groundY: 438,
+    seed: 17,
+    sectionLength: 1200,
+    sectionCount: 1
+  });
+  renderer.ready = true;
+  renderer.atmosphere = {
+    draw() { throw new Error("simulated canvas failure"); }
+  };
+  const originalWarn = console.warn;
+  console.warn = () => {};
+  try {
+    assert.equal(renderer.draw({ canvas: { width: 960, height: 540 } }), false);
+  } finally {
+    console.warn = originalWarn;
+  }
+  assert.equal(renderer.ready, false);
+});

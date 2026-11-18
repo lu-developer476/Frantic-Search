@@ -315,7 +315,7 @@ export class EmptyStomach {
     root.querySelector("[data-empty-exit]").addEventListener("click", () => this.exit());
     this.pauseButton.addEventListener("click", () => this.togglePause());
     this.checkpointButton.addEventListener("click", () => this.onBeforeStart("emptyStomach", () => this.continueFromCheckpoint()));
-    this.render();
+
   }
 
   text(es, en) { return this.locale === "es" ? es : en; }
@@ -418,7 +418,7 @@ export class EmptyStomach {
     this.root.querySelector("[data-empty-retry]").textContent = this.text("RETOMAR", "RETRY");
     this.root.querySelector("[data-empty-exit]").textContent = this.text("SALIR", "EXIT");
     this.updateCheckpointButton();
-    this.render();
+    if (this.root.classList.contains("active")) this.render();
   }
 
   open() {

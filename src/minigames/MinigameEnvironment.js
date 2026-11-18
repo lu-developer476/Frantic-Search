@@ -111,6 +111,8 @@ export class MinigameEnvironmentRenderer {
   } = {}) {
     if (!this.ready || !targetContext) return false;
 
+    try {
+
     const width = Math.max(1, Math.ceil(viewportWidth));
     const height = Math.max(1, Math.ceil(viewportHeight));
     this.ensureCoverage(cameraX, width);
@@ -165,6 +167,11 @@ export class MinigameEnvironmentRenderer {
       environment, cameraX,
       viewportWidth: width, viewportHeight: height, elapsed
     });
-    return true;
+      return true;
+    } catch (error) {
+      this.ready = false;
+      console.warn("[MinigameEnvironmentRenderer] Layered render failed; using native fallback:", error);
+      return false;
+    }
   }
 }
