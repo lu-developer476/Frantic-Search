@@ -1,4 +1,13 @@
-import "./styles/main.css";
+imp
+breakingRaceButton.addEventListener("click", () => {
+  if (!desktopPlayback.matches || desktopBlocked) return;
+  startScreen.classList.add("hidden");
+  setMenuOpen(false);
+  document.body.classList.add("game-session-active");
+  operationHeader?.classList.add("is-hidden");
+  campaignBriefHeader?.classList.add("is-hidden");
+  breakingRace.open();
+});ort "./styles/main.css";
 import "./styles/typography.css";
 import { inject } from "@vercel/analytics";
 import { GAME, LEVELS, WORLD } from "./config/GameConfig.js";
@@ -46,6 +55,7 @@ import { t as uiText, translateText, getModalTutorialCopy, getCampaignSceneCopy 
 import { EmptyStomach } from "./minigames/EmptyStomach.js";
 import { TimeAttack } from "./minigames/TimeAttack.js";
 import { Survival } from "./minigames/Survival.js";
+import { BreakingRace } from "./minigames/BreakingRace.js";
 
 const canvas = document.querySelector("#game");
 const nativeDesktopPlayback = window.matchMedia("(min-width: 768px) and (any-pointer: fine)");
@@ -105,6 +115,8 @@ const emptyStomachPanel = document.querySelector("#empty-stomach-panel");
 const timeAttackButton = document.querySelector("#time-attack-button");
 const timeAttackPanel = document.querySelector("#time-attack-panel");
 const survivalButton = document.querySelector("#survival-button");
+const breakingRaceButton = document.querySelector("#breaking-race-button");
+const breakingRacePanel = document.querySelector("#breaking-race-panel");
 const survivalPanel = document.querySelector("#survival-panel");
 const startScreenArtwork = document.querySelector(".start-screen-artwork");
 const defaultStartScreenArtwork = `${import.meta.env.BASE_URL}artwork/8bits-artwork.png`;
@@ -114,6 +126,7 @@ const minigamePreviewSources = new Map([
   [emptyStomachButton, minigamesStartScreenArtwork],
   [timeAttackButton, `${import.meta.env.BASE_URL}artwork/time-attack-artwork.png`],
   [survivalButton, `${import.meta.env.BASE_URL}artwork/survival-artwork.png`],
+  [breakingRaceButton, `${import.meta.env.BASE_URL}artwork/bracking-race-artwork.png`],
   [freeRoamButton, `${import.meta.env.BASE_URL}artwork/free-roam-artwork.png`]
 ]);
 let hoveredMinigameButton = null;
@@ -208,6 +221,7 @@ const returnFromMinigame = () => {
 const emptyStomach = new EmptyStomach(emptyStomachPanel, returnFromMinigame, showGameplayBrief);
 const timeAttack = new TimeAttack(timeAttackPanel, returnFromMinigame, spriteRenderer, showGameplayBrief);
 const survival = new Survival(survivalPanel, returnFromMinigame, spriteRenderer, showGameplayBrief);
+const breakingRace = new BreakingRace(breakingRacePanel, returnFromMinigame);
 const audio = new AudioManager();
 const music = new AdaptiveMusic();
 let locale = save.get("language") || "es";
@@ -3815,6 +3829,7 @@ function getActiveTutorialMode() {
   if (emptyStomachPanel.classList.contains("active")) return "emptyStomach";
   if (timeAttackPanel.classList.contains("active")) return "timeAttack";
   if (survivalPanel.classList.contains("active")) return "survival";
+  if (breakingRacePanel.classList.contains("active")) return "breakingRace";
   return running && freeRoamMode ? "freeRoam" : "campaign";
 }
 
@@ -3944,6 +3959,7 @@ function setLanguage(nextLocale) {
   emptyStomach.setLocale(locale);
   timeAttack.setLocale(locale);
   survival.setLocale(locale);
+  breakingRace.setLocale(locale);
   save.update({ language: locale });
   applyLanguage();
   updateCampaignHud();
@@ -3958,6 +3974,7 @@ function applyLanguage() {
   emptyStomach.setLocale(locale);
   timeAttack.setLocale(locale);
   survival.setLocale(locale);
+  breakingRace.setLocale(locale);
   document.documentElement.lang = locale;
   document.title = ui("documentTitle");
   document.querySelector('meta[name="description"]')?.setAttribute("content", ui("metaDescription"));

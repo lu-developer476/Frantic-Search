@@ -4635,3 +4635,25 @@ html.site-mode-gray .survival-intro button {
     font-size: 8px;
   }
 }
+
+
+/* Breaking Race — four-lane precision sprint. */
+.start-screen-copy #breaking-race-button{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:46px;padding:13px 15px;border:1px solid #c49a68;background:#3b3025;color:#fff0d8;font:9px var(--font-mono);letter-spacing:.12em;cursor:pointer;transition:.18s}
+.start-screen-copy #breaking-race-button:hover{background:#57422e;border-color:#f0c27c;transform:translateY(-1px)}
+.breaking-race-panel{position:absolute;inset:0;z-index:25;display:none;padding:clamp(12px,2.4vw,28px);background:radial-gradient(ellipse at 50% 35%,#66513a,#171b17 75%);color:#f4eddf}
+.breaking-race-panel.active{display:grid;grid-template-rows:minmax(0,1fr);gap:12px;min-width:0;min-height:0}
+.breaking-race-stage{position:relative;min-height:0;display:grid;place-items:center;overflow:hidden;border:1px solid #b99b70;background:#c4b08a}
+.breaking-race-stage canvas{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated;touch-action:manipulation}
+.breaking-race-top{position:absolute;z-index:2;top:12px;left:16px;right:16px;display:flex;justify-content:space-between;font:9px var(--font-mono);letter-spacing:.12em;color:#f8f0df;text-shadow:0 1px 3px #292016}
+.breaking-race-intro{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;background:linear-gradient(135deg,rgba(15,20,16,.88),rgba(33,29,21,.78))}
+.breaking-race-panel.playing .breaking-race-intro{pointer-events:none;background:transparent}
+.breaking-race-panel.playing .breaking-race-intro>*{display:none}
+.breaking-race-intro h2{margin:10px 0;color:#fff1d7;font:400 clamp(42px,8vw,84px)/.9 var(--font-condensed);letter-spacing:.04em}
+.breaking-race-intro p{max-width:70ch;color:#e6dfd0;font-size:12px;line-height:1.6}
+.breaking-race-instructions{font:10px var(--font-mono)!important}
+.breaking-race-result{padding:10px 16px;border:1px solid #e0b77d;background:#28241d;color:#ffe0a9;font:11px var(--font-mono)}
+.breaking-race-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.breaking-race-actions button{padding:10px 14px;border:1px solid #c49a68;background:#30271e;color:#fff0d8;font:9px var(--font-mono);letter-spacing:.1em;cursor:pointer}
+.breaking-race-actions button:first-child,.breaking-race-actions button:nth-child(2){border-color:#f0c27c;background:#f0c27c;color:#241d16}
+.breaking-race-actions button[hidden]{display:none!important}
+@media(max-width:700px){.breaking-race-panel{padding:8px}.breaking-race-intro h2{font-size:40px}}

@@ -205,6 +205,7 @@
                   <button id="empty-stomach-button" type="button" data-i18n="emptyStomach">ESTÓMAGO VACÍO</button>
                   <button id="time-attack-button" type="button"><span data-i18n="timeAttack">HORA DE ATACAR</span></button>
                   <button id="survival-button" type="button"><span data-i18n="survival">SUPERVIVENCIA</span></button>
+                  <button id="breaking-race-button" type="button"><span data-i18n="breakingRace">CARRERA DE FRENADO</span></button>
                   <button id="free-roam-button" type="button">
                     <span data-i18n="freeRoam">RECORRIDO LIBRE</span>
                   </button>
@@ -266,6 +267,23 @@
                     <button type="button" data-ta-start>INICIAR</button>
                     <button type="button" data-ta-retry hidden>REPETIR SECCIÓN</button>
                     <button type="button" data-ta-exit>VOLVER AL MENÚ</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section id="breaking-race-panel" class="breaking-race-panel game-mode-panel" aria-label="Breaking Race" data-i18n-aria="breakingRace" aria-hidden="true">
+              <div class="breaking-race-stage game-mode-stage">
+                <canvas width="960" height="540" aria-label="Carrera de dinosaurios" data-i18n-aria="breakingRaceCanvas"></canvas>
+                <div class="breaking-race-top"><span>FRANTIC SEARCH // TRACK MEET</span><span data-br-status>RACE // READY</span></div>
+                <div class="breaking-race-intro game-mode-intro">
+                  <h2 data-br-title>BREAKING RACE</h2>
+                  <p data-br-subtitle>Cuatro dinosaurios. Cuatro carriles. Pisá cada marca con precisión y cruzá la meta.</p>
+                  <p class="breaking-race-instructions game-mode-instructions" data-br-instructions></p>
+                  <p class="breaking-race-result" data-br-result hidden></p>
+                  <div class="breaking-race-actions game-mode-actions">
+                    <button type="button" data-br-start>INICIAR CARRERA</button>
+                    <button type="button" data-br-retry hidden>OTRA CARRERA</button>
+                    <button type="button" data-br-exit>VOLVER AL MENÚ</button>
                   </div>
                 </div>
               </div>
