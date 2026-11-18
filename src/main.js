@@ -40,6 +40,7 @@ import { drawGroundScenery } from "./rendering/SceneryRenderer.js";
 import { VegetationRenderer, isPixelGroundSceneryProp } from "./rendering/VegetationRenderer.js";
 import { TerrainRenderer } from "./rendering/TerrainRenderer.js";
 import { ObjectRenderer } from "./rendering/ObjectRenderer.js";
+import { EnvironmentalEffectsRenderer } from "./rendering/EnvironmentalEffectsRenderer.js";
 import { roundedRect, observeCanvasViewport } from "./rendering/CanvasUtils.js";
 import { t as uiText, translateText, getModalTutorialCopy, getCampaignSceneCopy } from "./i18n.js";
 import { EmptyStomach } from "./minigames/EmptyStomach.js";
@@ -66,6 +67,7 @@ const atmosphereRenderer = new AtmosphereRenderer();
 const vegetationRenderer = new VegetationRenderer();
 const terrainRenderer = new TerrainRenderer();
 const objectRenderer = new ObjectRenderer();
+const effectsRenderer = new EnvironmentalEffectsRenderer();
 const resizeMainCanvas = observeCanvasViewport(canvas.parentElement, canvas, (width) => {
   GAME.width = width;
   ctx.imageSmoothingEnabled = false;
@@ -388,6 +390,14 @@ function drawBackground() {
     scene
   });
 
+  effectsRenderer.drawAmbientBack(ctx, {
+    environment: scene.environment,
+    cameraX,
+    viewportWidth: GAME.width,
+    viewportHeight: GAME.height,
+    elapsed
+  });
+
   terrainRenderer.drawBackdrop(ctx, {
     cameraX,
     viewportWidth: GAME.width,
@@ -603,7 +613,7 @@ function updateDashDust(delta) {
   dashDustClouds = dashDustClouds.filter((cloud) => cloud.life > 0);
 }
 
-function drawDashDustCloud(cloud) {
+function drawDashDustCloud(cloud, context = ctx) {
   const fade = Math.max(0, Math.min(1, cloud.life / cloud.max));
   if (fade <= 0) return;
   const rise = (1 - fade) * 12;
@@ -612,25 +622,22 @@ function drawDashDustCloud(cloud) {
     [0.46, 0.64, 0.19, 0.25], [0.63, 0.42, 0.16, 0.28],
     [0.80, 0.65, 0.16, 0.23], [0.94, 0.77, 0.10, 0.18]
   ];
-  ctx.save();
-  ctx.globalAlpha = fade * 0.68;
+  context.save();
+  context.globalAlpha = fade * 0.68;
   puffs.forEach(([px, py, rx, ry], index) => {
-    ctx.fillStyle = index % 2 ? "#c0b397" : "#d9ccb0";
-    ctx.beginPath();
-    ctx.ellipse(
-      cloud.x + cloud.w * px,
-      cloud.y + cloud.h * py - rise,
-      cloud.w * rx,
-      cloud.h * ry,
-      0, 0, Math.PI * 2
-    );
-    ctx.fill();
+    const width = Math.max(4, Math.round(cloud.w * rx * 0.82));
+    const height = Math.max(3, Math.round(cloud.h * ry * 0.55));
+    const x = Math.round(cloud.x + cloud.w * px - width / 2);
+    const y = Math.round(cloud.y + cloud.h * py - rise - height / 2);
+    context.fillStyle = index % 2 ? "#c0b397" : "#d9ccb0";
+    context.fillRect(x, y, width, height);
+    context.fillRect(x + Math.round(width * 0.2), y - 3, Math.max(3, Math.round(width * 0.5)), 3);
   });
-  ctx.globalAlpha = fade * 0.56;
-  ctx.fillStyle = "#e0d5bd";
-  ctx.fillRect(cloud.x + cloud.w * 0.18, cloud.y + cloud.h * 0.52 - rise, 12, 5);
-  ctx.fillRect(cloud.x + cloud.w * 0.68, cloud.y + cloud.h * 0.31 - rise, 9, 4);
-  ctx.restore();
+  context.globalAlpha = fade * 0.56;
+  context.fillStyle = "#e0d5bd";
+  context.fillRect(cloud.x + cloud.w * 0.18, cloud.y + cloud.h * 0.52 - rise, 12, 5);
+  context.fillRect(cloud.x + cloud.w * 0.68, cloud.y + cloud.h * 0.31 - rise, 9, 4);
+  context.restore();
 }
 
 function burst(x, y, color = "#d8f36a", count = 12) {
@@ -2857,7 +2864,14 @@ function render() {
       if (!enemy.defeated) drawReferenceHealthBar(enemy);
     }
   }
-  for (const cloud of dashDustClouds) drawDashDustCloud(cloud);
+  effectsRenderer.drawDust(ctx, {
+    environment: level().environment,
+    cameraX,
+    viewportWidth: GAME.width,
+    viewportHeight: GAME.height,
+    elapsed,
+    dustClouds: dashDustClouds
+  });
   for (const hunter of hunters) {
     if (hunter.x + hunter.w >= cameraX - 90 && hunter.x <= cameraX + GAME.width + 90) drawHunter(hunter);
   }
@@ -2882,12 +2896,12 @@ function render() {
   if (beta) drawBeta(beta);
   if (stegoceratops) spriteRenderer.drawAnimated(ctx, "stegoceratops", stegoceratops.x, stegoceratops.y, stegoceratops.w, stegoceratops.h, stegoceratops, elapsed, { facing: 1 });
   drawCampaignPrologueActors();
-  for (const particle of particles) {
-    ctx.globalAlpha = Math.max(0, particle.life / particle.max);
-    ctx.fillStyle = particle.color;
-    ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
-  }
-  ctx.globalAlpha = 1;
+  effectsRenderer.drawParticles(ctx, {
+    cameraX,
+    viewportWidth: GAME.width,
+    viewportHeight: GAME.height,
+    particles
+  });
 
   if (!campaignPrologue?.active) {
     for (const companion of autonomousCompanions) {
@@ -2936,6 +2950,20 @@ function render() {
       ctx.fillText(ui("interact"), terminal.x - 18, terminal.y - 24);
     }
   }
+  effectsRenderer.drawWind(ctx, {
+    environment: level().environment,
+    cameraX,
+    viewportWidth: GAME.width,
+    viewportHeight: GAME.height,
+    elapsed
+  });
+  effectsRenderer.drawWeather(ctx, {
+    environment: level().environment,
+    cameraX,
+    viewportWidth: GAME.width,
+    viewportHeight: GAME.height,
+    elapsed
+  });
   ctx.restore();
 
   if (!campaignPrologue?.active) {
