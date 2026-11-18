@@ -572,12 +572,16 @@ test("Empty Stomach includes the pause key in both instruction labels for Spanis
     "[data-empty-pause-label]",
     "[data-empty-start]",
     "[data-empty-retry]",
-    "[data-empty-exit]"
+    "[data-empty-exit]",
+    "[data-empty-checkpoint]"
   ];
   const nodes = new Map(selectors.map((selector) => [selector, { textContent: "" }]));
   const simulation = Object.create(Persecution.prototype);
   Object.assign(simulation, {
     locale: "es",
+    phase: "finished",
+    checkpoint: { milestone: 5 },
+    checkpointCharges: 1,
     pauseButton: {
       textContent: "",
       setAttribute(name, value) { this[name] = value; }
@@ -597,7 +601,9 @@ test("Empty Stomach includes the pause key in both instruction labels for Spanis
   assert.equal(nodes.get("[data-empty-start]").textContent, "INICIAR");
   assert.equal(nodes.get("[data-empty-retry]").textContent, "RETOMAR");
   assert.equal(nodes.get("[data-empty-exit]").textContent, "SALIR");
+  assert.equal(nodes.get("[data-empty-checkpoint]").textContent, "CHECKPOINT · [1]");
 
+  simulation.checkpointCharges = 2;
   simulation.setLocale("en");
   const englishInstructions = "A / D OR ← / →: MOVE · W / S OR ↑ / ↓: CHANGE LANE · SPACE: JUMP · X: DASH · E: PICK UP / DROP · Q: EAT EGG · P: PAUSE · ESC: EXIT";
   const englishControls = "A / D OR ← / →: MOVE · W / S OR ↑ / ↓: LANES · SPACE: JUMP · X: DASH · E: ITEM · Q: EGG · ESC: EXIT";
@@ -607,6 +613,7 @@ test("Empty Stomach includes the pause key in both instruction labels for Spanis
   assert.equal(nodes.get("[data-empty-start]").textContent, "START RUN");
   assert.equal(nodes.get("[data-empty-retry]").textContent, "RETRY");
   assert.equal(nodes.get("[data-empty-exit]").textContent, "EXIT");
+  assert.equal(nodes.get("[data-empty-checkpoint]").textContent, "CHECKPOINT · [2]");
 });
 
 test("Empty Stomach updates the game-over message when the locale changes after Coral is eaten", () => {
@@ -649,7 +656,7 @@ test("Empty Stomach keeps the pause shortcut only in the right-side control", as
   ));
   assert.ok(html.includes('<button type="button" data-empty-pause>P: PAUSAR</button>'));
   assert.ok(html.includes('<button type="button" data-empty-retry hidden>RETOMAR</button>'));
-  assert.ok(html.includes('<button type="button" data-empty-checkpoint hidden>USAR CHECKPOINT</button>'));
+  assert.ok(html.includes('<button type="button" data-empty-checkpoint hidden>CHECKPOINT · [1]</button>'));
 });
 
 

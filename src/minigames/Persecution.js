@@ -1226,11 +1226,7 @@ export class Persecution {
       (this.checkpointCharges ?? 0) > 0;
     button.hidden = !canContinue;
     if (canContinue) {
-      const meters = this.checkpoint.milestone * CHECKPOINT_INTERVAL_METERS;
-      button.textContent = this.text(
-        `USAR CHECKPOINT · ${meters} M · ${this.checkpointCharges}`,
-        `USE CHECKPOINT · ${meters} M · ${this.checkpointCharges}`
-      );
+      button.textContent = `CHECKPOINT · [${this.checkpointCharges}]`;
     }
   }
 
