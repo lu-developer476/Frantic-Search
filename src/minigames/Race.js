@@ -275,7 +275,7 @@ export class Race {
     const options = BREAKING_RACE_ROSTER.map((dinosaur) => {
       const option = document.createElement("option");
       option.value = dinosaur.id;
-      option.textContent = dinosaur.name + " — " + dinosaur.species;
+      option.textContent = dinosaur.species;
       return option;
     });
     this.dinosaurSelect.replaceChildren(...options);
@@ -304,12 +304,12 @@ export class Race {
       "Elegí tu dinosaurio, cambiá entre cuatro carriles, embestí a tus rivales y sobreviví a los 10.000 metros.",
       "Choose your dinosaur, shift between four lanes, ram your rivals and survive the 10,000 meters."
     );
-    this.dinosaurSelectLabel.textContent = this.text("DINOSAURIO A CONTROLAR", "DINOSAUR TO CONTROL");
+    this.dinosaurSelectLabel.textContent = this.text("PERSONAJE", "CHARACTER");
     this.root.querySelector("[data-br-instructions]").textContent = this.text(
       "ESPACIO: SALTAR · W / S O ↑ / ↓: CAMBIAR CARRIL · X: EMBESTIR · P: PAUSA · ESC: SALIR · HUEVOS Y CARNE: IMPULSO",
       "SPACE: JUMP · W / S OR ↑ / ↓: CHANGE LANE · X: RAM · P: PAUSE · ESC: EXIT · EGGS AND MEAT: BOOST"
     );
-    this.root.querySelector("[data-br-start]").textContent = this.text("INICIAR CARRERA", "START RACE");
+    this.root.querySelector("[data-br-start]").textContent = this.text("INICIAR", "START");
     this.root.querySelector("[data-br-retry]").textContent = this.text("OTRA CARRERA", "RACE AGAIN");
     this.root.querySelector("[data-br-exit]").textContent = this.text("VOLVER AL MENÚ", "BACK TO MENU");
     this.setStatus("CARRERA // LISTA", "RACE // READY");
