@@ -108,6 +108,44 @@ function pick(random, choices) {
   return choices[Math.floor(random() * choices.length)];
 }
 
+/**
+ * Creates one procedural ground detail using the same biome palette and
+ * weighted prop distribution as section scenery, ready to be streamed in
+ * from a mini-game viewport edge.
+ */
+export function createGroundSceneryProp({
+  environment = "prairie",
+  x = 0,
+  groundY = 430,
+  random = Math.random,
+  id = "ground-scenery"
+} = {}) {
+  const profile = BIOME_PROFILES[environment];
+  if (!profile || !Number.isFinite(x) || !Number.isFinite(groundY) || typeof random !== "function") {
+    return null;
+  }
+
+  const kind = pick(random, profile.groundKinds);
+  const dimensions = GROUND_PROP_DIMENSIONS[kind];
+  if (!dimensions) return null;
+
+  return {
+    id,
+    layer: "ground",
+    type: "ground-detail",
+    environment,
+    kind,
+    x,
+    baseY: groundY,
+    width: Math.round(randomBetween(random, dimensions[0])),
+    height: Math.round(randomBetween(random, dimensions[1])),
+    parallax: 1,
+    opacity: 0.92 + random() * 0.08,
+    variant: Math.floor(random() * 4),
+    flip: random() < 0.5
+  };
+}
+
 function layerRandom(seed, sectionIndex, salt) {
   const mixed = ((seed >>> 0) ^ Math.imul(sectionIndex + 1, 0x9e3779b1) ^ salt) >>> 0;
   return createRandom(mixed);

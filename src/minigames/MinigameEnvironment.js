@@ -133,7 +133,8 @@ export class MinigameEnvironmentRenderer {
     viewportWidth = targetContext?.canvas?.width ?? 960,
     viewportHeight = targetContext?.canvas?.height ?? 540,
     elapsed = 0,
-    drawMidground = null
+    drawMidground = null,
+    includeGroundScenery = true
   } = {}) {
     if (!this.ready || !targetContext) return false;
 
@@ -184,10 +185,12 @@ export class MinigameEnvironmentRenderer {
         platforms: [ground], cameraX,
         viewportWidth: width, viewportHeight: height, scene: this.scene
       });
-      this.vegetation.drawGround(targetContext, {
-        props: this.scenery, cameraX,
-        viewportWidth: width, viewportHeight: height, scene: this.scene
-      });
+      if (includeGroundScenery) {
+        this.vegetation.drawGround(targetContext, {
+          props: this.scenery, cameraX,
+          viewportWidth: width, viewportHeight: height, scene: this.scene
+        });
+      }
       this.effects.drawWind(targetContext, {
         environment, cameraX,
         viewportWidth: width, viewportHeight: height, elapsed

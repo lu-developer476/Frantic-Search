@@ -10,6 +10,7 @@ import {
   selectHerdPreySpecies, herdPreyAnimationKey, PRAIRIE_HERD, prairieHerdAnimationKey
 } from "../src/minigames/Persecution.js";
 import { removeEdgeBackground, getBottomTransparentPadding } from "../src/minigames/AnimatedGif.js";
+import { createGroundSceneryProp } from "../src/world/SceneryGenerator.js";
 
 test("Empty Stomach resolves every animation from the current GIF asset directory", async () => {
   const { access } = await import("node:fs/promises");
@@ -317,6 +318,42 @@ function makeSimulation({ player, enemies = [], herd = [] }) {
   };
   return simulation;
 }
+
+test("PERSECUCIÓN genera pasto y vegetación baja desde el borde derecho a ritmo de desplazamiento", () => {
+  const simulation = makeSimulation({ player: { x: 250, y: 366, w: 80, h: 66 } });
+  simulation.groundScenery = [];
+  simulation.groundScenerySpawnTimer = 0;
+  simulation.groundScenerySpawnIndex = 0;
+
+  const fixedRandom = () => 0.5;
+  const speed = 150;
+  simulation.updateGroundScenery(0.04, speed, fixedRandom);
+
+  assert.equal(simulation.groundScenery.length, 1, "the first prop is spawned immediately");
+  const first = simulation.groundScenery[0];
+  assert.ok(first.x - first.width / 2 >= 960, "the prop begins beyond the right canvas edge");
+  assert.equal(first.baseY, 438);
+  assert.equal(first.layer, "ground");
+  assert.equal(first.type, "ground-detail");
+  assert.equal(first.kind, "shrub", "prairie's existing weighted palette supplies the green vegetation");
+
+  const initialX = first.x;
+  simulation.updateGroundScenery(0.5, speed, fixedRandom);
+  assert.equal(simulation.groundScenery.length, 1, "the next prop waits for the spacing interval");
+  assert.equal(Number((initialX - first.x).toFixed(2)), 54, "ground props scroll at the same speed as hazards and pickups");
+
+  const generated = createGroundSceneryProp({
+    environment: "prairie",
+    x: 500,
+    groundY: 438,
+    random: fixedRandom,
+    id: "test-ground-prop"
+  });
+  assert.equal(generated.x, 500);
+  assert.equal(generated.baseY, 438);
+  assert.equal(generated.id, "test-ground-prop");
+  assert.ok(["dune-grass", "shrub", "boulder", "driftwood"].includes(generated.kind));
+});
 
 test("PERSECUCIÓN calcula el seguimiento de cámara en ambos sentidos dentro de una zona amplia", () => {
   const leftLimit = 960 * CAMERA_DEAD_ZONE_LEFT_RATIO;

@@ -165,6 +165,36 @@ test("mini-game foreground procedural layers are composited with the camera tran
   }
 });
 
+test("PERSECUCIÓN can replace pre-placed ground details with streamed props", () => {
+  const renderer = new MinigameEnvironmentRenderer({
+    scene: MINIGAME_ENVIRONMENT_SCENES.persecution,
+    groundY: 438,
+    seed: 91,
+    sectionLength: 1600,
+    sectionCount: 1
+  });
+  let groundDraws = 0;
+  renderer.ready = true;
+  renderer.atmosphere = { draw() {} };
+  renderer.vegetation = {
+    drawBackground() {},
+    drawGround() { groundDraws += 1; }
+  };
+  renderer.terrain = { drawBackdrop() {}, drawPlatforms() {} };
+  renderer.effects = {
+    drawAmbientBack() {}, drawWind() {}, drawWeather() {}, drawDust() {}
+  };
+  const context = {
+    canvas: { width: 960, height: 540 },
+    save() {}, restore() {}, translate() {}
+  };
+
+  assert.equal(renderer.draw(context, { includeGroundScenery: false }), true);
+  assert.equal(groundDraws, 0, "PERSECUCIÓN renders its streamed ground props instead of pre-placed scenery");
+  assert.equal(renderer.draw(context), true);
+  assert.equal(groundDraws, 1, "other minigames keep the default pre-generated ground scenery");
+});
+
 test("layer allocation failure safely falls back to native mini-game drawing", () => {
   const renderer = new MinigameEnvironmentRenderer({
     scene: MINIGAME_ENVIRONMENT_SCENES.persecution,

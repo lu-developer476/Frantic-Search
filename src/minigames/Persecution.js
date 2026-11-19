@@ -1,6 +1,8 @@
 import { loadAnimatedGif, getAnimatedFrameIndex } from "./AnimatedGif.js";
 import { drawSpriteImage, observeCanvasViewport } from "../rendering/CanvasUtils.js";
 import { MinigameEnvironmentRenderer, MINIGAME_ENVIRONMENT_SCENES } from "./MinigameEnvironment.js";
+import { drawGroundScenery } from "../rendering/SceneryRenderer.js";
+import { createGroundSceneryProp } from "../world/SceneryGenerator.js";
 let WIDTH = 960;
 const HEIGHT = 540;
 const FLOOR = 438;
@@ -229,6 +231,8 @@ export const DASH_SPEED_MULTIPLIER = 2.2;
 export const DASH_DUST_DURATION = 0.72;
 export const ENEMY_STUN_DURATION = 2;
 export const PLAYER_RIGHT_MARGIN = 120;
+export const GROUND_SCENERY_SPAWN_SPACING = 215;
+export const GROUND_SCENERY_SCROLL_MULTIPLIER = 0.72;
 export const CAMERA_DEAD_ZONE_LEFT_RATIO = 0.22;
 export const CAMERA_DEAD_ZONE_RIGHT_RATIO = 0.78;
 
@@ -359,6 +363,9 @@ export class Persecution {
     this.pits = [];
     this.mudPuddles = [];
     this.bushes = [];
+    this.groundScenery = [];
+    this.groundScenerySpawnTimer = 0;
+    this.groundScenerySpawnIndex = 0;
     this.carriedItem = null;
     this.invulnerabilityTimer = 0;
     this.eggSpawnTimer = 2.2;
@@ -443,7 +450,7 @@ export class Persecution {
     player.x -= cameraDelta;
     const worldCollections = [
       this.enemies, this.herd, this.eggs, this.rocks,
-      this.pits, this.mudPuddles, this.bushes, this.particles
+      this.pits, this.mudPuddles, this.bushes, this.particles, this.groundScenery
     ];
     for (const collection of worldCollections) {
       if (!Array.isArray(collection)) continue;
@@ -579,6 +586,9 @@ export class Persecution {
     this.pits = [];
     this.mudPuddles = [];
     this.bushes = [];
+    this.groundScenery = [];
+    this.groundScenerySpawnTimer = 0;
+    this.groundScenerySpawnIndex = 0;
     this.carriedItem = null;
     this.invulnerabilityTimer = 0;
     this.eggSpawnTimer = 2.2;
@@ -783,6 +793,34 @@ export class Persecution {
     this.bushes = this.bushes.filter((bush) => bush.life > 0 && bush.x + bush.w > -60);
   }
 
+  updateGroundScenery(delta, speed, random = Math.random) {
+    this.groundScenery ??= [];
+    this.groundScenerySpawnTimer = (this.groundScenerySpawnTimer ?? 0) - delta;
+
+    if (this.groundScenerySpawnTimer <= 0) {
+      const prop = createGroundSceneryProp({
+        environment: MINIGAME_ENVIRONMENT_SCENES.persecution.environment,
+        groundY: FLOOR,
+        random,
+        id: "persecution-ground-" + (this.groundScenerySpawnIndex ?? 0)
+      });
+
+      if (prop) {
+        // Ground details enter just beyond the right edge, like eggs and hazards.
+        prop.x = WIDTH + prop.width / 2 + 12;
+        this.groundScenery.push(prop);
+        this.groundScenerySpawnIndex = (this.groundScenerySpawnIndex ?? 0) + 1;
+      }
+
+      this.groundScenerySpawnTimer =
+        GROUND_SCENERY_SPAWN_SPACING / Math.max(1, speed * GROUND_SCENERY_SCROLL_MULTIPLIER);
+    }
+
+    const scroll = speed * GROUND_SCENERY_SCROLL_MULTIPLIER * delta;
+    for (const prop of this.groundScenery) prop.x -= scroll;
+    this.groundScenery = this.groundScenery.filter((prop) => prop.x + prop.width / 2 > -60);
+  }
+
   updateCheckpointProgress() {
     const milestone = Math.floor(this.distance / CHECKPOINT_INTERVAL_DISTANCE);
     if (milestone <= (this.checkpoint?.milestone ?? 0)) return false;
@@ -844,6 +882,7 @@ export class Persecution {
 
     this.updateCheckpointProgress();
     this.updateTerrain(delta, speed);
+    this.updateGroundScenery(delta, speed);
     if (this.tryResolvePitfall(p, "player")) return;
 
     this.spawnTimer -= delta;
@@ -1308,6 +1347,9 @@ export class Persecution {
     this.pits = [];
     this.mudPuddles = [];
     this.bushes = [];
+    this.groundScenery = [];
+    this.groundScenerySpawnTimer = 0;
+    this.groundScenerySpawnIndex = 0;
     this.particles = [];
     this.dashDustClouds = [];
     this.carriedItem = null;
@@ -1460,7 +1502,8 @@ export class Persecution {
       viewportWidth: WIDTH,
       viewportHeight: HEIGHT,
       elapsed: this.animationClock ?? this.elapsed,
-      drawMidground: () => this.drawPrairieHerd(scroll)
+      drawMidground: () => this.drawPrairieHerd(scroll),
+      includeGroundScenery: false
     }) ?? false;
 
     if (!layeredBackground) {
@@ -1552,6 +1595,12 @@ export class Persecution {
         ctx.fill();
       }
     }
+    }
+
+    // Procedural ground details now stream in from the right edge instead of
+    // being pre-placed across the generated world sections.
+    for (const prop of this.groundScenery ?? []) {
+      drawGroundScenery(ctx, prop, MINIGAME_ENVIRONMENT_SCENES.persecution);
     }
 
     for (const pit of this.pits ?? []) this.drawPit(pit);
