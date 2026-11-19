@@ -14,6 +14,10 @@ import {
   RACE_SPEED_VARIANCE,
   getRacePace,
   getRaceAnimationSource,
+  getRaceHorizontalInput,
+  getRaceMovementSpeed,
+  getRaceCameraX,
+  RACE_PLAYER_HORIZONTAL_CONTROL_SPEED,
   RACE_OPENING_CINEMATIC_DURATION,
   getRaceDistanceMeters,
   hasRacerBeenEaten,
@@ -145,4 +149,54 @@ test("the race opening uses matching idle, walk and run GIFs when available", ()
   assert.equal(getRaceAnimationSource(brisa, "idle"), "references/juvenile-velociraptor-abyssomirabilis-idle.gif");
   assert.equal(getRaceAnimationSource(brisa, "walk"), "references/juvenile-velociraptor-abyssomirabilis-idle.gif");
   assert.equal(RACE_OPENING_CINEMATIC_DURATION, 10);
+});
+
+
+test("race opening uses walk GIFs for staging and run GIFs for the race", () => {
+  for (const id of ["venatosaurus-impavidus", "venatosaurus-saevidicus", "umbraraptor-silvis"]) {
+    const dinosaur = BREAKING_RACE_ROSTER.find((entry) => entry.id === id);
+    assert.match(getRaceAnimationSource(dinosaur, "walk"), /-walk\.gif$/);
+  }
+  for (const id of ["brisa", "venatosaurus-impavidus", "venatosaurus-saevidicus", "coral", "xenoraptor-crypticus"]) {
+    const dinosaur = BREAKING_RACE_ROSTER.find((entry) => entry.id === id);
+    assert.match(getRaceAnimationSource(dinosaur, "run"), /-run\.gif$/);
+  }
+  const umbraraptor = BREAKING_RACE_ROSTER.find((entry) => entry.id === "umbraraptor-silvis");
+  assert.equal(getRaceAnimationSource(umbraraptor, "run"), umbraraptor.idle);
+  const xenoraptor = BREAKING_RACE_ROSTER.find((entry) => entry.id === "xenoraptor-crypticus");
+  assert.equal(getRaceAnimationSource(xenoraptor, "idle"), null);
+  assert.equal(getRaceAnimationSource(xenoraptor, "walk"), null, "a run GIF must not play while taking positions");
+});
+
+test("the player can accelerate forward, reverse, and release horizontal controls", () => {
+  const racer = { isPlayer: true };
+  const basePace = getRacePace(88);
+  assert.equal(getRaceHorizontalInput(new Set()), 0);
+  assert.equal(getRaceHorizontalInput(new Set(["ArrowRight"])), 1);
+  assert.equal(getRaceHorizontalInput(new Set(["KeyD"])), 1);
+  assert.equal(getRaceHorizontalInput(new Set(["ArrowLeft"])), -1);
+  assert.equal(getRaceHorizontalInput(new Set(["KeyA"])), -1);
+  assert.equal(getRaceHorizontalInput(new Set(["ArrowLeft", "ArrowRight"])), 0);
+  assert.ok(getRaceMovementSpeed(racer, basePace, 0, 1) > basePace);
+  assert.ok(getRaceMovementSpeed(racer, basePace, 0, -1) < 0);
+  assert.equal(getRaceMovementSpeed(racer, basePace, 0, 0), basePace);
+  assert.equal(RACE_PLAYER_HORIZONTAL_CONTROL_SPEED, 170);
+});
+
+test("AI racers gain and lose ground independently of the player", () => {
+  const faster = getRaceMovementSpeed({ isPlayer: false, aiPaceFactor: 1.12, aiPaceFrequency: 0, aiPacePhase: 0 }, 100);
+  const slower = getRaceMovementSpeed({ isPlayer: false, aiPaceFactor: 0.88, aiPaceFrequency: 0, aiPacePhase: 0 }, 100);
+  assert.ok(faster > 100);
+  assert.ok(slower < 100);
+});
+
+test("the race camera pans forward and backward with the player", () => {
+  const forwardCamera = getRaceCameraX(-278, 1200, 960, 0, RACE_TRACK_LENGTH_PIXELS);
+  assert.ok(forwardCamera > -278);
+  const backwardCamera = getRaceCameraX(forwardCamera, 400, 960, 0, RACE_TRACK_LENGTH_PIXELS);
+  assert.ok(backwardCamera < forwardCamera);
+  const atStart = getRaceCameraX(backwardCamera, 0, 960, 0, RACE_TRACK_LENGTH_PIXELS);
+  assert.equal(atStart, -960 * 0.18);
+  const atFinish = getRaceCameraX(forwardCamera, RACE_TRACK_LENGTH_PIXELS, 960, 0, RACE_TRACK_LENGTH_PIXELS);
+  assert.equal(atFinish, RACE_TRACK_LENGTH_PIXELS - 960 * 0.82);
 });

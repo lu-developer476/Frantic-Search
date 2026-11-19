@@ -25,6 +25,9 @@ export const RAM_SLOW_DURATION = 1.35;
 export const RAM_SLOW_PENALTY = 39;
 export const RACE_BASE_SPEED = 88;
 export const RACE_SPEED_VARIANCE = 0.2;
+export const RACE_PLAYER_HORIZONTAL_CONTROL_SPEED = 170;
+export const RACE_CAMERA_LEFT_RATIO = 0.18;
+export const RACE_CAMERA_RIGHT_RATIO = 0.82;
 
 export function getRacePace(rosterSpeed) {
   const speed = Number.isFinite(Number(rosterSpeed)) ? Number(rosterSpeed) : RACE_BASE_SPEED;
@@ -51,7 +54,7 @@ export const BREAKING_RACE_ROSTER = Object.freeze([
   { id: "venatosaurus-impavidus", name: "Venatosaurus impavidus", species: "Venatosaurus impavidus", idle: "references/venatosaurus-impavidus-idle.gif", walk: "references/venatosaurus-impavidus-walk.gif", run: "references/venatosaurus-impavidus-run.gif", jump: "references/venatosaurus-impavidus-jump.gif", speed: 86 },
   { id: "venatosaurus-saevidicus", name: "Venatosaurus saevidicus", species: "Venatosaurus saevidicus", idle: "references/venatosaurus-saevidicus-idle.gif", walk: "references/venatosaurus-saevidicus-walk.gif", run: "references/venatosaurus-saevidicus-run.gif", jump: "references/venatosaurus-saevidicus-jump.gif", speed: 84 },
   { id: "coral", name: "Coral", species: "Miniraptor", idle: "minigame/persecution/gif/main/miniraptor-idle.gif", walk: null, run: "minigame/persecution/gif/main/miniraptor-run.gif", jump: "minigame/persecution/gif/main/miniraptor-jump.gif", speed: 94 },
-  { id: "umbraraptor-silvis", name: "Umbraraptor silvis", species: "Umbraraptor silvis", idle: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-idle.gif", walk: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-walk.gif", run: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-walk.gif", jump: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-jump.gif", speed: 82 },
+  { id: "umbraraptor-silvis", name: "Umbraraptor silvis", species: "Umbraraptor silvis", idle: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-idle.gif", walk: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-walk.gif", run: null, jump: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-jump.gif", speed: 82 },
   { id: "xenoraptor-crypticus", name: "Xenoraptor crypticus", species: "Xenoraptor crypticus", idle: null, walk: null, run: "minigame/persecution/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-run.gif", jump: "minigame/persecution/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-jump.gif", speed: 90 }
 ]);
 
@@ -136,11 +139,47 @@ export function generateRaceCourse(seed = Date.now()) {
 
 export function getRaceAnimationSource(dinosaur, action) {
   const sources = {
-    idle: [dinosaur?.idle, dinosaur?.walk, dinosaur?.run],
-    walk: [dinosaur?.walk, dinosaur?.idle, dinosaur?.run],
-    run: [dinosaur?.run, dinosaur?.walk, dinosaur?.idle]
+    idle: [dinosaur?.idle, dinosaur?.walk],
+    walk: [dinosaur?.walk, dinosaur?.idle],
+    run: [dinosaur?.run, dinosaur?.idle]
   };
   return (sources[action] ?? []).find((source) => typeof source === "string" && source.length > 0) ?? null;
+}
+
+export function getRaceHorizontalInput(keys = new Set()) {
+  const forward = keys.has("ArrowRight") || keys.has("KeyD");
+  const backward = keys.has("ArrowLeft") || keys.has("KeyA");
+  return forward === backward ? 0 : forward ? 1 : -1;
+}
+
+export function getRaceMovementSpeed(racer, basePace, elapsed = 0, horizontalInput = 0) {
+  if (racer?.isPlayer) {
+    return basePace + clamp(horizontalInput, -1, 1) * RACE_PLAYER_HORIZONTAL_CONTROL_SPEED;
+  }
+  const aiPaceFactor = Number.isFinite(racer?.aiPaceFactor) ? racer.aiPaceFactor : 1;
+  const aiPaceFrequency = Number.isFinite(racer?.aiPaceFrequency) ? racer.aiPaceFrequency : 0.45;
+  const aiPacePhase = Number.isFinite(racer?.aiPacePhase) ? racer.aiPacePhase : 0;
+  const paceVariation = 1 + Math.sin(elapsed * aiPaceFrequency + aiPacePhase) * 0.035;
+  return basePace * aiPaceFactor * paceVariation;
+}
+
+export function getRaceCameraX(
+  currentCameraX,
+  playerX,
+  viewportWidth,
+  trackStartX = 0,
+  trackFinishX = RACE_TRACK_LENGTH_PIXELS
+) {
+  const leftEdge = viewportWidth * RACE_CAMERA_LEFT_RATIO;
+  const rightEdge = viewportWidth * RACE_CAMERA_RIGHT_RATIO;
+  const screenX = playerX - currentCameraX;
+  let nextCameraX = currentCameraX;
+  if (screenX < leftEdge) nextCameraX = playerX - leftEdge;
+  else if (screenX > rightEdge) nextCameraX = playerX - rightEdge;
+
+  const minCameraX = trackStartX - viewportWidth / 2;
+  const maxCameraX = trackFinishX - viewportWidth / 2;
+  return clamp(nextCameraX, minCameraX, maxCameraX);
 }
 
 export function createRaceLineup(selectedDinosaurId, random = Math.random) {
@@ -206,6 +245,7 @@ export class Race {
     this.openingPhaseLabel = root.querySelector("[data-br-opening-phase]");
     this.openingStatusLabel = root.querySelector("[data-br-opening-status]");
     this.openingProgress = root.querySelector("[data-br-opening-progress]");
+    this.horizontalKeys = new Set();
     this.running = false;
     this.paused = false;
     this.last = 0;
@@ -231,7 +271,12 @@ export class Race {
     this.environmentRenderer = this.createEnvironmentRenderer(4021);
     this.handleDown = (event) => {
       if (!this.root.classList.contains("active")) return;
-      if (["Space", "ArrowUp", "ArrowDown", "KeyW", "KeyS", "KeyX"].includes(event.code)) event.preventDefault();
+      if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "KeyW", "KeyS", "KeyA", "KeyD", "KeyX"].includes(event.code)) event.preventDefault();
+
+      if (["ArrowLeft", "ArrowRight", "KeyA", "KeyD"].includes(event.code)) {
+        if (this.running && !this.paused) this.horizontalKeys.add(event.code);
+        return;
+      }
 
       if (event.code === "Escape" && !event.repeat) {
         if (!this.confirmationDialog.hidden) {
@@ -256,7 +301,11 @@ export class Race {
       else if (event.code === "KeyX") this.activateRam(player);
     };
 
+    this.handleUp = (event) => this.horizontalKeys.delete(event.code);
+    this.handleBlur = () => this.horizontalKeys.clear();
     window.addEventListener("keydown", this.handleDown);
+    window.addEventListener("keyup", this.handleUp);
+    window.addEventListener("blur", this.handleBlur);
     root.querySelector("[data-br-start]").addEventListener("click", () => this.openSelectionConfirmation());
     root.querySelector("[data-br-retry]").addEventListener("click", () => this.beginOpeningCinematic());
     root.querySelector("[data-br-exit]").addEventListener("click", () => this.exit());
@@ -335,8 +384,8 @@ export class Race {
     );
     this.dinosaurSelectLabel.textContent = this.text("PERSONAJE", "CHARACTER");
     this.root.querySelector("[data-br-instructions]").textContent = this.text(
-      "ESPACIO: SALTAR · W / S O ↑ / ↓: CAMBIAR CARRIL · X: EMBESTIR · P: PAUSA · ESC: SALIR · HUEVOS Y CARNE: IMPULSO",
-      "SPACE: JUMP · W / S OR ↑ / ↓: CHANGE LANE · X: RAM · P: PAUSE · ESC: EXIT · EGGS AND MEAT: BOOST"
+      "A / D O ← / →: AVANZAR / RETROCEDER · ESPACIO: SALTAR · W / S O ↑ / ↓: CAMBIAR CARRIL · X: EMBESTIR · P: PAUSA · ESC: SALIR · HUEVOS Y CARNE: IMPULSO",
+      "A / D OR ← / →: MOVE FORWARD / BACKWARD · SPACE: JUMP · W / S OR ↑ / ↓: CHANGE LANE · X: RAM · P: PAUSE · ESC: EXIT · EGGS AND MEAT: BOOST"
     );
     this.root.querySelector("[data-br-start]").textContent = this.text("INICIAR", "START");
     this.root.querySelector("[data-br-retry]").textContent = this.text("OTRA CARRERA", "RACE AGAIN");
@@ -426,6 +475,7 @@ export class Race {
     if (this.openingFrame !== null) cancelAnimationFrame(this.openingFrame);
     this.frame = null;
     this.openingFrame = null;
+    this.horizontalKeys?.clear();
   }
 
   loadDinosaurImages(lineup) {
@@ -489,7 +539,6 @@ export class Race {
 
     const phase = elapsed < 3 ? "idle" : elapsed < 6.5 ? "walk" : "run";
     const walkProgress = clamp((elapsed - 3) / 3.5, 0, 1);
-    const baseX = WIDTH * 0.26;
     for (let index = 0; index < lineup.length; index += 1) {
       const dinosaur = lineup[index];
       const lane = index;
@@ -500,10 +549,14 @@ export class Race {
       const height = image?.naturalWidth
         ? width * image.naturalHeight / image.naturalWidth
         : 48 * layout.scale;
-      const entryX = WIDTH * 0.08;
-      const x = phase === "walk"
-        ? entryX + (baseX - entryX) * walkProgress
-        : baseX + (phase === "run" ? Math.sin(elapsed * 9 + index) * 3 : 0);
+      const positionRatio = lineup.length > 1 ? index / (lineup.length - 1) : 0.5;
+      const targetX = WIDTH * (0.23 + positionRatio * 0.54);
+      const entryX = targetX - WIDTH * 0.11;
+      const x = phase === "idle"
+        ? entryX
+        : phase === "walk"
+          ? entryX + (targetX - entryX) * walkProgress
+          : targetX + Math.sin(elapsed * 9 + index) * 3;
       const baseline = layout.baseline;
       context.fillStyle = "rgba(35, 43, 28, 0.24)";
       context.beginPath();
@@ -592,6 +645,9 @@ export class Race {
       raceSpeed: getRacePace(dinosaur.speed),
       lane: laneOrder[index],
       x: this.startX,
+      aiPaceFactor: 0.84 + this.random() * 0.32,
+      aiPaceFrequency: 0.3 + this.random() * 0.38,
+      aiPacePhase: this.random() * Math.PI * 2,
       distanceMeters: 0,
       score: 0,
       cp: 0,
@@ -636,6 +692,7 @@ export class Race {
     if (this.paused) {
       if (this.frame !== null) cancelAnimationFrame(this.frame);
       this.frame = null;
+      this.horizontalKeys.clear();
       this.setStatus("CARRERA // PAUSADA", "RACE // PAUSED");
       return;
     }
@@ -675,6 +732,7 @@ export class Race {
 
   update(delta) {
     this.elapsed += delta;
+    const horizontalInput = getRaceHorizontalInput(this.horizontalKeys);
     for (const effect of this.eatEffects) effect.life = Math.max(0, effect.life - delta);
     this.eatEffects = this.eatEffects.filter((effect) => effect.life > 0);
 
@@ -718,13 +776,19 @@ export class Race {
       this.resolveHazards(racer);
       this.resolvePickups(racer);
 
-      const pace = (
+      const basePace = (
         racer.raceSpeed +
         (racer.boost > 0 ? 42 : 0) -
         (racer.slow > 0 ? RAM_SLOW_PENALTY : 0) +
         (racer.jumping ? 4 : 0)
       ) * (racer.ramTimer > 0 ? DASH_SPEED_MULTIPLIER : 1);
-      racer.x = Math.min(this.finishX, racer.x + pace * delta);
+      const pace = getRaceMovementSpeed(
+        racer,
+        basePace,
+        this.elapsed,
+        racer.isPlayer ? horizontalInput : 0
+      );
+      racer.x = clamp(racer.x + pace * delta, this.startX, this.finishX);
       racer.distanceMeters = getRaceDistanceMeters(racer.x);
 
       const target = this.checkpoints[racer.cp];
@@ -760,7 +824,11 @@ export class Race {
       if (racer.eaten || racer.finished) return current;
       return !current || racer.x > current.x ? racer : current;
     }, null);
-    if (leader) this.cameraX = Math.max(this.cameraX, leader.x - this.startScreenX);
+    const player = this.playerRacer;
+    const focus = player && !player.eaten ? player : leader;
+    if (focus) {
+      this.cameraX = getRaceCameraX(this.cameraX, focus.x, WIDTH, this.startX, this.finishX);
+    }
   }
 
   updateRacerAI(racer, delta) {
@@ -1262,7 +1330,10 @@ export class Race {
     const baseline = layout.baseline;
     const sink = racer.pitfallTimer > 0 ? (1 - racer.pitfallTimer / 0.82) * 23 * layout.scale : 0;
     const y = baseline - height + (racer.jumpY || 0) + sink;
-    const image = this.images.get(racer.jumping ? racer.d.jump : racer.d.run);
+    const imageSource = racer.jumping
+      ? racer.d.jump
+      : getRaceAnimationSource(racer.d, "run");
+    const image = this.images.get(imageSource);
 
     context.fillStyle = "rgba(35, 43, 28, 0.24)";
     context.beginPath();
@@ -1469,5 +1540,7 @@ export class Race {
     this.exit();
     this.canvasViewport.disconnect();
     window.removeEventListener("keydown", this.handleDown);
+    window.removeEventListener("keyup", this.handleUp);
+    window.removeEventListener("blur", this.handleBlur);
   }
 }
