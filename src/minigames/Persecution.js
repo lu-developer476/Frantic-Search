@@ -229,6 +229,32 @@ export const DASH_SPEED_MULTIPLIER = 2.2;
 export const DASH_DUST_DURATION = 0.72;
 export const ENEMY_STUN_DURATION = 2;
 export const PLAYER_RIGHT_MARGIN = 120;
+export const CAMERA_DEAD_ZONE_LEFT_RATIO = 0.22;
+export const CAMERA_DEAD_ZONE_RIGHT_RATIO = 0.78;
+
+/**
+ * Returns the signed horizontal camera movement needed to keep the player
+ * inside a broad central area of the canvas. Positive values follow rightward
+ * movement; negative values follow leftward movement.
+ */
+export function getCameraFollowDelta(playerX, playerWidth, viewportWidth) {
+  if (![playerX, playerWidth, viewportWidth].every(Number.isFinite) ||
+      playerWidth <= 0 || viewportWidth <= 0) return 0;
+
+  const maxPlayerX = Math.max(22, viewportWidth - playerWidth - 22);
+  const leftLimit = Math.min(
+    Math.max(22, viewportWidth * CAMERA_DEAD_ZONE_LEFT_RATIO),
+    maxPlayerX
+  );
+  const rightLimit = Math.max(
+    leftLimit,
+    Math.min(maxPlayerX, viewportWidth * CAMERA_DEAD_ZONE_RIGHT_RATIO - playerWidth)
+  );
+
+  if (playerX < leftLimit) return playerX - leftLimit;
+  if (playerX > rightLimit) return playerX - rightLimit;
+  return 0;
+}
 export const EGG_INVULNERABILITY_DURATION = 4;
 export const ITEM_INTERACTION_RADIUS = 112;
 export const ENEMY_TRIP_FADE_DURATION = 0.9;
@@ -403,6 +429,34 @@ export class Persecution {
 
   movementMultiplier(entity) {
     return this.isInMud(entity) ? MUD_SPEED_MULTIPLIER : 1;
+  }
+
+  followPlayerWithCamera() {
+    const player = this.player;
+    if (!player || !Number.isFinite(player.x)) return 0;
+
+    const cameraDelta = getCameraFollowDelta(player.x, player.w, WIDTH);
+    if (Math.abs(cameraDelta) < 0.001) return 0;
+
+    // Keep Coral inside the tracking zone and move every world-space actor
+    // and hazard by the inverse camera displacement.
+    player.x -= cameraDelta;
+    const worldCollections = [
+      this.enemies, this.herd, this.eggs, this.rocks,
+      this.pits, this.mudPuddles, this.bushes, this.particles
+    ];
+    for (const collection of worldCollections) {
+      if (!Array.isArray(collection)) continue;
+      for (const entity of collection) {
+        if (Number.isFinite(entity?.x)) entity.x -= cameraDelta;
+      }
+    }
+    for (const cloud of this.dashDustClouds ?? []) {
+      if (Number.isFinite(cloud?.x)) cloud.x -= cameraDelta;
+    }
+
+    this.sceneryOffset = (this.sceneryOffset ?? 0) + cameraDelta;
+    return cameraDelta;
   }
 
   isPlayerHidden() {
@@ -759,6 +813,7 @@ export class Persecution {
     if (left && !right) p.facing = -1;
     else if (right && !left) p.facing = 1;
     const dashing = (p.dashTimer ?? 0) > 0;
+    const previousPlayerX = p.x;
     const playerSpeed = this.movementMultiplier(p);
     if (p.trappedTimer <= 0) {
       if (dashing) {
@@ -771,6 +826,7 @@ export class Persecution {
     if (dashing) p.dashTimer = Math.max(0, p.dashTimer - delta);
     p.dashCooldown = Math.max(0, (p.dashCooldown ?? 0) - delta);
     p.x = Math.max(22, Math.min(WIDTH - p.w - PLAYER_RIGHT_MARGIN, p.x));
+    if (p.x !== previousPlayerX) this.followPlayerWithCamera();
     const playerFloor = getLaneBaseline(this.getEntityLane(p));
     if (p.trappedTimer > 0) {
       p.vy = 0;

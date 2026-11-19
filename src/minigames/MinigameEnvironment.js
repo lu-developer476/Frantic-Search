@@ -66,6 +66,7 @@ export class MinigameEnvironmentRenderer {
     this.seed = seed;
     this.sectionLength = Math.max(1000, Math.round(sectionLength));
     this.sectionCount = Math.max(1, Math.floor(sectionCount));
+    this.worldStart = 0;
     this.worldLength = this.sectionLength * this.sectionCount;
 
     this.scenery = [];
@@ -96,6 +97,21 @@ export class MinigameEnvironmentRenderer {
   }
 
   ensureCoverage(cameraX = 0, viewportWidth = 960) {
+    // Generate deterministic sections before world origin when the camera pans left.
+    while (this.worldStart > Math.min(0, cameraX)) {
+      const sectionStart = this.worldStart - this.sectionLength;
+      const sectionIndex = Math.round(sectionStart / this.sectionLength);
+      this.scenery.push(...generateSectionScenery({
+        seed: this.seed,
+        sectionIndex,
+        sectionStart,
+        sectionLength: this.sectionLength,
+        groundY: this.groundY,
+        environment: this.scene.environment
+      }));
+      this.worldStart = sectionStart;
+    }
+
     const requiredEnd = Math.max(0, cameraX) + Math.max(1, viewportWidth) + this.sectionLength;
     while (this.worldLength < requiredEnd) {
       const sectionIndex = this.sectionCount;
@@ -129,9 +145,9 @@ export class MinigameEnvironmentRenderer {
     const ground = {
       id: "minigame-ground",
       kind: "ground",
-      x: 0,
+      x: this.worldStart,
       y: this.groundY,
-      w: this.worldLength,
+      w: this.worldLength - this.worldStart,
       h: Math.max(1, height - this.groundY)
     };
     const environment = this.scene.environment;

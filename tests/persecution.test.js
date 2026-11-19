@@ -5,6 +5,7 @@ import {
   Persecution, ENEMY_CHASE_DURATION, INTRO_DURATION, PLAYER_WIDTH, PLAYER_HEIGHT,
   DASH_DURATION, DASH_COOLDOWN, DASH_SPEED_MULTIPLIER, ENEMY_STUN_DURATION,
   EGG_INVULNERABILITY_DURATION, ENEMY_TRIP_FADE_DURATION, createEgg,
+  getCameraFollowDelta, CAMERA_DEAD_ZONE_LEFT_RATIO, CAMERA_DEAD_ZONE_RIGHT_RATIO,
   CHECKPOINT_INTERVAL_METERS, CHECKPOINT_INTERVAL_DISTANCE, EGGS_PER_CHECKPOINT_CONTINUE,
   selectHerdPreySpecies, herdPreyAnimationKey, PRAIRIE_HERD, prairieHerdAnimationKey
 } from "../src/minigames/Persecution.js";
@@ -316,6 +317,59 @@ function makeSimulation({ player, enemies = [], herd = [] }) {
   };
   return simulation;
 }
+
+test("PERSECUCIÓN calcula el seguimiento de cámara en ambos sentidos dentro de una zona amplia", () => {
+  const leftLimit = 960 * CAMERA_DEAD_ZONE_LEFT_RATIO;
+  const rightLimit = 960 * CAMERA_DEAD_ZONE_RIGHT_RATIO - 80;
+
+  assert.equal(getCameraFollowDelta(400, 80, 960), 0, "the camera stays still while Coral is inside the tracking zone");
+  assert.ok(Math.abs(getCameraFollowDelta(700, 80, 960) - (700 - rightLimit)) < 1e-9);
+  assert.ok(Math.abs(getCameraFollowDelta(180, 80, 960) - (180 - leftLimit)) < 1e-9);
+  assert.equal(getCameraFollowDelta(180, 80, 0), 0, "invalid viewport dimensions are ignored");
+});
+
+test("PERSECUCIÓN desplaza el escenario y todos los elementos en el sentido inverso a la cámara", () => {
+  const makeWorld = (playerX) => {
+    const simulation = makeSimulation({ player: { x: playerX, y: 366, w: 80, h: 66 } });
+    Object.assign(simulation, {
+      sceneryOffset: 100,
+      enemies: [{ x: 500 }],
+      herd: [{ x: 460 }],
+      eggs: [{ x: 420 }],
+      rocks: [{ x: 380 }],
+      pits: [{ x: 340 }],
+      mudPuddles: [{ x: 300 }],
+      bushes: [{ x: 260 }],
+      particles: [{ x: 220 }],
+      dashDustClouds: [{ x: 180 }]
+    });
+    return simulation;
+  };
+
+  const rightward = makeWorld(700);
+  const rightDelta = rightward.followPlayerWithCamera();
+  const rightLimit = 960 * CAMERA_DEAD_ZONE_RIGHT_RATIO - 80;
+  assert.ok(rightDelta > 0, "moving past the right limit advances the camera");
+  assert.ok(Math.abs(rightward.player.x - rightLimit) < 1e-9);
+  assert.ok(Math.abs(rightward.sceneryOffset - (100 + rightDelta)) < 1e-9);
+  assert.ok(Math.abs(rightward.enemies[0].x - (500 - rightDelta)) < 1e-9);
+  assert.ok(Math.abs(rightward.herd[0].x - (460 - rightDelta)) < 1e-9);
+  assert.ok(Math.abs(rightward.eggs[0].x - (420 - rightDelta)) < 1e-9);
+  assert.ok(Math.abs(rightward.rocks[0].x - (380 - rightDelta)) < 1e-9);
+  assert.ok(Math.abs(rightward.pits[0].x - (340 - rightDelta)) < 1e-9);
+  assert.ok(Math.abs(rightward.mudPuddles[0].x - (300 - rightDelta)) < 1e-9);
+  assert.ok(Math.abs(rightward.bushes[0].x - (260 - rightDelta)) < 1e-9);
+  assert.ok(Math.abs(rightward.particles[0].x - (220 - rightDelta)) < 1e-9);
+  assert.ok(Math.abs(rightward.dashDustClouds[0].x - (180 - rightDelta)) < 1e-9);
+
+  const leftward = makeWorld(180);
+  const leftDelta = leftward.followPlayerWithCamera();
+  const leftLimit = 960 * CAMERA_DEAD_ZONE_LEFT_RATIO;
+  assert.ok(leftDelta < 0, "moving past the left limit reverses the camera");
+  assert.ok(Math.abs(leftward.player.x - leftLimit) < 1e-9);
+  assert.ok(Math.abs(leftward.sceneryOffset - (100 + leftDelta)) < 1e-9);
+  assert.ok(Math.abs(leftward.enemies[0].x - (500 - leftDelta)) < 1e-9);
+});
 
 test("Empty Stomach uses a five-second entrance before the ambush run begins", () => {
   assert.equal(INTRO_DURATION, 5);

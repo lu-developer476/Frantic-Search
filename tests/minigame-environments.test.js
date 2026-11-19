@@ -82,6 +82,24 @@ test("procedural environment coverage extends the ground and scenery for long-ru
   assert.ok(renderer.scenery.some(prop => prop.x >= initialLength));
 });
 
+test("procedural environment coverage extends scenery and ground behind world origin", async () => {
+  const renderer = new MinigameEnvironmentRenderer({
+    scene: MINIGAME_ENVIRONMENT_SCENES.persecution,
+    groundY: 438,
+    seed: 71,
+    sectionLength: 1600,
+    sectionCount: 2
+  });
+  const initialEnd = renderer.worldLength;
+  renderer.ensureCoverage(-1750, 960);
+
+  assert.ok(renderer.worldStart <= -1750, "the generated world must cover the camera's negative position");
+  assert.ok(renderer.scenery.some(prop => prop.x < 0), "backward sections contain real vegetation");
+  assert.equal(renderer.worldLength, initialEnd, "backward coverage must not change the positive world boundary");
+  const source = await readFile(new URL("../src/minigames/MinigameEnvironment.js", import.meta.url), "utf8");
+  assert.match(source, /x: this\.worldStart,[\s\S]*?w: this\.worldLength - this\.worldStart/);
+});
+
 test("layer allocation failure safely falls back to native mini-game drawing", () => {
   const renderer = new MinigameEnvironmentRenderer({
     scene: MINIGAME_ENVIRONMENT_SCENES.persecution,
