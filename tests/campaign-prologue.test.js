@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import {
   CampaignPrologue,
   PROLOGUE_MILESTONES,
@@ -97,4 +98,24 @@ test("prologue durations reject invalid delta values", () => {
   assert.throws(() => prologue.update(-0.1), RangeError);
   assert.throws(() => prologue.update(Number.NaN), RangeError);
   assert.throws(() => new CampaignPrologue({ startX: Infinity }), TypeError);
+});
+
+
+test("the opening narration leaves the campaign dinosaurs visible below its story card", async () => {
+  const [main, styles] = await Promise.all([
+    readFile(new URL("../src/main.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/styles/main.css", import.meta.url), "utf8")
+  ]);
+
+  assert.ok(main.includes("drawCampaignPrologueActors();"), "the prologue actors must be rendered on every game frame");
+  assert.ok(main.includes("drawPrologueBrisa("), "Brisa must remain part of the opening scene");
+
+  const panelStart = styles.indexOf(".story-panel{");
+  const cardStart = styles.indexOf(".story-card{");
+  const panel = styles.slice(panelStart, styles.indexOf("}", panelStart));
+  const card = styles.slice(cardStart, styles.indexOf("}", cardStart));
+  assert.ok(panel.includes("place-items:start center"));
+  assert.ok(panel.includes("rgba(7,16,15,.06)"));
+  assert.ok(panel.includes("pointer-events:none"));
+  assert.ok(card.includes("pointer-events:auto"));
 });

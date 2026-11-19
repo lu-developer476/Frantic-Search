@@ -6,9 +6,9 @@
 .hud-strip .objective .health-readout{display:block;margin-top:4px;font-size:7px;letter-spacing:.08em;color:#e8a77d}.hud-strip .objective .health-readout:empty{display:none}
 
 
-.story-panel{position:absolute;inset:0;z-index:8;display:grid;place-items:center;padding:clamp(14px,4vw,42px);background:linear-gradient(135deg,#07100fee,#101d1ddd 65%,#111b1beF);backdrop-filter:blur(5px)}
+.story-panel{position:absolute;inset:0;z-index:8;display:grid;place-items:start center;padding:clamp(12px,2vw,22px);background:linear-gradient(180deg,rgba(7,16,15,.68) 0%,rgba(7,16,15,.28) 38%,rgba(7,16,15,.06) 68%,transparent 100%);backdrop-filter:none;pointer-events:none}
 .story-panel.hidden{display:none}
-.story-card{width:min(680px,100%);padding:clamp(22px,4vw,42px);border:1px solid #667c66;background:linear-gradient(145deg,#1c2928f5,#101a1bf5);box-shadow:0 24px 80px #0009}
+.story-card{width:min(680px,100%);max-height:calc(100% - 12px);overflow-y:auto;margin:0 auto;padding:clamp(18px,3vw,30px);border:1px solid #667c66;background:linear-gradient(145deg,rgba(28,41,40,.94),rgba(16,26,27,.88));box-shadow:0 24px 80px #0009;pointer-events:auto}
 .story-kicker{margin:0 0 14px;color:var(--acid);font-family:var(--font-mono);font-size:9px;letter-spacing:.18em}
 .story-card h2{margin:0;color:#eef2e6;font-family:var(--font-condensed),sans-serif;font-size:clamp(32px,5vw,54px);line-height:.95;letter-spacing:.02em}
 .story-narrator{margin:22px 0 8px;color:#d8f36a;font-family:var(--font-mono);font-size:10px;letter-spacing:.14em}
