@@ -290,6 +290,29 @@
                     <button type="button" data-br-exit>SALIR</button>
                   </div>
                 </div>
+                <div class="race-opening-overlay" data-br-opening hidden aria-live="polite">
+                  <span class="race-opening-kicker">FRANTIC SEARCH // TRACK MEET</span>
+                  <strong class="race-opening-phase" data-br-opening-phase>LOS CORREDORES SE PREPARAN</strong>
+                  <span class="race-opening-status" data-br-opening-status>PRESENTACIÓN DE CARRERA</span>
+                  <span class="race-opening-progress"><span data-br-opening-progress></span></span>
+                </div>
+                <div class="race-confirmation" data-br-confirmation hidden>
+                  <div class="race-confirmation-dialog" role="dialog" aria-modal="true" aria-labelledby="race-confirmation-title" aria-describedby="race-confirmation-copy">
+                    <span class="race-confirmation-kicker">FRANTIC SEARCH // PILOTO</span>
+                    <h3 id="race-confirmation-title" data-br-confirmation-title>¿ESTE ES TU DINOSAURIO?</h3>
+                    <div class="race-confirmation-preview">
+                      <img data-br-confirm-image alt="" />
+                      <div>
+                        <strong data-br-confirm-species></strong>
+                        <p id="race-confirmation-copy" data-br-confirmation-copy>Vas a controlar a este corredor durante toda la carrera.</p>
+                      </div>
+                    </div>
+                    <div class="race-confirmation-actions">
+                      <button type="button" data-br-confirm-cancel>CAMBIAR ELECCIÓN</button>
+                      <button type="button" data-br-confirm-accept>SÍ, ES MI ELECCIÓN</button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </section>
             <section id="ambush-panel" class="ambush-panel game-mode-panel" aria-label="Supervivencia" data-i18n-aria="ambush" aria-hidden="true">

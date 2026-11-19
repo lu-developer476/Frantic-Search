@@ -13,6 +13,8 @@ import {
   RACE_BASE_SPEED,
   RACE_SPEED_VARIANCE,
   getRacePace,
+  getRaceAnimationSource,
+  RACE_OPENING_CINEMATIC_DURATION,
   getRaceDistanceMeters,
   hasRacerBeenEaten,
   areAllRaceParticipantsEaten
@@ -131,4 +133,16 @@ test("roster speed differences are compressed so eliminations are not predetermi
   assert.ok(Math.max(...paces) - Math.min(...paces) < 3);
   assert.equal(getRacePace(82), 86.8);
   assert.equal(getRacePace(94), 89.2);
+});
+
+
+test("the race opening uses matching idle, walk and run GIFs when available", () => {
+  const venatosaurus = BREAKING_RACE_ROSTER.find((dinosaur) => dinosaur.id === "venatosaurus-impavidus");
+  assert.equal(getRaceAnimationSource(venatosaurus, "idle"), "references/venatosaurus-impavidus-idle.gif");
+  assert.equal(getRaceAnimationSource(venatosaurus, "walk"), "references/venatosaurus-impavidus-walk.gif");
+  assert.equal(getRaceAnimationSource(venatosaurus, "run"), "references/venatosaurus-impavidus-run.gif");
+  const brisa = BREAKING_RACE_ROSTER.find((dinosaur) => dinosaur.id === "brisa");
+  assert.equal(getRaceAnimationSource(brisa, "idle"), "references/juvenile-velociraptor-abyssomirabilis-idle.gif");
+  assert.equal(getRaceAnimationSource(brisa, "walk"), "references/juvenile-velociraptor-abyssomirabilis-idle.gif");
+  assert.equal(RACE_OPENING_CINEMATIC_DURATION, 10);
 });

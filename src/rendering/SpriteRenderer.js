@@ -1,6 +1,6 @@
 import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.js";
 import { getAnimatedFrameIndex, loadAnimatedGif } from "../minigames/AnimatedGif.js";
-import { drawOutlinedImage } from "./CanvasUtils.js";
+import { drawSpriteImage } from "./CanvasUtils.js";
 
 export const BRISA_ANIMATIONS = Object.freeze({
   idle: "juvenile-velociraptor-abyssomirabilis-idle.gif",
@@ -403,7 +403,7 @@ export class SpriteRenderer {
     context.imageSmoothingEnabled = false;
     context.translate(Math.round(x + width / 2), Math.round(groundAlignedY));
     context.scale(flip ? -1 : 1, 1);
-    drawOutlinedImage(context, frame.image, -drawWidth / 2, 0, drawWidth, drawHeight);
+    drawSpriteImage(context, frame.image, -drawWidth / 2, 0, drawWidth, drawHeight);
     context.restore();
     return true;
   }
@@ -450,7 +450,7 @@ export class SpriteRenderer {
       Math.round(y + height - renderedHeight + scaledBottomPadding + bob)
     );
     context.scale(flip ? -1 : 1, 1);
-    drawOutlinedImage(context, frame.image, -renderedWidth / 2, 0, renderedWidth, renderedHeight);
+    drawSpriteImage(context, frame.image, -renderedWidth / 2, 0, renderedWidth, renderedHeight);
     context.restore();
     return true;
   }
@@ -484,7 +484,7 @@ export class SpriteRenderer {
       Math.round(y + height - drawHeight + scaledBottomPadding)
     );
     context.scale(flip ? -1 : 1, 1);
-    drawOutlinedImage(context, frame.image, -drawWidth / 2, 0, drawWidth, drawHeight);
+    drawSpriteImage(context, frame.image, -drawWidth / 2, 0, drawWidth, drawHeight);
     context.restore();
     return true;
   }
@@ -576,7 +576,7 @@ export class SpriteRenderer {
     context.translate(drawCenterX, drawCenterY);
     context.rotate(rotation * Math.sign(facing || 1));
     context.scale((flip ? -1 : 1) * scaleX, scaleY);
-    drawOutlinedImage(
+    drawSpriteImage(
       context,
       image,
       -drawWidth / 2,
@@ -1673,7 +1673,7 @@ export class SpriteRenderer {
     context.imageSmoothingEnabled = false;
     context.translate(Math.round(x + width / 2), Math.round(y + height - drawHeight + scaledBottomPadding));
     context.scale(flip ? -1 : 1, 1);
-    drawOutlinedImage(context, frame.image, -drawWidth / 2, 0, drawWidth, drawHeight);
+    drawSpriteImage(context, frame.image, -drawWidth / 2, 0, drawWidth, drawHeight);
     context.restore();
     return true;
   }

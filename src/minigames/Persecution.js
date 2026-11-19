@@ -1,5 +1,5 @@
 import { loadAnimatedGif, getAnimatedFrameIndex } from "./AnimatedGif.js";
-import { drawOutlinedImage, observeCanvasViewport } from "../rendering/CanvasUtils.js";
+import { drawSpriteImage, observeCanvasViewport } from "../rendering/CanvasUtils.js";
 import { MinigameEnvironmentRenderer, MINIGAME_ENVIRONMENT_SCENES } from "./MinigameEnvironment.js";
 let WIDTH = 960;
 const HEIGHT = 540;
@@ -1344,10 +1344,10 @@ export class Persecution {
         this.ctx.save();
         this.ctx.translate(drawX + drawWidth, 0);
         this.ctx.scale(-1, 1);
-        drawOutlinedImage(this.ctx, frame.image, 0, drawY, drawWidth, drawHeight);
+        drawSpriteImage(this.ctx, frame.image, 0, drawY, drawWidth, drawHeight);
         this.ctx.restore();
       } else {
-        drawOutlinedImage(this.ctx, frame.image, drawX, drawY, drawWidth, drawHeight);
+        drawSpriteImage(this.ctx, frame.image, drawX, drawY, drawWidth, drawHeight);
       }
     } else {
       this.ctx.fillStyle = fallback;

@@ -121,21 +121,17 @@ test("the HUD status combines dash and Stegoceratops readiness with the requeste
   assert.match(css, /\.stegoceratops-readout::before\s*\{[^}]*content:"◦"/s);
 });
 
-test("PNG and GIF dinosaurs share cached one-pixel black outlines", async () => {
-  const [renderer, canvasUtils] = await Promise.all([
+test("PNG and GIF dinosaurs render without generated black outlines", async () => {
+  const [renderer, canvasUtils, race] = await Promise.all([
     readFile(new URL("../src/rendering/SpriteRenderer.js", import.meta.url), "utf8"),
-    readFile(new URL("../src/rendering/CanvasUtils.js", import.meta.url), "utf8")
+    readFile(new URL("../src/rendering/CanvasUtils.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/minigames/Race.js", import.meta.url), "utf8")
   ]);
-  assert.match(renderer, /drawOutlinedImage\(context, image,[\s\S]*?bounds\)/);
-  assert.match(renderer, /drawOutlinedImage\(context, frame\.image/);
-  assert.doesNotMatch(renderer, /outlinedReferenceImages|getOutlinedReferenceImage|REFERENCE_OUTLINE_WIDTH/);
-  assert.match(canvasUtils, /const OUTLINED_IMAGE_CACHE = new WeakMap\(\)/);
-  assert.match(canvasUtils, /MAX_OUTLINED_IMAGE_CACHE_ENTRIES = 128/);
-  assert.match(canvasUtils, /globalCompositeOperation = "source-in"/);
-  assert.match(canvasUtils, /fillStyle = "#000000"/);
-  assert.match(canvasUtils, /drawImage\(mask, 1 \+ offsetX, 1 \+ offsetY\)/);
-  assert.match(canvasUtils, /context\.drawImage\(outlined, x - 1, y - 1, width \+ 2, height \+ 2\)/);
-  assert.doesNotMatch(canvasUtils, /context\.filter/);
+  assert.match(renderer, /drawSpriteImage\(context, frame\.image/);
+  assert.doesNotMatch(renderer, /drawOutlinedImage|OUTLINED_IMAGE_CACHE/);
+  assert.doesNotMatch(canvasUtils, /drawOutlinedImage|getOutlinedImage|OUTLINED_IMAGE_CACHE|source-in/);
+  assert.doesNotMatch(race, /drawOutlinedImage/);
+  assert.match(canvasUtils, /context\.drawImage\(image, x, y, width, height\)/);
 });
 
 test("Venatosaurus variants render their dedicated idle, walk, run, jump and attack GIF references", () => {

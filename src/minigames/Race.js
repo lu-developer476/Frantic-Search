@@ -2,7 +2,7 @@ import {
   createEgg, getLaneBaseline, getLaneScale, normalizeLane, LANE_COUNT,
   DASH_DURATION, DASH_COOLDOWN, DASH_SPEED_MULTIPLIER, DASH_DUST_DURATION
 } from "./Persecution.js";
-import { drawOutlinedImage, observeCanvasViewport } from "../rendering/CanvasUtils.js";
+import { observeCanvasViewport } from "../rendering/CanvasUtils.js";
 import { MinigameEnvironmentRenderer, MINIGAME_ENVIRONMENT_SCENES } from "./MinigameEnvironment.js";
 
 let WIDTH = 960;
@@ -31,6 +31,7 @@ export function getRacePace(rosterSpeed) {
   return RACE_BASE_SPEED + (speed - RACE_BASE_SPEED) * RACE_SPEED_VARIANCE;
 }
 const START_SCREEN_RATIO = 0.29;
+export const RACE_OPENING_CINEMATIC_DURATION = 10;
 
 export function getRaceDistanceMeters(worldX) {
   return clamp((Number(worldX) || 0) / RACE_PIXELS_PER_METER, 0, RACE_DISTANCE_METERS);
@@ -45,13 +46,13 @@ export function areAllRaceParticipantsEaten(racers = []) {
 }
 
 export const BREAKING_RACE_ROSTER = Object.freeze([
-  { id: "gala", name: "Gala", species: "Velociraptor nublarensis", run: "references/adult-velociraptor-nublarensis.png", jump: "references/adult-velociraptor-nublarensis.png", speed: 92 },
-  { id: "brisa", name: "Brisa", species: "Velociraptor abyssomirabilis", run: "references/juvenile-velociraptor-abyssomirabilis-run.gif", jump: "references/juvenile-velociraptor-abyssomirabilis-jump.gif", speed: 88 },
-  { id: "venatosaurus-impavidus", name: "Venatosaurus impavidus", species: "Venatosaurus impavidus", run: "references/venatosaurus-impavidus-run.gif", jump: "references/venatosaurus-impavidus-jump.gif", speed: 86 },
-  { id: "venatosaurus-saevidicus", name: "Venatosaurus saevidicus", species: "Venatosaurus saevidicus", run: "references/venatosaurus-saevidicus-run.gif", jump: "references/venatosaurus-saevidicus-jump.gif", speed: 84 },
-  { id: "coral", name: "Coral", species: "Miniraptor", run: "minigame/persecution/gif/main/miniraptor-run.gif", jump: "minigame/persecution/gif/main/miniraptor-jump.gif", speed: 94 },
-  { id: "umbraraptor-silvis", name: "Umbraraptor silvis", species: "Umbraraptor silvis", run: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-walk.gif", jump: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-jump.gif", speed: 82 },
-  { id: "xenoraptor-crypticus", name: "Xenoraptor crypticus", species: "Xenoraptor crypticus", run: "minigame/persecution/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-run.gif", jump: "minigame/persecution/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-jump.gif", speed: 90 }
+  { id: "gala", name: "Gala", species: "Velociraptor nublarensis", idle: null, walk: null, run: "references/adult-velociraptor-nublarensis.png", jump: "references/adult-velociraptor-nublarensis.png", speed: 92 },
+  { id: "brisa", name: "Brisa", species: "Velociraptor abyssomirabilis", idle: "references/juvenile-velociraptor-abyssomirabilis-idle.gif", walk: null, run: "references/juvenile-velociraptor-abyssomirabilis-run.gif", jump: "references/juvenile-velociraptor-abyssomirabilis-jump.gif", speed: 88 },
+  { id: "venatosaurus-impavidus", name: "Venatosaurus impavidus", species: "Venatosaurus impavidus", idle: "references/venatosaurus-impavidus-idle.gif", walk: "references/venatosaurus-impavidus-walk.gif", run: "references/venatosaurus-impavidus-run.gif", jump: "references/venatosaurus-impavidus-jump.gif", speed: 86 },
+  { id: "venatosaurus-saevidicus", name: "Venatosaurus saevidicus", species: "Venatosaurus saevidicus", idle: "references/venatosaurus-saevidicus-idle.gif", walk: "references/venatosaurus-saevidicus-walk.gif", run: "references/venatosaurus-saevidicus-run.gif", jump: "references/venatosaurus-saevidicus-jump.gif", speed: 84 },
+  { id: "coral", name: "Coral", species: "Miniraptor", idle: "minigame/persecution/gif/main/miniraptor-idle.gif", walk: null, run: "minigame/persecution/gif/main/miniraptor-run.gif", jump: "minigame/persecution/gif/main/miniraptor-jump.gif", speed: 94 },
+  { id: "umbraraptor-silvis", name: "Umbraraptor silvis", species: "Umbraraptor silvis", idle: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-idle.gif", walk: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-walk.gif", run: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-walk.gif", jump: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-jump.gif", speed: 82 },
+  { id: "xenoraptor-crypticus", name: "Xenoraptor crypticus", species: "Xenoraptor crypticus", idle: null, walk: null, run: "minigame/persecution/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-run.gif", jump: "minigame/persecution/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-jump.gif", speed: 90 }
 ]);
 
 const laneX = (ratio) => WIDTH * ratio;
@@ -133,6 +134,15 @@ export function generateRaceCourse(seed = Date.now()) {
   return { seed: Number(seed) >>> 0, distanceMeters: RACE_DISTANCE_METERS, hazards, pickups };
 }
 
+export function getRaceAnimationSource(dinosaur, action) {
+  const sources = {
+    idle: [dinosaur?.idle, dinosaur?.walk, dinosaur?.run],
+    walk: [dinosaur?.walk, dinosaur?.idle, dinosaur?.run],
+    run: [dinosaur?.run, dinosaur?.walk, dinosaur?.idle]
+  };
+  return (sources[action] ?? []).find((source) => typeof source === "string" && source.length > 0) ?? null;
+}
+
 export function createRaceLineup(selectedDinosaurId, random = Math.random) {
   const selected = BREAKING_RACE_ROSTER.find((dinosaur) => dinosaur.id === selectedDinosaurId)
     ?? BREAKING_RACE_ROSTER[0];
@@ -187,6 +197,15 @@ export class Race {
     this.locale = "es";
     this.images = new Map();
     this.frame = null;
+    this.openingFrame = null;
+    this.openingCinematic = null;
+    this.confirmationDialog = root.querySelector("[data-br-confirmation]");
+    this.confirmationImage = root.querySelector("[data-br-confirm-image]");
+    this.confirmationSpecies = root.querySelector("[data-br-confirm-species]");
+    this.openingOverlay = root.querySelector("[data-br-opening]");
+    this.openingPhaseLabel = root.querySelector("[data-br-opening-phase]");
+    this.openingStatusLabel = root.querySelector("[data-br-opening-status]");
+    this.openingProgress = root.querySelector("[data-br-opening-progress]");
     this.running = false;
     this.paused = false;
     this.last = 0;
@@ -215,6 +234,11 @@ export class Race {
       if (["Space", "ArrowUp", "ArrowDown", "KeyW", "KeyS", "KeyX"].includes(event.code)) event.preventDefault();
 
       if (event.code === "Escape" && !event.repeat) {
+        if (!this.confirmationDialog.hidden) {
+          this.closeSelectionConfirmation();
+          return;
+        }
+        if (this.openingCinematic) return;
         this.exit();
         return;
       }
@@ -233,9 +257,14 @@ export class Race {
     };
 
     window.addEventListener("keydown", this.handleDown);
-    root.querySelector("[data-br-start]").addEventListener("click", () => this.start());
-    root.querySelector("[data-br-retry]").addEventListener("click", () => this.start());
+    root.querySelector("[data-br-start]").addEventListener("click", () => this.openSelectionConfirmation());
+    root.querySelector("[data-br-retry]").addEventListener("click", () => this.beginOpeningCinematic());
     root.querySelector("[data-br-exit]").addEventListener("click", () => this.exit());
+    root.querySelector("[data-br-confirm-cancel]").addEventListener("click", () => this.closeSelectionConfirmation());
+    root.querySelector("[data-br-confirm-accept]").addEventListener("click", () => this.confirmSelection());
+    this.confirmationDialog.addEventListener("click", (event) => {
+      if (event.target === this.confirmationDialog) this.closeSelectionConfirmation();
+    });
     this.canvasViewport = observeCanvasViewport(
       root.querySelector(".race-stage"),
       this.canvas,
@@ -312,6 +341,14 @@ export class Race {
     this.root.querySelector("[data-br-start]").textContent = this.text("INICIAR", "START");
     this.root.querySelector("[data-br-retry]").textContent = this.text("OTRA CARRERA", "RACE AGAIN");
     this.root.querySelector("[data-br-exit]").textContent = this.text("SALIR", "EXIT");
+    this.root.querySelector("[data-br-confirmation-title]").textContent = this.text("¿ESTE ES TU DINOSAURIO?", "IS THIS YOUR DINOSAUR?");
+    this.root.querySelector("[data-br-confirmation-copy]").textContent = this.text(
+      "Vas a controlar a este corredor durante toda la carrera.",
+      "You will control this racer throughout the race."
+    );
+    this.root.querySelector("[data-br-confirm-cancel]").textContent = this.text("CAMBIAR ELECCIÓN", "CHANGE SELECTION");
+    this.root.querySelector("[data-br-confirm-accept]").textContent = this.text("SÍ, ES MI ELECCIÓN", "YES, THIS IS MY PICK");
+    this.updateOpeningOverlay(0);
     this.setStatus("CARRERA // LISTA", "RACE // READY");
     if (this.root.classList.contains("active")) this.render();
   }
@@ -320,7 +357,9 @@ export class Race {
     this.root.classList.add("active");
     this.canvasViewport();
     this.root.setAttribute("aria-hidden", "false");
-    this.root.classList.remove("playing");
+    this.root.classList.remove("playing", "cinematic");
+    this.confirmationDialog.hidden = true;
+    this.openingOverlay.hidden = true;
     this.reset();
     this.root.querySelector("[data-br-start]").hidden = false;
     this.root.querySelector("[data-br-retry]").hidden = true;
@@ -333,6 +372,9 @@ export class Race {
 
   reset() {
     this.stop();
+    this.openingCinematic = null;
+    if (this.confirmationDialog) this.confirmationDialog.hidden = true;
+    if (this.openingOverlay) this.openingOverlay.hidden = true;
     this.elapsed = 0;
     this.paused = false;
     this.racers = [];
@@ -381,13 +423,164 @@ export class Race {
   stop() {
     this.running = false;
     if (this.frame !== null) cancelAnimationFrame(this.frame);
+    if (this.openingFrame !== null) cancelAnimationFrame(this.openingFrame);
     this.frame = null;
+    this.openingFrame = null;
   }
 
-  start() {
+  loadDinosaurImages(lineup) {
+    const sources = new Set(lineup.flatMap((dinosaur) =>
+      [dinosaur.idle, dinosaur.walk, dinosaur.run, dinosaur.jump].filter(Boolean)
+    ));
+    for (const source of sources) {
+      if (this.images.has(source)) continue;
+      const image = new Image();
+      image.src = import.meta.env.BASE_URL + source;
+      this.images.set(source, image);
+    }
+  }
+
+  openSelectionConfirmation() {
+    if (this.running || this.openingCinematic) return;
+    const selected = BREAKING_RACE_ROSTER.find((dinosaur) => dinosaur.id === this.selectedDinosaurId)
+      ?? BREAKING_RACE_ROSTER[0];
+    const previewSource = getRaceAnimationSource(selected, "idle") ?? selected.run;
+    this.confirmationImage.src = import.meta.env.BASE_URL + previewSource;
+    this.confirmationImage.alt = selected.species;
+    this.confirmationSpecies.textContent = selected.species;
+    this.confirmationDialog.hidden = false;
+    this.root.querySelector("[data-br-confirm-accept]").focus();
+  }
+
+  closeSelectionConfirmation(restoreFocus = true) {
+    this.confirmationDialog.hidden = true;
+    if (restoreFocus) this.root.querySelector("[data-br-start]").focus();
+  }
+
+  confirmSelection() {
+    if (this.confirmationDialog.hidden) return;
+    this.closeSelectionConfirmation(false);
+    this.beginOpeningCinematic();
+  }
+
+  updateOpeningOverlay(elapsed) {
+    if (!this.openingOverlay) return;
+    const phase = elapsed < 3 ? "idle" : elapsed < 6.5 ? "walk" : "run";
+    const phaseCopy = {
+      idle: this.text("LOS CORREDORES SE PREPARAN", "THE RACERS ARE READYING"),
+      walk: this.text("A SUS PUESTOS", "TAKE YOUR POSITIONS"),
+      run: this.text("LA SALIDA ES INMINENTE", "THE START IS IMMINENT")
+    };
+    this.openingPhaseLabel.textContent = phaseCopy[phase];
+    this.openingStatusLabel.textContent = elapsed >= 7
+      ? this.text("PREPARADOS · ", "GET READY · ") + Math.max(1, Math.ceil(RACE_OPENING_CINEMATIC_DURATION - elapsed))
+      : this.text("PRESENTACIÓN DE CARRERA", "RACE INTRODUCTION");
+    this.openingProgress.style.width = (Math.min(1, elapsed / RACE_OPENING_CINEMATIC_DURATION) * 100) + "%";
+  }
+
+  renderOpeningCinematic(elapsed, lineup) {
+    const context = this.ctx;
+    context.clearRect(0, 0, WIDTH, HEIGHT);
+    this.elapsed = elapsed;
+    this.drawBackground();
+    this.drawLaneGuides();
+    this.drawStartAndFinish();
+    this.drawLeftChaserEdge();
+
+    const phase = elapsed < 3 ? "idle" : elapsed < 6.5 ? "walk" : "run";
+    const walkProgress = clamp((elapsed - 3) / 3.5, 0, 1);
+    const baseX = WIDTH * 0.26;
+    for (let index = 0; index < lineup.length; index += 1) {
+      const dinosaur = lineup[index];
+      const lane = index;
+      const layout = getRaceLaneLayout(lane);
+      const source = getRaceAnimationSource(dinosaur, phase);
+      const image = source ? this.images.get(source) : null;
+      const width = 118 * layout.scale;
+      const height = image?.naturalWidth
+        ? width * image.naturalHeight / image.naturalWidth
+        : 48 * layout.scale;
+      const entryX = WIDTH * 0.08;
+      const x = phase === "walk"
+        ? entryX + (baseX - entryX) * walkProgress
+        : baseX + (phase === "run" ? Math.sin(elapsed * 9 + index) * 3 : 0);
+      const baseline = layout.baseline;
+      context.fillStyle = "rgba(35, 43, 28, 0.24)";
+      context.beginPath();
+      context.ellipse(x, baseline - 1, width * 0.38, 4 * layout.scale, 0, 0, Math.PI * 2);
+      context.fill();
+      if (image?.complete && image.naturalWidth) {
+        context.save();
+        context.imageSmoothingEnabled = false;
+        context.drawImage(image, x - width / 2, baseline - height, width, height);
+        context.restore();
+      } else {
+        context.fillStyle = ["#526b4b", "#b38b61", "#786b54", "#8d715b"][lane];
+        context.fillRect(x - width * 0.38, baseline - 23 * layout.scale, width * 0.76, 20 * layout.scale);
+        context.fillRect(x + width * 0.08, baseline - 31 * layout.scale, 16 * layout.scale, 13 * layout.scale);
+      }
+      context.fillStyle = dinosaur.id === this.selectedDinosaurId ? "#e8ff8a" : "#f3f1df";
+      context.font = "bold " + Math.max(9, Math.round(10 * layout.scale)) + "px monospace";
+      context.textAlign = "center";
+      context.fillText(dinosaur.id === this.selectedDinosaurId ? dinosaur.name + " · P1" : dinosaur.name, x, baseline - height - 8);
+    }
+
+    if (elapsed >= 7) {
+      context.save();
+      context.fillStyle = "rgba(13, 23, 19, 0.72)";
+      context.fillRect(WIDTH / 2 - 44, 82, 88, 74);
+      context.strokeStyle = "#d8f36a";
+      context.lineWidth = 2;
+      context.strokeRect(WIDTH / 2 - 44, 82, 88, 74);
+      context.fillStyle = "#f3f1df";
+      context.font = "bold 48px monospace";
+      context.textAlign = "center";
+      context.fillText(String(Math.max(1, Math.ceil(RACE_OPENING_CINEMATIC_DURATION - elapsed))), WIDTH / 2, 137);
+      context.restore();
+    }
+  }
+
+  beginOpeningCinematic() {
+    if (this.running || this.openingCinematic) return;
     this.canvasViewport();
     this.reset();
     const lineup = createRaceLineup(this.selectedDinosaurId, this.random);
+    this.loadDinosaurImages(lineup);
+    this.openingCinematic = { startedAt: performance.now(), lineup };
+    this.root.classList.add("playing", "cinematic");
+    this.root.querySelector("[data-br-start]").hidden = true;
+    this.root.querySelector("[data-br-retry]").hidden = true;
+    this.root.querySelector("[data-br-result]").hidden = true;
+    this.openingOverlay.hidden = false;
+    this.setStatus("CARRERA // PRESENTACIÓN", "RACE // INTRODUCTION");
+    this.updateOpeningOverlay(0);
+    this.renderOpeningCinematic(0, lineup);
+    this.openingFrame = requestAnimationFrame((time) => this.tickOpeningCinematic(time));
+  }
+
+  tickOpeningCinematic(now) {
+    const cinematic = this.openingCinematic;
+    if (!cinematic) return;
+    const elapsed = Math.min(RACE_OPENING_CINEMATIC_DURATION, Math.max(0, (now - cinematic.startedAt) / 1000));
+    this.renderOpeningCinematic(elapsed, cinematic.lineup);
+    this.updateOpeningOverlay(elapsed);
+    if (elapsed >= RACE_OPENING_CINEMATIC_DURATION) {
+      this.openingCinematic = null;
+      this.openingFrame = null;
+      this.openingOverlay.hidden = true;
+      this.root.classList.remove("cinematic");
+      this.start(cinematic.lineup);
+      return;
+    }
+    this.openingFrame = requestAnimationFrame((time) => this.tickOpeningCinematic(time));
+  }
+
+  start(preparedLineup = null) {
+    this.openingOverlay.hidden = true;
+    this.root.classList.remove("cinematic");
+    this.canvasViewport();
+    this.reset();
+    const lineup = preparedLineup ?? createRaceLineup(this.selectedDinosaurId, this.random);
     const laneOrder = [0, 1, 2, 3];
     for (let index = laneOrder.length - 1; index > 0; index -= 1) {
       const swapIndex = Math.floor(this.random() * (index + 1));
@@ -424,14 +617,7 @@ export class Race {
       isPlayer: dinosaur.id === this.selectedDinosaurId
     }));
 
-    for (const dinosaur of lineup) {
-      for (const source of [dinosaur.run, dinosaur.jump]) {
-        if (this.images.has(source)) continue;
-        const image = new Image();
-        image.src = import.meta.env.BASE_URL + source;
-        this.images.set(source, image);
-      }
-    }
+    this.loadDinosaurImages(lineup);
 
     this.running = true;
     this.paused = false;
@@ -1094,7 +1280,7 @@ export class Race {
     if (image?.complete && image.naturalWidth) {
       context.save();
       context.globalAlpha = racer.flash > 0 && Math.floor(this.elapsed * 14) % 2 === 0 ? 0.25 : 1;
-      drawOutlinedImage(context, image, racer.x - width / 2, y, width, height);
+      context.drawImage(image, racer.x - width / 2, y, width, height);
       context.restore();
     } else {
       context.fillStyle = ["#526b4b", "#b38b61", "#786b54", "#8d715b"][racer.lane];
@@ -1271,7 +1457,10 @@ export class Race {
 
   exit() {
     this.stop();
-    this.root.classList.remove("active", "playing");
+    this.openingCinematic = null;
+    this.confirmationDialog.hidden = true;
+    this.openingOverlay.hidden = true;
+    this.root.classList.remove("active", "playing", "cinematic");
     this.root.setAttribute("aria-hidden", "true");
     this.onExit();
   }
