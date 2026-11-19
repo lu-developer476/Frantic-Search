@@ -1,6 +1,17 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { canCompleteSection, createWavePlan, formatHunterLabel, formatTime, getHuntingCameraFollowDelta, nearestTarget } from "../src/minigames/Hunting.js";
+import { readFile } from "node:fs/promises";
+import {
+  canCompleteSection,
+  createWavePlan,
+  formatHunterLabel,
+  formatTime,
+  getHuntingCameraFollowDelta,
+  nearestTarget,
+  Hunting,
+  HUNTING_ENEMY_SPAWN_MARGIN,
+  HUNTING_GROUND_SCENERY_SPAWN_SPACING
+} from "../src/minigames/Hunting.js";
 
 test("Time Attack plans four ordered waves containing fourteen dinosaurs", () => {
   const waves = createWavePlan();
@@ -60,4 +71,72 @@ test("Hunting camera follows the player in both directions using the live canvas
   assert.equal(getHuntingCameraFollowDelta(480, playerWidth, viewportWidth), 0);
   assert.equal(getHuntingCameraFollowDelta(100, playerWidth, 1280), -181.6);
   assert.equal(getHuntingCameraFollowDelta(Number.NaN, playerWidth, viewportWidth), 0);
+});
+
+
+test("Time Attack streams procedural redwood ground details from both camera edges", () => {
+  const simulation = {
+    cameraX: 0,
+    groundScenery: [],
+    groundScenerySpawnIndex: 0,
+    nextGroundSceneryX: 960 + 12,
+    nextGroundSceneryLeftX: -12
+  };
+
+  Hunting.prototype.updateGroundScenery.call(simulation, () => 0.5);
+
+  assert.equal(simulation.groundScenery.length, 2);
+  const rightProp = simulation.groundScenery.find(prop => prop.x > 960);
+  const leftProp = simulation.groundScenery.find(prop => prop.x < 0);
+  assert.ok(rightProp);
+  assert.ok(leftProp);
+  assert.equal(rightProp.environment, "redwood");
+  assert.equal(leftProp.environment, "redwood");
+  assert.equal(rightProp.kind, "moss-rock");
+  assert.ok(rightProp.x - rightProp.width / 2 > 960);
+  assert.ok(leftProp.x + leftProp.width / 2 < 0);
+
+  simulation.cameraX = HUNTING_GROUND_SCENERY_SPAWN_SPACING;
+  Hunting.prototype.updateGroundScenery.call(simulation, () => 0.5);
+
+  assert.equal(simulation.groundScenery.length, 3);
+  const streamedProp = simulation.groundScenery[2];
+  assert.equal(
+    Number((streamedProp.x - rightProp.x).toFixed(2)),
+    HUNTING_GROUND_SCENERY_SPAWN_SPACING
+  );
+});
+
+test("Time Attack waves spawn prey just beyond the current right viewport edge", () => {
+  const simulation = { cameraX: 345, dinosaurs: [] };
+  const wave = {
+    at: 620,
+    kinds: [
+      "venatosaurus-impavidus",
+      "venatosaurus-saevidicus",
+      "venatosaurus-impavidus"
+    ]
+  };
+
+  Hunting.prototype.spawnWave.call(simulation, wave);
+
+  const expectedStart = 345 + 960 + HUNTING_ENEMY_SPAWN_MARGIN;
+  assert.equal(simulation.dinosaurs.length, 3);
+  assert.deepEqual(
+    simulation.dinosaurs.map(dinosaur => dinosaur.x),
+    [expectedStart, expectedStart + 112, expectedStart + 224]
+  );
+  assert.ok(simulation.dinosaurs.every(dinosaur =>
+    dinosaur.x - simulation.cameraX > 960
+  ));
+  assert.equal(simulation.dinosaurs[0].patrolStart, expectedStart - 220);
+  assert.equal(simulation.dinosaurs[0].patrolEnd, expectedStart + 3 * 112 + 360);
+  assert.equal(simulation.dinosaurs[1].health, 4);
+});
+
+test("Hunting uses streamed foreground props instead of pre-generated ground details", async () => {
+  const source = await readFile(new URL("../src/minigames/Hunting.js", import.meta.url), "utf8");
+  assert.match(source, /includeGroundScenery:\s*false/);
+  assert.match(source, /ctx\.translate\(-this\.cameraX,\s*0\)/);
+  assert.match(source, /drawGroundScenery\(ctx,\s*prop,\s*MINIGAME_ENVIRONMENT_SCENES\.hunting\)/);
 });

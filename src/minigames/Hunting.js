@@ -3,12 +3,17 @@ import { observeCanvasViewport } from "../rendering/CanvasUtils.js";
 import { WildDinosaur } from "../entities/WildDinosaur.js";
 import { SpriteRenderer } from "../rendering/SpriteRenderer.js";
 import { MinigameEnvironmentRenderer, MINIGAME_ENVIRONMENT_SCENES } from "./MinigameEnvironment.js";
+import { drawGroundScenery } from "../rendering/SceneryRenderer.js";
+import { createGroundSceneryProp } from "../world/SceneryGenerator.js";
 
 let WIDTH = 960;
 const HEIGHT = 540;
 const FLOOR = 438;
 const SECTION_END = 3680;
 const BEST_KEY = "frantic-hunting-best";
+export const HUNTING_GROUND_SCENERY_SPAWN_SPACING = 215;
+export const HUNTING_GROUND_SCENERY_VIEWPORT_MARGIN = 64;
+export const HUNTING_ENEMY_SPAWN_MARGIN = 28;
 export const HUNTING_CAMERA_DEAD_ZONE_LEFT_RATIO = 0.22;
 export const HUNTING_CAMERA_DEAD_ZONE_RIGHT_RATIO = 0.78;
 
@@ -223,6 +228,10 @@ export class Hunting {
     this.dinosaurs = [];
     this.projectiles = [];
     this.particles = [];
+    this.groundScenery = [];
+    this.groundScenerySpawnIndex = 0;
+    this.nextGroundSceneryX = WIDTH + 12;
+    this.nextGroundSceneryLeftX = -12;
     this.kills = 0;
     this.finished = null;
     this.keys.clear();
@@ -285,20 +294,60 @@ export class Hunting {
   }
 
   spawnWave(wave) {
+    // Prey enter just beyond the current viewport edge as the squad advances.
+    const spawnX = this.cameraX + WIDTH + HUNTING_ENEMY_SPAWN_MARGIN;
+    const patrolStart = Math.max(0, spawnX - 220);
+    const patrolEnd = spawnX + wave.kinds.length * 112 + 360;
+
     for (let i = 0; i < wave.kinds.length; i += 1) {
       const kind = wave.kinds[i];
       const dinosaur = new WildDinosaur({
         id: "hunting-" + (this.dinosaurs.length + 1),
         kind,
-        x: wave.at + i * 112,
+        x: spawnX + i * 112,
         groundY: FLOOR,
-        patrolStart: wave.at - 160,
-        patrolEnd: wave.at + 500,
+        patrolStart,
+        patrolEnd,
         direction: i % 2 === 0 ? -1 : 1
       });
       dinosaur.maxHealth = kind === "venatosaurus-saevidicus" ? 4 : 3;
       dinosaur.health = dinosaur.maxHealth;
       this.dinosaurs.push(dinosaur);
+    }
+  }
+
+  updateGroundScenery(random = Math.random) {
+    this.groundScenery ??= [];
+    this.groundScenerySpawnIndex ??= 0;
+    this.nextGroundSceneryX ??= WIDTH + 12;
+    this.nextGroundSceneryLeftX ??= -12;
+
+    const spawn = (edgeX, direction) => {
+      const prop = createGroundSceneryProp({
+        environment: MINIGAME_ENVIRONMENT_SCENES.hunting.environment,
+        x: edgeX,
+        groundY: FLOOR,
+        random,
+        id: "hunting-ground-" + this.groundScenerySpawnIndex
+      });
+      this.groundScenerySpawnIndex += 1;
+      if (!prop) return;
+
+      // Keep each prop fully outside the viewport until the camera reveals it.
+      prop.x += direction * (prop.width / 2 + 12);
+      this.groundScenery.push(prop);
+    };
+
+    const rightEdge = this.cameraX + WIDTH + HUNTING_GROUND_SCENERY_VIEWPORT_MARGIN;
+    while (this.nextGroundSceneryX <= rightEdge) {
+      spawn(this.nextGroundSceneryX, 1);
+      this.nextGroundSceneryX += HUNTING_GROUND_SCENERY_SPAWN_SPACING;
+    }
+
+    const leftEdge = this.cameraX - HUNTING_GROUND_SCENERY_VIEWPORT_MARGIN;
+    while (this.nextGroundSceneryLeftX >= leftEdge) {
+      spawn(this.nextGroundSceneryLeftX, -1);
+      this.nextGroundSceneryLeftX -= HUNTING_GROUND_SCENERY_SPAWN_SPACING;
     }
   }
 
@@ -347,6 +396,7 @@ export class Hunting {
     }
     // Keep the player inside a viewport-sized dead zone while panning in either direction.
     this.cameraX += getHuntingCameraFollowDelta(player.x - this.cameraX, player.w, WIDTH);
+    this.updateGroundScenery();
 
     if (this.keys.has("Space") || this.keys.has("KeyF") || this.pointerDown) this.firePlayer();
     while (this.waveIndex < this.wavePlan.length && this.wavePlan[this.waveIndex].at <= player.x + 510) {
@@ -505,7 +555,8 @@ export class Hunting {
       cameraX: this.cameraX,
       viewportWidth: WIDTH,
       viewportHeight: HEIGHT,
-      elapsed: this.elapsed
+      elapsed: this.elapsed,
+      includeGroundScenery: false
     }) ?? false;
 
     if (!layeredBackground) {
@@ -548,6 +599,14 @@ export class Hunting {
       ctx.font = "9px monospace";
       ctx.fillText(String(i + 1).padStart(2, "0"), x + 5, FLOOR - 8);
     }
+
+    // Ground details share the redwood biome palette and remain in world space.
+    ctx.save();
+    ctx.translate(-this.cameraX, 0);
+    for (const prop of this.groundScenery ?? []) {
+      drawGroundScenery(ctx, prop, MINIGAME_ENVIRONMENT_SCENES.hunting);
+    }
+    ctx.restore();
   }
 
   drawHunter(hunter, index) {
