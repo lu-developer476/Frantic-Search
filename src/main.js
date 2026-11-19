@@ -1068,9 +1068,12 @@ function collectNearbyCollectibles(){
       }else if(count>=COLLECTIBLE_TOTALS.amber){player.health=player.maxHealth;message="fullSurveyReward";}
       showPickupNotice("amberSampleRecovered",message);
       burst(item.x,item.y+item.h/2,"#f3c36b",18);
-    }else{
+    }else if(item.type==="intel"){
       showPickupNotice("intelDriveRecovered",!previousIntel&&hasIntelSupportUpgrade()?"supportUpgradeReward":"intelProgress");
       burst(item.x,item.y+item.h/2,"#79d9d2",20);
+    }else if(item.type==="egg"){
+      showPickupNotice("eggRecovered","");
+      burst(item.x,item.y+item.h/2,"#f1d49a",22);
     }
     audio.collect();applyCollectibleUnlocks();updateCampaignHud();updatePlayerHealthHud();updateStegoceratopsHud();
   }
@@ -1117,13 +1120,18 @@ function drawFoodDrop(food, context = ctx) {
 }
 function drawCollectible(context,item){
   const bob=Math.sin(elapsed*3.4+item.phase)*3,centerY=item.y+item.h/2+bob;
+  const glow=item.type==="amber"?"#ffd36d":item.type==="egg"?"#f1d49a":"#68e4df";
   context.save();context.globalAlpha=.78+Math.sin(elapsed*5+item.phase)*.12;context.shadowBlur=12;
-  context.shadowColor=item.type==="amber"?"#ffd36d":"#68e4df";context.fillStyle=item.type==="amber"?"#ffd36d":"#68e4df";
+  context.shadowColor=glow;context.fillStyle=glow;
   context.beginPath();context.arc(item.x,centerY,15+Math.sin(elapsed*4+item.phase)*1.5,0,Math.PI*2);context.fill();context.shadowBlur=0;
   if(item.type==="amber"){
     context.fillStyle="#a85c28";context.beginPath();context.moveTo(item.x,centerY-12);context.lineTo(item.x+8,centerY-1);
     context.lineTo(item.x+3,centerY+12);context.lineTo(item.x-7,centerY+7);context.lineTo(item.x-9,centerY-5);context.closePath();context.fill();
     context.fillStyle="#fff0a8";context.fillRect(item.x-2,centerY-8,3,6);context.fillRect(item.x+3,centerY-1,3,4);
+  }else if(item.type==="egg"){
+    context.fillStyle="#fff5df";context.strokeStyle="#a7794d";context.lineWidth=2;
+    context.beginPath();context.ellipse(item.x,centerY,7,11,0,0,Math.PI*2);context.fill();context.stroke();
+    context.fillStyle="#d8a85d";context.fillRect(item.x-3,centerY-5,3,3);context.fillRect(item.x+1,centerY+1,3,3);
   }else{
     context.fillStyle="#143c4b";context.fillRect(item.x-10,centerY-8,20,17);
     context.strokeStyle="#dcffef";context.lineWidth=2;context.strokeRect(item.x-10,centerY-8,20,17);

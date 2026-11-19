@@ -5,8 +5,7 @@ const SECTION_COLLECTIBLE_LAYOUT=Object.freeze([
  {amber:[0.34,0.68],intel:[0.76],egg:[0.16]},
  {amber:[0.09,0.95],intel:[0.17],egg:[0.54]},
  {amber:[],intel:[],egg:[]},
- {amber:[0.17,0.92],intel:[],egg:[0.62]},
- {amber:[],intel:[],egg:[0.48]}
+ {amber:[0.17,0.92],intel:[],egg:[0.30,0.62]}
 ]);
 export const COLLECTIBLE_TOTALS=Object.freeze({amber:12,intel:3,egg:7});
 function seededCollectibleRandom(seed){

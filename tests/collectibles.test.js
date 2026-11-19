@@ -29,3 +29,13 @@ test("collectibles spawn within supported section floor",()=>{
   assert.ok(item.y<GAME.groundY&&item.y+item.h>GAME.groundY-100);
  }
 });
+
+
+test("every declared campaign collectible is reachable in an existing world section",()=>{
+ const world=new PlatformWorld(GAME.groundY,{seed:20261119});
+ world.extendTo(WORLD.totalLength+1);
+ for(const type of ["amber","intel","egg"]){
+  assert.equal(world.collectibleSpawns.filter(item=>item.type===type).length,COLLECTIBLE_TOTALS[type]);
+ }
+ assert.equal(world.collectibleSpawns.some(item=>item.sectionIndex>=WORLD.sectionCount),false);
+});

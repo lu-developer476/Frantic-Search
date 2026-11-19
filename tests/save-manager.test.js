@@ -173,7 +173,7 @@ test("collectible progress permits six health only after six amber fossils",()=>
 });
 test("continue and checkpoint data retain collected collectible IDs",(t)=>{
  installStorage(t);const save=new SaveManager();
- const current=createSnapshot({collectedCollectibleIds:["amber-0-1","intel-2"],playerHealth:6});
+ const current=createSnapshot({collectedCollectibleIds:["amber-0-1","intel-2"],playerHealth:5});
  const start=createSnapshot(),checkpoint=createSnapshot({collectedCollectibleIds:["amber-0-1"]});
  assert.equal(save.saveCampaignProgress({snapshot:current,levelStartSnapshot:start,checkpointSnapshot:checkpoint}),true);
  const loaded=new SaveManager().getCampaignProgress();
@@ -187,4 +187,47 @@ test("malformed collectible ledgers are rejected without throwing", () => {
   const snapshot = createSnapshot();
   assert.equal(isValidCampaignSnapshot({ ...snapshot, collectedCollectibleIds: "amber-0-1" }), false);
   assert.equal(isValidCampaignSnapshot({ ...snapshot, collectedCollectibleIds: { fossil: true } }), false);
+});
+
+
+test("campaign saves preserve all 22 generated collectible IDs, including eggs and slot-qualified Intel", (t) => {
+  const collectibleIds = [
+    ...[0, 1, 2, 3, 4, 6].flatMap((section) =>
+      [1, 2].map((slot) => `amber-${section}-${slot}`)
+    ),
+    "intel-2-1",
+    "intel-3-1",
+    "intel-4-1",
+    "egg-0-1",
+    "egg-1-1",
+    "egg-2-1",
+    "egg-3-1",
+    "egg-4-1",
+    "egg-6-1",
+    "egg-6-2"
+  ];
+  assert.equal(collectibleIds.length, 22);
+  assert.equal(new Set(collectibleIds).size, 22);
+
+  const storage = installStorage(t);
+  const save = new SaveManager();
+  const snapshot = createSnapshot({
+    playerHealth: 6,
+    collectedCollectibleIds: collectibleIds
+  });
+
+  assert.equal(isValidCampaignSnapshot(snapshot), true);
+  assert.equal(save.saveCampaignProgress({ snapshot }), true);
+
+  const restored = new SaveManager().getCampaignProgress();
+  assert.deepEqual(restored.snapshot.collectedCollectibleIds, collectibleIds);
+  assert.equal(restored.snapshot.playerHealth, 6);
+  assert.ok(storage.has("avoid-save-v1"));
+});
+
+test("legacy Intel IDs remain valid alongside the current slot-qualified format", () => {
+  const legacy = createSnapshot({ collectedCollectibleIds: ["intel-2"] });
+  const current = createSnapshot({ collectedCollectibleIds: ["intel-2-1"] });
+  assert.equal(isValidCampaignSnapshot(legacy), true);
+  assert.equal(isValidCampaignSnapshot(current), true);
 });

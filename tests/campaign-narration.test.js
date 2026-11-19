@@ -46,7 +46,7 @@ test("runtime campaign scenes render inline copy when their ID is not in the sce
 
   assert.equal(panelClasses.has("hidden"), false, "uncatalogued runtime scenes must remain visible");
   assert.equal(storyTitle.textContent, "TERMINAL DE SEGURIDAD BLOQUEADA");
-  assert.equal(storyText.textContent, "El terminal de seguridad no tiene energía auxiliar. Primero hay que activar el relé de energía.");
+  assert.equal(storyText.textContent, "El terminal de seguridad no tiene energía auxiliar. Primero es necesario activar el relé de energía.");
   assert.equal(storyProgress.textContent, "1 / 1");
   assert.equal(storyNextButton.textContent, "CONTINUAR");
   assert.deepEqual(duckChanges, [true]);

@@ -33,17 +33,35 @@ function isCollectibleId(value) {
   if (!isNonEmptyString(value, 80)) return false;
   const parts = value.split("-");
   const digits = (part) => part.length > 0 && /^[0-9]+$/.test(part);
+  if (!digits(parts[1] ?? "")) return false;
+
+  const section = Number(parts[1]);
+
   if (parts[0] === "amber") {
-    const section = Number(parts[1]), slot = Number(parts[2]);
-    return parts.length === 3 && digits(parts[1]) && digits(parts[2]) && section >= 0 && section <= 6 && section !== 5 && slot >= 1 && slot <= 2;
+    if (parts.length !== 3 || !digits(parts[2])) return false;
+    const slot = Number(parts[2]);
+    return section >= 0 && section <= 6 && section !== 5 &&
+      slot >= 1 && slot <= 2;
   }
+
   if (parts[0] === "intel") {
-    const section = Number(parts[1]);
-    return parts.length === 2 && digits(parts[1]) && section >= 2 && section <= 4;
+    // Previous saves used "intel-2"; current generator writes "intel-2-1".
+    const legacyId = parts.length === 2;
+    const generatedId = parts.length === 3 &&
+      digits(parts[2]) && Number(parts[2]) === 1;
+    return (legacyId || generatedId) && section >= 2 && section <= 4;
   }
+
+  if (parts[0] === "egg") {
+    if (parts.length !== 3 || !digits(parts[2])) return false;
+    const slot = Number(parts[2]);
+    const validSection = [0, 1, 2, 3, 4, 6].includes(section);
+    const maxSlot = section === 6 ? 2 : 1;
+    return validSection && slot >= 1 && slot <= maxSlot;
+  }
+
   return false;
 }
-
 function isScene(scene) {
   return Boolean(
     scene &&
@@ -74,7 +92,7 @@ export function isValidCampaignSnapshot(snapshot) {
     : [];
   const validCollectibles = snapshot.collectedCollectibleIds === undefined ||
     (Array.isArray(snapshot.collectedCollectibleIds) &&
-      collectedIds.length <= 15 &&
+      collectedIds.length <= 22 &&
       new Set(collectedIds).size === collectedIds.length &&
       collectedIds.every(isCollectibleId));
   const healthCap = collectedIds.filter((id) => typeof id === "string" && id.startsWith("amber-")).length >= 6 ? 6 : 5;
