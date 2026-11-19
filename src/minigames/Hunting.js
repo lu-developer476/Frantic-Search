@@ -9,6 +9,33 @@ const HEIGHT = 540;
 const FLOOR = 438;
 const SECTION_END = 3680;
 const BEST_KEY = "frantic-hunting-best";
+export const HUNTING_CAMERA_DEAD_ZONE_LEFT_RATIO = 0.22;
+export const HUNTING_CAMERA_DEAD_ZONE_RIGHT_RATIO = 0.78;
+
+/**
+ * Returns the signed camera movement needed to keep the player in a broad
+ * central viewport zone. Negative values follow leftward movement; positive
+ * values follow rightward movement.
+ */
+export function getHuntingCameraFollowDelta(playerScreenX, playerWidth, viewportWidth) {
+  if (![playerScreenX, playerWidth, viewportWidth].every(Number.isFinite) ||
+      playerWidth <= 0 || viewportWidth <= 0) return 0;
+
+  const maxPlayerX = Math.max(22, viewportWidth - playerWidth - 22);
+  const leftLimit = Math.min(
+    Math.max(22, viewportWidth * HUNTING_CAMERA_DEAD_ZONE_LEFT_RATIO),
+    maxPlayerX
+  );
+  const rightLimit = Math.max(
+    leftLimit,
+    Math.min(maxPlayerX, viewportWidth * HUNTING_CAMERA_DEAD_ZONE_RIGHT_RATIO - playerWidth)
+  );
+
+  if (playerScreenX < leftLimit) return playerScreenX - leftLimit;
+  if (playerScreenX > rightLimit) return playerScreenX - rightLimit;
+  return 0;
+}
+
 const WAVES = Object.freeze([
   { at: 620, kinds: ["venatosaurus-impavidus", "venatosaurus-saevidicus", "venatosaurus-impavidus"] },
   { at: 1370, kinds: ["venatosaurus-saevidicus", "venatosaurus-impavidus", "venatosaurus-saevidicus"] },
@@ -318,9 +345,10 @@ export class Hunting {
       player.vy = 0;
       player.onGround = true;
     }
-    if (this.keys.has("Space") || this.keys.has("KeyF") || this.pointerDown) this.firePlayer();
+    // Keep the player inside a viewport-sized dead zone while panning in either direction.
+    this.cameraX += getHuntingCameraFollowDelta(player.x - this.cameraX, player.w, WIDTH);
 
-    this.cameraX = clamp(player.x - 320, 0, SECTION_END - WIDTH);
+    if (this.keys.has("Space") || this.keys.has("KeyF") || this.pointerDown) this.firePlayer();
     while (this.waveIndex < this.wavePlan.length && this.wavePlan[this.waveIndex].at <= player.x + 510) {
       this.spawnWave(this.wavePlan[this.waveIndex]);
       this.waveIndex += 1;

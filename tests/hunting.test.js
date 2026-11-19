@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { canCompleteSection, createWavePlan, formatHunterLabel, formatTime, nearestTarget } from "../src/minigames/Hunting.js";
+import { canCompleteSection, createWavePlan, formatHunterLabel, formatTime, getHuntingCameraFollowDelta, nearestTarget } from "../src/minigames/Hunting.js";
 
 test("Time Attack plans four ordered waves containing fourteen dinosaurs", () => {
   const waves = createWavePlan();
@@ -45,4 +45,19 @@ test("Time Attack localizes the player and AI squad labels", () => {
   assert.equal(formatHunterLabel(0, true, "en"), "YOU");
   assert.equal(formatHunterLabel(1, false, "es"), "IA 1");
   assert.equal(formatHunterLabel(3, false, "en"), "AI 3");
+});
+
+test("Hunting camera follows the player in both directions using the live canvas width", () => {
+  const viewportWidth = 960;
+  const playerWidth = 38;
+  const backwardDelta = getHuntingCameraFollowDelta(100, playerWidth, viewportWidth);
+  const forwardDelta = getHuntingCameraFollowDelta(800, playerWidth, viewportWidth);
+
+  assert.equal(Number(backwardDelta.toFixed(1)), -111.2);
+  assert.equal(Number(forwardDelta.toFixed(1)), 89.2);
+  assert.equal(Number((100 - backwardDelta).toFixed(1)), 211.2);
+  assert.equal(Number((800 - forwardDelta).toFixed(1)), 710.8);
+  assert.equal(getHuntingCameraFollowDelta(480, playerWidth, viewportWidth), 0);
+  assert.equal(getHuntingCameraFollowDelta(100, playerWidth, 1280), -181.6);
+  assert.equal(getHuntingCameraFollowDelta(Number.NaN, playerWidth, viewportWidth), 0);
 });
