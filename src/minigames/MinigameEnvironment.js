@@ -173,26 +173,36 @@ export class MinigameEnvironmentRenderer {
 
     if (typeof drawMidground === "function") drawMidground(targetContext);
 
-    this.terrain.drawPlatforms(targetContext, {
-      platforms: [ground], cameraX,
-      viewportWidth: width, viewportHeight: height, scene: this.scene
-    });
-    this.vegetation.drawGround(targetContext, {
-      props: this.scenery, cameraX,
-      viewportWidth: width, viewportHeight: height, scene: this.scene
-    });
-    this.effects.drawWind(targetContext, {
-      environment, cameraX,
-      viewportWidth: width, viewportHeight: height, elapsed
-    });
-    this.effects.drawWeather(targetContext, {
-      environment, cameraX,
-      viewportWidth: width, viewportHeight: height, elapsed
-    });
-    this.effects.drawDust(targetContext, {
-      environment, cameraX,
-      viewportWidth: width, viewportHeight: height, elapsed
-    });
+    // These renderers rasterize world-space geometry offscreen and composite it
+    // at cameraOffset. The mini-game Canvas is not translated by its caller, so
+    // apply the matching world transform only while drawing foreground layers.
+    const cameraOffset = Math.round(cameraX);
+    targetContext.save();
+    try {
+      targetContext.translate(-cameraOffset, 0);
+      this.terrain.drawPlatforms(targetContext, {
+        platforms: [ground], cameraX,
+        viewportWidth: width, viewportHeight: height, scene: this.scene
+      });
+      this.vegetation.drawGround(targetContext, {
+        props: this.scenery, cameraX,
+        viewportWidth: width, viewportHeight: height, scene: this.scene
+      });
+      this.effects.drawWind(targetContext, {
+        environment, cameraX,
+        viewportWidth: width, viewportHeight: height, elapsed
+      });
+      this.effects.drawWeather(targetContext, {
+        environment, cameraX,
+        viewportWidth: width, viewportHeight: height, elapsed
+      });
+      this.effects.drawDust(targetContext, {
+        environment, cameraX,
+        viewportWidth: width, viewportHeight: height, elapsed
+      });
+    } finally {
+      targetContext.restore();
+    }
       return true;
     } catch (error) {
       this.ready = false;

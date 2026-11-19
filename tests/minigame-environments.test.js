@@ -100,6 +100,71 @@ test("procedural environment coverage extends scenery and ground behind world or
   assert.match(source, /x: this\.worldStart,[\s\S]*?w: this\.worldLength - this\.worldStart/);
 });
 
+test("mini-game foreground procedural layers are composited with the camera transform", () => {
+  const renderer = new MinigameEnvironmentRenderer({
+    scene: MINIGAME_ENVIRONMENT_SCENES.persecution,
+    groundY: 438,
+    seed: 83,
+    sectionLength: 1600,
+    sectionCount: 2
+  });
+
+  for (const cameraX of [420.4, -255.6]) {
+    let translationX = 0;
+    const transformStack = [];
+    const calls = [];
+    const context = {
+      canvas: { width: 960, height: 540 },
+      save() { transformStack.push(translationX); },
+      restore() { translationX = transformStack.pop(); },
+      translate(x, y) {
+        assert.equal(y, 0);
+        translationX += x;
+      }
+    };
+    const record = (name) => calls.push({ name, translationX });
+
+    renderer.ready = true;
+    renderer.atmosphere = { draw() { record("atmosphere"); } };
+    renderer.vegetation = {
+      drawBackground() { record("background-vegetation"); },
+      drawGround() { record("ground-vegetation"); }
+    };
+    renderer.terrain = {
+      drawBackdrop() { record("terrain-backdrop"); },
+      drawPlatforms() { record("terrain-platforms"); }
+    };
+    renderer.effects = {
+      drawAmbientBack() { record("ambient-effects"); },
+      drawWind() { record("wind"); },
+      drawWeather() { record("weather"); },
+      drawDust() { record("dust"); }
+    };
+
+    const midgroundCalls = [];
+    assert.equal(renderer.draw(context, {
+      cameraX,
+      viewportWidth: 960,
+      viewportHeight: 540,
+      elapsed: 2,
+      drawMidground() { midgroundCalls.push(translationX); }
+    }), true);
+
+    const cameraOffset = Math.round(cameraX);
+    const worldLayerNames = new Set(["terrain-platforms", "ground-vegetation", "wind", "weather", "dust"]);
+    for (const call of calls) {
+      assert.equal(
+        call.translationX,
+        worldLayerNames.has(call.name) ? -cameraOffset : 0,
+        call.name + " must use the correct camera coordinate space"
+      );
+    }
+    assert.deepEqual(midgroundCalls, [0], "the parallax midground remains in screen space");
+    assert.equal(translationX, 0, "the world transform must be restored after foreground composition");
+    assert.equal(transformStack.length, 0);
+  }
+});
+
 test("layer allocation failure safely falls back to native mini-game drawing", () => {
   const renderer = new MinigameEnvironmentRenderer({
     scene: MINIGAME_ENVIRONMENT_SCENES.persecution,
