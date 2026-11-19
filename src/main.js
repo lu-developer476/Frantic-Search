@@ -101,6 +101,8 @@ const minigamesButton = document.querySelector("#minigames-button");
 const startMenuBackButton = document.querySelector("#start-menu-back-button");
 const minigamesBackButton = document.querySelector("#minigames-back-button");
 const explorationButton = document.querySelector("#exploration-button");
+const explorationBiomeDialog = document.querySelector("#exploration-biome-dialog");
+const explorationBiomeBackButton = document.querySelector("#exploration-biome-back");
 const persecutionButton = document.querySelector("#persecution-button");
 const persecutionPanel = document.querySelector("#persecution-panel");
 const huntingButton = document.querySelector("#hunting-button");
@@ -194,6 +196,7 @@ let selectionReturn = "start";
 let activeStartMenuPage = "home";
 let selectionMenuPage = "home";
 let pendingGameMode = "campaign";
+let selectedExplorationBiomeIndex = 0;
 let prologueCharacterSelectionPending = false;
 const menuToggle = document.querySelector("#menu-toggle");
 const navMenu = document.querySelector("#nav-menu");
@@ -2505,12 +2508,12 @@ function update(delta) {
   }
 
   world.extendTo(player.x + WORLD.maxSectionLength + 1200);
-  world.pruneBehind(player.x);
+  if (!explorationMode) world.pruneBehind(player.x);
   syncEncounters();
   syncBossEncounter();
   syncFacility();
   music.setTheme(currentMusicTheme());
-  distance = Math.max(0, player.x - GAME.playerX);
+  distance = explorationMode ? player.x - GAME.playerX : Math.max(0, player.x - GAME.playerX);
   if (!explorationMode) campaign.updateLocation(player.x);
   updateCampaignHud();
   if (!explorationMode && campaign.sceneOpen) {
@@ -2525,7 +2528,7 @@ function update(delta) {
   }
   cameraX = Math.max(0, player.x - 330);
   const currentLevelIndex = LEVELS.reduce((current, item, index) => distance >= item.distance ? index : current, 0);
-  if (currentLevelIndex > lastLevelIndex && currentLevelIndex < LEVELS.length) {
+  if (!explorationMode && currentLevelIndex > lastLevelIndex && currentLevelIndex < LEVELS.length) {
     const nextDistance = LEVELS[currentLevelIndex].distance;
     player.x = GAME.playerX + nextDistance;
     distance = nextDistance;
@@ -3346,6 +3349,19 @@ function start(mode = "campaign") {
   pendingPauseAction = null;
   pauseActionTrigger = null;
   resetPlayer();
+  if (explorationMode) {
+    const biomeIndex = Math.max(0, Math.min(LEVELS.length - 1, selectedExplorationBiomeIndex));
+    const biomeDistance = Math.max(0, LEVELS[biomeIndex].distance);
+    player.x = GAME.playerX + biomeDistance;
+    player.y = GAME.groundY - player.h;
+    player.vx = 0;
+    player.vy = 0;
+    distance = biomeDistance;
+    lastLevelIndex = biomeIndex;
+    cameraX = Math.max(0, player.x - 330);
+    introSequence = false;
+    world.extendTo(player.x + WORLD.maxSectionLength + 1200);
+  }
   if (!explorationMode) beginCampaignPrologue();
   updatePlayerHealthHud();
   music.start(audio.context, currentMusicTheme());
@@ -3357,7 +3373,18 @@ function start(mode = "campaign") {
   document.body.classList.remove("game-paused");
   elapsed = 0;
   accumulator = 0;
-  distance = 0;
+  distance = explorationMode
+    ? Math.max(0, LEVELS[Math.max(0, Math.min(LEVELS.length - 1, selectedExplorationBiomeIndex))].distance)
+    : 0;
+  if (explorationMode) {
+    player.x = GAME.playerX + distance;
+    player.y = GAME.groundY - player.h;
+    player.vx = 0;
+    player.vy = 0;
+    lastLevelIndex = Math.max(0, Math.min(LEVELS.length - 1, selectedExplorationBiomeIndex));
+    cameraX = Math.max(0, player.x - 330);
+    world.extendTo(player.x + WORLD.maxSectionLength + 1200);
+  }
   rescues = 0;
   campaignAutosaveElapsed = 0;
   stateLabel.textContent = explorationMode ? ui("inProgress") : "";
@@ -3793,6 +3820,11 @@ function startFromDinoModal() {
   if (!dinoModal.classList.contains("hidden") || characterConfirmation.classList.contains("hidden") || !desktopPlayback.matches) return;
   characterConfirmation.classList.add("hidden");
   dinoModal.classList.add("hidden");
+  if (pendingGameMode === "exploration") {
+    explorationBiomeDialog?.classList.remove("hidden");
+    explorationBiomeDialog?.querySelector("[data-exploration-biome]")?.focus();
+    return;
+  }
   setCharacterSelectionModalOpen(false);
   start(pendingGameMode);
 }
@@ -4041,6 +4073,19 @@ characterConfirmation.addEventListener("click", (event) => {
 });
 document.querySelector("#cancel-character").addEventListener("click", closeDinoModal);
 confirmCharacterButton.addEventListener("click", openCharacterConfirmation);
+explorationBiomeBackButton?.addEventListener("click", () => {
+  explorationBiomeDialog?.classList.add("hidden");
+  dinoModal.classList.remove("hidden");
+  confirmCharacterButton.focus();
+});
+explorationBiomeDialog?.querySelectorAll("[data-exploration-biome]").forEach((button) => {
+  button.addEventListener("click", () => {
+    selectedExplorationBiomeIndex = Number(button.dataset.explorationBiome) || 0;
+    explorationBiomeDialog.classList.add("hidden");
+    setCharacterSelectionModalOpen(false);
+    start("exploration");
+  });
+});
 backCharacterConfirmationButton.addEventListener("click", returnToCharacterSelection);
 playCharacterButton.addEventListener("click", startFromDinoModal);
 menuToggle.addEventListener("click", () => setMenuOpen(navMenu.classList.contains("hidden")));

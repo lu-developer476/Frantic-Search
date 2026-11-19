@@ -221,3 +221,11 @@ test("Hunting exposes both mode controls and documents role-specific weapon rest
   assert.match(markup, /data-ta-start/);
   assert.match(markup, /data-ta-predator/);
 });
+
+
+test("Predator player starts with one hundred health points", async () => {
+  const source = await readFile(new URL("../src/minigames/Hunting.js", import.meta.url), "utf8");
+  assert.match(source, /PREDATOR_PLAYER_HEALTH = 100/);
+  assert.match(source, /this\.player\.health = PREDATOR_PLAYER_HEALTH/);
+  assert.match(source, /this\.player\.maxHealth = PREDATOR_PLAYER_HEALTH/);
+});

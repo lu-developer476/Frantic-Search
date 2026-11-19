@@ -22,7 +22,7 @@ export const HUNTER_RESERVE_AMMO = 28;
 export const HUNTER_RELOAD_DURATION = 1.65;
 export const PREDATOR_BITE_DAMAGE = 2;
 export const PREDATOR_BITE_COOLDOWN = 0.78;
-export const PREDATOR_PLAYER_HEALTH = 24;
+export const PREDATOR_PLAYER_HEALTH = 100;
 
 /**
  * Returns the signed camera movement needed to keep the player in a broad

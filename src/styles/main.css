@@ -4894,3 +4894,12 @@ html.site-mode-gray .ambush-intro button {
   .race-confirmation-actions { flex-direction: column-reverse; }
   .race-confirmation-actions button { width: 100%; }
 }
+
+
+/* Free-roam biome picker */
+.exploration-biome-dialog { max-width: 720px; }
+.exploration-biome-copy { margin: 0 0 1.25rem; color: var(--muted, #b7c0b5); text-align: center; }
+.exploration-biome-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; }
+.exploration-biome-options button { min-height: 68px; border: 1px solid rgba(210,230,190,.24); border-radius: 8px; background: rgba(34,54,42,.78); color: #edf3df; font: inherit; letter-spacing: .08em; cursor: pointer; }
+.exploration-biome-options button:hover, .exploration-biome-options button:focus-visible { border-color: #d8f36a; background: rgba(72,94,49,.9); outline: none; }
+@media (max-width: 620px) { .exploration-biome-options { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
