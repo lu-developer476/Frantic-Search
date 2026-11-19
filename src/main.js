@@ -1923,8 +1923,15 @@ function renderStoryPanel({ syncAudio = true } = {}) {
     return;
   }
   const scene = campaign.activeScene;
-  const copy = scene ? getCampaignSceneCopy(scene.id, locale) : null;
-  const line = copy?.lines[scene.index];
+  const catalogCopy = scene ? getCampaignSceneCopy(scene.id, locale) : null;
+  // Some runtime scenes are queued with their own title and lines instead of
+  // a catalog entry. Always render that inline copy so an unknown scene ID
+  // cannot leave campaign.sceneOpen blocking the game with no visible dialog.
+  const copy = catalogCopy ?? (scene ? {
+    title: translateText(scene.title, locale),
+    lines: scene.lines.map((lineText) => translateText(lineText, locale))
+  } : null);
+  const line = copy?.lines[scene?.index];
   if (!scene || !line || !storyPanel) return;
   storyTitle.textContent = copy.title;
   storyText.textContent = line;
