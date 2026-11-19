@@ -26,12 +26,12 @@ test("the prologue fixes the capture, encounter, battle-end and Level 1 mileston
   });
 });
 
-test("Brisa remains playable through 2,000 m, where the jeep cinematic starts automatically", () => {
+test("Brisa becomes playable as soon as the opening narration ends", () => {
   const prologue = new CampaignPrologue({ startX: 100 });
   assert.equal(prologue.phase, "rest");
-  assert.equal(prologue.update(4.19), null);
-  assert.equal(prologue.update(0.02), "rest");
+  assert.equal(prologue.continueAfterNarration(), "explore");
   assert.equal(prologue.phase, "explore");
+  assert.equal(prologue.elapsed, 0);
 
   const player = { x: prologue.captureX - 28, w: 54, vx: 80 };
   assert.equal(prologue.captureAtMilestone(player), false);

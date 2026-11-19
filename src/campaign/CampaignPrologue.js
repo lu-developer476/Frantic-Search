@@ -5,6 +5,7 @@ const PROLOGUE_DURATIONS = Object.freeze({
 });
 
 const DIALOGUE_TO_SEQUENCE = Object.freeze({
+  rest: "explore",
   "capture-dialog": "search",
   "tracks-dialog": "character-select",
   "alliance-dialog": "advance"
