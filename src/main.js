@@ -321,8 +321,29 @@ function advanceEnemyFades(delta) {
   }
 }
 
+const spriteFailures = new Set();
+
+function drawSpriteSafely(key, draw) {
+  try {
+    return draw();
+  } catch (error) {
+    if (!spriteFailures.has(key)) {
+      spriteFailures.add(key);
+      console.warn("[Frantic Search] Sprite rendering failed; using the Canvas fallback:", key, error);
+    }
+    return false;
+  }
+}
+
+function drawAnimatedSafely(...args) {
+  const character = args[1] ?? "unknown";
+  return drawSpriteSafely("animated:" + character, () => spriteRenderer.drawAnimated(...args));
+}
+
 function drawDino(x, y, width, height, color, kind, phase = 0, alpha = 1, facing = 1, actor = null) {
-  if (spriteRenderer.drawDinosaur(ctx, kind, x, y, width, height, actor, phase, alpha)) return;
+  if (drawSpriteSafely("dinosaur:" + kind, () =>
+    spriteRenderer.drawDinosaur(ctx, kind, x, y, width, height, actor, phase, alpha)
+  )) return;
 
   // Pixel-cell fallback follows the same low, long-bodied V-Rex silhouette as the SVG set.
   const palette = kind === "vasti"
@@ -513,7 +534,7 @@ function drawBrisaContainmentFrame(context, entity) {
 
 function drawBrisa(entity) {
   if (!entity) return;
-  const drawn = spriteRenderer.drawAnimated(
+  const drawn = drawAnimatedSafely(
     ctx, "brisa", entity.x, entity.y, entity.w, entity.h,
     entity, elapsed, { facing: entity.facing }
   );
@@ -705,7 +726,7 @@ function drawReferenceHealthBar(actor, width = 36) {
 function drawFerrucutus(ally) {
   const x = ally.x;
   const y = ally.y;
-  if (!spriteRenderer.drawAnimated(ctx, "ferrucutus", x, y, ally.w, ally.h, ally, elapsed, { facing: ally.direction })) return;
+  if (!drawAnimatedSafely(ctx, "ferrucutus", x, y, ally.w, ally.h, ally, elapsed, { facing: ally.direction })) return;
   if (ally.state === "brace" || ally.state === "bridge" || ally.state === "charge") {
     ctx.fillStyle = "#d8f36a";
     ctx.font = "10px monospace";
@@ -820,7 +841,7 @@ function drawHunter(hunter) {
   const defeated = hunter.defeated;
   const alpha = getEnemyOpacity(hunter);
 
-  const spriteDrawn = spriteRenderer.drawAnimated(ctx, "hunter", x - 6, y - 5, hunter.w + 12, hunter.h + 8, hunter, elapsed, {
+  const spriteDrawn = drawAnimatedSafely(ctx, "hunter", x - 6, y - 5, hunter.w + 12, hunter.h + 8, hunter, elapsed, {
     alpha,
     facing: hunter.direction
   });
@@ -1858,7 +1879,7 @@ function drawCampaignPrologueActors() {
       drawDino(vasti.x, vasti.y, vasti.w, vasti.h, "#68784e", "vasti", elapsed, 1, vasti.facing, vasti);
     }
     for (const enemy of prologue.venatosauruses) {
-      spriteRenderer.drawAnimated(
+      drawAnimatedSafely(
         ctx, enemy.kind, enemy.x, enemy.y, enemy.w, enemy.h,
         enemy, elapsed, { facing: enemy.direction, alpha: enemy.defeated ? 0.38 : 1 }
       );
@@ -1873,7 +1894,7 @@ function drawCampaignPrologueActors() {
     drawDino(vasti.x, vasti.y, vasti.w, vasti.h, "#68784e", "vasti", elapsed, 1, vasti.facing, vasti);
     if (prologue.phase !== "advance") {
       for (const enemy of prologue.venatosauruses) {
-        spriteRenderer.drawAnimated(
+        drawAnimatedSafely(
           ctx, enemy.kind, enemy.x, enemy.y, enemy.w, enemy.h,
           enemy, elapsed, { facing: enemy.direction, alpha: enemy.defeated ? 0.38 : 1 }
         );
@@ -2173,7 +2194,7 @@ function damageCompanion(actor) {
 
 
 function drawIndoraptor(boss) {
-  const drawn=spriteRenderer.drawAnimated(ctx,"indoraptor",boss.x-4,boss.y-4,boss.w+8,boss.h+8,boss,elapsed,{alpha:getEnemyOpacity(boss),facing:boss.direction});
+  const drawn=drawAnimatedSafely(ctx,"indoraptor",boss.x-4,boss.y-4,boss.w+8,boss.h+8,boss,elapsed,{alpha:getEnemyOpacity(boss),facing:boss.direction});
   if(!drawn)return;
   if(boss.state==="telegraph"){
     ctx.strokeStyle="#ff806c";ctx.lineWidth=3;ctx.setLineDash([7,6]);
@@ -2186,7 +2207,7 @@ function drawIndoraptor(boss) {
 }
 function drawIndominus(boss) {
   const kind=boss.character??"indominus";
-  const drawn=spriteRenderer.drawAnimated(ctx,kind,boss.x-4,boss.y-4,boss.w+8,boss.h+8,boss,elapsed,{alpha:getEnemyOpacity(boss),facing:boss.direction});
+  const drawn=drawAnimatedSafely(ctx,kind,boss.x-4,boss.y-4,boss.w+8,boss.h+8,boss,elapsed,{alpha:getEnemyOpacity(boss),facing:boss.direction});
   if(!drawn)return;
   if(boss.state==="telegraph"){
     ctx.strokeStyle="#ffb26b";ctx.lineWidth=3;
@@ -2788,7 +2809,7 @@ function render() {
   }
   for (const animal of wildlife) {
     if (animal.x + animal.w >= cameraX - 120 && animal.x <= cameraX + GAME.width + 120) {
-      spriteRenderer.drawAnimated(ctx, "brontosaurus", animal.x, animal.y, animal.w, animal.h, animal, elapsed, { alpha: 0.9, facing: animal.facing });
+      drawAnimatedSafely(ctx, "brontosaurus", animal.x, animal.y, animal.w, animal.h, animal, elapsed, { alpha: 0.9, facing: animal.facing });
     }
   }
   terrainRenderer.drawPlatforms(ctx, {
@@ -2856,7 +2877,7 @@ function render() {
     for (const captive of visibleCaptives) drawFerrucutusCageBack(layerContext, captive);
   });
   for (const captive of visibleCaptives) {
-    spriteRenderer.drawAnimated(
+    drawAnimatedSafely(
       ctx, "ferrucutus", captive.dinosaurX, captive.dinosaurY,
       captive.dinosaurW, captive.dinosaurH, captive, elapsed
     );
@@ -2869,7 +2890,7 @@ function render() {
     if (food.kind === "ligocristus") {
       const spriteW = food.spriteW ?? food.w;
       const spriteH = food.spriteH ?? food.h;
-      spriteRenderer.drawAnimated(
+      drawAnimatedSafely(
         ctx, "ligocristus",
         food.x + (food.w - spriteW) / 2,
         food.y + food.h - spriteH,
@@ -2886,7 +2907,7 @@ function render() {
   }
   for (const enemy of venatosauruses) {
     if (enemy.x + enemy.w >= cameraX - 90 && enemy.x <= cameraX + GAME.width + 90) {
-      spriteRenderer.drawAnimated(ctx, enemy.kind, enemy.x, enemy.y, enemy.w, enemy.h, enemy, elapsed, { facing: enemy.direction, alpha: getEnemyOpacity(enemy) });
+      drawAnimatedSafely(ctx, enemy.kind, enemy.x, enemy.y, enemy.w, enemy.h, enemy, elapsed, { facing: enemy.direction, alpha: getEnemyOpacity(enemy) });
       if (!enemy.defeated) drawReferenceHealthBar(enemy);
     }
   }
@@ -2920,7 +2941,7 @@ function render() {
     });
   }
   if (beta) drawBrisa(beta);
-  if (stegoceratops) spriteRenderer.drawAnimated(ctx, "stegoceratops", stegoceratops.x, stegoceratops.y, stegoceratops.w, stegoceratops.h, stegoceratops, elapsed, { facing: 1 });
+  if (stegoceratops) drawAnimatedSafely(ctx, "stegoceratops", stegoceratops.x, stegoceratops.y, stegoceratops.w, stegoceratops.h, stegoceratops, elapsed, { facing: 1 });
   drawCampaignPrologueActors();
   effectsRenderer.drawParticles(ctx, {
     cameraX,
@@ -2944,9 +2965,11 @@ function render() {
     const brisaAnimationElapsed = brisaSleeping
       ? 0
       : Math.max(0, elapsed - (campaignPrologue.rosaAnimationStartedAt ?? elapsed));
-    const brisaDrawn = spriteRenderer.drawPrologueBrisa(
-      ctx, player.x, brisaY, player.w, player.h, player,
-      brisaAnimationElapsed, blink ? 0.35 : 1, brisaSleeping
+    const brisaDrawn = drawSpriteSafely("prologue-brisa", () =>
+      spriteRenderer.drawPrologueBrisa(
+        ctx, player.x, brisaY, player.w, player.h, player,
+        brisaAnimationElapsed, blink ? 0.35 : 1, brisaSleeping
+      )
     );
     if (!brisaDrawn) {
       drawDino(
@@ -3418,7 +3441,14 @@ function start(mode = "campaign") {
   renderStoryPanel();
   last = performance.now();
   document.body.classList.add("game-session-active");
-  render();
+  // The first draw happens before the animation loop. Handle it exactly like
+  // later frames so a failing asset cannot leave a partially painted frozen scene.
+  try {
+    render();
+  } catch (error) {
+    handleFrameError(error);
+    return;
+  }
   if (explorationMode) {
     showGameplayBrief("exploration");
   } else {

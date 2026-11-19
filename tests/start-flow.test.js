@@ -364,3 +364,94 @@ test("the page stays black until load completes, then reveals all start-screen e
   ]) assert.ok(reveal.includes(selector), "missing shared reveal for " + selector);
   assert.ok(reveal.includes("animation:arriveFromBelow .72s cubic-bezier(.16,1,.3,1) both"));
 });
+
+
+test("campaign dinosaur drawing falls back to Canvas when a sprite renderer throws", async () => {
+  const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
+  const start = main.indexOf("const spriteFailures = new Set();");
+  const end = main.indexOf("\nfunction drawBackground", start);
+  assert.ok(start >= 0 && end > start, "safe dinosaur drawing helpers must exist");
+
+  let fallbackRectangles = 0;
+  const warnings = [];
+  const context = {
+    globalAlpha: 1,
+    save() {},
+    restore() {},
+    translate() {},
+    scale() {},
+    fillRect() { fallbackRectangles += 1; }
+  };
+
+  runInNewContext(main.slice(start, end) + '\ndrawDino(10, 20, 64, 62, "#75a99b", "blue");', {
+    ctx: context,
+    spriteRenderer: {
+      drawDinosaur() { throw new Error("broken reference image"); },
+      drawAnimated() { throw new Error("broken animation"); }
+    },
+    console: { warn: (...args) => warnings.push(args) }
+  });
+
+  assert.ok(fallbackRectangles > 0, "the native Canvas dinosaur must render when its sprite fails");
+  assert.equal(warnings.length, 1, "the renderer failure should be reported only once");
+});
+
+test("a first campaign render failure is reported instead of silently preventing the frame loop", async () => {
+  const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
+  const start = main.indexOf('function start(mode = "campaign")');
+  const end = main.indexOf("\nfunction endGame()", start);
+  assert.ok(start >= 0 && end > start, "the game start routine must exist");
+  const events = [];
+  const noOp = () => {};
+  const classList = { add: noOp, remove: noOp, toggle: noOp };
+  const globals = {
+    desktopPlayback: { matches: true },
+    running: false,
+    paused: false,
+    explorationMode: false,
+    document: { body: { classList } },
+    save: { update: noOp },
+    operationHeader: { classList },
+    campaignBriefHeader: { classList },
+    cancelScheduledFrame: noOp,
+    audio: { context: {}, unlock: noOp },
+    startScreen: { classList },
+    setCharacterSelectionModalOpen: noOp,
+    prologueCharacterSelectionPending: false,
+    dinoModal: { classList },
+    cancelCharacterButton: { hidden: false },
+    overlayActionButton: { hidden: false },
+    overlayContent: { hidden: true },
+    retryOptions: { classList },
+    overlayExitButton: { hidden: false },
+    failureScreenActive: false,
+    pauseMenu: { classList },
+    pauseConfirmation: { classList },
+    pendingPauseAction: null,
+    pauseActionTrigger: null,
+    resetPlayer: noOp,
+    beginCampaignPrologue: () => { globals.campaignPrologue = { active: true }; },
+    campaignPrologue: null,
+    updatePlayerHealthHud: noOp,
+    music: { start: noOp, setPaused: noOp, setEnabled: noOp },
+    overlay: { classList },
+    elapsed: 0,
+    accumulator: 0,
+    distance: 0,
+    rescues: 0,
+    campaignAutosaveElapsed: 0,
+    stateLabel: { textContent: "" },
+    rescuesLabel: { textContent: "" },
+    updateCampaignHud: noOp,
+    renderStoryPanel: noOp,
+    performance: { now: () => 1 },
+    render: () => { events.push("render"); throw new Error("first frame failed"); },
+    handleFrameError: (error) => events.push("error:" + error.message),
+    showGameplayBrief: noOp,
+    scheduleFrame: () => events.push("schedule")
+  };
+
+  runInNewContext(main.slice(start, end) + '\nstart("campaign");', globals);
+
+  assert.deepEqual(events, ["render", "error:first frame failed"]);
+});
