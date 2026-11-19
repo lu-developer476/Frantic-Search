@@ -9,13 +9,20 @@ import { createGroundSceneryProp } from "../world/SceneryGenerator.js";
 let WIDTH = 960;
 const HEIGHT = 540;
 const FLOOR = 438;
-const SECTION_END = 3680;
+const SECTION_END = 5200;
 const BEST_KEY = "frantic-hunting-best";
+const PREDATOR_BEST_KEY = "frantic-hunting-predator-best";
 export const HUNTING_GROUND_SCENERY_SPAWN_SPACING = 215;
 export const HUNTING_GROUND_SCENERY_VIEWPORT_MARGIN = 64;
 export const HUNTING_ENEMY_SPAWN_MARGIN = 28;
 export const HUNTING_CAMERA_DEAD_ZONE_LEFT_RATIO = 0.22;
 export const HUNTING_CAMERA_DEAD_ZONE_RIGHT_RATIO = 0.78;
+export const HUNTER_MAGAZINE_SIZE = 8;
+export const HUNTER_RESERVE_AMMO = 28;
+export const HUNTER_RELOAD_DURATION = 1.65;
+export const PREDATOR_BITE_DAMAGE = 2;
+export const PREDATOR_BITE_COOLDOWN = 0.78;
+export const PREDATOR_PLAYER_HEALTH = 24;
 
 /**
  * Returns the signed camera movement needed to keep the player in a broad
@@ -42,12 +49,34 @@ export function getHuntingCameraFollowDelta(playerScreenX, playerWidth, viewport
 }
 
 const WAVES = Object.freeze([
-  { at: 620, kinds: ["venatosaurus-impavidus", "venatosaurus-saevidicus", "venatosaurus-impavidus"] },
-  { at: 1370, kinds: ["venatosaurus-saevidicus", "venatosaurus-impavidus", "venatosaurus-saevidicus"] },
-  { at: 2170, kinds: ["venatosaurus-impavidus", "venatosaurus-saevidicus", "venatosaurus-impavidus", "venatosaurus-saevidicus"] },
-  { at: 3020, kinds: ["venatosaurus-saevidicus", "venatosaurus-impavidus", "venatosaurus-saevidicus", "venatosaurus-impavidus"] }
+  { at: 720, kinds: [
+    "venatosaurus-impavidus", "venatosaurus-saevidicus", "venatosaurus-impavidus",
+    "venatosaurus-saevidicus", "venatosaurus-impavidus", "venatosaurus-saevidicus"
+  ] },
+  { at: 1680, kinds: [
+    "venatosaurus-saevidicus", "venatosaurus-impavidus", "venatosaurus-saevidicus",
+    "venatosaurus-impavidus", "venatosaurus-saevidicus", "venatosaurus-impavidus",
+    "venatosaurus-saevidicus"
+  ] },
+  { at: 2820, kinds: [
+    "venatosaurus-impavidus", "venatosaurus-saevidicus", "venatosaurus-impavidus",
+    "venatosaurus-saevidicus", "venatosaurus-impavidus", "venatosaurus-saevidicus",
+    "venatosaurus-impavidus", "venatosaurus-saevidicus"
+  ] },
+  { at: 4060, kinds: [
+    "venatosaurus-saevidicus", "venatosaurus-impavidus", "venatosaurus-saevidicus",
+    "venatosaurus-impavidus", "venatosaurus-saevidicus", "venatosaurus-impavidus",
+    "venatosaurus-saevidicus", "venatosaurus-impavidus", "venatosaurus-saevidicus"
+  ] }
 ]);
-const TOTAL_DINOSAURS = WAVES.reduce((sum, wave) => sum + wave.kinds.length, 0);
+export const TOTAL_DINOSAURS = WAVES.reduce((sum, wave) => sum + wave.kinds.length, 0);
+const PREDATOR_WAVES = Object.freeze([
+  { at: 620, count: 2 },
+  { at: 1540, count: 2 },
+  { at: 2760, count: 3 },
+  { at: 4060, count: 3 }
+]);
+export const TOTAL_PREDATOR_HUNTERS = PREDATOR_WAVES.reduce((sum, wave) => sum + wave.count, 0);
 const TEAM_COLORS = [
   { vest: "#596b50", trim: "#d8f36a", pack: "#3b463b" },
   { vest: "#52616a", trim: "#e5b16a", pack: "#303c43" },
@@ -65,6 +94,10 @@ export function formatTime(milliseconds) {
 
 export function createWavePlan() {
   return WAVES.map(wave => ({ at: wave.at, kinds: [...wave.kinds] }));
+}
+
+export function createPredatorWavePlan() {
+  return PREDATOR_WAVES.map(wave => ({ ...wave }));
 }
 
 export function formatHunterLabel(index, isPlayer, locale = "es") {
@@ -92,6 +125,12 @@ export function canCompleteSection(playerX, exitX, dinosaurs, spawnedWaves, tota
     dinosaurs.length === TOTAL_DINOSAURS && dinosaurs.every(dinosaur => dinosaur.defeated);
 }
 
+export function canCompletePredatorSection(playerX, exitX, hunters, spawnedWaves, totalWaves) {
+  return playerX >= exitX && spawnedWaves >= totalWaves &&
+    hunters.length === TOTAL_PREDATOR_HUNTERS &&
+    hunters.every(hunter => hunter.defeated || hunter.health <= 0);
+}
+
 function overlaps(a, b) {
   return a.x < b.x + b.w && a.x + a.w > b.x &&
     a.y < b.y + b.h && a.y + a.h > b.y;
@@ -101,15 +140,18 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
-function hunterActor(index, x) {
-  const isPlayer = index === 0;
+function hunterActor(index, x, isPlayer = index === 0) {
   return {
     id: isPlayer ? "hunting-player" : "hunting-ai-" + index,
     squadIndex: index,
     x, y: FLOOR - 64, w: 38, h: 64, direction: 1,
     health: isPlayer ? 4 : 3, maxHealth: isPlayer ? 4 : 3,
     invulnerable: 0, downTimer: 0, fireCooldown: 0.12 + index * 0.18,
-    vy: 0, onGround: true, isPlayer
+    ammo: HUNTER_MAGAZINE_SIZE,
+    reserveAmmo: HUNTER_RESERVE_AMMO,
+    reloadTimer: 0,
+    shotInterval: isPlayer ? 0.34 : 0.78 + index * 0.07,
+    vy: 0, onGround: true, isPlayer, defeated: false
   };
 }
 
@@ -125,6 +167,9 @@ export class Hunting {
     this.onExit = onExit;
     this.onBeforeStart = onBeforeStart;
     this.locale = "es";
+    this.mode = "sentinel";
+    this.playerAttackTimer = 0;
+    this.playerAttackHit = false;
     this.sprites = spriteRenderer ?? new SpriteRenderer(import.meta.env.BASE_URL);
     this.environmentRenderer = new MinigameEnvironmentRenderer({
       scene: MINIGAME_ENVIRONMENT_SCENES.hunting,
@@ -143,9 +188,13 @@ export class Hunting {
 
     this.handleKeyDown = event => {
       if (!this.root.classList.contains("active")) return;
-      if (["ArrowLeft", "ArrowRight", "ArrowUp", "Space"].includes(event.code)) event.preventDefault();
+      if (["ArrowLeft", "ArrowRight", "ArrowUp", "Space", "KeyR"].includes(event.code)) event.preventDefault();
       if (event.code === "Escape" && !event.repeat) { this.exit(); return; }
       if (event.code === "KeyP" && !event.repeat && this.running) { this.togglePause(); return; }
+      if (event.code === "KeyR" && !event.repeat && this.running && this.mode === "sentinel") {
+        this.reloadPlayer();
+        return;
+      }
       if (["ArrowLeft","ArrowRight","ArrowUp","Space","KeyA","KeyD","KeyW","KeyF"].includes(event.code)) this.keys.add(event.code);
       if (["ArrowUp","KeyW"].includes(event.code) && !event.repeat && this.running) this.jump();
     };
@@ -175,8 +224,9 @@ export class Hunting {
     window.addEventListener("pointerup", this.handlePointerUp);
     this.canvas.addEventListener("pointermove", this.handlePointerMove);
     this.canvas.addEventListener("pointerdown", this.handlePointerDown);
-    root.querySelector("[data-ta-start]").addEventListener("click", () => this.requestStart());
-    root.querySelector("[data-ta-retry]").addEventListener("click", () => this.requestStart());
+    root.querySelector("[data-ta-start]").addEventListener("click", () => this.requestStart("sentinel"));
+    root.querySelector("[data-ta-predator]").addEventListener("click", () => this.requestStart("predator"));
+    root.querySelector("[data-ta-retry]").addEventListener("click", () => this.requestStart(this.mode));
     root.querySelector("[data-ta-exit]").addEventListener("click", () => this.exit());
     this.setLocale(this.locale);
 
@@ -188,14 +238,15 @@ export class Hunting {
     this.locale = locale === "en" ? "en" : "es";
     this.root.querySelector("[data-ta-title]").textContent = this.text("CACERÍA", "HUNTING");
     this.root.querySelector("[data-ta-subtitle]").textContent = this.text(
-      "Una escuadra. Múltiples presas. Despejá el camino y llegá a la extracción cuanto antes.",
-      "One squad. Multiple targets. Clear the path and reach extraction as soon as possible."
+      "Elegí tu rol: protegé la expedición como cazador o sobreviví como dinosaurio.",
+      "Choose your role: protect the expedition as a hunter or survive as a dinosaur."
     );
     this.root.querySelector("[data-ta-instructions]").textContent = this.text(
-      "A / D o ← / →: moverse · W / ↑: saltar · ESPACIO / F o clic izquierdo: disparar · P: pausa · ESC: salir",
-      "A / D or ← / →: move · W / ↑: jump · SPACE / F or left click: fire · P: pause · ESC: exit"
+      "CENTINELA: A / D mover · W / ↑ saltar · ESPACIO / F / clic disparar · R recargar. DEPREDADOR: A / D mover · W / ↑ saltar · ESPACIO / F / clic morder. P pausa · ESC salir.",
+      "SENTINEL: A / D move · W / ↑ jump · SPACE / F / click fire · R reload. PREDATOR: A / D move · W / ↑ jump · SPACE / F / click bite. P pause · ESC exit."
     );
-    this.root.querySelector("[data-ta-start]").textContent = this.text("INICIAR", "START");
+    this.root.querySelector("[data-ta-start]").textContent = this.text("CENTINELA", "SENTINEL");
+    this.root.querySelector("[data-ta-predator]").textContent = this.text("DEPREDADOR", "PREDATOR");
     this.root.querySelector("[data-ta-retry]").textContent = this.text("VOLVER A INTENTAR", "TRY AGAIN");
     this.root.querySelector("[data-ta-exit]").textContent = this.text("SALIR", "EXIT");
     this.root.querySelector("[data-ta-status]").textContent = this.text("SECCIÓN 01 // EXTRACCIÓN", "SECTION 01 // EXTRACTION");
@@ -207,8 +258,10 @@ export class Hunting {
     this.canvasViewport();
     this.root.classList.remove("playing");
     this.root.setAttribute("aria-hidden", "false");
+    this.mode = "sentinel";
     this.reset();
     this.root.querySelector("[data-ta-start]").hidden = false;
+    this.root.querySelector("[data-ta-predator]").hidden = false;
     this.root.querySelector("[data-ta-retry]").hidden = true;
     this.root.querySelector("[data-ta-exit]").hidden = false;
     this.root.querySelector("[data-ta-result]").hidden = true;
@@ -228,6 +281,9 @@ export class Hunting {
     this.dinosaurs = [];
     this.projectiles = [];
     this.particles = [];
+    this.playerAttackTimer = 0;
+    this.playerAttackHit = false;
+    this.predatorHunterKills = 0;
     this.groundScenery = [];
     this.groundScenerySpawnIndex = 0;
     this.nextGroundSceneryX = WIDTH + 12;
@@ -236,31 +292,79 @@ export class Hunting {
     this.finished = null;
     this.keys.clear();
     this.pointerDown = false;
-    this.hunters = [
-      hunterActor(0, 130), hunterActor(1, 42),
-      hunterActor(2, 2), hunterActor(3, -38)
-    ];
-    this.player = this.hunters[0];
-    this.wavePlan = createWavePlan();
+    if (this.mode === "predator") {
+      this.hunters = [];
+      this.player = new WildDinosaur({
+        id: "hunting-predator-player",
+        kind: "venatosaurus-saevidicus",
+        x: 130,
+        groundY: FLOOR,
+        patrolStart: 0,
+        patrolEnd: SECTION_END,
+        direction: 1
+      });
+      this.player.health = PREDATOR_PLAYER_HEALTH;
+      this.player.maxHealth = PREDATOR_PLAYER_HEALTH;
+      this.player.invulnerable = 0;
+      this.wavePlan = createPredatorWavePlan();
+    } else {
+      this.hunters = [
+        hunterActor(0, 130), hunterActor(1, 42),
+        hunterActor(2, 2), hunterActor(3, -38)
+      ];
+      this.player = this.hunters[0];
+      this.wavePlan = createWavePlan();
+    }
     this.best = 0;
-    try { this.best = Math.max(0, Number(localStorage.getItem(BEST_KEY)) || 0); } catch {}
+    const bestKey = this.mode === "predator" ? PREDATOR_BEST_KEY : BEST_KEY;
+    try { this.best = Math.max(0, Number(localStorage.getItem(bestKey)) || 0); } catch {}
   }
 
-  requestStart() {
+  requestStart(mode = this.mode) {
     if (!this.root.classList.contains("active")) return;
-    this.onBeforeStart("hunting", () => this.start());
+    const selectedMode = mode === "predator" ? "predator" : "sentinel";
+    this.onBeforeStart("hunting", () => this.start(selectedMode));
   }
 
-  start() {
+  start(mode = this.mode) {
     if (!this.root.classList.contains("active")) return;
+    this.mode = mode === "predator" ? "predator" : "sentinel";
     this.reset();
     this.running = true;
     this.root.classList.add("playing");
     this.root.querySelector("[data-ta-start]").hidden = true;
+    this.root.querySelector("[data-ta-predator]").hidden = true;
     this.root.querySelector("[data-ta-retry]").hidden = true;
     this.root.querySelector("[data-ta-result]").hidden = true;
     this.last = performance.now();
+    this.setModeIntroCopy();
     this.frame = requestAnimationFrame(now => this.tick(now));
+  }
+
+  setModeIntroCopy() {
+    const predator = this.mode === "predator";
+    this.root.querySelector("[data-ta-title]").textContent = this.text(
+      predator ? "DEPREDADOR" : "CENTINELA",
+      predator ? "PREDATOR" : "SENTINEL"
+    );
+    this.root.querySelector("[data-ta-subtitle]").textContent = predator
+      ? this.text(
+        "Controlá al Venatosaurus. Derribá a los cazadores y alcanzá la extracción.",
+        "Control the Venatosaurus. Take down the hunters and reach extraction."
+      )
+      : this.text(
+        "Liderá la escuadra. Administrá la munición y despejá las cuatro oleadas.",
+        "Lead the squad. Manage ammunition and clear all four waves."
+      );
+    this.root.querySelector("[data-ta-instructions]").textContent = predator
+      ? this.text(
+        "A / D o ← / →: mover · W / ↑: saltar · ESPACIO / F o clic: morder · P: pausa · ESC: salir",
+        "A / D or ← / →: move · W / ↑: jump · SPACE / F or click: bite · P: pause · ESC: exit"
+      )
+      : this.text(
+        "A / D o ← / →: mover · W / ↑: saltar · ESPACIO / F o clic: disparar · R: recargar · P: pausa · ESC: salir",
+        "A / D or ← / →: move · W / ↑: jump · SPACE / F or click: fire · R: reload · P: pause · ESC: exit"
+      );
   }
 
   togglePause() {
@@ -274,7 +378,10 @@ export class Hunting {
       return;
     }
     this.last = performance.now();
-    this.root.querySelector("[data-ta-status]").textContent = this.text("SECCIÓN 01 // EXTRACCIÓN", "SECTION 01 // EXTRACTION");
+    this.root.querySelector("[data-ta-status]").textContent = this.text(
+      this.mode === "predator" ? "DEPREDADOR // CAZADORES" : "CENTINELA // EXTRACCIÓN",
+      this.mode === "predator" ? "PREDATOR // HUNTERS" : "SENTINEL // EXTRACTION"
+    );
     this.frame = requestAnimationFrame(now => this.tick(now));
   }
 
@@ -294,11 +401,25 @@ export class Hunting {
   }
 
   spawnWave(wave) {
-    // Prey enter just beyond the current viewport edge as the squad advances.
+    if (this.mode === "predator") {
+      const spawnX = this.cameraX + WIDTH + HUNTING_ENEMY_SPAWN_MARGIN;
+      for (let i = 0; i < wave.count; i += 1) {
+        const hunter = hunterActor(this.hunters.length + 1, spawnX + i * 86, false);
+        hunter.id = "predator-hunter-" + (this.hunters.length + 1);
+        hunter.health = 3;
+        hunter.maxHealth = 3;
+        hunter.ammo = 5;
+        hunter.reserveAmmo = 5;
+        hunter.shotInterval = 1.2;
+        hunter.fireCooldown = 0.45 + i * 0.16;
+        this.hunters.push(hunter);
+      }
+      return;
+    }
+
     const spawnX = this.cameraX + WIDTH + HUNTING_ENEMY_SPAWN_MARGIN;
     const patrolStart = Math.max(0, spawnX - 220);
     const patrolEnd = spawnX + wave.kinds.length * 112 + 360;
-
     for (let i = 0; i < wave.kinds.length; i += 1) {
       const kind = wave.kinds[i];
       const dinosaur = new WildDinosaur({
@@ -351,8 +472,41 @@ export class Hunting {
     }
   }
 
+  beginWeaponReload(hunter) {
+    if (!hunter || hunter.reloadTimer > 0 || hunter.ammo >= HUNTER_MAGAZINE_SIZE ||
+        hunter.reserveAmmo <= 0 || hunter.health <= 0) return false;
+    hunter.reloadTimer = HUNTER_RELOAD_DURATION;
+    return true;
+  }
+
+  updateWeapon(hunter, delta) {
+    if (!hunter) return;
+    hunter.fireCooldown = Math.max(0, hunter.fireCooldown - delta);
+    if (hunter.reloadTimer > 0) {
+      hunter.reloadTimer = Math.max(0, hunter.reloadTimer - delta);
+      if (hunter.reloadTimer === 0) {
+        const loaded = Math.min(HUNTER_MAGAZINE_SIZE - hunter.ammo, hunter.reserveAmmo);
+        hunter.ammo += loaded;
+        hunter.reserveAmmo -= loaded;
+      }
+    } else if (hunter.ammo <= 0 && hunter.reserveAmmo > 0) {
+      this.beginWeaponReload(hunter);
+    }
+  }
+
+  reloadPlayer() {
+    if (!this.running || this.mode !== "sentinel") return false;
+    return this.beginWeaponReload(this.player);
+  }
+
   fire(hunter, targetX, targetY) {
-    if (hunter.health <= 0 || hunter.downTimer > 0) return false;
+    if (!hunter || hunter.health <= 0 || hunter.downTimer > 0 || hunter.defeated ||
+        hunter.reloadTimer > 0) return false;
+    if (hunter.ammo <= 0) {
+      this.beginWeaponReload(hunter);
+      return false;
+    }
+    if (hunter.fireCooldown > 0) return false;
     const muzzleX = hunter.x + (hunter.direction > 0 ? hunter.w + 3 : -3);
     const muzzleY = hunter.y + 31;
     if (Math.abs(targetX - muzzleX) < 2 && Math.abs(targetY - muzzleY) < 2) targetX += hunter.direction * 500;
@@ -360,12 +514,15 @@ export class Hunting {
       x: muzzleX, y: muzzleY, targetX, targetY,
       shooterId: hunter.id, speed: 710, damage: 1, radius: 5, lifetime: 2.3
     }));
+    hunter.ammo -= 1;
+    hunter.fireCooldown = hunter.shotInterval ?? 0.5;
     this.particles.push({ x: muzzleX, y: muzzleY, vx: hunter.direction * 36, vy: -12, life: 0.11, max: 0.11, color: "#ffe5a1", size: 5 });
     return true;
   }
 
   firePlayer() {
-    if (!this.running || this.player.fireCooldown > 0) return;
+    if (!this.running) return false;
+    if (this.mode === "predator") return this.startPredatorAttack();
     const target = nearestTarget(this.player, this.dinosaurs, Infinity);
     const targetX = this.pointer.active
       ? this.pointer.x + this.cameraX
@@ -374,19 +531,65 @@ export class Hunting {
       ? this.pointer.y
       : target ? target.y + target.h * 0.42 : this.player.y + 22;
     this.player.direction = targetX >= this.player.x ? 1 : -1;
-    this.fire(this.player, targetX, targetY);
-    this.player.fireCooldown = 0.24;
+    return this.fire(this.player, targetX, targetY);
+  }
+
+  startPredatorAttack() {
+    if (this.mode !== "predator" || this.player.attackCooldown > 0) return false;
+    this.player.attackCooldown = PREDATOR_BITE_COOLDOWN;
+    this.playerAttackTimer = 0.24;
+    this.playerAttackHit = false;
+    this.player.state = "attack";
+    return true;
+  }
+
+  getPredatorAttackBox() {
+    if (this.mode !== "predator" || this.playerAttackTimer <= 0) return null;
+    const player = this.player;
+    return {
+      x: player.direction > 0 ? player.x + player.w - 8 : player.x - 68,
+      y: player.y + 30,
+      w: 76,
+      h: 48
+    };
+  }
+
+  updatePredatorAttack(delta) {
+    if (this.mode !== "predator") return;
+    this.player.attackCooldown = Math.max(0, this.player.attackCooldown - delta);
+    this.playerAttackTimer = Math.max(0, this.playerAttackTimer - delta);
+    const attackBox = this.getPredatorAttackBox();
+    if (attackBox && !this.playerAttackHit) {
+      const target = this.hunters.find(hunter => !hunter.defeated && hunter.health > 0 && overlaps(attackBox, hunter));
+      if (target) {
+        this.playerAttackHit = true;
+        this.damageHunter(target, PREDATOR_BITE_DAMAGE);
+      }
+    }
+    if (this.playerAttackTimer <= 0 && this.player.state === "attack") {
+      this.player.state = "pursuit";
+    }
   }
 
   update(delta) {
     this.elapsed += delta;
     const player = this.player;
+    const predatorMode = this.mode === "predator";
     const move = Number(this.keys.has("ArrowRight") || this.keys.has("KeyD")) -
       Number(this.keys.has("ArrowLeft") || this.keys.has("KeyA"));
+
     if (move !== 0) player.direction = move;
-    player.x = clamp(player.x + move * 245 * delta, 18, SECTION_END);
-    player.fireCooldown = Math.max(0, player.fireCooldown - delta);
-    player.invulnerable = Math.max(0, player.invulnerable - delta);
+    player.x = clamp(player.x + move * (predatorMode ? 265 : 245) * delta, 18, SECTION_END);
+    player.invulnerable = Math.max(0, (player.invulnerable ?? 0) - delta);
+
+    if (predatorMode) {
+      this.updatePredatorAttack(delta);
+      if (this.keys.has("Space") || this.keys.has("KeyF") || this.pointerDown) this.firePlayer();
+    } else {
+      this.updateWeapon(player, delta);
+      if (this.keys.has("Space") || this.keys.has("KeyF") || this.pointerDown) this.firePlayer();
+    }
+
     player.vy += 1500 * delta;
     player.y += player.vy * delta;
     if (player.y + player.h >= FLOOR) {
@@ -394,19 +597,21 @@ export class Hunting {
       player.vy = 0;
       player.onGround = true;
     }
-    // Keep the player inside a viewport-sized dead zone while panning in either direction.
+
     this.cameraX += getHuntingCameraFollowDelta(player.x - this.cameraX, player.w, WIDTH);
     this.updateGroundScenery();
 
-    if (this.keys.has("Space") || this.keys.has("KeyF") || this.pointerDown) this.firePlayer();
     while (this.waveIndex < this.wavePlan.length && this.wavePlan[this.waveIndex].at <= player.x + 510) {
       this.spawnWave(this.wavePlan[this.waveIndex]);
       this.waveIndex += 1;
     }
 
-    for (let i = 1; i < this.hunters.length; i += 1) {
+    const firstHunterIndex = predatorMode ? 0 : 1;
+    for (let i = firstHunterIndex; i < this.hunters.length; i += 1) {
       const hunter = this.hunters[i];
-      if (hunter.health <= 0) {
+      if (hunter.defeated) continue;
+
+      if (!predatorMode && hunter.health <= 0) {
         hunter.downTimer -= delta;
         if (hunter.downTimer <= 0) {
           hunter.health = hunter.maxHealth;
@@ -416,38 +621,58 @@ export class Hunting {
         }
         continue;
       }
+      if (hunter.health <= 0) continue;
+
       hunter.invulnerable = Math.max(0, hunter.invulnerable - delta);
-      hunter.fireCooldown = Math.max(0, hunter.fireCooldown - delta);
+      this.updateWeapon(hunter, delta);
+      hunter.y = FLOOR - hunter.h;
+
+      if (predatorMode) {
+        const playerCenter = player.x + player.w / 2;
+        const hunterCenter = hunter.x + hunter.w / 2;
+        const separation = playerCenter - hunterCenter;
+        hunter.direction = separation >= 0 ? 1 : -1;
+        const desiredX = separation >= 0
+          ? player.x - hunter.w - 165
+          : player.x + player.w + 165;
+        hunter.x += clamp(desiredX - hunter.x, -150 * delta, 150 * delta);
+        hunter.x = clamp(hunter.x, 0, SECTION_END);
+        if (Math.abs(separation) <= 760 && hunter.fireCooldown <= 0) {
+          this.fire(hunter, playerCenter, player.y + player.h * 0.48);
+        }
+        continue;
+      }
+
       const target = nearestTarget(hunter, this.dinosaurs, 860);
       const formationX = Math.max(0, player.x - 66 * i);
       const desiredX = target ? target.x + (hunter.x < target.x ? -138 : target.w + 26) : formationX;
       hunter.x += clamp(desiredX - hunter.x, -235 * delta, 235 * delta);
       hunter.x = clamp(hunter.x, 0, SECTION_END);
-      hunter.y = FLOOR - hunter.h;
       if (target) {
         hunter.direction = target.x + target.w / 2 >= hunter.x + hunter.w / 2 ? 1 : -1;
         if (hunter.fireCooldown <= 0) {
           this.fire(hunter, target.x + target.w / 2, target.y + target.h * 0.43);
-          hunter.fireCooldown = 0.7 + i * 0.08;
         }
       } else {
         hunter.direction = player.x >= hunter.x ? 1 : -1;
       }
     }
 
-    const activeHunters = this.hunters
-      .filter(hunter => hunter.health > 0 && hunter.downTimer <= 0)
-      .map(hunter => ({ target: hunter, kind: "hunter" }));
-    for (const dinosaur of this.dinosaurs) {
-      if (dinosaur.defeated) continue;
-      dinosaur.update(delta, activeHunters);
-      const attackBox = dinosaur.attackBox;
-      if (attackBox) {
-        for (const entry of activeHunters) {
-          if (!overlaps(attackBox, entry.target)) continue;
-          this.damageHunter(entry.target);
-          if (!this.running) return;
-          break;
+    if (!predatorMode) {
+      const activeHunters = this.hunters
+        .filter(hunter => hunter.health > 0 && hunter.downTimer <= 0)
+        .map(hunter => ({ target: hunter, kind: "hunter" }));
+      for (const dinosaur of this.dinosaurs) {
+        if (dinosaur.defeated) continue;
+        dinosaur.update(delta, activeHunters);
+        const attackBox = dinosaur.attackBox;
+        if (attackBox) {
+          for (const entry of activeHunters) {
+            if (!overlaps(attackBox, entry.target)) continue;
+            this.damageHunter(entry.target);
+            if (!this.running) return;
+            break;
+          }
         }
       }
     }
@@ -455,6 +680,20 @@ export class Hunting {
     for (const projectile of this.projectiles) {
       projectile.update(delta);
       if (!projectile.active) continue;
+
+      if (predatorMode) {
+        const hitPlayer =
+          projectile.x + projectile.radius >= player.x + 8 &&
+          projectile.x - projectile.radius <= player.x + player.w - 8 &&
+          projectile.y + projectile.radius >= player.y + 14 &&
+          projectile.y - projectile.radius <= player.y + player.h - 8;
+        if (!hitPlayer) continue;
+        projectile.active = false;
+        this.damagePredator(projectile.damage);
+        if (!this.running) return;
+        continue;
+      }
+
       const target = this.dinosaurs.find(dinosaur =>
         !dinosaur.defeated &&
         projectile.x + projectile.radius >= dinosaur.x + 8 &&
@@ -481,20 +720,37 @@ export class Hunting {
     }
     this.particles = this.particles.filter(particle => particle.life > 0);
 
-    if (canCompleteSection(player.x, SECTION_END - 65, this.dinosaurs, this.waveIndex, this.wavePlan.length)) {
-      this.finish(true);
+    const completed = predatorMode
+      ? canCompletePredatorSection(player.x, SECTION_END - 65, this.hunters, this.waveIndex, this.wavePlan.length)
+      : canCompleteSection(player.x, SECTION_END - 65, this.dinosaurs, this.waveIndex, this.wavePlan.length);
+    if (completed) this.finish(true);
+  }
+
+  damageHunter(hunter, damage = 1) {
+    if (!hunter || hunter.invulnerable > 0 || hunter.health <= 0 || hunter.defeated) return;
+    hunter.health = Math.max(0, hunter.health - damage);
+    hunter.invulnerable = this.mode === "predator" ? 0.18 : 1.05;
+    this.burst(hunter.x + hunter.w / 2, hunter.y + 22, "#f08b64", 7);
+    if (hunter.health === 0) {
+      if (this.mode === "predator") {
+        hunter.defeated = true;
+        this.kills += 1;
+        this.predatorHunterKills += 1;
+      } else if (hunter.isPlayer) {
+        this.finish(false);
+      } else {
+        hunter.downTimer = 4.2;
+      }
     }
   }
 
-  damageHunter(hunter) {
-    if (hunter.invulnerable > 0 || hunter.health <= 0) return;
-    hunter.health = Math.max(0, hunter.health - 1);
-    hunter.invulnerable = 1.05;
-    this.burst(hunter.x + hunter.w / 2, hunter.y + 22, "#f08b64", 7);
-    if (hunter.health === 0) {
-      if (hunter.isPlayer) this.finish(false);
-      else hunter.downTimer = 4.2;
-    }
+  damagePredator(damage = 1) {
+    const player = this.player;
+    if (this.mode !== "predator" || player.invulnerable > 0 || player.health <= 0) return;
+    player.health = Math.max(0, player.health - damage);
+    player.invulnerable = 0.68;
+    this.burst(player.x + player.w / 2, player.y + player.h * 0.55, "#e58a68", 9);
+    if (player.health <= 0) this.finish(false);
   }
 
   burst(x, y, color, count) {
@@ -516,22 +772,39 @@ export class Hunting {
     this.frame = null;
     this.finished = success;
     const result = this.root.querySelector("[data-ta-result]");
+    const predatorMode = this.mode === "predator";
+    const bestKey = predatorMode ? PREDATOR_BEST_KEY : BEST_KEY;
+    const totalTargets = predatorMode ? TOTAL_PREDATOR_HUNTERS : TOTAL_DINOSAURS;
     if (success) {
       const elapsedMs = Math.round(this.elapsed * 1000);
       if (!this.best || elapsedMs < this.best) this.best = elapsedMs;
-      try { localStorage.setItem(BEST_KEY, String(this.best)); } catch {}
+      try { localStorage.setItem(bestKey, String(this.best)); } catch {}
       result.textContent = this.text(
-        "SECCIÓN DESPEJADA · " + formatTime(elapsedMs) + " · RÉCORD " + formatTime(this.best),
-        "SECTION CLEARED · " + formatTime(elapsedMs) + " · BEST " + formatTime(this.best)
+        (predatorMode ? "CAZADORES ELIMINADOS" : "SECCIÓN DESPEJADA") +
+          " · " + formatTime(elapsedMs) + " · RÉCORD " + formatTime(this.best),
+        (predatorMode ? "HUNTERS ELIMINATED" : "SECTION CLEARED") +
+          " · " + formatTime(elapsedMs) + " · BEST " + formatTime(this.best)
       );
     } else {
-      result.textContent = this.text(
-        "CAZADOR ABATIDO · " + this.kills + "/" + TOTAL_DINOSAURS + " DINOSAURIOS ELIMINADOS · " + formatTime(this.elapsed * 1000),
-        "HUNTER DOWN · " + this.kills + "/" + TOTAL_DINOSAURS + " DINOSAURS ELIMINATED · " + formatTime(this.elapsed * 1000)
-      );
+      result.textContent = predatorMode
+        ? this.text(
+          "DEPREDADOR ABATIDO · " + this.kills + "/" + totalTargets + " CAZADORES ELIMINADOS · " + formatTime(this.elapsed * 1000),
+          "PREDATOR DOWN · " + this.kills + "/" + totalTargets + " HUNTERS ELIMINATED · " + formatTime(this.elapsed * 1000)
+        )
+        : this.text(
+          "CAZADOR ABATIDO · " + this.kills + "/" + totalTargets + " DINOSAURIOS ELIMINADOS · " + formatTime(this.elapsed * 1000),
+          "HUNTER DOWN · " + this.kills + "/" + totalTargets + " DINOSAURS ELIMINATED · " + formatTime(this.elapsed * 1000)
+        );
     }
     this.root.classList.remove("playing");
+    this.setModeIntroCopy();
     result.hidden = false;
+    this.root.querySelector("[data-ta-start]").hidden = true;
+    this.root.querySelector("[data-ta-predator]").hidden = true;
+    this.root.querySelector("[data-ta-retry]").textContent = this.text(
+      predatorMode ? "REINTENTAR DEPREDADOR" : "REINTENTAR CENTINELA",
+      predatorMode ? "RETRY PREDATOR" : "RETRY SENTINEL"
+    );
     this.root.querySelector("[data-ta-retry]").hidden = false;
     this.root.querySelector("[data-ta-exit]").hidden = false;
     this.render();
@@ -591,7 +864,7 @@ export class Hunting {
       ctx.fillRect(x, FLOOR + 8 + (i % 4) * 10, 12 + (i % 5) * 4, 3);
     }
     }
-    for (let i = 0; i < 7; i += 1) {
+    for (let i = 0; i < 9; i += 1) {
       const x = i * 600 - this.cameraX;
       if (x < -30 || x > WIDTH + 30) continue;
       ctx.fillStyle = "rgba(26,42,34,.48)";
@@ -638,7 +911,7 @@ export class Hunting {
     ctx.fillStyle = "#141c1b";
     ctx.fillRect(25, 31, 17, 4);
     ctx.fillRect(39, 29, 4, 3);
-    if (hunter.isPlayer) {
+    if (hunter.isPlayer && this.mode === "sentinel") {
       ctx.fillStyle = "#f1e7bd";
       ctx.fillRect(17, 12, 7, 3);
     }
@@ -647,7 +920,12 @@ export class Hunting {
     ctx.fillStyle = hunter.isPlayer ? "#e9f3bd" : "#d4dfd2";
     ctx.font = "9px monospace";
     ctx.textAlign = "center";
-    ctx.fillText(formatHunterLabel(hunter.squadIndex, hunter.isPlayer, this.locale), screenX, y - 11);
+    ctx.fillText(
+      this.mode === "predator"
+        ? this.text("CAZADOR " + hunter.squadIndex, "HUNTER " + hunter.squadIndex)
+        : formatHunterLabel(hunter.squadIndex, hunter.isPlayer, this.locale),
+      screenX, y - 11
+    );
     ctx.textAlign = "left";
     if (hunter.health > 0) {
       ctx.fillStyle = "#18221d";
@@ -708,7 +986,17 @@ export class Hunting {
       ctx.font = "10px monospace";
       ctx.fillText(this.text("EXTRACCIÓN", "EXTRACTION"), exitX - 78, FLOOR - 130);
     }
-    for (const dinosaur of this.dinosaurs) this.drawDinosaur(dinosaur);
+    if (this.mode === "predator") {
+      this.drawDinosaur(this.player);
+      const predatorX = this.player.x - this.cameraX + this.player.w / 2;
+      ctx.fillStyle = "#e8ff8a";
+      ctx.font = "9px monospace";
+      ctx.textAlign = "center";
+      ctx.fillText(this.text("DEPREDADOR", "PREDATOR"), predatorX, this.player.y - 12);
+      ctx.textAlign = "left";
+    } else {
+      for (const dinosaur of this.dinosaurs) this.drawDinosaur(dinosaur);
+    }
     for (let i = 0; i < this.hunters.length; i += 1) this.drawHunter(this.hunters[i], i);
     for (const projectile of this.projectiles) {
       ctx.fillStyle = "#ffe8a1";
@@ -734,10 +1022,14 @@ export class Hunting {
     ctx.fillText(this.text("TIEMPO", "TIME"), 25, 43);
     ctx.font = "14px monospace";
     ctx.fillStyle = "#d8f36a";
-    ctx.fillText(this.kills + "/" + TOTAL_DINOSAURS, 204, 26);
+    const totalTargets = this.mode === "predator" ? TOTAL_PREDATOR_HUNTERS : TOTAL_DINOSAURS;
+    ctx.fillText(this.kills + "/" + totalTargets, 204, 26);
     ctx.font = "9px monospace";
     ctx.fillStyle = "#c8d5c6";
-    ctx.fillText(this.text("ELIMINADOS", "ELIMINATED"), 204, 43);
+    ctx.fillText(this.text(
+      this.mode === "predator" ? "CAZADORES" : "DINOSAURIOS",
+      this.mode === "predator" ? "HUNTERS" : "DINOSAURS"
+    ), 204, 43);
     ctx.font = "14px monospace";
     ctx.fillStyle = "#f0f3e7";
     ctx.fillText(this.waveIndex + "/" + this.wavePlan.length, 382, 26);
@@ -747,15 +1039,37 @@ export class Hunting {
     ctx.font = "9px monospace";
     ctx.fillStyle = "#c8d5c6";
     ctx.fillText(this.text("VIDA", "HEALTH"), 548, 26);
-    for (let i = 0; i < this.player.maxHealth; i += 1) {
-      ctx.fillStyle = i < this.player.health ? "#d8f36a" : "#34463a";
-      ctx.fillRect(548 + i * 15, 33, 11, 8);
+    if (this.mode === "predator") {
+      ctx.fillStyle = "#34463a";
+      ctx.fillRect(548, 33, 150, 8);
+      ctx.fillStyle = "#d8f36a";
+      ctx.fillRect(548, 33, 150 * this.player.health / this.player.maxHealth, 8);
+      ctx.font = "9px monospace";
+      ctx.fillStyle = "#d8f36a";
+      ctx.fillText(this.text("VENATOSAURUS", "VENATOSAURUS"), 740, 26);
+      ctx.fillStyle = "#e7c59d";
+      ctx.fillText(this.text("ESPACIO / CLIC: MORDER", "SPACE / CLICK: BITE"), 740, 43);
+    } else {
+      for (let i = 0; i < this.player.maxHealth; i += 1) {
+        ctx.fillStyle = i < this.player.health ? "#d8f36a" : "#34463a";
+        ctx.fillRect(548 + i * 15, 33, 11, 8);
+      }
+      ctx.font = "9px monospace";
+      ctx.fillStyle = "#d8f36a";
+      ctx.fillText(this.text("ESCUADRA 1 + 3 IA", "SQUAD 1 + 3 AI"), 740, 26);
+      ctx.fillStyle = "#e7c59d";
+      ctx.fillText(
+        this.text(
+          this.player.reloadTimer > 0
+            ? "RECARGANDO..."
+            : "MUNICIÓN " + this.player.ammo + "/" + this.player.reserveAmmo + " · R: RECARGAR",
+          this.player.reloadTimer > 0
+            ? "RELOADING..."
+            : "AMMO " + this.player.ammo + "/" + this.player.reserveAmmo + " · R: RELOAD"
+        ),
+        740, 43
+      );
     }
-    ctx.font = "9px monospace";
-    ctx.fillStyle = "#d8f36a";
-    ctx.fillText(this.text("ESCUADRA 1 + 3 IA", "SQUAD 1 + 3 AI"), 740, 26);
-    ctx.fillStyle = "#e7c59d";
-    ctx.fillText(this.text("ESPACIO / CLIC: DISPARAR", "SPACE / CLICK: FIRE"), 740, 43);
     ctx.restore();
     if (this.pointer.active && this.running) {
       ctx.strokeStyle = "rgba(245,236,190,.85)";

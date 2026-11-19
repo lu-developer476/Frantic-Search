@@ -3,21 +3,29 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import {
   canCompleteSection,
+  canCompletePredatorSection,
   createWavePlan,
+  createPredatorWavePlan,
   formatHunterLabel,
   formatTime,
   getHuntingCameraFollowDelta,
   nearestTarget,
   Hunting,
+  HUNTER_MAGAZINE_SIZE,
+  HUNTER_RELOAD_DURATION,
   HUNTING_ENEMY_SPAWN_MARGIN,
-  HUNTING_GROUND_SCENERY_SPAWN_SPACING
+  HUNTING_GROUND_SCENERY_SPAWN_SPACING,
+  TOTAL_DINOSAURS,
+  TOTAL_PREDATOR_HUNTERS
 } from "../src/minigames/Hunting.js";
 
-test("Time Attack plans four ordered waves containing fourteen dinosaurs", () => {
+test("Sentinel plans four extended waves containing thirty dinosaurs", () => {
   const waves = createWavePlan();
   assert.equal(waves.length, 4);
-  assert.deepEqual(waves.map(wave => wave.at), [620, 1370, 2170, 3020]);
-  assert.equal(waves.reduce((sum, wave) => sum + wave.kinds.length, 0), 14);
+  assert.deepEqual(waves.map(wave => wave.at), [720, 1680, 2820, 4060]);
+  assert.deepEqual(waves.map(wave => wave.kinds.length), [6, 7, 8, 9]);
+  assert.equal(waves.reduce((sum, wave) => sum + wave.kinds.length, 0), 30);
+  assert.equal(TOTAL_DINOSAURS, 30);
   assert.ok(waves.every(wave => wave.kinds.every(kind =>
     ["venatosaurus-impavidus", "venatosaurus-saevidicus"].includes(kind)
   )));
@@ -31,7 +39,7 @@ test("Time Attack formats a non-negative run time as mm:ss:centiseconds", () => 
 });
 
 test("Time Attack only completes after the squad reaches extraction and every wave is cleared", () => {
-  const fullClear = Array.from({ length: 14 }, () => ({ defeated: true }));
+  const fullClear = Array.from({ length: TOTAL_DINOSAURS }, () => ({ defeated: true }));
   const alive = fullClear.map((item, index) => index === 4 ? { defeated: false } : item);
   assert.equal(canCompleteSection(3680, 3615, fullClear, 4, 4), true);
   assert.equal(canCompleteSection(3680, 3615, alive, 4, 4), false);
@@ -139,4 +147,77 @@ test("Hunting uses streamed foreground props instead of pre-generated ground det
   assert.match(source, /includeGroundScenery:\s*false/);
   assert.match(source, /ctx\.translate\(-this\.cameraX,\s*0\)/);
   assert.match(source, /drawGroundScenery\(ctx,\s*prop,\s*MINIGAME_ENVIRONMENT_SCENES\.hunting\)/);
+});
+
+
+test("Predator has four progressive hunter waves and requires a full clear", () => {
+  const waves = createPredatorWavePlan();
+  assert.equal(waves.length, 4);
+  assert.deepEqual(waves.map(wave => wave.count), [2, 2, 3, 3]);
+  assert.equal(TOTAL_PREDATOR_HUNTERS, 10);
+  const defeated = Array.from({ length: TOTAL_PREDATOR_HUNTERS }, () => ({ defeated: true, health: 0 }));
+  const surviving = defeated.map((hunter, index) => index === 5 ? { defeated: false, health: 1 } : hunter);
+  assert.equal(canCompletePredatorSection(5200, 5135, defeated, 4, 4), true);
+  assert.equal(canCompletePredatorSection(5200, 5135, surviving, 4, 4), false);
+  assert.equal(canCompletePredatorSection(5100, 5135, defeated, 4, 4), false);
+  assert.equal(canCompletePredatorSection(5200, 5135, defeated, 3, 4), false);
+});
+
+test("Every armed hunter, player or AI, is limited by magazine, reload and firing cadence", () => {
+  const simulation = Object.create(Hunting.prototype);
+  simulation.projectiles = [];
+  simulation.particles = [];
+  const shooter = {
+    id: "weapon-test",
+    x: 100, y: 200, w: 38, h: 64,
+    direction: 1, health: 3, downTimer: 0, defeated: false,
+    ammo: 1, reserveAmmo: 2, reloadTimer: 0,
+    fireCooldown: 0, shotInterval: 0.4
+  };
+
+  assert.equal(simulation.fire(shooter, 500, 220), true);
+  assert.equal(shooter.ammo, 0);
+  assert.equal(simulation.fire(shooter, 500, 220), false, "empty magazines cannot fire");
+  assert.equal(shooter.reloadTimer, HUNTER_RELOAD_DURATION);
+  assert.equal(simulation.projectiles.length, 1);
+
+  shooter.reloadTimer = 0;
+  shooter.ammo = HUNTER_MAGAZINE_SIZE;
+  shooter.reserveAmmo = 0;
+  shooter.fireCooldown = 0.2;
+  assert.equal(simulation.fire(shooter, 500, 220), false, "weapon cadence prevents rapid fire");
+  assert.equal(simulation.projectiles.length, 1);
+});
+
+test("Weapon reload transfers only the available reserve ammunition", () => {
+  const simulation = Object.create(Hunting.prototype);
+  const shooter = { health: 3, ammo: 0, reserveAmmo: 3, reloadTimer: 0, fireCooldown: 0 };
+  assert.equal(simulation.beginWeaponReload(shooter), true);
+  assert.equal(shooter.reloadTimer, HUNTER_RELOAD_DURATION);
+  simulation.updateWeapon(shooter, HUNTER_RELOAD_DURATION);
+  assert.equal(shooter.ammo, 3);
+  assert.equal(shooter.reserveAmmo, 0);
+});
+
+test("Predator waves spawn armed hunters beyond the live viewport edge", () => {
+  const simulation = { mode: "predator", cameraX: 420, hunters: [] };
+  Hunting.prototype.spawnWave.call(simulation, { at: 620, count: 2 });
+  assert.equal(simulation.hunters.length, 2);
+  assert.ok(simulation.hunters.every(hunter => hunter.x - simulation.cameraX > 960));
+  assert.ok(simulation.hunters.every(hunter => hunter.ammo === 5 && hunter.reserveAmmo === 5));
+  assert.ok(simulation.hunters.every(hunter => hunter.shotInterval === 1.2));
+});
+
+test("Hunting exposes both mode controls and documents role-specific weapon restrictions", async () => {
+  const [source, markup] = await Promise.all([
+    readFile(new URL("../src/minigames/Hunting.js", import.meta.url), "utf8"),
+    readFile(new URL("../index.html", import.meta.url), "utf8")
+  ]);
+  assert.match(source, /requestStart\("sentinel"\)/);
+  assert.match(source, /requestStart\("predator"\)/);
+  assert.match(source, /beginWeaponReload\(hunter\)/);
+  assert.match(source, /updateWeapon\(hunter, delta\)/);
+  assert.match(source, /startPredatorAttack\(\)/);
+  assert.match(markup, /data-ta-start/);
+  assert.match(markup, /data-ta-predator/);
 });
