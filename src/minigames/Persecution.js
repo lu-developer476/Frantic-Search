@@ -48,7 +48,7 @@ export const ASSETS = {
   xenoraptorRun: "minigame/persecution/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-run.gif",
   xenoraptorJump: "minigame/persecution/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-jump.gif",
   xenoraptorAttack: "minigame/persecution/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-attack.gif",
-  umbraraptorWalk: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-walk.gif",
+  umbraraptorRun: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-run.gif",
   umbraraptorJump: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-jump.gif",
   umbraraptorEat: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-eat.gif",
   umbraraptorIdle: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-idle.gif",
@@ -298,11 +298,11 @@ export function enemyAnimationKey(enemy, elapsed = 0) {
     return isXenoraptor ? "xenoraptorJump" : "umbraraptorIdle";
   }
 
-  if ((enemy.slideTimer ?? 0) > 0) return isXenoraptor ? "xenoraptorRun" : "umbraraptorWalk";
+  if ((enemy.slideTimer ?? 0) > 0) return isXenoraptor ? "xenoraptorRun" : "umbraraptorRun";
 
   const jumping = Math.sin(elapsed * 3.8 + (enemy.phase ?? 0)) > 0.92;
   if (isXenoraptor) return jumping ? "xenoraptorJump" : "xenoraptorRun";
-  return jumping ? "umbraraptorJump" : "umbraraptorWalk";
+  return jumping ? "umbraraptorJump" : "umbraraptorRun";
 }
 
 export class Persecution {

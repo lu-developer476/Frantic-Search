@@ -559,7 +559,7 @@ test("Empty Stomach changes predator GIFs for running, jumping, eating, and depa
   assert.equal(enemyAnimationKey({ ...xenoraptor, state: "departing" }, 0), "xenoraptorJump");
 
   const umbraraptor = { kind: "umbraraptor", phase: 0, state: "chasing" };
-  assert.equal(enemyAnimationKey(umbraraptor, 0), "umbraraptorWalk");
+  assert.equal(enemyAnimationKey(umbraraptor, 0), "umbraraptorRun");
   assert.equal(enemyAnimationKey(umbraraptor, Math.PI / (2 * 3.8)), "umbraraptorJump");
   assert.equal(enemyAnimationKey({ ...umbraraptor, state: "eating" }, 0), "umbraraptorEat");
   assert.equal(enemyAnimationKey({ ...umbraraptor, state: "departing" }, 0), "umbraraptorIdle");
@@ -568,7 +568,7 @@ test("Empty Stomach changes predator GIFs for running, jumping, eating, and depa
 test("Xenoraptors and Umbraraptors use a faster low slide while chasing", () => {
   for (const [kind, expectedPose] of [
     ["xenoraptor", "xenoraptorRun"],
-    ["umbraraptor", "umbraraptorWalk"]
+    ["umbraraptor", "umbraraptorRun"]
   ]) {
     const enemy = createPredator(kind, 0);
     enemy.x = 100;
