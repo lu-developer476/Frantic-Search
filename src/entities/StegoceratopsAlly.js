@@ -1,11 +1,14 @@
+import { getDinosaurHitbox } from "../config/DinosaurSizing.js";
+
 export class StegoceratopsAlly {
   constructor({ x, groundY, cameraRight = x + 960 }) {
     this.id = "stegoceratops-sweep-" + Math.round(x);
     this.character = "stegoceratops";
     this.x = x;
-    this.y = groundY - 108;
-    this.w = 184;
-    this.h = 108;
+    const size = getDinosaurHitbox("stegoceratops");
+    this.w = size.w;
+    this.h = size.h;
+    this.y = groundY - this.h;
     this.groundY = groundY;
     this.direction = 1;
     this.motionSpeed = 930;

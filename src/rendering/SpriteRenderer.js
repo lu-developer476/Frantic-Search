@@ -1,6 +1,9 @@
 import { ACTOR_ANIMATION_PROFILES, selectActorPose } from "./AnimationProfiles.js";
 import { getAnimatedFrameIndex, loadAnimatedGif } from "../minigames/AnimatedGif.js";
 import { drawSpriteImage } from "./CanvasUtils.js";
+import { getDinosaurRenderScale } from "../config/DinosaurSizing.js";
+
+const BOSS_DRAW_PADDING = 8;
 
 export const BRISA_ANIMATIONS = Object.freeze({
   idle: "juvenile-velociraptor-abyssomirabilis-idle.gif",
@@ -17,15 +20,22 @@ export const LIGOCRISTUS_ANIMATION_ASSETS = Object.freeze({
 const PROLOGUE_BRISA_SCALE = 1.8;
 const ANIMATED_REFERENCE_VERSION = "20261118-campaign-ligocristus-four-gif-routing-1";
 
+// Every scale is derived from the species' size class and artwork detail (see DinosaurSizing.js).
 export const DINOSAUR_REFERENCE_SCALES = Object.freeze({
-  gala: 1.6,
-  violeta: 1.6,
-  brisa: 1.56,
-  rosa: 1.56,
-  basilio: 1.95,
-  vastatosaurusRex: 1.95,
-  ligocristusInnocens: 0.9,
-  venatosaurusImpavidus: 0.94
+  gala: getDinosaurRenderScale("gala"),
+  violeta: getDinosaurRenderScale("gala"),
+  brisa: getDinosaurRenderScale("brisa"),
+  rosa: getDinosaurRenderScale("brisa"),
+  basilio: getDinosaurRenderScale("basilio"),
+  vastatosaurusRex: getDinosaurRenderScale("basilio"),
+  ligocristusInnocens: getDinosaurRenderScale("ligocristus"),
+  venatosaurusImpavidus: getDinosaurRenderScale("venatosaurusImpavidus"),
+  venatosaurusSaevidicus: getDinosaurRenderScale("venatosaurusSaevidicus"),
+  ferrucutus: getDinosaurRenderScale("ferrucutus"),
+  indoraptor: getDinosaurRenderScale("indoraptor", BOSS_DRAW_PADDING),
+  indominus: getDinosaurRenderScale("indominus", BOSS_DRAW_PADDING),
+  stegoceratops: getDinosaurRenderScale("stegoceratops"),
+  brontosaurus: getDinosaurRenderScale("brontosaurus")
 });
 
 export const JUVENILE_ANIMATED_CHARACTERS = Object.freeze({
@@ -48,18 +58,18 @@ export const REFERENCE_PNG_CHARACTERS = Object.freeze({
   blue: GALA_REFERENCE,
   basilio: BASILIO_REFERENCE,
   vasti: BASILIO_REFERENCE,
-  ferrucutus: { file: "ferrucutus-cerastes.png", sourceFacing: -1, scale: 1.08 },
-  indoraptor: { first: "indoraptor-first-generation.png", second: "indoraptor-second-generation.png", sourceFacing: 1, scale: 1.34 },
-  indominus: { first: "indominus-rex-first-generation.png", second: "indominus-rex-second-generation.png", sourceFacing: -1, scale: 1.18 },
-  "indominus-variant": { file: "indominus-rex-second-generation-variant.png", sourceFacing: -1, scale: 1.18 },
-  stegoceratops: { file: "stegoceratops.png", sourceFacing: -1, scale: 1.18 }
+  ferrucutus: { file: "ferrucutus-cerastes.png", sourceFacing: -1, scale: DINOSAUR_REFERENCE_SCALES.ferrucutus },
+  indoraptor: { first: "indoraptor-first-generation.png", second: "indoraptor-second-generation.png", sourceFacing: 1, scale: DINOSAUR_REFERENCE_SCALES.indoraptor },
+  indominus: { first: "indominus-rex-first-generation.png", second: "indominus-rex-second-generation.png", sourceFacing: -1, scale: DINOSAUR_REFERENCE_SCALES.indominus },
+  "indominus-variant": { file: "indominus-rex-second-generation-variant.png", sourceFacing: -1, scale: DINOSAUR_REFERENCE_SCALES.indominus },
+  stegoceratops: { file: "stegoceratops.png", sourceFacing: -1, scale: DINOSAUR_REFERENCE_SCALES.stegoceratops }
 });
 
 export const BRONTOSAURUS_ANIMATION_ASSETS = Object.freeze({
   walk: "brontosaurus-excelsus-basteri-walk.gif",
   run: "brontosaurus-excelsus-basteri-run.gif",
   sourceFacing: 1,
-  scale: 1.18
+  scale: DINOSAUR_REFERENCE_SCALES.brontosaurus
 });
 
 export function selectBrontosaurusAnimation(actor = {}) {
@@ -105,7 +115,7 @@ export const VENATOSAURUS_ANIMATION_ASSETS = Object.freeze({
     run: "venatosaurus-saevidicus-run.gif",
     walk: "venatosaurus-saevidicus-walk.gif",
     sourceFacing: 1,
-    scale: 1.18
+    scale: DINOSAUR_REFERENCE_SCALES.venatosaurusSaevidicus
   })
 });
 

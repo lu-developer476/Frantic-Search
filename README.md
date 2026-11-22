@@ -41,7 +41,7 @@ Narrator interludes pause the simulation so the player can read the story and ev
 - **Basilio:** Vastatosaurus rex from *King Kong* (2005), redesigned from `public/references/vastatosaurus-rex.jpg`: low, long-bodied profile, broad blunt skull, long tapering tail, short three-fingered forelimbs, powerful hind legs and muted olive-grey/brown hide with a sand-coloured underside; heavy movement, ground shockwave and aerial ground-slam. His name comes from Greek *basileus* (“king”), the same root found in *Basilosaurus* (*basileus* + *sauros*, “king lizard”).
 - **Brisa:** Gala's juvenile Velociraptor offspring, sharing Gala's white, purple and magenta family pattern; she becomes an escort companion after the facility systems are restored and lunges through crates that block her route. Her name recalls the events leading to her capture, her agility and the curiosity of a young raptor.
 - **Ferrucutus Cerastes:** *King Kong* (2005) ceratopsian with a heavy quadrupedal body, spiked oval frill and paired nasal horns; ally that helps bridge selected gaps and attacks enemies during exposed windows.
-- **Poachers:** state-driven patrol, investigation, pursuit and melee attack AI; defeated poachers become edible food sources.
+- **Poachers:** state-driven patrol, investigation, pursuit and ranged attack AI (they only fire projectiles, never melee); defeated poachers become edible food sources.
 - **Venatosaurus:** both reference variants spawn as frequent territorial enemies. They jump while patrolling and pursuing, and use a fast pouncing charge against nearby targets. They hunt the protagonists, attack other Venatosaurus and can hunt Ligocristus.
 - **Ligocristus Innocens:** procedural prey with its own health and four animated reference GIFs for idle, walking, running and jumping. Gala can defeat it with her dash, while Basilio can crush it with his stomp. Defeated Ligocristus fade out as translucent carcasses that the player, autonomous companions and Venatosaurus can consume to restore health. They can also appear as edible prey in Empty Stomach.
 - **Indoraptor:** *Jurassic World: Fallen Kingdom* hybrid with a lean black body, gold dorsal stripe and elongated clawed forelimbs. Its eight-part rig supports both supplied generations: black-and-gold first generation and ivory-and-turquoise second generation, which appears at the existing phase-two health threshold. Pounce, claw, jump and feeding poses are supported.
@@ -181,3 +181,27 @@ This is an unofficial fan-made project and is not affiliated with Universal Prod
 - Ground details such as ferns, fallen logs, driftwood, rocks, shrubs, stumps, planters and rubble add biome-specific context.
 - Scenery generation uses independent random streams and protected gameplay zones, so decorative placement does not reshuffle platforms, enemy encounters or rescue objectives.
 - Brisa's indoor containment environment intentionally remains free of outdoor vegetation.
+
+## Clasificación del tamaño de los dinosaurios
+
+El tamaño físico de cada dinosaurio sale de un único módulo, `src/config/DinosaurSizing.js`:
+
+1. **Especie → clase de tamaño** según su longitud real: `tiny` (<2 m), `small` (<4 m), `medium` (<6 m), `large` (<10 m), `huge` (<18 m), `colossal`. Las bandas de píxeles de cada clase no se solapan, así que una especie más grande nunca se dibuja más chica que una de una clase menor.
+2. **Nivel de detalle del arte → posición dentro de la banda**: el arte de baja resolución o plano se dibuja hacia el extremo inferior, el de alta resolución hacia el superior.
+3. El hitbox se deriva del tamaño dibujado según el rol (jugable, criatura, jefe, aliado). Los jugables tienen un hitbox acotado para que el juego siga siendo justo.
+
+| Dinosaurio | Clase | Detalle | Dibujado | Hitbox |
+|---|---|---|---|---|
+| Brisa (juvenil) | tiny | bajo | 70 | 48×48 |
+| Ligocristus | tiny | estándar | 78 | 64×45 |
+| Venatosaurus impavidus | small | bajo | 101 | 83×68 |
+| Gala (raptor adulta) | small | alto | 125 | 69×67 |
+| Venatosaurus saevidicus | medium | alto | 162 | 133×109 |
+| Indoraptor | medium | alto | 162 | 133×124 |
+| Ferrucutus | large | estándar | 188 | 169×101 |
+| Stegoceratops | large | alto | 199 | 179×106 |
+| Basilio (V-Rex) | huge | bajo | 222 | 112×99 |
+| Indominus rex | huge | alto | 270 | 221×148 |
+| Brontosaurus | colossal | estándar | 340 | 300×178 |
+
+Para agregar un dinosaurio, sumá un perfil en `DINOSAUR_SIZE_PROFILES`; las jaulas (`getContainmentCageSize`) se adaptan solas.

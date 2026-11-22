@@ -1,7 +1,10 @@
 import { BossEnemy } from "./BossEnemy.js";
+import { getDinosaurHitbox } from "../config/DinosaurSizing.js";
+
+const INDOMINUS_SIZE = getDinosaurHitbox("indominus");
 export class IndominusRexBoss extends BossEnemy {
  constructor({id,x,groundY,arenaMinX,arenaMaxX,variant="first-generation",title,formLabel,formLabelEs}){
-  super({id,kind:"indominus",x,groundY,width:224,height:150,health:14,detectionRange:620,preferredDistance:280,moveSpeed:78,attackCooldown:1.65});
+  super({id,kind:"indominus",x,groundY,width:INDOMINUS_SIZE.w,height:INDOMINUS_SIZE.h,health:14,detectionRange:620,preferredDistance:280,moveSpeed:78,attackCooldown:1.65});
   this.variant=["first-generation","second-generation","second-generation-variant"].includes(variant)?variant:"first-generation";
   this.generation=this.variant==="first-generation"?1:2;this.character=this.variant==="second-generation-variant"?"indominus-variant":"indominus";
   this.title=title??(this.variant==="second-generation-variant"?"INDOMINUS REX // GEN 2 VARIANT":`INDOMINUS REX // GEN ${this.generation}`);

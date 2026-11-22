@@ -1,10 +1,19 @@
+import { getDinosaurHitbox } from "../config/DinosaurSizing.js";
+
+const VENATOSAURUS_SIZE_PROFILE = Object.freeze({
+  "venatosaurus-impavidus": "venatosaurusImpavidus",
+  "venatosaurus-saevidicus": "venatosaurusSaevidicus"
+});
+const LEGACY_VENATOSAURUS_WIDTH = 112;
+
 export class WildDinosaur {
   constructor({ id, kind, x, groundY, patrolStart, patrolEnd, direction = 1 }) {
     this.id = id;
     this.kind = kind;
     this.x = x;
-    this.w = 112;
-    this.h = 92;
+    const size = getDinosaurHitbox(VENATOSAURUS_SIZE_PROFILE[kind] ?? "venatosaurusImpavidus");
+    this.w = size.w;
+    this.h = size.h;
     this.baseY = groundY - this.h;
     this.y = this.baseY;
     this.vy = 0;
@@ -138,11 +147,14 @@ export class WildDinosaur {
 
   get attackBox() {
     if (this.state !== "attack") return null;
+    // The strike reach scales with the body so a bigger Venatosaurus bites farther.
+    const reach = this.w / LEGACY_VENATOSAURUS_WIDTH;
+    const width = Math.round(58 * reach);
     return {
-      x: this.direction > 0 ? this.x + this.w - 12 : this.x - 44,
-      y: this.y + 28,
-      w: 58,
-      h: 48
+      x: this.direction > 0 ? this.x + this.w - Math.round(12 * reach) : this.x - Math.round(44 * reach),
+      y: this.y + Math.round(28 * reach),
+      w: width,
+      h: Math.round(48 * reach)
     };
   }
 }

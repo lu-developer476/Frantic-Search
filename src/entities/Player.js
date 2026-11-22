@@ -1,3 +1,7 @@
+import { getDinosaurHitbox } from "../config/DinosaurSizing.js";
+
+const PLAYER_SIZE_PROFILE = Object.freeze({ blue: "gala", rosa: "brisa", vasti: "basilio" });
+
 export class Player {
   constructor(character, x, groundY) {
     this.x = x;
@@ -36,8 +40,9 @@ export class Player {
   setCharacter(character) {
     this.character = character;
     this.applyCharacterStats();
-    this.w = character === "blue" ? 64 : character === "rosa" ? 54 : 82;
-    this.normalHeight = character === "blue" ? 62 : character === "rosa" ? 54 : 72;
+    const size = getDinosaurHitbox(PLAYER_SIZE_PROFILE[character] ?? "basilio");
+    this.w = size.w;
+    this.normalHeight = size.h;
     this.h = this.normalHeight;
   }
 

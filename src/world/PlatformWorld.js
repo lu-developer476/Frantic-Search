@@ -3,6 +3,7 @@ import { GAME, LEVELS, WORLD } from "../config/GameConfig.js";
 export const BOSS_ARENA_HALF_WIDTH = 780;
 import { generateSectionScenery } from "./SceneryGenerator.js";
 import { generateSectionCollectibles } from "./CollectibleGenerator.js";
+import { getContainmentCageSize } from "../config/DinosaurSizing.js";
 
 function seededRandom(seed) {
   let state = seed >>> 0;
@@ -51,7 +52,7 @@ const PLATFORM_LAYOUTS = [
   ]
 ];
 
-const FERRUCUTUS_CAGE_WIDTH = 164;
+const FERRUCUTUS_CAGE_WIDTH = getContainmentCageSize("ferrucutus").w;
 const CAPTIVE_RATIOS_BY_SECTION = [[0.20], [0.52], [0.32], [0.42], [0.30], [], []];
 const CHAPTER_BY_SECTION = [0, 1, 2, 2, 3, 4, 5];
 const BOSS_ENCOUNTERS_BY_SECTION = [

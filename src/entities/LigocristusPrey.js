@@ -1,11 +1,14 @@
+import { getDinosaurHitbox } from "../config/DinosaurSizing.js";
+
 export class LigocristusPrey {
   constructor({ id, x, groundY, patrolStart = x - 80, patrolEnd = x + 180 }) {
     this.id = id;
     this.kind = "ligocristus";
     this.character = "ligocristus";
     this.x = x;
-    this.w = 76;
-    this.h = 54;
+    const size = getDinosaurHitbox("ligocristus");
+    this.w = size.w;
+    this.h = size.h;
     this.baseY = groundY - this.h;
     this.y = this.baseY;
     this.vy = 0;
@@ -120,9 +123,10 @@ export class Brontosaurus {
     this.kind = "brontosaurus";
     this.character = "brontosaurus";
     this.x = x;
-    this.y = groundY - 178;
-    this.w = 300;
-    this.h = 178;
+    const size = getDinosaurHitbox("brontosaurus");
+    this.w = size.w;
+    this.h = size.h;
+    this.y = groundY - this.h;
     this.groundY = groundY;
     this.patrolStart = patrolStart;
     this.patrolEnd = patrolEnd;
