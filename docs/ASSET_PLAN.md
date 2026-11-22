@@ -86,3 +86,12 @@ Los eventos ya existentes (`jump`, `collect`, `hit`, `rescue`, `boss-*`) conserv
 4. **Cargador de imágenes de entorno** (parecido a `SpriteRenderer`) que precargue tilesets y capas y cachee patrones; `AtmosphereRenderer`/`TerrainRenderer` dibujan la imagen si está cargada y, si no, el código actual.
 5. **Parallax por capas** con velocidades (más lejos = más lento) y teñido por capítulo con `globalCompositeOperation`.
 6. Actualizar tests (`sprites-and-music`, `terrain-renderer`, `atmosphere-renderer`, `audio-samples`) para cubrir ambos caminos (con asset y fallback).
+
+## 5. Estado de implementación
+
+Hecho en código:
+- `src/rendering/ImageParallax.js`: carga las capas reales, hace color-key del fondo y las dibuja con parallax. `AtmosphereRenderer` la usa para `redwood`, `prairie`, `extraction`, `black-site` y `containment`, y mantiene el horizonte procedural si una imagen no carga (y para `coastal`/`rosa-containment`, que no tienen capas).
+- `AdaptiveMusic` reproduce `music-<tema>` desde archivo si existe, con el sintetizador como fallback.
+- `AudioManager`: `dash`, `stomp`, `shot`, `eat`, `terminal`, `door`, `cageOpen`, `stegoCharge`, `checkpoint`. Conectados en `main.js`: dash, stomp, jaula, terminal y Stegoceratops.
+
+Pendiente: tilesets de suelo/plataformas (`tileset-export*.png`), foreground del parallax, llamadas a `shot`/`eat`/`door`/`checkpoint`, música de minijuegos y los archivos de audio en sí.

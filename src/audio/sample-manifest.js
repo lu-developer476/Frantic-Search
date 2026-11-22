@@ -25,6 +25,19 @@ export const SAMPLE_MANIFEST = {
   "stego-charge": { files: ["/audio/sfx/stego-charge.ogg"], volume: 0.7 },
   checkpoint: { files: ["/audio/sfx/checkpoint.ogg"], volume: 0.5 },
 
+  // Música por tema (reemplaza al sintetizador de AdaptiveMusic si el archivo existe).
+  // loop:false para stingers de victoria/derrota.
+  "music-coastal": { files: ["/audio/music/coastal.ogg"], volume: 0.55 },
+  "music-forest": { files: ["/audio/music/forest.ogg"], volume: 0.55 },
+  "music-industrial": { files: ["/audio/music/industrial.ogg"], volume: 0.55 },
+  "music-facility": { files: ["/audio/music/facility.ogg"], volume: 0.55 },
+  "music-boss": { files: ["/audio/music/boss.ogg"], volume: 0.6 },
+  "music-extraction": { files: ["/audio/music/extraction.ogg"], volume: 0.55 },
+  "music-victory": { files: ["/audio/music/victory.ogg"], volume: 0.6, loop: false },
+  "music-defeat": { files: ["/audio/music/defeat.ogg"], volume: 0.6, loop: false },
+  "music-minigame-chase": { files: ["/audio/music/minigame-chase.ogg"], volume: 0.55 },
+  "music-minigame-combat": { files: ["/audio/music/minigame-combat.ogg"], volume: 0.55 },
+
   // Ambiente en loop, por tema musical del capítulo
   "ambient-coastal": { files: ["/audio/ambient/coastal.ogg"], volume: 0.35 },
   "ambient-forest": { files: ["/audio/ambient/forest.ogg"], volume: 0.35 },

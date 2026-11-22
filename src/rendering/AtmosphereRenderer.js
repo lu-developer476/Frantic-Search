@@ -429,7 +429,8 @@ function drawAtmosphericLighting(context, scene, environment, width, height, ela
 }
 
 export class AtmosphereRenderer {
-  constructor({ pixelScale = ATMOSPHERE_PIXEL_SCALE, createCanvas = createLayerCanvas } = {}) {
+  constructor({ pixelScale = ATMOSPHERE_PIXEL_SCALE, createCanvas = createLayerCanvas, parallax = null } = {}) {
+    this.parallax = parallax;
     if (!Number.isInteger(pixelScale) || pixelScale < 1) {
       throw new RangeError("Atmosphere pixelScale must be a positive integer.");
     }
@@ -464,7 +465,8 @@ export class AtmosphereRenderer {
     cameraX = 0,
     viewportWidth = targetContext?.canvas?.width ?? 960,
     viewportHeight = targetContext?.canvas?.height ?? 540,
-    elapsed = 0
+    elapsed = 0,
+    groundY = 430
   } = {}) {
     if (!targetContext || !scene) return;
     const width = Math.max(1, Math.ceil(viewportWidth));
@@ -479,10 +481,21 @@ export class AtmosphereRenderer {
     const layerByName = Object.fromEntries(this.layers.map((layer) => [layer.name, layer]));
     drawSky(layerByName.sky.context, scene, width, height, environment);
     drawCelestialLayer(layerByName.celestial.context, scene, environment, cameraX, width);
-    drawBiomeHorizon(layerByName.horizon.context, scene, environment, cameraX, width, elapsed);
+    const useImages = Boolean(this.parallax?.hasEnvironment(environment));
+    if (useImages) this.parallax.preload(environment);
+    if (!useImages) drawBiomeHorizon(layerByName.horizon.context, scene, environment, cameraX, width, elapsed);
     drawAtmosphericLighting(layerByName.lighting.context, scene, environment, width, height, elapsed);
 
+    let imagesDrawn = false;
     for (const layer of this.layers) {
+      if (layer.name === "horizon" && useImages) {
+        // Imágenes reales; si todavía no cargaron, se dibuja el horizonte procedural como fallback.
+        imagesDrawn = this.parallax.draw(targetContext, { environment, cameraX, viewportWidth: width, groundY });
+        if (!imagesDrawn) {
+          drawBiomeHorizon(layer.context, scene, environment, cameraX, width, elapsed);
+        }
+        if (imagesDrawn) continue;
+      }
       targetContext.save();
       targetContext.imageSmoothingEnabled = false;
       targetContext.globalAlpha = 1;

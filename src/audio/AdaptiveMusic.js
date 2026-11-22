@@ -22,6 +22,28 @@ export class AdaptiveMusic {
     this.theme = THEMES.coastal;
     this.step = 0;
     this.nextAt = 0;
+    this.samples = null;
+    this.fileSource = null;
+    this.fileKey = null;
+  }
+
+  setSamples(samples) {
+    this.samples = samples;
+  }
+
+  // Si hay un archivo para el tema actual lo reproduce; si no, queda el sintetizador.
+  syncFileTrack() {
+    const key = this.themeName ? "music-" + this.themeName : null;
+    if (key === this.fileKey && this.fileSource) return;
+    if (this.fileSource) {
+      try { this.fileSource.stop(); } catch { /* ya detenido */ }
+      this.fileSource = null;
+    }
+    this.fileKey = null;
+    if (!key || !this.context || !this.master || !this.samples?.has(key)) return;
+    const loop = this.samples.manifest[key]?.loop !== false;
+    this.fileSource = this.samples.play(this.context, this.master, key, { loop });
+    this.fileKey = this.fileSource ? key : null;
   }
 
   start(context, theme = "coastal") {
@@ -33,6 +55,7 @@ export class AdaptiveMusic {
       this.master.connect(context.destination);
     }
     this.setTheme(theme);
+    this.syncFileTrack();
     this.applyGain();
     if (context.state === "suspended") context.resume();
     if (!this.timer) this.timer = setInterval(() => this.schedule(), 30);
@@ -45,6 +68,7 @@ export class AdaptiveMusic {
     this.theme = THEMES[name];
     this.step = 0;
     this.nextAt = this.context ? this.context.currentTime + 0.04 : 0;
+    this.syncFileTrack();
   }
 
   setEnabled(value) {
@@ -116,6 +140,7 @@ export class AdaptiveMusic {
 
   schedule() {
     if (!this.context || !this.master || !this.enabled || this.paused) return;
+    if (this.fileSource) return;
     const horizon = this.context.currentTime + 0.16;
     if (!this.nextAt) this.nextAt = this.context.currentTime + 0.04;
     const interval = 60 / this.theme.tempo / 2;
@@ -126,6 +151,11 @@ export class AdaptiveMusic {
   }
 
   stop() {
+    if (this.fileSource) {
+      try { this.fileSource.stop(); } catch { /* ya detenido */ }
+      this.fileSource = null;
+      this.fileKey = null;
+    }
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
     this.paused = true;

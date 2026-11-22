@@ -1,5 +1,6 @@
 import { LEVELS } from "../config/GameConfig.js";
 import { AtmosphereRenderer } from "../rendering/AtmosphereRenderer.js";
+import { ImageParallax } from "../rendering/ImageParallax.js";
 import { EnvironmentalEffectsRenderer } from "../rendering/EnvironmentalEffectsRenderer.js";
 import { generateSectionScenery } from "../world/SceneryGenerator.js";
 import { TerrainRenderer } from "../rendering/TerrainRenderer.js";
@@ -47,6 +48,13 @@ export const MINIGAME_ENVIRONMENT_SCENES = Object.freeze({
   ambush: LEVELS[1]
 });
 
+let parallaxInstance = null;
+function sharedParallax() {
+  // Una sola caché de imágenes para todos los minijuegos.
+  if (!parallaxInstance) parallaxInstance = new ImageParallax();
+  return parallaxInstance;
+}
+
 function canCreateLayerCanvases() {
   return typeof OffscreenCanvas === "function" ||
     (typeof document !== "undefined" && typeof document.createElement === "function");
@@ -85,7 +93,7 @@ export class MinigameEnvironmentRenderer {
     if (!canCreateLayerCanvases()) return;
 
     try {
-      this.atmosphere = new AtmosphereRenderer();
+      this.atmosphere = new AtmosphereRenderer({ parallax: sharedParallax() });
       this.vegetation = new VegetationRenderer();
       this.terrain = new TerrainRenderer();
       this.effects = new EnvironmentalEffectsRenderer();
@@ -157,7 +165,8 @@ export class MinigameEnvironmentRenderer {
     // layered ground, cover, and environmental movement.
     this.atmosphere.draw(targetContext, {
       scene: this.scene, environment, cameraX,
-      viewportWidth: width, viewportHeight: height, elapsed
+      viewportWidth: width, viewportHeight: height, elapsed,
+      groundY: this.groundY
     });
     this.vegetation.drawBackground(targetContext, {
       props: this.scenery, cameraX,

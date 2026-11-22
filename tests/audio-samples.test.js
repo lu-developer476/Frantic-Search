@@ -96,3 +96,11 @@ test("sound toggle mutes ambience", async () => {
   manager.enabled = false;
   assert.equal(manager.ambientGainTarget(), 0);
 });
+
+test("manifest declares the new sfx, prairie ambient and per-theme music", async () => {
+  const { SAMPLE_MANIFEST } = await import("../src/audio/sample-manifest.js");
+  for (const key of ["dash", "stomp", "shot", "eat", "terminal", "door", "cage-open", "stego-charge", "checkpoint", "ambient-prairie", "music-boss", "music-minigame-chase"]) {
+    assert.ok(SAMPLE_MANIFEST[key]?.files?.length, key);
+  }
+  assert.equal(SAMPLE_MANIFEST["music-victory"].loop, false);
+});
