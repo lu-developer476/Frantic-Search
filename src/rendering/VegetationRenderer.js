@@ -145,7 +145,7 @@ export class VegetationRenderer {
     ground.context.save();
     ground.context.translate(-cameraOffset, 0);
     for (const prop of props) {
-      if (isPixelVegetationProp(prop)) this.drawGroundScenery(ground.context, prop, scene);
+      if (isPixelGroundSceneryProp(prop)) this.drawGroundScenery(ground.context, prop, scene);
     }
     ground.context.restore();
 

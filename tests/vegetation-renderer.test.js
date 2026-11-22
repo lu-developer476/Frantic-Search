@@ -150,3 +150,12 @@ test("vegetation layers are integrated without changing platform geometry or imp
   assert.doesNotMatch(vegetation, /\.(?:png|gif)\b/i);
   assert.doesNotMatch(vegetation, /PlatformWorld|CollisionSystem|PhysicsSystem/);
 });
+
+test("drawGround renders ground scenery props instead of throwing (campaign first frame)", () => {
+  const { createCanvas } = createCanvasFactory();
+  const renderer = new VegetationRenderer({ createCanvas });
+  const target = createTargetContext();
+  const props = [{ layer: "ground", kind: "grass", x: 100, y: 430 }, { layer: "far", kind: "tree", x: 50, y: 400 }];
+  assert.doesNotThrow(() => renderer.drawGround(target, { props, cameraX: 0, scene }));
+  assert.equal(target.draws.length, 1);
+});
