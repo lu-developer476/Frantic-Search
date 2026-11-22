@@ -147,29 +147,19 @@ test("Brontosaurus alternate between grazing and wandering, then retreat from pr
   assert.ok(bronto.x > beforeRetreat);
 });
 
-test("hunter contact during pursuit does not damage the player without an attack hitbox", () => {
-  const player = { x: 120, y: 366, w: 64, h: 62 };
+test("hunters only attack with projectiles: body contact never counts as a melee hit", () => {
   const hunter = new HunterEnemy({
-    id: "hunter-hit-timing",
+    id: "hunter-ranged-only",
     x: 100,
     patrolStart: 0,
     patrolEnd: 500,
     groundY: 430,
     carriesCaptive: false
   });
-
-  hunter.direction = 1;
-  hunter.state = "pursuit";
-
-  assert.equal(CollisionSystem.bodyHit(player, hunter), true);
-  assert.equal(CollisionSystem.hunterAttackHit(player, hunter), false);
-
   hunter.state = "attack";
-  assert.equal(CollisionSystem.hunterAttackHit(player, hunter), true);
 
-  // Once the attack is over, the same physical overlap is not another hit.
-  hunter.state = "pursuit";
-  assert.equal(CollisionSystem.hunterAttackHit(player, hunter), false);
+  assert.equal(CollisionSystem.hunterAttackHit, undefined);
+  assert.ok(!hunter.attackBox);
 });
 
 test("player HUD contains one continuous health bar and no numeric counter", async () => {
