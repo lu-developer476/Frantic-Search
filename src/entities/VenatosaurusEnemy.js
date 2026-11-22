@@ -1,12 +1,21 @@
+import { getDinosaurHitbox } from "../config/DinosaurSizing.js";
+
+const VENATOSAURUS_SIZE_PROFILE = Object.freeze({
+  "venatosaurus-impavidus": "venatosaurusImpavidus",
+  "venatosaurus-saevidicus": "venatosaurusSaevidicus"
+});
+const LEGACY_VENATOSAURUS_WIDTH = 94;
+
 export class VenatosaurusEnemy {
   constructor({ id, x, patrolStart, patrolEnd, groundY, variant = "venatosaurus-impavidus" }) {
     this.id = id;
     this.character = variant;
     this.variant = variant;
     this.x = x;
-    this.y = groundY - 72;
-    this.w = 94;
-    this.h = 72;
+    const size = getDinosaurHitbox(VENATOSAURUS_SIZE_PROFILE[variant] ?? "venatosaurusImpavidus");
+    this.w = size.w;
+    this.h = size.h;
+    this.y = groundY - this.h;
     this.groundY = groundY;
     this.patrolStart = patrolStart;
     this.patrolEnd = patrolEnd;
@@ -107,11 +116,12 @@ export class VenatosaurusEnemy {
 
   get attackBox() {
     if (this.state !== "attack") return null;
+    const reach = this.w / LEGACY_VENATOSAURUS_WIDTH;
     return {
-      x: this.direction > 0 ? this.x + this.w - 12 : this.x - 38,
-      y: this.y + 19,
-      w: 52,
-      h: 42
+      x: this.direction > 0 ? this.x + this.w - Math.round(12 * reach) : this.x - Math.round(38 * reach),
+      y: this.y + Math.round(19 * reach),
+      w: Math.round(52 * reach),
+      h: Math.round(42 * reach)
     };
   }
 }

@@ -77,8 +77,13 @@ test("enemy actors are defeated by unsupported ground gaps", () => {
   assert.equal(world.hasGroundSupportAt(520), true);
   for (const enemy of enemies) {
     assert.equal(world.resolveGroundPitfall(enemy, 430), true);
-    assert.equal(enemy.defeated, true);
     assert.equal(enemy.fellIntoPit, true);
+    // The fall is gradual now: keep resolving until the enemy has dropped out of the world.
+    for (let frame = 0; frame < 240 && !enemy.defeated; frame += 1) {
+      enemy.y += 12;
+      world.resolveGroundPitfall(enemy, 430);
+    }
+    assert.equal(enemy.defeated, true);
   }
 });
 

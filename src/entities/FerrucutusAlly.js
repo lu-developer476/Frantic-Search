@@ -1,12 +1,15 @@
+import { getDinosaurHitbox } from "../config/DinosaurSizing.js";
+
 export class FerrucutusAlly {
   constructor({ id, x, groundY }) {
     this.id = id;
     this.startX = x;
     this.departed = false;
     this.x = x;
-    this.y = groundY - 74;
-    this.w = 124;
-    this.h = 74;
+    const size = getDinosaurHitbox("ferrucutus");
+    this.w = size.w;
+    this.h = size.h;
+    this.y = groundY - this.h;
     this.groundY = groundY;
     this.state = "scout";
     this.stateTimer = 0;

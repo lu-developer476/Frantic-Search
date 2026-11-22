@@ -1,3 +1,4 @@
+import { getDinosaurRenderScale } from "../src/config/DinosaurSizing.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -30,8 +31,8 @@ test("feeding, jumping and combat actions resolve to their own poses", () => {
 });
 
 test("Vastatosaurus Rex is scaled as a large adult beside the raptors", () => {
-  assert.equal(DINOSAUR_REFERENCE_SCALES.vastatosaurusRex, 1.95);
-  assert.equal(REFERENCE_PNG_CHARACTERS.vasti.scale, 1.95);
+  assert.equal(DINOSAUR_REFERENCE_SCALES.vastatosaurusRex, getDinosaurRenderScale("basilio"));
+  assert.equal(REFERENCE_PNG_CHARACTERS.vasti.scale, getDinosaurRenderScale("basilio"));
   assert.ok(DINOSAUR_REFERENCE_SCALES.vastatosaurusRex > DINOSAUR_REFERENCE_SCALES.violeta);
   assert.ok(DINOSAUR_REFERENCE_SCALES.vastatosaurusRex > DINOSAUR_REFERENCE_SCALES.rosa);
 });

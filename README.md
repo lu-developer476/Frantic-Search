@@ -181,3 +181,27 @@ This is an unofficial fan-made project and is not affiliated with Universal Prod
 - Ground details such as ferns, fallen logs, driftwood, rocks, shrubs, stumps, planters and rubble add biome-specific context.
 - Scenery generation uses independent random streams and protected gameplay zones, so decorative placement does not reshuffle platforms, enemy encounters or rescue objectives.
 - Brisa's indoor containment environment intentionally remains free of outdoor vegetation.
+
+## Clasificación del tamaño de los dinosaurios
+
+El tamaño físico de cada dinosaurio sale de un único módulo, `src/config/DinosaurSizing.js`:
+
+1. **Especie → clase de tamaño** según su longitud real: `tiny` (<2 m), `small` (<4 m), `medium` (<6 m), `large` (<10 m), `huge` (<18 m), `colossal`. Las bandas de píxeles de cada clase no se solapan, así que una especie más grande nunca se dibuja más chica que una de una clase menor.
+2. **Nivel de detalle del arte → posición dentro de la banda**: el arte de baja resolución o plano se dibuja hacia el extremo inferior, el de alta resolución hacia el superior.
+3. El hitbox se deriva del tamaño dibujado según el rol (jugable, criatura, jefe, aliado). Los jugables tienen un hitbox acotado para que el juego siga siendo justo.
+
+| Dinosaurio | Clase | Detalle | Dibujado | Hitbox |
+|---|---|---|---|---|
+| Brisa (juvenil) | tiny | bajo | 70 | 48×48 |
+| Ligocristus | tiny | estándar | 78 | 64×45 |
+| Venatosaurus impavidus | small | bajo | 101 | 83×68 |
+| Gala (raptor adulta) | small | alto | 125 | 69×67 |
+| Venatosaurus saevidicus | medium | alto | 162 | 133×109 |
+| Indoraptor | medium | alto | 162 | 133×124 |
+| Ferrucutus | large | estándar | 188 | 169×101 |
+| Stegoceratops | large | alto | 199 | 179×106 |
+| Basilio (V-Rex) | huge | bajo | 222 | 112×99 |
+| Indominus rex | huge | alto | 270 | 221×148 |
+| Brontosaurus | colossal | estándar | 340 | 300×178 |
+
+Para agregar un dinosaurio, sumá un perfil en `DINOSAUR_SIZE_PROFILES`; las jaulas (`getContainmentCageSize`) se adaptan solas.

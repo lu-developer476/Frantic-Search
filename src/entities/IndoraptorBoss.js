@@ -1,12 +1,16 @@
 import { BossEnemy } from "./BossEnemy.js";
+import { getDinosaurHitbox } from "../config/DinosaurSizing.js";
+
+const INDORAPTOR_SIZE = getDinosaurHitbox("indoraptor");
 export class IndoraptorBoss extends BossEnemy {
  constructor({id,x,groundY,arenaMinX,arenaMaxX,generation=1,title,formLabel,formLabelEs}){
-  super({id,kind:"indoraptor",x,groundY,width:136,height:127,health:8,detectionRange:470,preferredDistance:178,moveSpeed:152,attackCooldown:1.4});
-  this.generation=Number(generation)>=2?2:1;this.title=title??`INDORAPTOR // GEN ${this.generation}`;
-  this.formLabel=formLabel??(this.generation===2?"SECOND-GENERATION SPECIMEN":"ORIGINAL SPECIMEN");
-  this.formLabelEs=formLabelEs??(this.generation===2?"EJEMPLAR DE SEGUNDA GENERACIÓN":"EJEMPLAR ORIGINAL");
+  super({id,kind:"indoraptor",x,groundY,width:INDORAPTOR_SIZE.w,height:INDORAPTOR_SIZE.h,health:8,detectionRange:470,preferredDistance:178,moveSpeed:152,attackCooldown:1.4});
+  this.baseGeneration=Number(generation)>=2?2:1;this.title=title??`INDORAPTOR // GEN ${this.baseGeneration}`;
+  this.formLabel=formLabel??(this.baseGeneration===2?"SECOND-GENERATION SPECIMEN":"ORIGINAL SPECIMEN");
+  this.formLabelEs=formLabelEs??(this.baseGeneration===2?"EJEMPLAR DE SEGUNDA GENERACIÓN":"EJEMPLAR ORIGINAL");
   if(Number.isFinite(arenaMinX))this.arenaMinX=arenaMinX;if(Number.isFinite(arenaMaxX))this.arenaMaxX=arenaMaxX;
  }
+ get generation(){return this.baseGeneration===2||this.phase===2?2:1;}
  chooseAttack(){if(this.phase===2&&this.attackIndex%3===2)return"shadow-lunge";return this.attackIndex%2===0?"pounce":"claw";}
  telegraphDuration(){if(this.attackName==="shadow-lunge")return 0.52;return(this.phase===2?0.48:0.68)+(this.attackName==="claw"?-0.12:0);}
  attackDuration(){if(this.attackName==="shadow-lunge")return 0.34;return this.attackName==="pounce"?0.46:0.24;}

@@ -1,9 +1,12 @@
+import { getDinosaurHitbox } from "../config/DinosaurSizing.js";
+
 export class Beta {
   constructor({ x, groundY }) {
+    const size = getDinosaurHitbox("brisa");
     this.x = x;
-    this.y = groundY - 48;
-    this.w = 48;
-    this.h = 48;
+    this.w = size.w;
+    this.h = size.h;
+    this.y = groundY - this.h;
     this.groundY = groundY;
     this.state = "confined";
     this.followDistance = 208;

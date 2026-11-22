@@ -1,3 +1,4 @@
+import { getDinosaurHitbox } from "../src/config/DinosaurSizing.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { BOSS_ARENA_HALF_WIDTH, PlatformWorld } from "../src/world/PlatformWorld.js";
@@ -301,8 +302,8 @@ test("Ferrucutus captive can be rescued once and only within interaction range",
 
 test("Indoraptor proportions follow its upright reference and attack hitboxes remain grounded", () => {
   const boss = new IndoraptorBoss({ id: "indo-proportions", x: 500, groundY: 430, arenaMinX: 0, arenaMaxX: 1000 });
-  assert.equal(boss.w, 136);
-  assert.equal(boss.h, 127);
+  assert.equal(boss.w, getDinosaurHitbox("indoraptor").w);
+  assert.equal(boss.h, getDinosaurHitbox("indoraptor").h);
   boss.activate();
   boss.state = "attacking";
   boss.attackName = "claw";

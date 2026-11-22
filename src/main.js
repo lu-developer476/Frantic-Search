@@ -2,6 +2,7 @@ import "./styles/main.css";
 import "./styles/typography.css";
 import { inject } from "@vercel/analytics";
 import { GAME, LEVELS, WORLD } from "./config/GameConfig.js";
+import { getDinosaurHitbox } from "./config/DinosaurSizing.js";
 
 inject();
 import { AudioManager } from "./audio/AudioManager.js";
@@ -2428,7 +2429,8 @@ function updateLevelTransition(delta) {
 function activateStegoceratops() {
   if(stegoceratops||stegoceratopsCooldown>0||!running||campaign.flags.completed)return false;
   stegoceratopsCooldown=currentStegoceratopsCooldown();
-  stegoceratops = { id: "stegoceratops-special", x: cameraX - 190, y: GAME.groundY - 126, w: 170, h: 126, direction: 1, state: "charge", hitIds: new Set() };
+  const stegoSize = getDinosaurHitbox("stegoceratops");
+  stegoceratops = { id: "stegoceratops-special", x: cameraX - stegoSize.w - 20, y: GAME.groundY - stegoSize.h, w: stegoSize.w, h: stegoSize.h, direction: 1, state: "charge", hitIds: new Set() };
   audio.collect();
   return true;
 }

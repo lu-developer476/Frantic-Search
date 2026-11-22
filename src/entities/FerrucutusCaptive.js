@@ -1,15 +1,19 @@
+import { getContainmentCageSize, getDinosaurHitbox } from "../config/DinosaurSizing.js";
+
 export class FerrucutusCaptive {
   constructor({ id, x, groundY }) {
     this.id = id;
     this.x = x;
     this.groundY = groundY;
-    this.w = 164;
-    this.h = 124;
+    const cage = getContainmentCageSize("ferrucutus");
+    const animal = getDinosaurHitbox("ferrucutus");
+    this.w = cage.w;
+    this.h = cage.h;
     this.y = groundY - this.h;
-    this.dinosaurX = x + 14;
-    this.dinosaurY = groundY - 92;
-    this.dinosaurW = 136;
-    this.dinosaurH = 78;
+    this.dinosaurW = animal.w;
+    this.dinosaurH = animal.h;
+    this.dinosaurX = x + (this.w - this.dinosaurW) / 2;
+    this.dinosaurY = groundY - this.dinosaurH - 14;
     this.direction = -1;
     this.state = "confined";
     this.rescued = false;
