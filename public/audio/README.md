@@ -33,3 +33,17 @@ audio.play();
 ```
 
 Actualmente el juego sintetiza música y efectos con Web Audio API (`src/audio/`). Los archivos de esta carpeta permiten reemplazar o complementar ese audio procedural.
+
+## Cómo se usan los archivos (samples opcionales)
+
+`src/audio/sample-manifest.js` define qué archivo corresponde a cada evento y a cada ambiente de capítulo. Al iniciar el audio, `SampleBank` intenta cargar cada archivo; **los que no existan se ignoran** y se usa el sonido sintetizado de siempre. Se pueden listar varias variantes por evento (se elige una al azar).
+
+| Evento | Archivos esperados |
+| --- | --- |
+| Salto / recolección / rescate | `sfx/jump.ogg`, `sfx/collect.ogg`, `sfx/rescue.ogg` |
+| Golpe | `sfx/hit-1.ogg`, `sfx/hit-2.ogg` |
+| Jefes | `sfx/boss-roar-{1,2}.ogg`, `sfx/boss-attack-{1,2}.ogg`, `sfx/boss-hit-{1,2}.ogg`, `sfx/boss-defeat.ogg` |
+| Ambiente por capítulo (loop) | `ambient/{coastal,forest,industrial,facility,extraction}.ogg` |
+
+Autores y licencias: ver [`CREDITS.md`](./CREDITS.md). El interruptor de sonido del menú también silencia estos ambientes.
+

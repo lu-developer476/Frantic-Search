@@ -1428,6 +1428,7 @@ function finishCampaignPrologue() {
   updateCampaignHud();
   renderStoryPanel();
   music.setTheme(currentMusicTheme());
+  audio.setAmbient(currentMusicTheme());
   render();
   showGameplayBrief("campaign", null, LEVELS[0].name);
 }
@@ -2551,6 +2552,7 @@ function update(delta) {
   syncBossEncounter();
   syncFacility();
   music.setTheme(currentMusicTheme());
+  audio.setAmbient(currentMusicTheme());
   distance = explorationMode ? player.x - GAME.playerX : Math.max(0, player.x - GAME.playerX);
   if (!explorationMode) campaign.updateLocation(player.x);
   updateCampaignHud();
@@ -3405,6 +3407,7 @@ function start(mode = "campaign") {
   if (!explorationMode) beginCampaignPrologue();
   updatePlayerHealthHud();
   music.start(audio.context, currentMusicTheme());
+  audio.setAmbient(currentMusicTheme());
   music.setPaused(false);
   music.setEnabled(audio.enabled);
   overlay.classList.add("hidden");
@@ -4185,6 +4188,7 @@ document.querySelector("#sound-toggle").addEventListener("click", () => {
   music.setEnabled(enabled);
   if (enabled) {
     music.start(audio.context, currentMusicTheme());
+    audio.setAmbient(currentMusicTheme());
     music.setPaused(paused);
     music.setDucked(campaign.sceneOpen);
   }
