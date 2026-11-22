@@ -37,6 +37,7 @@ import { Beta } from "./entities/Beta.js";
 import { FacilityConsole } from "./entities/FacilityConsole.js";
 import { SpriteRenderer } from "./rendering/SpriteRenderer.js";
 import { AtmosphereRenderer } from "./rendering/AtmosphereRenderer.js";
+import { ImageParallax } from "./rendering/ImageParallax.js";
 import { drawGroundScenery } from "./rendering/SceneryRenderer.js";
 import { VegetationRenderer, isPixelGroundSceneryProp } from "./rendering/VegetationRenderer.js";
 import { TerrainRenderer } from "./rendering/TerrainRenderer.js";
@@ -65,7 +66,7 @@ const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
 ctx.fillText = () => {};
 ctx.strokeText = () => {};
 ctx.imageSmoothingEnabled = false;
-const atmosphereRenderer = new AtmosphereRenderer();
+const atmosphereRenderer = new AtmosphereRenderer({ parallax: new ImageParallax() });
 const vegetationRenderer = new VegetationRenderer();
 const terrainRenderer = new TerrainRenderer();
 const objectRenderer = new ObjectRenderer();
@@ -219,6 +220,8 @@ const ambush = new Ambush(ambushPanel, returnFromMinigame, spriteRenderer, showG
 const race = new Race(racePanel, returnFromMinigame);
 const audio = new AudioManager();
 const music = new AdaptiveMusic();
+music.setSamples(audio.samples);
+audio.onSamplesLoaded = () => music.syncFileTrack();
 let locale = save.get("language") || "es";
 const savedEnvironmentMode = save.get("environmentMode");
 let environmentMode = ["beige", "gray"].includes(savedEnvironmentMode) ? savedEnvironmentMode : "beige";
@@ -409,7 +412,8 @@ function drawBackground() {
     cameraX,
     viewportWidth: GAME.width,
     viewportHeight: GAME.height,
-    elapsed
+    elapsed,
+    groundY: GAME.groundY
   });
 
   vegetationRenderer.drawBackground(ctx, {
@@ -1470,7 +1474,8 @@ function updatePrologueFight(delta) {
   const abilityEvent = player.consumeAbilityEvent();
   if (abilityEvent) {
     prologue.tutorial.abilityUsed = true;
-    if (abilityEvent === "dash" || abilityEvent === "stomp") audio.collect();
+    if (abilityEvent === "dash") audio.dash();
+  else if (abilityEvent === "stomp") audio.stomp();
     else if (abilityEvent === "slam") audio.hit();
   }
 
@@ -1665,7 +1670,7 @@ function updateCampaignPrologue(delta) {
     player.state = Math.abs(player.vx) > 30 ? "running" : "alert";
     if (player.consumeJumpEvent()) audio.jump();
     const abilityEvent = player.consumeAbilityEvent();
-    if (abilityEvent === "dash") audio.collect();
+    if (abilityEvent === "dash") audio.dash();
 
     const result = physics.step(player, delta, world.platformsNear(player.x));
     if (result.fell) {
@@ -2021,6 +2026,7 @@ function interactWithFacility() {
       x: captive.x + 18,
       groundY: GAME.groundY
     }));
+    audio.cageOpen();
     audio.rescue();
     burst(captive.x + captive.w / 2, captive.y + captive.h / 2, "#d8f36a", 26);
     updateCampaignHud();
@@ -2038,6 +2044,7 @@ function interactWithFacility() {
     }
     if (campaign.activateConsole(terminal.kind)) {
       terminal.activate();
+      audio.terminal();
       audio.rescue();
       renderStoryPanel();
       updateCampaignHud();
@@ -2432,7 +2439,7 @@ function activateStegoceratops() {
   stegoceratopsCooldown=currentStegoceratopsCooldown();
   const stegoSize = getDinosaurHitbox("stegoceratops");
   stegoceratops = { id: "stegoceratops-special", x: cameraX - stegoSize.w - 20, y: GAME.groundY - stegoSize.h, w: stegoSize.w, h: stegoSize.h, direction: 1, state: "charge", hitIds: new Set() };
-  audio.collect();
+  audio.stegoCharge();
   return true;
 }
 
@@ -2510,7 +2517,8 @@ function update(delta) {
     dashHitIds.clear();
     createDashDustCloud();
   }
-  if (abilityEvent === "dash" || abilityEvent === "stomp") audio.collect();
+  if (abilityEvent === "dash") audio.dash();
+    else if (abilityEvent === "stomp") audio.stomp();
   if (abilityEvent === "slam") audio.hit();
 
   const brontosaurusBacks = createBrontosaurusBackPlatforms(wildlife, selected);
