@@ -13,10 +13,23 @@ export const SAMPLE_MANIFEST = {
   "boss-hit": { files: ["/audio/sfx/boss-hit-1.ogg", "/audio/sfx/boss-hit-2.ogg"], volume: 0.65 },
   "boss-defeat": { files: ["/audio/sfx/boss-defeat.ogg"], volume: 0.7 },
 
+  // Efectos previstos (ver docs/ASSET_PLAN.md). Aún sin llamadas en el código:
+  // se cargan solo si el archivo existe.
+  dash: { files: ["/audio/sfx/dash.ogg"], volume: 0.5 },
+  stomp: { files: ["/audio/sfx/stomp.ogg"], volume: 0.65 },
+  shot: { files: ["/audio/sfx/shot.ogg"], volume: 0.5 },
+  eat: { files: ["/audio/sfx/eat.ogg"], volume: 0.5 },
+  terminal: { files: ["/audio/sfx/terminal.ogg"], volume: 0.5 },
+  door: { files: ["/audio/sfx/door.ogg"], volume: 0.55 },
+  "cage-open": { files: ["/audio/sfx/cage-open.ogg"], volume: 0.6 },
+  "stego-charge": { files: ["/audio/sfx/stego-charge.ogg"], volume: 0.7 },
+  checkpoint: { files: ["/audio/sfx/checkpoint.ogg"], volume: 0.5 },
+
   // Ambiente en loop, por tema musical del capítulo
   "ambient-coastal": { files: ["/audio/ambient/coastal.ogg"], volume: 0.35 },
   "ambient-forest": { files: ["/audio/ambient/forest.ogg"], volume: 0.35 },
   "ambient-industrial": { files: ["/audio/ambient/industrial.ogg"], volume: 0.3 },
   "ambient-facility": { files: ["/audio/ambient/facility.ogg"], volume: 0.3 },
-  "ambient-extraction": { files: ["/audio/ambient/extraction.ogg"], volume: 0.3 }
+  "ambient-extraction": { files: ["/audio/ambient/extraction.ogg"], volume: 0.3 },
+  "ambient-prairie": { files: ["/audio/ambient/prairie.ogg"], volume: 0.3 }
 };
