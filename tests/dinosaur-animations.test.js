@@ -262,3 +262,18 @@ test("the tactical enemy atlas is RGBA so sprites and combat effects retain tran
   assert.equal(png.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
   assert.equal(png[25], 6, "tactical-enemies.png must use PNG truecolor with alpha");
 });
+
+
+test("campaign hunters mix transparent tactical atlas sprites with the supplied human GIFs", async () => {
+  const [renderer, main] = await Promise.all([
+    readFile(new URL("../src/rendering/SpriteRenderer.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/main.js", import.meta.url), "utf8")
+  ]);
+  assert.match(renderer, /actor\?\.useTacticalSprite \?\? hash % 3 === 0/);
+  assert.match(renderer, /human-v1\.gif/);
+  assert.match(renderer, /human-v2\.gif/);
+  const drawHunter = main.slice(main.indexOf("function drawHunter(hunter)"), main.indexOf("function drawHunterProjectile"));
+  assert.match(drawHunter, /drawAnimatedSafely\(ctx, "hunter"/);
+  assert.match(drawHunter, /if \(!spriteDrawn\) return;/);
+  assert.doesNotMatch(drawHunter, /ctx\.fillRect\(7, 58, 25, 5\)/);
+});

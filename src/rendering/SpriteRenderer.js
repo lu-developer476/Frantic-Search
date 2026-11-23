@@ -1780,7 +1780,7 @@ export class SpriteRenderer {
       const identity = String(actor?.id ?? actor?.squadIndex ?? "hunter");
       let hash = 0;
       for (const char of identity) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-      if ((actor?.useTacticalSprite ?? true) &&
+      if ((actor?.useTacticalSprite ?? hash % 3 === 0) &&
           this.drawTacticalEnemy(context, x, y, width, height, actor ?? {}, elapsed, options)) return true;
       const humanFile = hash % 2 === 0 ? "human-v1.gif" : "human-v2.gif";
       return this.drawAnimatedReference(context, humanFile, x, y, width, height, actor ?? {}, elapsed, options);
