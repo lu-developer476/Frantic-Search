@@ -38,8 +38,7 @@ import { FacilityConsole } from "./entities/FacilityConsole.js";
 import { SpriteRenderer } from "./rendering/SpriteRenderer.js";
 import { AtmosphereRenderer } from "./rendering/AtmosphereRenderer.js";
 import { ImageParallax } from "./rendering/ImageParallax.js";
-import { drawGroundScenery } from "./rendering/SceneryRenderer.js";
-import { VegetationRenderer, isPixelGroundSceneryProp } from "./rendering/VegetationRenderer.js";
+import { CRATE_VARIANTS, OBJECT_SPECS, PORTAL_FRAMES, SLICES, fillTiled, imageSize, sharedEnvironmentAssets } from "./rendering/EnvironmentAssets.js";
 import { TerrainRenderer } from "./rendering/TerrainRenderer.js";
 import { ObjectRenderer } from "./rendering/ObjectRenderer.js";
 import { EnvironmentalEffectsRenderer } from "./rendering/EnvironmentalEffectsRenderer.js";
@@ -67,7 +66,9 @@ ctx.fillText = () => {};
 ctx.strokeText = () => {};
 ctx.imageSmoothingEnabled = false;
 const atmosphereRenderer = new AtmosphereRenderer({ parallax: new ImageParallax() });
-const vegetationRenderer = new VegetationRenderer();
+const environmentAssets = sharedEnvironmentAssets();
+environmentAssets.preload(OBJECT_SPECS);
+const art = (spec) => environmentAssets.get(spec);
 const terrainRenderer = new TerrainRenderer();
 const objectRenderer = new ObjectRenderer();
 const effectsRenderer = new EnvironmentalEffectsRenderer();
@@ -412,32 +413,7 @@ function drawBackground() {
     cameraX,
     viewportWidth: GAME.width,
     viewportHeight: GAME.height,
-    elapsed,
     groundY: GAME.groundY
-  });
-
-  vegetationRenderer.drawBackground(ctx, {
-    props: world.visibleScenery(cameraX, GAME.width, "background", scene.environment),
-    cameraX,
-    viewportWidth: GAME.width,
-    viewportHeight: GAME.height,
-    scene
-  });
-
-  effectsRenderer.drawAmbientBack(ctx, {
-    environment: scene.environment,
-    cameraX,
-    viewportWidth: GAME.width,
-    viewportHeight: GAME.height,
-    elapsed
-  });
-
-  terrainRenderer.drawBackdrop(ctx, {
-    cameraX,
-    viewportWidth: GAME.width,
-    viewportHeight: GAME.height,
-    groundY: GAME.groundY,
-    scene
   });
 }
 
@@ -445,84 +421,40 @@ function drawBackground() {
 
 
 function drawFacilityProp(prop, context = ctx) {
+  context.imageSmoothingEnabled = false;
+  const view = { visibleLeft: cameraX - 50, visibleRight: cameraX + GAME.width + 50 };
   if (prop.kind === "security-fence") {
-    context.fillStyle = "#171f22";
-    context.fillRect(prop.x, prop.y, prop.w, prop.h);
-    context.fillStyle = "#71817d";
-    context.fillRect(prop.x, prop.y, prop.w, 3);
-    for (let x = prop.x + 8; x < prop.x + prop.w; x += 26) {
-      context.fillStyle = "#778580";
-      context.fillRect(x, prop.y - 38, 3, 38);
-    }
+    const deck = art(SLICES.hazardDeck);
+    if (deck) fillTiled(context, deck, prop.x, prop.y, prop.w, imageSize(deck)[1], view);
     return;
   }
-
-  if (prop.kind === "facility-lamp") {
-    context.fillStyle = "#202a2c";
-    context.fillRect(prop.x + 10, prop.y, 8, prop.h);
-    context.fillStyle = "#87958a";
-    context.fillRect(prop.x, prop.y, 28, 8);
-    context.fillStyle = "#e4d9a1";
-    context.fillRect(prop.x + 4, prop.y + 8, 20, 8);
-    context.fillStyle = "#e4d9a122";
-    context.beginPath();
-    context.moveTo(prop.x + 4, prop.y + 16);
-    context.lineTo(prop.x - 65, GAME.groundY);
-    context.lineTo(prop.x + 93, GAME.groundY);
-    context.closePath();
-    context.fill();
-    return;
-  }
-
-  context.fillStyle = prop.kind === "containment-wing" ? "#424c50" : "#313d42";
-  context.fillRect(prop.x, prop.y, prop.w, prop.h);
-  context.fillStyle = "#68777a";
-  context.fillRect(prop.x, prop.y, prop.w, 7);
-  context.fillStyle = "#182326";
-  for (let x = prop.x + 18; x < prop.x + prop.w - 18; x += 52) {
-    context.fillRect(x, prop.y + 35, 31, Math.max(28, prop.h - 72));
-    context.fillStyle = prop.kind === "containment-wing" ? "#8cb1a4" : "#758a85";
-    context.fillRect(x + 5, prop.y + 41, 21, 4);
-    context.fillStyle = "#182326";
-  }
-  context.fillStyle = "#d8f36a";
-  context.fillRect(prop.x + 14, prop.y + 16, Math.min(90, prop.w - 28), 3);
+  const wall = art(SLICES.greyBlock);
+  if (wall) fillTiled(context, wall, prop.x, prop.y, prop.w, prop.h, view);
+  const sign = art(prop.kind === "containment-wing" ? SLICES.radiationSign : SLICES.hazardSign);
+  if (sign) context.drawImage(sign, Math.round(prop.x + 14), Math.round(prop.y + 14));
   if (prop.kind === "containment-wing") {
-    context.strokeStyle = "#a9b7a4";
-    context.lineWidth = 4;
-    context.strokeRect(prop.x + 32, prop.y + 54, prop.w - 64, prop.h - 72);
-    context.fillStyle = "#8bb6a044";
-    context.fillRect(prop.x + 36, prop.y + 58, prop.w - 72, prop.h - 80);
     context.fillStyle = "#d8f36a";
     context.font = "10px monospace";
     context.fillText(tr("CELL BLOCK C"), prop.x + 48, prop.y + prop.h - 28);
   }
-
 }
 function drawFacilityConsole(consoleEntity, context = ctx) {
-  const x = consoleEntity.x;
-  const y = consoleEntity.y;
+  const sprite = art(consoleEntity.activated ? SLICES.computerOn : SLICES.computerOff);
   context.save();
-  context.fillStyle = "#202a2d";
-  roundedRect(context, x, y + 18, consoleEntity.w, 60, 6);
-  context.fillStyle = "#71817b";
-  context.fillRect(x + 5, y + 20, consoleEntity.w - 10, 5);
-  context.fillStyle = consoleEntity.activated ? "#d8f36a" : "#e18c62";
-  roundedRect(context, x + 8, y + 7, consoleEntity.w - 16, 28, 4);
-  context.fillStyle = "#14201f";
-  context.fillRect(x + 12, y + 12, consoleEntity.w - 24, 17);
-  context.fillStyle = consoleEntity.activated ? "#d8f36a" : "#e18c62";
-  context.fillRect(x + 17, y + 17, consoleEntity.w - 34, 4);
+  context.imageSmoothingEnabled = false;
+  if (sprite) {
+    const [width, height] = imageSize(sprite);
+    context.drawImage(sprite, Math.round(consoleEntity.x + (consoleEntity.w - width) / 2), Math.round(consoleEntity.y + consoleEntity.h - height));
+  }
   context.fillStyle = "#9aa69d";
   context.font = "8px monospace";
-  context.fillText(locale === "es" ? (consoleEntity.kind === "power" ? "ENE" : "SEG") : (consoleEntity.kind === "power" ? "PWR" : "LOCK"), x + 7, y + 2);
+  context.fillText(locale === "es" ? (consoleEntity.kind === "power" ? "ENE" : "SEG") : (consoleEntity.kind === "power" ? "PWR" : "LOCK"), consoleEntity.x + 7, consoleEntity.y - 2);
   if (consoleEntity.activated) {
     context.fillStyle = "#d8f36a";
     context.font = "9px monospace";
-    context.fillText(tr("ONLINE"), x - 2, y - 10);
+    context.fillText(tr("ONLINE"), consoleEntity.x - 2, consoleEntity.y - 12);
   }
   context.restore();
-
 }
 function drawBrisaContainmentFrame(context, entity) {
   if (!entity || entity.state !== "confined") return;
@@ -550,34 +482,33 @@ function drawBrisa(entity) {
 
 function drawExtractionMarker(x, context = ctx) {
   if (!Number.isFinite(x)) return;
-  context.fillStyle = "#1b2929";
-  context.fillRect(x, GAME.groundY - 190, 18, 190);
-  context.fillRect(x + 180, GAME.groundY - 190, 18, 190);
-  context.fillRect(x, GAME.groundY - 190, 198, 16);
-  context.fillStyle = "#d8f36a";
-  context.fillRect(x + 22, GAME.groundY - 166, 154, 4);
+  const unlocked = beta?.state === "following" || beta?.state === "extracted";
+  const frame = unlocked ? PORTAL_FRAMES[3 + (Math.floor(elapsed * 6) % 3)] : PORTAL_FRAMES[0];
+  const portal = art(SLICES[frame]);
+  context.save();
+  context.imageSmoothingEnabled = false;
+  if (portal) {
+    const [width, height] = imageSize(portal);
+    context.drawImage(portal, Math.round(x + 99 - width / 2), GAME.groundY - height);
+  }
   context.fillStyle = "#edf3e5";
   context.font = "11px monospace";
-  context.fillText(tr(beta?.state === "following" || beta?.state === "extracted" ? "EXTRACTION" : "EXIT LOCKED"), x + 28, GAME.groundY - 139);
+  context.textAlign = "center";
+  context.fillText(tr(unlocked ? "EXTRACTION" : "EXIT LOCKED"), x + 99, GAME.groundY - 112);
   context.fillStyle = "#d8f36a";
   context.font = "8px monospace";
-  context.fillText(tr("EAST GATE"), x + 60, GAME.groundY - 123);
-
+  context.fillText(tr("EAST GATE"), x + 99, GAME.groundY - 100);
+  context.restore();
 }
 function drawObstacle(obstacle, context = ctx) {
   context.save();
   if (obstacle.type === "crate") {
-    context.fillStyle = "#a66b3d";
-    context.fillRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h);
-    context.fillStyle = "#d6a45f";
-    context.fillRect(obstacle.x + 4, obstacle.y + 4, obstacle.w - 8, 5);
-    context.fillRect(obstacle.x + 4, obstacle.y + obstacle.h - 8, obstacle.w - 8, 4);
-    context.fillStyle = "#70472f";
-    context.fillRect(obstacle.x + 8, obstacle.y + 10, 5, obstacle.h - 20);
-    context.fillRect(obstacle.x + obstacle.w - 13, obstacle.y + 10, 5, obstacle.h - 20);
-    context.fillStyle = "#d6a45f";
-    context.fillRect(obstacle.x + 9, obstacle.y + 10, obstacle.w - 18, 4);
-    context.fillRect(obstacle.x + 9, obstacle.y + obstacle.h - 14, obstacle.w - 18, 4);
+    const variant = CRATE_VARIANTS[Math.abs(Math.round(obstacle.x / 52)) % CRATE_VARIANTS.length];
+    const crate = art(SLICES[variant]);
+    if (crate) {
+      context.imageSmoothingEnabled = false;
+      context.drawImage(crate, obstacle.x, obstacle.y, obstacle.w, obstacle.h);
+    }
   } else if (obstacle.type === "hunter") {
     context.fillStyle = "#d1c5a0";
     context.fillRect(obstacle.x + 8, obstacle.y + 14, obstacle.w - 16, obstacle.h - 14);
@@ -2258,19 +2189,16 @@ function drawBoss(boss) {
 
 function drawBossArenaBoundary(context = ctx) {
   if (!activeBoss || activeBoss.defeated) return;
+  const beam = art(SLICES.laserBeam);
+  if (!beam) return;
+  const [beamWidth] = imageSize(beam);
   for (const boundaryX of [activeBoss.arenaMinX, activeBoss.arenaMaxX]) {
     context.save();
-    context.globalAlpha = 0.62 + Math.sin(elapsed * 7) * 0.12;
-    context.fillStyle = "#d8f36a";
-    context.fillRect(boundaryX - 3, GAME.groundY - 224, 6, 224);
-    context.fillStyle = "#f7f2df";
-    context.fillRect(boundaryX - 1, GAME.groundY - 224, 2, 224);
-    context.globalAlpha = 0.14;
-    context.fillStyle = "#d8f36a";
-    context.fillRect(boundaryX - 18, GAME.groundY - 224, 36, 224);
+    context.imageSmoothingEnabled = false;
+    context.globalAlpha = 0.72 + Math.sin(elapsed * 7) * 0.18;
+    fillTiled(context, beam, Math.round(boundaryX - beamWidth / 2), GAME.groundY - 224, beamWidth, 224);
     context.restore();
   }
-
 }
 function drawBossHud() {
   if(activeBoss&&!activeBoss.defeated){
@@ -2831,18 +2759,12 @@ function render() {
     viewportHeight: GAME.height,
     scene: level()
   });
-  const sceneryScene = level();
-  const groundScenery = world.visibleScenery(cameraX, GAME.width, "ground", sceneryScene.environment);
-  vegetationRenderer.drawGround(ctx, {
-    props: groundScenery,
+  terrainRenderer.drawGroundCover(ctx, {
     cameraX,
     viewportWidth: GAME.width,
-    viewportHeight: GAME.height,
-    scene: sceneryScene
+    groundY: GAME.groundY,
+    scene: level()
   });
-  for (const prop of groundScenery) {
-    if (!isPixelGroundSceneryProp(prop)) drawGroundScenery(ctx, prop, sceneryScene);
-  }
   const objectLayerOptions = {
     cameraX,
     viewportWidth: GAME.width,
@@ -2923,14 +2845,7 @@ function render() {
       if (!enemy.defeated) drawReferenceHealthBar(enemy);
     }
   }
-  effectsRenderer.drawDust(ctx, {
-    environment: level().environment,
-    cameraX,
-    viewportWidth: GAME.width,
-    viewportHeight: GAME.height,
-    elapsed,
-    dustClouds: dashDustClouds
-  });
+  effectsRenderer.drawDust(ctx, { dustClouds: dashDustClouds });
   for (const hunter of hunters) {
     if (hunter.x + hunter.w >= cameraX - 90 && hunter.x <= cameraX + GAME.width + 90) drawHunter(hunter);
   }
@@ -2955,12 +2870,7 @@ function render() {
   if (beta) drawBrisa(beta);
   if (stegoceratops) drawAnimatedSafely(ctx, "stegoceratops", stegoceratops.x, stegoceratops.y, stegoceratops.w, stegoceratops.h, stegoceratops, elapsed, { facing: 1 });
   drawCampaignPrologueActors();
-  effectsRenderer.drawParticles(ctx, {
-    cameraX,
-    viewportWidth: GAME.width,
-    viewportHeight: GAME.height,
-    particles
-  });
+  effectsRenderer.drawParticles(ctx, { particles });
 
   if (!campaignPrologue?.active) {
     for (const companion of autonomousCompanions) {
@@ -3011,20 +2921,6 @@ function render() {
       ctx.fillText(ui("interact"), terminal.x - 18, terminal.y - 24);
     }
   }
-  effectsRenderer.drawWind(ctx, {
-    environment: level().environment,
-    cameraX,
-    viewportWidth: GAME.width,
-    viewportHeight: GAME.height,
-    elapsed
-  });
-  effectsRenderer.drawWeather(ctx, {
-    environment: level().environment,
-    cameraX,
-    viewportWidth: GAME.width,
-    viewportHeight: GAME.height,
-    elapsed
-  });
   ctx.restore();
 
   if (!campaignPrologue?.active) {

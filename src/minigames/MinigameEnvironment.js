@@ -2,9 +2,7 @@ import { LEVELS } from "../config/GameConfig.js";
 import { AtmosphereRenderer } from "../rendering/AtmosphereRenderer.js";
 import { ImageParallax } from "../rendering/ImageParallax.js";
 import { EnvironmentalEffectsRenderer } from "../rendering/EnvironmentalEffectsRenderer.js";
-import { generateSectionScenery } from "../world/SceneryGenerator.js";
 import { TerrainRenderer } from "../rendering/TerrainRenderer.js";
-import { VegetationRenderer } from "../rendering/VegetationRenderer.js";
 
 const PRAIRIE_SCENE = Object.freeze({
   ...LEVELS[0],
@@ -55,11 +53,8 @@ function sharedParallax() {
   return parallaxInstance;
 }
 
-function canCreateLayerCanvases() {
-  return typeof OffscreenCanvas === "function" ||
-    (typeof document !== "undefined" && typeof document.createElement === "function");
-}
-
+// Fondo de los minijuegos: cielo + parallax + terreno con los assets predeterminados
+// del proyecto. No genera escenografía; el suelo se extiende repitiendo tiles.
 export class MinigameEnvironmentRenderer {
   constructor({
     scene,
@@ -76,61 +71,16 @@ export class MinigameEnvironmentRenderer {
     this.sectionCount = Math.max(1, Math.floor(sectionCount));
     this.worldStart = 0;
     this.worldLength = this.sectionLength * this.sectionCount;
-
-    this.scenery = [];
-    for (let sectionIndex = 0; sectionIndex < this.sectionCount; sectionIndex += 1) {
-      this.scenery.push(...generateSectionScenery({
-        seed,
-        sectionIndex,
-        sectionStart: sectionIndex * this.sectionLength,
-        sectionLength: this.sectionLength,
-        groundY: this.groundY,
-        environment: this.scene.environment
-      }));
-    }
-
-    this.ready = false;
-    if (!canCreateLayerCanvases()) return;
-
-    try {
-      this.atmosphere = new AtmosphereRenderer({ parallax: sharedParallax() });
-      this.vegetation = new VegetationRenderer();
-      this.terrain = new TerrainRenderer();
-      this.effects = new EnvironmentalEffectsRenderer();
-      this.ready = true;
-    } catch (error) {
-      // Keep menu/game startup resilient when layered canvas allocation is unavailable.
-      console.warn("[MinigameEnvironmentRenderer] Layered environment unavailable:", error);
-    }
+    this.ready = true;
+    this.atmosphere = new AtmosphereRenderer({ parallax: sharedParallax() });
+    this.terrain = new TerrainRenderer();
+    this.effects = new EnvironmentalEffectsRenderer();
   }
 
   ensureCoverage(cameraX = 0, viewportWidth = 960) {
-    // Generate deterministic sections before world origin when the camera pans left.
-    while (this.worldStart > Math.min(0, cameraX)) {
-      const sectionStart = this.worldStart - this.sectionLength;
-      const sectionIndex = Math.round(sectionStart / this.sectionLength);
-      this.scenery.push(...generateSectionScenery({
-        seed: this.seed,
-        sectionIndex,
-        sectionStart,
-        sectionLength: this.sectionLength,
-        groundY: this.groundY,
-        environment: this.scene.environment
-      }));
-      this.worldStart = sectionStart;
-    }
-
+    while (this.worldStart > Math.min(0, cameraX)) this.worldStart -= this.sectionLength;
     const requiredEnd = Math.max(0, cameraX) + Math.max(1, viewportWidth) + this.sectionLength;
     while (this.worldLength < requiredEnd) {
-      const sectionIndex = this.sectionCount;
-      this.scenery.push(...generateSectionScenery({
-        seed: this.seed,
-        sectionIndex,
-        sectionStart: this.worldLength,
-        sectionLength: this.sectionLength,
-        groundY: this.groundY,
-        environment: this.scene.environment
-      }));
       this.sectionCount += 1;
       this.worldLength += this.sectionLength;
     }
@@ -142,83 +92,47 @@ export class MinigameEnvironmentRenderer {
     viewportHeight = targetContext?.canvas?.height ?? 540,
     elapsed = 0,
     drawMidground = null,
-    includeGroundScenery = true
+    dustClouds = []
   } = {}) {
     if (!this.ready || !targetContext) return false;
-
     try {
+      const width = Math.max(1, Math.ceil(viewportWidth));
+      const height = Math.max(1, Math.ceil(viewportHeight));
+      this.ensureCoverage(cameraX, width);
+      const ground = {
+        id: "minigame-ground",
+        kind: "ground",
+        x: this.worldStart,
+        y: this.groundY,
+        w: this.worldLength - this.worldStart,
+        h: Math.max(1, height - this.groundY)
+      };
 
-    const width = Math.max(1, Math.ceil(viewportWidth));
-    const height = Math.max(1, Math.ceil(viewportHeight));
-    this.ensureCoverage(cameraX, width);
-    const ground = {
-      id: "minigame-ground",
-      kind: "ground",
-      x: this.worldStart,
-      y: this.groundY,
-      w: this.worldLength - this.worldStart,
-      h: Math.max(1, height - this.groundY)
-    };
-    const environment = this.scene.environment;
-
-    // Match campaign compositing: atmosphere, parallax scenery, ambient motes,
-    // layered ground, cover, and environmental movement.
-    this.atmosphere.draw(targetContext, {
-      scene: this.scene, environment, cameraX,
-      viewportWidth: width, viewportHeight: height, elapsed,
-      groundY: this.groundY
-    });
-    this.vegetation.drawBackground(targetContext, {
-      props: this.scenery, cameraX,
-      viewportWidth: width, viewportHeight: height, scene: this.scene
-    });
-    this.effects.drawAmbientBack(targetContext, {
-      environment, cameraX,
-      viewportWidth: width, viewportHeight: height, elapsed
-    });
-    this.terrain.drawBackdrop(targetContext, {
-      cameraX, viewportWidth: width, viewportHeight: height,
-      groundY: this.groundY, scene: this.scene
-    });
-
-    if (typeof drawMidground === "function") drawMidground(targetContext);
-
-    // These renderers rasterize world-space geometry offscreen and composite it
-    // at cameraOffset. The mini-game Canvas is not translated by its caller, so
-    // apply the matching world transform only while drawing foreground layers.
-    const cameraOffset = Math.round(cameraX);
-    targetContext.save();
-    try {
-      targetContext.translate(-cameraOffset, 0);
-      this.terrain.drawPlatforms(targetContext, {
-        platforms: [ground], cameraX,
-        viewportWidth: width, viewportHeight: height, scene: this.scene
+      this.atmosphere.draw(targetContext, {
+        scene: this.scene, environment: this.scene.environment, cameraX,
+        viewportWidth: width, viewportHeight: height, groundY: this.groundY
       });
-      if (includeGroundScenery) {
-        this.vegetation.drawGround(targetContext, {
-          props: this.scenery, cameraX,
-          viewportWidth: width, viewportHeight: height, scene: this.scene
+      if (typeof drawMidground === "function") drawMidground(targetContext);
+
+      // El terreno está en coordenadas de mundo; el canvas del minijuego no está
+      // trasladado por quien llama, así que se aplica la cámara solo aquí.
+      targetContext.save();
+      try {
+        targetContext.translate(-Math.round(cameraX), 0);
+        this.terrain.drawPlatforms(targetContext, {
+          platforms: [ground], cameraX, viewportWidth: width, scene: this.scene
         });
+        this.terrain.drawGroundCover(targetContext, {
+          cameraX, viewportWidth: width, groundY: this.groundY, scene: this.scene
+        });
+        this.effects.drawDust(targetContext, { dustClouds });
+      } finally {
+        targetContext.restore();
       }
-      this.effects.drawWind(targetContext, {
-        environment, cameraX,
-        viewportWidth: width, viewportHeight: height, elapsed
-      });
-      this.effects.drawWeather(targetContext, {
-        environment, cameraX,
-        viewportWidth: width, viewportHeight: height, elapsed
-      });
-      this.effects.drawDust(targetContext, {
-        environment, cameraX,
-        viewportWidth: width, viewportHeight: height, elapsed
-      });
-    } finally {
-      targetContext.restore();
-    }
       return true;
     } catch (error) {
       this.ready = false;
-      console.warn("[MinigameEnvironmentRenderer] Layered render failed; using native fallback:", error);
+      console.warn("[MinigameEnvironmentRenderer] Environment render failed; using native fallback:", error);
       return false;
     }
   }

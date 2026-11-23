@@ -7,7 +7,7 @@ Decisiones para reemplazar lo generado por código (música/SFX de Web Audio y e
 - `public/audio/{music,sfx,ambient}` están **vacías** (solo `.gitkeep`). `SampleBank` ya soporta samples opcionales con fallback sintetizado, pero nada se carga todavía.
 - La **música** es 100 % procedural (`MusicManager`/`AdaptiveMusic`, 8 temas). No existe un camino para reproducir música desde archivo.
 - Hay assets visuales en `public/environment/` que **ningún `.js` referencia**: `tilesets/` (3 PNG), `maps/forest` (3 capas), `maps/parallax` (12 capas), `maps/facility` (spritesheets + `doors-laboratory.gif`).
-- Escenario (`AtmosphereRenderer`, `TerrainRenderer`, `VegetationRenderer`, `SceneryGenerator`) 100 % dibujado por código, con ramas por `environment`: `coastal`, `redwood`, `black-site`, `containment`, `rosa-containment`, `extraction`, `prairie`.
+- Escenario (`AtmosphereRenderer`, `TerrainRenderer`, `EnvironmentAssets`): armado solo con los assets de `public/environment/**`, con un tema por `environment` (`coastal`, `redwood`, `black-site`, `containment`, `rosa-containment`, `extraction`, `prairie`). Se eliminó la generación procedural (`VegetationRenderer`, `SceneryGenerator`, `SceneryRenderer`, clima/viento/motas).
 
 ## 2. Decisión de tilesets y mapas
 
@@ -90,8 +90,9 @@ Los eventos ya existentes (`jump`, `collect`, `hit`, `rescue`, `boss-*`) conserv
 ## 5. Estado de implementación
 
 Hecho en código:
-- `src/rendering/ImageParallax.js`: carga las capas reales, hace color-key del fondo y las dibuja con parallax. `AtmosphereRenderer` la usa para `redwood`, `prairie`, `extraction`, `black-site` y `containment`, y mantiene el horizonte procedural si una imagen no carga (y para `coastal`/`rosa-containment`, que no tienen capas).
+- `src/rendering/ImageParallax.js`: carga las capas reales, hace color-key del fondo y las dibuja con parallax para los siete entornos (`coastal` reutiliza las capas del bosque teñidas de celeste; `rosa-containment` las del bosque oscuro teñidas de azul). `AtmosphereRenderer` pinta el color de cielo plano y encima las capas; no hay horizonte procedural.
+- `src/rendering/EnvironmentAssets.js`: catálogo único de recortes (tilesets, parallax, `facility/*`) y temas de terreno; cachea cada PNG y cada recorte una sola vez. `TerrainRenderer` rellena suelo, plataformas y rocas repitiendo esos recortes; `main.js` dibuja cajas, terminales, portal de extracción y láser de arena con los sprites de `facility/`.
 - `AdaptiveMusic` reproduce `music-<tema>` desde archivo si existe, con el sintetizador como fallback.
 - `AudioManager`: `dash`, `stomp`, `shot`, `eat`, `terminal`, `door`, `cageOpen`, `stegoCharge`, `checkpoint`. Conectados en `main.js`: dash, stomp, jaula, terminal y Stegoceratops.
 
-Pendiente: tilesets de suelo/plataformas (`tileset-export*.png`), foreground del parallax, llamadas a `shot`/`eat`/`door`/`checkpoint`, música de minijuegos y los archivos de audio en sí.
+Pendiente: foreground del parallax (`forest-foreground-layer.png`), llamadas a `shot`/`eat`/`door`/`checkpoint`, música de minijuegos y los archivos de audio en sí.

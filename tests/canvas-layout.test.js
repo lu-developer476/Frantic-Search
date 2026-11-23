@@ -157,7 +157,7 @@ test("character selection and narrator panels share readable, edge-safe typograp
 });
 
 
-test("the six campaign biomes use dedicated layered Canvas atmosphere rendering", async () => {
+test("the six campaign biomes render their atmosphere with the project's parallax art", async () => {
   const expectedEnvironments = ["coastal", "redwood", "black-site", "containment", "rosa-containment", "extraction"];
   const expectedThemes = ["coastal", "forest", "industrial", "industrial", "facility", "extraction"];
   assert.equal(LEVELS.length, 6);
@@ -165,14 +165,11 @@ test("the six campaign biomes use dedicated layered Canvas atmosphere rendering"
   assert.deepEqual(LEVELS.map((chapter) => chapter.musicTheme), expectedThemes);
 
   const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
-  const renderer = await readFile(new URL("../src/rendering/AtmosphereRenderer.js", import.meta.url), "utf8");
+  const { PARALLAX_LAYERS } = await import("../src/rendering/ImageParallax.js");
   assert.match(main, /atmosphereRenderer\.draw\(ctx/);
   for (const environment of expectedEnvironments) {
-    assert.ok(renderer.includes('case "' + environment + '"'), "missing Canvas atmosphere: " + environment);
+    assert.ok(PARALLAX_LAYERS[environment]?.length > 0, "missing parallax art: " + environment);
   }
-  assert.match(renderer, /ATMOSPHERE_LAYER_NAMES[\s\S]*?sky[\s\S]*?celestial[\s\S]*?horizon[\s\S]*?lighting/);
-  assert.doesNotMatch(renderer, /\.(?:png|gif)\b/i);
-  assert.doesNotMatch(main, /new Image\([^)]*\.(?:png|gif)/i);
 });
 
 test("the upper operation HUD is hidden in non-campaign modes and restored on exit", async () => {
