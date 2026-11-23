@@ -23,3 +23,8 @@ const map = await fetch("/environment/maps/coastal-highway.json").then((r) => r.
 const tileset = new Image();
 tileset.src = "/environment/tilesets/coastal-tileset.png";
 ```
+
+
+## Clasificación de uso
+
+El inventario de mapas, capas, tilesets y sprites de instalación activos o todavía sin referencias está en [ASSET_USAGE.md](./ASSET_USAGE.md).

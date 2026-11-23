@@ -56,9 +56,9 @@ test("PERSECUSIÓN can spawn Ligocristus as edible prey and uses all four GIF po
 
 test("Coral uses the dedicated Miniraptor idle, run and jump GIF assets", () => {
   assert.deepEqual(CORAL_ANIMATION_ASSETS, {
-    idle: "minigame/persecution/gif/main/miniraptor-idle.gif",
-    run: "minigame/persecution/gif/main/miniraptor-run.gif",
-    jump: "minigame/persecution/gif/main/miniraptor-jump.gif"
+    idle: "references/miniraptor-idle.gif",
+    run: "references/miniraptor-run.gif",
+    jump: "references/miniraptor-jump.gif"
   });
   assert.equal(ASSETS.coralIdle, CORAL_ANIMATION_ASSETS.idle);
   assert.equal(ASSETS.coral, CORAL_ANIMATION_ASSETS.run);
@@ -951,4 +951,29 @@ test("Empty Stomach preserves source GIF proportions and aligns each frame's vis
   assert.deepEqual(rect, { x: 10, y: 56, width: 160, height: 80 });
   const visibleBottom = rect.y + rect.height * (100 - 20) / 100;
   assert.equal(visibleBottom, 120, "visible feet stay on the entity baseline");
+});
+
+
+test("all relocated pursuit GIF and reference assets exist directly under public/references", async () => {
+  const { access } = await import("node:fs/promises");
+  const files = [
+    "miniraptor-idle.gif",
+    "miniraptor-run.gif",
+    "miniraptor-jump.gif",
+    "umbraraptor-silvis-eat.gif",
+    "umbraraptor-silvis-idle.gif",
+    "umbraraptor-silvis-jump.gif",
+    "umbraraptor-silvis-run.gif",
+    "xenoraptor-crypticus-attack.gif",
+    "xenoraptor-crypticus-background.png",
+    "xenoraptor-crypticus-jump.gif",
+    "xenoraptor-crypticus-run.gif",
+    "parasaurolophus-attack.gif",
+    "parasaurolophus-idle.gif",
+    "parasaurolophus-run.gif",
+    "parasaurolophus-walk.gif"
+  ];
+  await Promise.all(files.map((file) =>
+    access(new URL(`../public/references/${file}`, import.meta.url))
+  ));
 });

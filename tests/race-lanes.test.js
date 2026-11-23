@@ -153,10 +153,13 @@ test("the race opening uses matching idle, walk and run GIFs when available", ()
 
 
 test("race opening uses walk GIFs for staging and run GIFs for the race", () => {
-  for (const id of ["venatosaurus-impavidus", "venatosaurus-saevidicus", "umbraraptor-silvis"]) {
+  for (const id of ["venatosaurus-impavidus", "venatosaurus-saevidicus"]) {
     const dinosaur = BREAKING_RACE_ROSTER.find((entry) => entry.id === id);
     assert.match(getRaceAnimationSource(dinosaur, "walk"), /-walk\.gif$/);
   }
+  const umbraraptor = BREAKING_RACE_ROSTER.find((entry) => entry.id === "umbraraptor-silvis");
+  assert.equal(umbraraptor.walk, null, "no Umbraraptor walk GIF exists in the repository");
+  assert.equal(getRaceAnimationSource(umbraraptor, "walk"), umbraraptor.idle, "the intro reuses its available idle pose");
   for (const id of ["brisa", "venatosaurus-impavidus", "venatosaurus-saevidicus", "coral", "xenoraptor-crypticus"]) {
     const dinosaur = BREAKING_RACE_ROSTER.find((entry) => entry.id === id);
     assert.match(getRaceAnimationSource(dinosaur, "run"), /-run\.gif$/);
@@ -199,4 +202,15 @@ test("the race camera pans forward and backward with the player", () => {
   assert.equal(atStart, -960 * 0.18);
   const atFinish = getRaceCameraX(forwardCamera, RACE_TRACK_LENGTH_PIXELS, 960, 0, RACE_TRACK_LENGTH_PIXELS);
   assert.equal(atFinish, RACE_TRACK_LENGTH_PIXELS - 960 * 0.82);
+});
+
+
+test("every Breaking Race roster image resolves from the public asset tree", async () => {
+  const { access } = await import("node:fs/promises");
+  const sources = new Set(BREAKING_RACE_ROSTER.flatMap((dinosaur) =>
+    [dinosaur.idle, dinosaur.walk, dinosaur.run, dinosaur.jump].filter(Boolean)
+  ));
+  await Promise.all([...sources].map((source) =>
+    access(new URL(`../public/${source}`, import.meta.url))
+  ));
 });

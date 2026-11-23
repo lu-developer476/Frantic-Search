@@ -34,26 +34,26 @@ export function prairieHerdAnimationKey(animal = {}, elapsed = 0) {
   return "ligocristusWalk";
 }
 export const CORAL_ANIMATION_ASSETS = Object.freeze({
-  idle: "minigame/persecution/gif/main/miniraptor-idle.gif",
-  run: "minigame/persecution/gif/main/miniraptor-run.gif",
-  jump: "minigame/persecution/gif/main/miniraptor-jump.gif"
+  idle: "references/miniraptor-idle.gif",
+  run: "references/miniraptor-run.gif",
+  jump: "references/miniraptor-jump.gif"
 });
 
 export const ASSETS = {
   coral: CORAL_ANIMATION_ASSETS.run,
   coralIdle: CORAL_ANIMATION_ASSETS.idle,
   coralJump: CORAL_ANIMATION_ASSETS.jump,
-  xenoraptorRun: "minigame/persecution/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-run.gif",
-  xenoraptorJump: "minigame/persecution/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-jump.gif",
-  xenoraptorAttack: "minigame/persecution/gif/enemies/xenoraptor-crypticus/xenoraptor-crypticus-attack.gif",
-  umbraraptorRun: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-run.gif",
-  umbraraptorJump: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-jump.gif",
-  umbraraptorEat: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-eat.gif",
-  umbraraptorIdle: "minigame/persecution/gif/enemies/umbraraptor-silvis/umbraraptor-silvis-idle.gif",
-  parasaurRun: "minigame/persecution/gif/parasaurolophus/parasaurolophus-run.gif",
-  parasaurWalk: "minigame/persecution/gif/parasaurolophus/parasaurolophus-walk.gif",
-  parasaurIdle: "minigame/persecution/gif/parasaurolophus/parasaurolophus-idle.gif",
-  parasaurPerturbed: "minigame/persecution/gif/parasaurolophus/parasaurolophus-attack.gif",
+  xenoraptorRun: "references/xenoraptor-crypticus-run.gif",
+  xenoraptorJump: "references/xenoraptor-crypticus-jump.gif",
+  xenoraptorAttack: "references/xenoraptor-crypticus-attack.gif",
+  umbraraptorRun: "references/umbraraptor-silvis-run.gif",
+  umbraraptorJump: "references/umbraraptor-silvis-jump.gif",
+  umbraraptorEat: "references/umbraraptor-silvis-eat.gif",
+  umbraraptorIdle: "references/umbraraptor-silvis-idle.gif",
+  parasaurRun: "references/parasaurolophus-run.gif",
+  parasaurWalk: "references/parasaurolophus-walk.gif",
+  parasaurIdle: "references/parasaurolophus-idle.gif",
+  parasaurPerturbed: "references/parasaurolophus-attack.gif",
   brontosaurusRun: "references/brontosaurus-excelsus-basteri-run.gif",
   brontosaurusWalk: "references/brontosaurus-excelsus-basteri-walk.gif",
   ligocristusIdle: "references/ligocristus-innocens-idle.gif",

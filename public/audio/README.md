@@ -47,3 +47,8 @@ Actualmente el juego sintetiza música y efectos con Web Audio API (`src/audio/`
 
 Autores y licencias: ver [`CREDITS.md`](./CREDITS.md). El interruptor de sonido del menú también silencia estos ambientes.
 
+
+
+## Clasificación de uso
+
+La clasificación comprobada de temas, efectos, ambientes, campañas y minijuegos está en [ASSET_USAGE.md](./ASSET_USAGE.md). Distingue las claves que el código ya selecciona de las muestras opcionales que todavía faltan o no están conectadas.
