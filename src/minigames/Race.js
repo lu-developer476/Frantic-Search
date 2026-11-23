@@ -55,7 +55,10 @@ export const BREAKING_RACE_ROSTER = Object.freeze([
   { id: "venatosaurus-saevidicus", name: "Venatosaurus saevidicus", species: "Venatosaurus saevidicus", idle: "references/venatosaurus-saevidicus-idle.gif", walk: "references/venatosaurus-saevidicus-walk.gif", run: "references/venatosaurus-saevidicus-run.gif", jump: "references/venatosaurus-saevidicus-jump.gif", speed: 84 },
   { id: "coral", name: "Coral", species: "Miniraptor", idle: "references/miniraptor-idle.gif", walk: null, run: "references/miniraptor-run.gif", jump: "references/miniraptor-jump.gif", speed: 94 },
   { id: "umbraraptor-silvis", name: "Umbraraptor silvis", species: "Umbraraptor silvis", idle: "references/umbraraptor-silvis-idle.gif", walk: null, run: null, jump: "references/umbraraptor-silvis-jump.gif", speed: 82 },
-  { id: "xenoraptor-crypticus", name: "Xenoraptor crypticus", species: "Xenoraptor crypticus", idle: null, walk: null, run: "references/xenoraptor-crypticus-run.gif", jump: "references/xenoraptor-crypticus-jump.gif", speed: 90 }
+  { id: "xenoraptor-crypticus", name: "Xenoraptor crypticus", species: "Xenoraptor crypticus", idle: null, walk: null, run: "references/xenoraptor-crypticus-run.gif", jump: "references/xenoraptor-crypticus-jump.gif", speed: 90 },
+  { id: "dr-raptor", name: "Dr. Raptor", species: "Dino Run / Dino Run DX", idle: "references/dr-raptor-walk.gif", walk: "references/dr-raptor-walk.gif", run: "references/dr-raptor-run.gif", jump: "references/dr-raptor-run.gif", speed: 96 },
+  { id: "google-rex", name: "Chrome T-Rex", species: "Google Chrome Dinosaur", idle: "references/google-rex-idle.gif", walk: "references/google-rex-run.gif", run: "references/google-rex-run.gif", jump: "references/google-rex-duck.gif", speed: 91 },
+  { id: "utahraptor", name: "Utahraptor", species: "Utahraptor", idle: "references/utahraptor-run.gif", walk: "references/utahraptor-run.gif", run: "references/utahraptor-run.gif", jump: "references/utahraptor-run.gif", speed: 89 }
 ]);
 
 const laneX = (ratio) => WIDTH * ratio;

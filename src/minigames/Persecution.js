@@ -21,7 +21,7 @@ export const PRAIRIE_HERD = Object.freeze([
   Object.freeze({ species: "ligocristus", phase: 0.2, x: 452, y: 373, w: 60, h: 43 }),
   Object.freeze({ species: "parasaur", pose: "parasaurWalk", x: 610, y: 366, w: 78, h: 56 }),
   Object.freeze({ species: "ligocristus", phase: 4.25, x: 770, y: 372, w: 64, h: 46 }),
-  Object.freeze({ species: "brontosaurus", pose: "brontosaurusRun", x: 905, y: 354, w: 92, h: 66 })
+  Object.freeze({ species: "littleDino", pose: "littleDino", x: 905, y: 382, w: 52, h: 38 })
 ]);
 
 export function prairieHerdAnimationKey(animal = {}, elapsed = 0) {
@@ -59,7 +59,12 @@ export const ASSETS = {
   ligocristusIdle: "references/ligocristus-innocens-idle.gif",
   ligocristusJump: "references/ligocristus-innocens-jump.gif",
   ligocristusRun: "references/ligocristus-innocens-run.gif",
-  ligocristusWalk: "references/ligocristus-innocens-walk.gif"
+  ligocristusWalk: "references/ligocristus-innocens-walk.gif",
+  deadDino: "references/dead-dino-run.gif", infectedDino: "references/infected-dino-run.gif", zombieDino: "references/zombie-dino-run.gif",
+  drRaptorRun: "references/dr-raptor-run.gif", drRaptorWalk: "references/dr-raptor-walk.gif",
+  googlePterodactyl: "references/google-pterodactyl-flying.gif", googleRexIdle: "references/google-rex-idle.gif",
+  googleRexRun: "references/google-rex-run.gif", googleRexDuck: "references/google-rex-duck.gif",
+  pterodactyl: "references/pterodactyl-flying.gif", littleDino: "references/little-dino-run.gif"
 };
 
 export function coralAnimationKey(player = {}, phase = "playing") {
@@ -69,12 +74,14 @@ export function coralAnimationKey(player = {}, phase = "playing") {
 }
 
 export function selectHerdPreySpecies(random = Math.random()) {
-  if (random < 0.2) return "ligocristus";
-  if (random < 0.52) return "brontosaurus";
+  if (random < 0.14) return "littleDino";
+  if (random < 0.31) return "ligocristus";
+  if (random < 0.58) return "brontosaurus";
   return "parasaur";
 }
 
 export function herdPreyAnimationKey(prey = {}, elapsed = 0) {
+  if (prey.species === "littleDino") return "littleDino";
   if (prey.species === "ligocristus") {
     if (prey.beingEaten || prey.pitfallDefeated || (prey.trappedTimer ?? 0) > 0) {
       return "ligocristusIdle";
@@ -352,6 +359,11 @@ export class Persecution {
     this.preyTimer = 1.5;
     this.enemies = [];
     this.herd = [];
+    this.deadlyEnemies = []; this.drRaptors = []; this.googleRexes = []; this.pterodactyls = []; this.googlePterodactyls = [];
+    this.deadlySpawnTimer = 7.5; this.drRaptorSpawnTimer = 15; this.googleRexSpawnTimer = 12;
+    this.pterodactylSpawnTimer = 10; this.googlePterodactylSpawnTimer = 2.5;
+    this.carriedRaptorTimer = 0; this.pterodactylCaptureTimer = 0;
+    this.pterodactylCaptureMode = null; this.raptorClearFlash = 0;
     this.particles = [];
     this.dashDustClouds = [];
     this.eggs = [];
@@ -442,7 +454,8 @@ export class Persecution {
     // and hazard by the inverse camera displacement.
     player.x -= cameraDelta;
     const worldCollections = [
-      this.enemies, this.herd, this.eggs, this.rocks,
+      this.enemies, this.herd, this.deadlyEnemies, this.drRaptors, this.googleRexes,
+      this.pterodactyls, this.googlePterodactyls, this.eggs, this.rocks,
       this.pits, this.mudPuddles, this.bushes, this.particles
     ];
     for (const collection of worldCollections) {
@@ -572,6 +585,11 @@ export class Persecution {
     this.preyTimer = 0.8;
     this.enemies = [];
     this.herd = [];
+    this.deadlyEnemies = []; this.drRaptors = []; this.googleRexes = []; this.pterodactyls = []; this.googlePterodactyls = [];
+    this.deadlySpawnTimer = 7.5; this.drRaptorSpawnTimer = 15; this.googleRexSpawnTimer = 12;
+    this.pterodactylSpawnTimer = 10; this.googlePterodactylSpawnTimer = 2.5;
+    this.carriedRaptorTimer = 0; this.pterodactylCaptureTimer = 0;
+    this.pterodactylCaptureMode = null; this.raptorClearFlash = 0;
     this.particles = [];
     this.dashDustClouds = [];
     this.eggs = [];
@@ -783,6 +801,100 @@ export class Persecution {
     this.bushes = this.bushes.filter((bush) => bush.life > 0 && bush.x + bush.w > -60);
   }
 
+  updateSpecialActors(delta, speed, playerHitbox) {
+    this.deadlySpawnTimer -= delta;
+    if (this.deadlySpawnTimer <= 0) {
+      const kind = ["dead", "infected", "zombie"][Math.floor(Math.random() * 3)];
+      const lane = randomLane(), width = kind === "infected" ? 92 : 78, height = kind === "infected" ? 55 : 48;
+      const spriteKey = kind === "dead" ? "deadDino" : kind === "infected" ? "infectedDino" : "zombieDino";
+      this.deadlyEnemies.push(applyLane({ kind, spriteKey, x: WIDTH + 36, y: 0, w: width, h: height, baseW: width, baseH: height, speed: 190 + Math.random() * 75, direction: -1 }, lane));
+      this.deadlySpawnTimer = 9 + Math.random() * 7;
+    }
+    this.drRaptorSpawnTimer -= delta;
+    if (this.drRaptorSpawnTimer <= 0 && this.drRaptors.length === 0) {
+      this.drRaptors.push({ kind: "dr-raptor", state: "walking", x: WIDTH + 24, y: 270, w: 92, h: 70, lane: null, phase: Math.random() * 5, fleeingTimer: 0 });
+      this.drRaptorSpawnTimer = 25 + Math.random() * 14;
+    }
+    this.googleRexSpawnTimer -= delta;
+    if (this.googleRexSpawnTimer <= 0 && this.googleRexes.length === 0) {
+      this.googleRexes.push({ kind: "google-rex", state: "idle", x: WIDTH + 28, y: 280, w: 76, h: 64, lane: null, phase: Math.random() * 5, fleeTimer: 0 });
+      this.googleRexSpawnTimer = 18 + Math.random() * 15;
+    }
+    this.googlePterodactylSpawnTimer -= delta;
+    if (this.googlePterodactylSpawnTimer <= 0) {
+      const direction = Math.random() < 0.5 ? 1 : -1;
+      this.googlePterodactyls.push({ kind: "google-pterodactyl", x: direction > 0 ? -90 : WIDTH + 90, y: 66 + Math.random() * 92, w: 72, h: 42, direction, speed: 80 + Math.random() * 55, phase: Math.random() * 4 });
+      this.googlePterodactylSpawnTimer = 5.5 + Math.random() * 5;
+    }
+    this.pterodactylSpawnTimer -= delta;
+    if (this.pterodactylSpawnTimer <= 0 && this.pterodactyls.length === 0 && this.pterodactylCaptureTimer <= 0) {
+      this.pterodactyls.push({ kind: "pterodactyl", state: "diving", x: WIDTH + 80, y: 94, w: 116, h: 72, lane: this.getEntityLane(this.player), phase: Math.random() * 4, speed: 190 + Math.random() * 35 });
+      this.pterodactylSpawnTimer = 14 + Math.random() * 9;
+    }
+    for (const enemy of this.deadlyEnemies) {
+      enemy.x -= (speed * 0.72 + enemy.speed) * delta; enemy.y = getLaneBaseline(enemy.lane) - enemy.h;
+      const hitbox = { x: enemy.x + 12, y: enemy.y + 8, w: enemy.w - 24, h: enemy.h - 12 };
+      if (enemy.lane === this.getEntityLane(this.player) && overlaps(playerHitbox, hitbox)) { this.finish(enemy.kind); return true; }
+      this.herd = this.herd.filter((prey) => this.getEntityLane(prey) !== enemy.lane || !overlaps(hitbox, prey));
+    }
+    this.deadlyEnemies = this.deadlyEnemies.filter((enemy) => enemy.x + enemy.w > -50);
+    for (const raptor of this.drRaptors) {
+      if (raptor.state === "walking") {
+        raptor.x -= speed * 0.34 * delta;
+        if (raptor.x < this.player.x + this.player.w + 250) {
+          raptor.state = "fleeing"; raptor.lane = randomLane(); applyLane(raptor, raptor.lane, raptor.w, raptor.h); raptor.fleeingTimer = 5;
+        }
+      } else { raptor.x += 235 * delta; raptor.fleeingTimer = Math.max(0, raptor.fleeingTimer - delta); }
+    }
+    this.drRaptors = this.drRaptors.filter((raptor) => raptor.state === "walking" ? raptor.x + raptor.w > -80 : raptor.x < WIDTH + 120);
+    for (const rex of this.googleRexes) {
+      if (rex.state === "idle") {
+        rex.x -= speed * 0.32 * delta;
+        if (Math.abs(rex.x - this.player.x) < 250 || this.herd.some((prey) => Math.abs(prey.x - rex.x) < 180)) {
+          rex.state = "fleeing"; rex.lane = randomLane(); rex.fleeTimer = 5; applyLane(rex, rex.lane, rex.w, rex.h);
+        }
+      } else { rex.x += 205 * delta; rex.fleeTimer = Math.max(0, rex.fleeTimer - delta); }
+    }
+    this.googleRexes = this.googleRexes.filter((rex) => rex.state === "idle" ? rex.x + rex.w > -80 : rex.x < WIDTH + 120);
+    for (const flyer of this.googlePterodactyls) flyer.x += flyer.direction * flyer.speed * delta;
+    this.googlePterodactyls = this.googlePterodactyls.filter((flyer) => flyer.x < WIDTH + 110 && flyer.x + flyer.w > -110);
+    if (this.pterodactylCaptureTimer > 0) {
+      this.pterodactylCaptureTimer = Math.max(0, this.pterodactylCaptureTimer - delta);
+      this.player.trappedTimer = Math.max(this.player.trappedTimer ?? 0, this.pterodactylCaptureTimer);
+      this.player.vy = 0; this.player.grounded = true;
+      this.player.y = getLaneBaseline(this.getEntityLane(this.player)) - this.player.h - 48;
+      const carrier = this.pterodactyls[0];
+      if (carrier) { carrier.state = "carrying"; carrier.x = this.player.x - 22; carrier.y = this.player.y - 42; }
+      if (this.pterodactylCaptureTimer <= 0) {
+        if (this.pterodactylCaptureMode === "fatal") { this.finish("pterodactyl"); return true; }
+        this.distance += 2200; this.sceneryOffset += 2200;
+        this.player.y = getLaneBaseline(this.getEntityLane(this.player)) - this.player.h;
+        this.player.trappedTimer = 0; this.invulnerabilityTimer = 2.5;
+        this.enemies = []; this.deadlyEnemies = []; this.herd = [];
+        this.eggs = []; this.rocks = []; this.pits = []; this.mudPuddles = []; this.bushes = [];
+        this.pterodactyls = []; this.pterodactylCaptureMode = null;
+      }
+      return false;
+    }
+    for (const bird of this.pterodactyls) {
+      if (bird.state === "fleeing") { bird.x += 245 * delta; continue; }
+      bird.x -= (speed * 0.58 + bird.speed) * delta;
+      bird.y = Math.min(getLaneBaseline(bird.lane) - bird.h + 5, bird.y + 135 * delta);
+      const prey = this.herd.find((item) => item.small && this.getEntityLane(item) === bird.lane && overlaps(bird, item));
+      if (prey) { this.herd = this.herd.filter((item) => item !== prey); bird.state = "fleeing"; continue; }
+      for (const cloud of this.dashDustClouds ?? []) if (cloud.lane === bird.lane && overlaps(cloud, bird)) { bird.state = "fleeing"; break; }
+      if (bird.state === "fleeing") continue;
+      if (bird.lane === this.getEntityLane(this.player) && overlaps(playerHitbox, bird)) {
+        this.pterodactylCaptureMode = this.carriedItem?.kind === "egg" ? "transport" : "fatal";
+        this.pterodactylCaptureTimer = this.pterodactylCaptureMode === "transport" ? 6 : 5;
+        bird.state = "carrying"; this.player.trappedTimer = this.pterodactylCaptureTimer; this.player.grounded = true; this.player.vy = 0;
+        return false;
+      }
+    }
+    this.pterodactyls = this.pterodactyls.filter((bird) => bird.x < WIDTH + 220 || bird.state === "carrying");
+    return false;
+  }
+
   updateCheckpointProgress() {
     const milestone = Math.floor(this.distance / CHECKPOINT_INTERVAL_DISTANCE);
     if (milestone <= (this.checkpoint?.milestone ?? 0)) return false;
@@ -861,10 +973,12 @@ export class Persecution {
       for (let i = 0; i < count; i += 1) {
         const lane = randomLane();
         const species = selectHerdPreySpecies(Math.random());
-        const baseW = species === "brontosaurus" ? 142 : species === "ligocristus" ? 76 : 100;
-        const baseH = species === "brontosaurus" ? 92 : species === "ligocristus" ? 54 : 72;
+        const isLittleDino = species === "littleDino";
+        const baseW = species === "brontosaurus" ? 142 : species === "ligocristus" ? 76 : isLittleDino ? 54 : 100;
+        const baseH = species === "brontosaurus" ? 92 : species === "ligocristus" ? 54 : isLittleDino ? 40 : 72;
         this.herd.push(applyLane({
           species,
+          small: isLittleDino || Math.random() < 0.12,
           x: WIDTH + i * 94,
           y: 0,
           w: baseW,
@@ -920,6 +1034,15 @@ export class Persecution {
     };
 
     this.updateDashDust(delta);
+    if (this.updateSpecialActors(delta, speed, playerHitbox)) return;
+    if (this.carriedItem?.kind === "dr-raptor") {
+      this.carriedRaptorTimer = Math.max(0, (this.carriedRaptorTimer ?? 2) - delta);
+      if (this.carriedRaptorTimer <= 0) {
+        this.enemies = []; this.deadlyEnemies = []; this.carriedItem = null; this.drRaptors = [];
+        this.raptorClearFlash = 2.2;
+      }
+    }
+    this.raptorClearFlash = Math.max(0, (this.raptorClearFlash ?? 0) - delta);
     for (const enemy of this.enemies) {
       const chaseSpeed = enemy.kind === "xenoraptor" ? 168 : 138;
       const enemyFloor = getLaneBaseline(this.getEntityLane(enemy));
@@ -1042,6 +1165,7 @@ export class Persecution {
     const player = this.player;
     const lane = this.getEntityLane(player);
     if (this.carriedItem) {
+      if (this.carriedItem.kind === "dr-raptor") return false;
       const item = this.carriedItem;
       this.setEntityLane(item, lane);
       const direction = player.facing || 1;
@@ -1052,7 +1176,7 @@ export class Persecution {
       this.carriedItem = null;
       return true;
     }
-    const candidates = [...this.eggs, ...this.rocks]
+    const candidates = [...this.eggs, ...this.rocks, ...this.drRaptors.filter((raptor) => raptor.state === "fleeing")]
       .filter((item) =>
         this.getEntityLane(item) === lane &&
         Math.abs(item.x + item.w / 2 - (player.x + player.w / 2)) <= ITEM_INTERACTION_RADIUS
@@ -1060,10 +1184,10 @@ export class Persecution {
       .sort((a, b) => Math.abs(a.x - player.x) - Math.abs(b.x - player.x));
     const item = candidates[0];
     if (!item) return false;
-    const collection = item.kind === "egg" ? this.eggs : this.rocks;
+    const collection = item.kind === "dr-raptor" ? this.drRaptors : item.kind === "egg" ? this.eggs : this.rocks;
     collection.splice(collection.indexOf(item), 1);
-    item.vx = 0;
-    this.carriedItem = item;
+    item.vx = 0; this.carriedItem = item;
+    if (item.kind === "dr-raptor") this.carriedRaptorTimer = 2;
     return true;
   }
 
@@ -1265,13 +1389,20 @@ export class Persecution {
 
   drawCarriedItem(item) {
     const x=this.player.x+this.player.w/2-item.w/2,y=this.player.y-item.h+8;
-    if(item.kind==="egg")this.drawEgg({...item,x,y});else this.drawRock({...item,x,y});
+    if(item.kind==="dr-raptor")this.drawSprite("drRaptorWalk",x,y,item.w,item.h,"#b5a58a",undefined,1);
+    else if(item.kind==="egg")this.drawEgg({...item,x,y});else this.drawRock({...item,x,y});
   }
 
   getDeathMessage() {
-    return this.deathCause === "pit"
-      ? this.text("CORAL CAYÓ AL POZO", "CORAL FELL INTO THE PIT")
-      : this.text("CORAL FUE DEVORADA", "CORAL WAS EATEN");
+    const messages = {
+      pit: ["CORAL CAYÓ AL POZO", "CORAL FELL INTO THE PIT"],
+      dead: ["CORAL FUE ATROPELLADA POR UN DINOSAURIO MUERTO", "CORAL WAS HIT BY A DEAD DINOSAUR"],
+      infected: ["CORAL FUE INFECTADA", "CORAL WAS INFECTED"],
+      zombie: ["CORAL FUE DEVORADA POR UN DINOSAURIO ZOMBI", "CORAL WAS EATEN BY A ZOMBIE DINOSAUR"],
+      pterodactyl: ["CORAL FUE ARRASTRADA POR UN PTERODÁCTILO", "CORAL WAS CARRIED AWAY BY A PTERODACTYL"]
+    };
+    const copy = messages[this.deathCause] ?? ["CORAL FUE DEVORADA", "CORAL WAS EATEN"];
+    return this.text(copy[0], copy[1]);
   }
 
   updateCheckpointButton() {
@@ -1303,6 +1434,8 @@ export class Persecution {
     this.player.x = Math.max(22, Math.min(WIDTH - this.player.w - PLAYER_RIGHT_MARGIN, checkpoint.playerX));
     this.enemies = [];
     this.herd = [];
+    this.deadlyEnemies = []; this.drRaptors = []; this.googleRexes = []; this.pterodactyls = []; this.googlePterodactyls = [];
+    this.carriedRaptorTimer = 0; this.pterodactylCaptureTimer = 0; this.pterodactylCaptureMode = null;
     this.eggs = [];
     this.rocks = [];
     this.pits = [];
@@ -1346,7 +1479,7 @@ export class Persecution {
 
   finish(reason = "eaten") {
     if (!this.running) return;
-    this.deathCause = reason === "pit" ? "pit" : "eaten";
+    this.deathCause = ["pit", "dead", "infected", "zombie", "pterodactyl"].includes(reason) ? reason : "eaten";
     this.running = false;
     this.phase = "finished";
     this.paused = false;
@@ -1560,12 +1693,28 @@ export class Persecution {
     for (const egg of this.eggs) this.drawEgg(egg);
     for (const rock of this.rocks) this.drawRock(rock);
 
+    for (const flyer of this.googlePterodactyls ?? []) {
+      const py = flyer.y + Math.sin(this.animationClock * 5 + flyer.phase) * 5;
+      this.drawSprite("googlePterodactyl", flyer.x, py, flyer.w, flyer.h, "#a5a9a0", undefined, flyer.direction);
+    }
+    for (const actor of this.drRaptors ?? []) if (actor.state === "walking") this.drawSprite("drRaptorWalk", actor.x, actor.y, actor.w, actor.h, "#9d8b72", undefined, -1);
+    for (const rex of this.googleRexes ?? []) {
+      const pose = rex.state === "idle" ? "googleRexIdle" : Math.floor(this.animationClock * 7 + rex.phase) % 3 === 0 ? "googleRexDuck" : "googleRexRun";
+      this.drawSprite(pose, rex.x, rex.y, rex.w, rex.h, "#6d7770", undefined, rex.state === "idle" ? -1 : 1);
+    }
     for (let lane = 0; lane < LANE_COUNT; lane += 1) {
       for (const prey of this.herd.filter((item) => this.getEntityLane(item) === lane)) {
         const pose = herdPreyAnimationKey(prey, this.animationClock ?? this.elapsed ?? 0);
         const sink = (prey.trappedTimer ?? 0) > 0 ? 9 * getLaneScale(lane) : 0;
         this.drawSprite(pose, prey.x, prey.y + sink, prey.w, prey.h, "#8e9b72", undefined, prey.direction ?? -1);
       }
+      for (const deadly of (this.deadlyEnemies ?? []).filter((item) => item.lane === lane)) this.drawSprite(deadly.spriteKey, deadly.x, deadly.y, deadly.w, deadly.h, "#657248", undefined, -1);
+      for (const raptor of (this.drRaptors ?? []).filter((item) => item.state === "fleeing" && item.lane === lane)) this.drawSprite("drRaptorRun", raptor.x, raptor.y, raptor.w, raptor.h, "#9d8b72", undefined, 1);
+      for (const rex of (this.googleRexes ?? []).filter((item) => item.state === "fleeing" && item.lane === lane)) {
+        const pose = Math.floor(this.animationClock * 7 + rex.phase) % 3 === 0 ? "googleRexDuck" : "googleRexRun";
+        this.drawSprite(pose, rex.x, rex.y, rex.w, rex.h, "#6d7770", undefined, 1);
+      }
+      for (const bird of (this.pterodactyls ?? []).filter((item) => item.lane === lane)) this.drawSprite("pterodactyl", bird.x, bird.y, bird.w, bird.h, "#7c6d5d", undefined, -1);
       for (const enemy of this.enemies.filter((item) => this.getEntityLane(item) === lane)) {
         const pose = enemyAnimationKey(enemy, this.elapsed);
         const frozenPose = ["departing", "stunned", "trapped"].includes(enemy.state) ||

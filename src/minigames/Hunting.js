@@ -277,6 +277,8 @@ export class Hunting {
     this.dinosaurs = [];
     this.projectiles = [];
     this.particles = [];
+    this.blockyPickups = [];
+    this.blockySpawnTimer = 5 + Math.random() * 3;
     this.playerAttackTimer = 0;
     this.playerAttackHit = false;
     this.predatorHunterKills = 0;
@@ -556,6 +558,21 @@ export class Hunting {
     }
 
     this.cameraX += getHuntingCameraFollowDelta(player.x - this.cameraX, player.w, WIDTH);
+    this.blockySpawnTimer -= delta;
+    if (this.blockySpawnTimer <= 0) {
+      this.blockyPickups.push({ x: this.cameraX + 26, y: FLOOR - 46, w: 38, h: 42, vx: 365, phase: Math.random() * Math.PI * 2 });
+      this.blockySpawnTimer = 10 + Math.random() * 8;
+    }
+    for (const pickup of this.blockyPickups) {
+      pickup.x += pickup.vx * delta; pickup.y = FLOOR - pickup.h + Math.sin(this.elapsed * 5 + pickup.phase) * 3;
+      if (overlaps(pickup, player)) {
+        pickup.taken = true;
+        if (predatorMode) { player.health = Math.min(player.maxHealth, player.health + 18); player.invulnerable = Math.max(player.invulnerable ?? 0, 0.35); }
+        else { player.health = Math.min(player.maxHealth, player.health + 1); player.ammo = Math.min(HUNTER_MAGAZINE_SIZE, player.ammo + 3); player.reserveAmmo = Math.min(HUNTER_RESERVE_AMMO, player.reserveAmmo + 8); }
+        this.burst(pickup.x + pickup.w / 2, pickup.y + pickup.h / 2, "#d8f36a", 12);
+      }
+    }
+    this.blockyPickups = this.blockyPickups.filter((pickup) => !pickup.taken && pickup.x < this.cameraX + WIDTH + 90);
 
     while (this.waveIndex < this.wavePlan.length && this.wavePlan[this.waveIndex].at <= player.x + 510) {
       this.spawnWave(this.wavePlan[this.waveIndex]);
@@ -837,8 +854,10 @@ export class Hunting {
     const y = hunter.y;
     const stride = Math.sin(this.elapsed * 10 + index * 1.7 + hunter.x * 0.035);
     const alpha = hunter.health > 0 ? (hunter.invulnerable > 0 && Math.floor(this.elapsed * 18) % 2 ? 0.48 : 1) : 0.3;
-    ctx.save();
-    ctx.globalAlpha *= alpha;
+    const humanCharacter = (hunter.squadIndex ?? index) % 2 === 0 ? "human-v1" : "human-v2";
+    const spriteDrawn = this.sprites.drawAnimated(ctx, humanCharacter, x - 12, y - 13, hunter.w + 24, hunter.h + 18, hunter, this.elapsed, { alpha, facing: hunter.direction });
+    if (!spriteDrawn) {
+    ctx.save(); ctx.globalAlpha *= alpha;
     ctx.translate(hunter.direction < 0 ? x + hunter.w : x, y);
     if (hunter.direction < 0) ctx.scale(-1, 1);
     ctx.fillStyle = "#202a29";
@@ -864,6 +883,7 @@ export class Hunting {
       ctx.fillRect(17, 12, 7, 3);
     }
     ctx.restore();
+    }
     const screenX = x + hunter.w / 2;
     ctx.fillStyle = hunter.isPlayer ? "#e9f3bd" : "#d4dfd2";
     ctx.font = "9px monospace";
@@ -944,6 +964,14 @@ export class Hunting {
       ctx.textAlign = "left";
     } else {
       for (const dinosaur of this.dinosaurs) this.drawDinosaur(dinosaur);
+    }
+    for (const pickup of this.blockyPickups ?? []) {
+      const x = pickup.x - this.cameraX; if (x < -60 || x > WIDTH + 60) continue;
+      ctx.save(); ctx.globalAlpha = 0.94 + Math.sin(this.elapsed * 5 + pickup.phase) * 0.06;
+      if (!this.sprites.drawAnimated(ctx, "blocky", x, pickup.y, pickup.w, pickup.h, { state: "running", direction: 1 }, this.elapsed, { facing: 1 })) {
+        ctx.fillStyle = "#d8f36a"; ctx.fillRect(x + 7, pickup.y + 12, pickup.w - 14, pickup.h - 14);
+      }
+      ctx.restore();
     }
     for (let i = 0; i < this.hunters.length; i += 1) this.drawHunter(this.hunters[i], i);
     for (const projectile of this.projectiles) {

@@ -18,7 +18,7 @@ export const LIGOCRISTUS_ANIMATION_ASSETS = Object.freeze({
   walk: "ligocristus-innocens-walk.gif"
 });
 const PROLOGUE_BRISA_SCALE = 1.8;
-const ANIMATED_REFERENCE_VERSION = "20261118-campaign-ligocristus-four-gif-routing-1";
+const ANIMATED_REFERENCE_VERSION = "20261123-special-enemy-assets-1";
 
 // Every scale is derived from the species' size class and artwork detail (see DinosaurSizing.js).
 export const DINOSAUR_REFERENCE_SCALES = Object.freeze({
@@ -140,7 +140,8 @@ export const CAMPAIGN_ANIMATED_REFERENCE_FILES = Object.freeze([
   BRONTOSAURUS_ANIMATION_ASSETS.run,
   ...Object.values(VENATOSAURUS_ANIMATION_ASSETS).flatMap((assets) => [
     assets.attack, assets.idle, assets.jump, assets.run, assets.walk
-  ])
+  ]),
+  "human-v1.gif", "human-v2.gif", "blocky.gif"
 ]);
 
 export const REFERENCE_PRELOAD_FILES = [
@@ -152,10 +153,11 @@ export const REFERENCE_PRELOAD_FILES = [
   "indominus-rex-first-generation.png",
   "indominus-rex-second-generation.png",
   "indominus-rex-second-generation-variant.png",
-  "stegoceratops.png"
+  "stegoceratops.png",
+  "tactical-enemies.png"
 ];
 
-const SPRITE_ASSET_VERSION = "20261118-campaign-ligocristus-gif-routing-1";
+const SPRITE_ASSET_VERSION = "20261123-special-enemy-assets-1";
 const ROSA_RIG_PARTS = [
   "rosa-rig-body",
   "rosa-rig-tail",
@@ -1662,6 +1664,55 @@ export class SpriteRenderer {
     return result;
   }
 
+  drawAnimatedReference(context, file, x, y, width, height, actor = {}, elapsed = 0, options = {}) {
+    const animation = this.animatedReferences.get(file);
+    if (!animation?.frames?.length) { this.loadAnimatedReference(file); return false; }
+    const frame = animation.frames[getAnimatedFrameIndex(animation.frames, Math.max(0, elapsed) * 1000)];
+    if (!frame?.image) return false;
+    const sw = Number(animation.width) || frame.image.width || width, sh = Number(animation.height) || frame.image.height || height;
+    const scale = Math.min(width / sw, height / sh), dw = Math.max(1, Math.round(sw * scale)), dh = Math.max(1, Math.round(sh * scale));
+    const dx = Math.round(x + (width - dw) / 2), padding = Number(frame.bottomPadding ?? animation.bottomPadding) || 0;
+    const dy = Math.round(y + height - dh + dh * padding / sh), facing = options.facing ?? actor?.facing ?? actor?.direction ?? 1;
+    context.save(); context.globalAlpha *= options.alpha ?? 1; context.imageSmoothingEnabled = false;
+    if (Math.sign(facing || 1) < 0) { context.translate(dx + dw, 0); context.scale(-1, 1); drawSpriteImage(context, frame.image, 0, dy, dw, dh); }
+    else drawSpriteImage(context, frame.image, dx, dy, dw, dh);
+    context.restore(); return true;
+  }
+
+  drawTacticalEnemy(context, x, y, width, height, actor = {}, elapsed = 0, options = {}) {
+    const image = this.getReferenceImage("tactical-enemies.png");
+    if (!image?.complete || !image.naturalWidth) return false;
+    const identity = String(actor?.id ?? actor?.squadIndex ?? actor?.name ?? "enemy"); let hash = 0;
+    for (const char of identity) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+    const sx = 8 + (hash % 2) * 24;
+    const motionFrame = Math.floor(Math.max(0, elapsed) * (actor?.state === "attack" ? 11 : 7) + hash) % 8;
+    const sy = 76 + motionFrame * 26, facing = options.facing ?? actor?.direction ?? 1;
+    context.save(); context.globalAlpha *= options.alpha ?? 1; context.imageSmoothingEnabled = false;
+    if (Math.sign(facing || 1) < 0) { context.translate(x + width, 0); context.scale(-1, 1); context.drawImage(image, sx, sy, 19, 23, 0, y, width, height); }
+    else context.drawImage(image, sx, sy, 19, 23, x, y, width, height);
+    if (["attack", "windup", "shooting"].includes(actor?.state)) {
+      const mx = facing < 0 ? x - 3 : x + width + 3, my = y + height * 0.46;
+      const flicker = Math.sin(elapsed * 31) * 2;
+      context.fillStyle = "#e95b2b"; context.beginPath(); context.moveTo(mx, my);
+      context.lineTo(mx + (facing < 0 ? -14 : 14), my - 5 - flicker);
+      context.lineTo(mx + (facing < 0 ? -9 : 9), my + 5); context.closePath(); context.fill();
+      context.fillStyle = "#ffb34d"; context.beginPath(); context.moveTo(mx, my - 2);
+      context.lineTo(mx + (facing < 0 ? -9 : 9), my - 1); context.lineTo(mx + (facing < 0 ? -5 : 5), my + 2); context.closePath(); context.fill();
+      context.fillStyle = "#fff0bc"; context.fillRect(mx + (facing < 0 ? -5 : 2), my - 1, 4, 2);
+    }
+    if (actor?.health <= 0 || actor?.defeated) {
+      const pulse = 5 + Math.abs(Math.sin(elapsed * 16)) * 7;
+      context.strokeStyle = "rgba(255, 159, 72, 0.85)"; context.lineWidth = 2;
+      context.beginPath(); context.arc(x + width / 2, y + height / 2, pulse, 0, Math.PI * 2); context.stroke();
+      context.fillStyle = "#f28b3c";
+      for (let i = 0; i < 4; i += 1) {
+        const angle = elapsed * 3 + i * Math.PI / 2;
+        context.fillRect(x + width / 2 + Math.cos(angle) * pulse - 2, y + height / 2 + Math.sin(angle) * pulse - 2, 4, 4);
+      }
+    }
+    context.restore(); return true;
+  }
+
   drawAnimatedBrontosaurus(context, x, y, width, height, actor = {}, elapsed = 0, options = {}) {
     const file = selectBrontosaurusAnimation(actor);
     const animation = this.animatedReferences.get(file);
@@ -1689,6 +1740,17 @@ export class SpriteRenderer {
   }
 
   drawAnimated(context, character, x, y, width, height, actor, elapsed, options = {}) {
+    if (character === "hunter") {
+      const identity = String(actor?.id ?? actor?.squadIndex ?? "hunter");
+      let hash = 0;
+      for (const char of identity) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+      if ((actor?.useTacticalSprite ?? hash % 4 === 0) &&
+          this.drawTacticalEnemy(context, x, y, width, height, actor ?? {}, elapsed, options)) return true;
+      const humanFile = hash % 2 === 0 ? "human-v1.gif" : "human-v2.gif";
+      return this.drawAnimatedReference(context, humanFile, x, y, width, height, actor ?? {}, elapsed, options);
+    }
+    if (character === "hunter-tactical") return this.drawTacticalEnemy(context, x, y, width, height, actor ?? {}, elapsed, options);
+    if (character === "human-v1" || character === "human-v2" || character === "blocky") return this.drawAnimatedReference(context, character + ".gif", x, y, width, height, actor ?? {}, elapsed, options);
     if (character === "ligocristus") {
       return this.drawAnimatedLigocristus(context, x, y, width, height, actor ?? {}, elapsed, options);
     }
