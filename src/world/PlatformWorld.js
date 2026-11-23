@@ -1,7 +1,6 @@
 import { GAME, LEVELS, WORLD } from "../config/GameConfig.js";
 
 export const BOSS_ARENA_HALF_WIDTH = 780;
-import { generateSectionScenery } from "./SceneryGenerator.js";
 import { generateSectionCollectibles } from "./CollectibleGenerator.js";
 import { getContainmentCageSize } from "../config/DinosaurSizing.js";
 
@@ -136,7 +135,6 @@ export class PlatformWorld {
     this.bossSpawns = [];
     this.facilitySpawns = null;
     this.facilityProps = [];
-    this.sceneryProps = [];
     this.collectibleSpawns = [];
     this.generatedSections = 0;
     this.bridgeSequence = 0;
@@ -318,12 +316,7 @@ export class PlatformWorld {
         { x: at(0.20), y: 180, w: Math.round(sectionLength * 0.16), h: 250, kind: "facility-building" },
         { x: at(0.42), y: 230, w: Math.round(sectionLength * 0.14), h: 200, kind: "containment-wing" },
         { x: at(0.61), y: 245, w: Math.round(sectionLength * 0.14), h: 185, kind: "facility-building" },
-        { x: at(0.80), y: 220, w: Math.round(sectionLength * 0.13), h: 210, kind: "facility-building" },
-        { x: at(0.06), y: 90, w: 28, h: 340, kind: "facility-lamp" },
-        { x: at(0.26), y: 80, w: 28, h: 350, kind: "facility-lamp" },
-        { x: at(0.52), y: 80, w: 28, h: 350, kind: "facility-lamp" },
-        { x: at(0.77), y: 80, w: 28, h: 350, kind: "facility-lamp" },
-        { x: at(0.94), y: 80, w: 28, h: 350, kind: "facility-lamp" }
+        { x: at(0.80), y: 220, w: Math.round(sectionLength * 0.13), h: 210, kind: "facility-building" }
       );
     }
 
@@ -333,33 +326,10 @@ export class PlatformWorld {
         { x: at(0.24), y: 180, w: Math.round(sectionLength * 0.16), h: 250, kind: "facility-building" },
         { x: at(0.47), y: 230, w: Math.round(sectionLength * 0.14), h: 200, kind: "facility-building" },
         { x: at(0.70), y: 245, w: Math.round(sectionLength * 0.16), h: 185, kind: "facility-building" },
-        { x: at(0.04), y: 290, w: Math.round(sectionLength * 0.92), h: 14, kind: "security-fence" },
-        { x: at(0.07), y: 90, w: 28, h: 340, kind: "facility-lamp" },
-        { x: at(0.28), y: 80, w: 28, h: 350, kind: "facility-lamp" },
-        { x: at(0.55), y: 80, w: 28, h: 350, kind: "facility-lamp" },
-        { x: at(0.82), y: 80, w: 28, h: 350, kind: "facility-lamp" },
-        { x: at(0.96), y: 80, w: 28, h: 350, kind: "facility-lamp" }
+        { x: at(0.04), y: 290, w: Math.round(sectionLength * 0.92), h: 14, kind: "security-fence" }
       );
     }
 
-    const scenerySafeZones = [
-      ...(!continuousFloor && !isBossArena ? [{ x: start + 815, radius: 125 }] : []),
-      ...reservedCharacterPositions.map((x) => ({ x, radius: 175 })),
-      ...occupiedCages.map((cage) => ({ x: cage.x + FERRUCUTUS_CAGE_WIDTH / 2, radius: 230 })),
-      ...this.obstacles
-        .filter((obstacle) => obstacle.x >= start && obstacle.x <= end)
-        .map((obstacle) => ({ x: obstacle.x + obstacle.w / 2, radius: 115 })),
-      ...(BOSS_RATIOS_BY_SECTION[index] ?? []).map((ratio) => ({ x: at(ratio), radius: 660 }))
-    ];
-    this.sceneryProps.push(...generateSectionScenery({
-      seed: this.seed,
-      sectionIndex: index,
-      sectionStart: start,
-      sectionLength,
-      groundY: this.groundY,
-      environment: LEVELS[levelIndex]?.environment,
-      safeZones: scenerySafeZones
-    }));
     this.collectibleSpawns.push(...generateSectionCollectibles({
       seed: this.seed, sectionIndex: index, sectionStart: start, sectionLength, groundY: this.groundY
     }));
@@ -448,20 +418,6 @@ export class PlatformWorld {
     this.platforms = this.platforms.filter((platform) => platform.id !== id);
   }
 
-  visibleScenery(cameraX, width, layer = null, environment = null) {
-    return this.sceneryProps.filter((prop) => {
-      if (layer && prop.layer !== layer) return false;
-      if (environment && prop.environment !== environment) return false;
-      if (prop.layer === "ground") {
-        return prop.x + prop.width / 2 >= cameraX - 120 &&
-          prop.x - prop.width / 2 <= cameraX + width + 120;
-      }
-      const screenX = width * (1 - prop.parallax) * 0.5 +
-        (prop.x - cameraX) * prop.parallax;
-      return screenX + prop.width >= -180 && screenX - prop.width <= width + 180;
-    });
-  }
-
   pruneBehind(worldX, retain = 1400) {
     const cutoff = worldX - retain;
     this.platforms = this.platforms.filter((platform) => platform.x + platform.w >= cutoff);
@@ -474,11 +430,6 @@ export class PlatformWorld {
     this.ferrucutusCageSpawns = this.ferrucutusCageSpawns.filter((spawn) => spawn.x >= cutoff);
     this.bossSpawns = this.bossSpawns.filter((spawn) => spawn.x >= cutoff);
     this.facilityProps = this.facilityProps.filter((prop) => prop.x + prop.w >= cutoff);
-    this.sceneryProps = this.sceneryProps.filter((prop) =>
-      prop.layer === "ground"
-        ? prop.x + prop.width / 2 >= cutoff
-        : prop.x + prop.width >= worldX - 6200
-    );
   }
 
   platformsNear(worldX, range = 1200) {

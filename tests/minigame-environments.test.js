@@ -17,21 +17,15 @@ test("mini-game scenes keep distinct prairie and Redwood identities with campaig
   assert.ok(MINIGAME_ENVIRONMENT_SCENES.ambush.platformTop);
 });
 
-test("layered mini-game environment composes campaign atmosphere, scenery, terrain and effects", async () => {
+test("mini-game environment composes sky, parallax, tiled terrain and dash dust from project assets", async () => {
   const source = await readFile(new URL("../src/minigames/MinigameEnvironment.js", import.meta.url), "utf8");
-  for (const renderer of [
-    "AtmosphereRenderer",
-    "VegetationRenderer",
-    "TerrainRenderer",
-    "EnvironmentalEffectsRenderer"
-  ]) assert.match(source, new RegExp(renderer));
+  for (const renderer of ["AtmosphereRenderer", "TerrainRenderer", "EnvironmentalEffectsRenderer"]) {
+    assert.match(source, new RegExp(renderer));
+  }
   assert.match(source, /atmosphere\.draw\(targetContext/);
-  assert.match(source, /vegetation\.drawBackground\(targetContext/);
-  assert.match(source, /terrain\.drawBackdrop\(targetContext/);
   assert.match(source, /terrain\.drawPlatforms\(targetContext/);
-  assert.match(source, /vegetation\.drawGround\(targetContext/);
-  assert.match(source, /effects\.drawWind\(targetContext/);
-  assert.match(source, /effects\.drawWeather\(targetContext/);
+  assert.match(source, /terrain\.drawGroundCover\(targetContext/);
+  assert.doesNotMatch(source, /Vegetation|SceneryGenerator|generateSectionScenery|drawWind|drawWeather/);
 });
 
 test("all mini-games delegate their environment backgrounds to the shared renderer", async () => {
@@ -54,145 +48,61 @@ test("all mini-games delegate their environment backgrounds to the shared render
   assert.match(sources[3], /MINIGAME_ENVIRONMENT_SCENES\.race/);
 });
 
-test("prairie is a first-class atmosphere, vegetation and ambient-effects biome", async () => {
-  const paths = [
-    "../src/rendering/AtmosphereRenderer.js",
-    "../src/world/SceneryGenerator.js",
-    "../src/rendering/EnvironmentalEffectsRenderer.js"
-  ];
-  const sources = await Promise.all(paths.map(path =>
-    readFile(new URL(path, import.meta.url), "utf8")
-  ));
-  assert.match(sources[0], /case "prairie": drawPrairieHorizon/);
-  assert.match(sources[1], /prairie:\s*\{/);
-  assert.match(sources[2], /prairie:\s*\{/);
+test("prairie and every other biome get terrain and parallax from project art", async () => {
+  const { TERRAIN_THEMES } = await import("../src/rendering/EnvironmentAssets.js");
+  const { PARALLAX_LAYERS } = await import("../src/rendering/ImageParallax.js");
+  assert.ok(TERRAIN_THEMES.prairie);
+  assert.ok(PARALLAX_LAYERS.prairie.length > 0);
 });
 
-test("procedural environment coverage extends the ground and scenery for long-running modes", () => {
+test("ground coverage extends forward and behind the world origin without generating props", () => {
   const renderer = new MinigameEnvironmentRenderer({
     scene: MINIGAME_ENVIRONMENT_SCENES.persecution,
     groundY: 438,
-    seed: 41,
     sectionLength: 1600,
     sectionCount: 1
   });
   const initialLength = renderer.worldLength;
   renderer.ensureCoverage(initialLength + 900, 960);
   assert.ok(renderer.worldLength > initialLength + 900);
-  assert.ok(renderer.scenery.some(prop => prop.x >= initialLength));
-});
-
-test("procedural environment coverage extends scenery and ground behind world origin", async () => {
-  const renderer = new MinigameEnvironmentRenderer({
-    scene: MINIGAME_ENVIRONMENT_SCENES.persecution,
-    groundY: 438,
-    seed: 71,
-    sectionLength: 1600,
-    sectionCount: 2
-  });
-  const initialEnd = renderer.worldLength;
   renderer.ensureCoverage(-1750, 960);
-
-  assert.ok(renderer.worldStart <= -1750, "the generated world must cover the camera's negative position");
-  assert.ok(renderer.scenery.some(prop => prop.x < 0), "backward sections contain real vegetation");
-  assert.equal(renderer.worldLength, initialEnd, "backward coverage must not change the positive world boundary");
-  const source = await readFile(new URL("../src/minigames/MinigameEnvironment.js", import.meta.url), "utf8");
-  assert.match(source, /x: this\.worldStart,[\s\S]*?w: this\.worldLength - this\.worldStart/);
+  assert.ok(renderer.worldStart <= -1750);
+  assert.equal(renderer.scenery, undefined, "no procedural scenery is generated");
 });
 
-test("mini-game foreground procedural layers are composited with the camera transform", () => {
+test("the mini-game terrain is composited with the camera transform", () => {
   const renderer = new MinigameEnvironmentRenderer({
     scene: MINIGAME_ENVIRONMENT_SCENES.persecution,
     groundY: 438,
-    seed: 83,
     sectionLength: 1600,
     sectionCount: 2
   });
-
   for (const cameraX of [420.4, -255.6]) {
     let translationX = 0;
-    const transformStack = [];
+    const stack = [];
     const calls = [];
     const context = {
       canvas: { width: 960, height: 540 },
-      save() { transformStack.push(translationX); },
-      restore() { translationX = transformStack.pop(); },
-      translate(x, y) {
-        assert.equal(y, 0);
-        translationX += x;
-      }
+      save() { stack.push(translationX); },
+      restore() { translationX = stack.pop(); },
+      translate(x, y) { assert.equal(y, 0); translationX += x; }
     };
     const record = (name) => calls.push({ name, translationX });
-
-    renderer.ready = true;
     renderer.atmosphere = { draw() { record("atmosphere"); } };
-    renderer.vegetation = {
-      drawBackground() { record("background-vegetation"); },
-      drawGround() { record("ground-vegetation"); }
-    };
     renderer.terrain = {
-      drawBackdrop() { record("terrain-backdrop"); },
-      drawPlatforms() { record("terrain-platforms"); }
+      drawPlatforms() { record("platforms"); },
+      drawGroundCover() { record("cover"); }
     };
-    renderer.effects = {
-      drawAmbientBack() { record("ambient-effects"); },
-      drawWind() { record("wind"); },
-      drawWeather() { record("weather"); },
-      drawDust() { record("dust"); }
-    };
-
-    const midgroundCalls = [];
-    assert.equal(renderer.draw(context, {
-      cameraX,
-      viewportWidth: 960,
-      viewportHeight: 540,
-      elapsed: 2,
-      drawMidground() { midgroundCalls.push(translationX); }
-    }), true);
-
-    const cameraOffset = Math.round(cameraX);
-    const worldLayerNames = new Set(["terrain-platforms", "ground-vegetation", "wind", "weather", "dust"]);
+    renderer.effects = { drawDust() { record("dust"); } };
+    const midground = [];
+    assert.equal(renderer.draw(context, { cameraX, drawMidground() { midground.push(translationX); } }), true);
+    const offset = Math.round(cameraX);
     for (const call of calls) {
-      assert.equal(
-        call.translationX,
-        worldLayerNames.has(call.name) ? -cameraOffset : 0,
-        call.name + " must use the correct camera coordinate space"
-      );
+      assert.equal(call.translationX, call.name === "atmosphere" ? 0 : -offset, call.name);
     }
-    assert.deepEqual(midgroundCalls, [0], "the parallax midground remains in screen space");
-    assert.equal(translationX, 0, "the world transform must be restored after foreground composition");
-    assert.equal(transformStack.length, 0);
+    assert.deepEqual(midground, [0]);
+    assert.equal(translationX, 0);
   }
-});
-
-test("PERSECUCIÓN can replace pre-placed ground details with streamed props", () => {
-  const renderer = new MinigameEnvironmentRenderer({
-    scene: MINIGAME_ENVIRONMENT_SCENES.persecution,
-    groundY: 438,
-    seed: 91,
-    sectionLength: 1600,
-    sectionCount: 1
-  });
-  let groundDraws = 0;
-  renderer.ready = true;
-  renderer.atmosphere = { draw() {} };
-  renderer.vegetation = {
-    drawBackground() {},
-    drawGround() { groundDraws += 1; }
-  };
-  renderer.terrain = { drawBackdrop() {}, drawPlatforms() {} };
-  renderer.effects = {
-    drawAmbientBack() {}, drawWind() {}, drawWeather() {}, drawDust() {}
-  };
-  const context = {
-    canvas: { width: 960, height: 540 },
-    save() {}, restore() {}, translate() {}
-  };
-
-  assert.equal(renderer.draw(context, { includeGroundScenery: false }), true);
-  assert.equal(groundDraws, 0, "PERSECUCIÓN renders its streamed ground props instead of pre-placed scenery");
-  assert.equal(renderer.draw(context), true);
-  assert.equal(groundDraws, 1, "other minigames keep the default pre-generated ground scenery");
 });
 
 test("layer allocation failure safely falls back to native mini-game drawing", () => {

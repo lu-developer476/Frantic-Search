@@ -1,7 +1,6 @@
 // Parallax de fondo con imágenes reales (public/environment/maps/**).
-// Reemplaza el horizonte dibujado por código (montañas/árboles procedurales)
-// en los entornos que tienen capas definidas. Si una imagen no carga, el
-// renderer devuelve false y AtmosphereRenderer usa el horizonte procedural.
+// Es el único horizonte del juego: no hay fondo generado por código. Mientras
+// las imágenes cargan (o si una falla) draw() devuelve false y se ve el color de cielo.
 
 const PARALLAX = "environment/maps/parallax/";
 const FOREST = "environment/maps/forest/";
@@ -30,9 +29,15 @@ export const PARALLAX_LAYERS = Object.freeze({
     { src: PARALLAX + "forestbg-layer8.png", speed: 0.28, scale: 3, anchor: "ground", y: 14, key: KEY_OLIVE, tint: ["#d8e58a", 0.22] },
     { src: PARALLAX + "forestbg-layer7.png", speed: 0.42, scale: 3, anchor: "ground", y: 20, key: KEY_OLIVE, tint: ["#d8e58a", 0.16] }
   ]),
+  coastal: Object.freeze([
+    { src: PARALLAX + "forestbg-layer9.png", speed: 0.2, scale: 3, anchor: "ground", y: 8, key: KEY_OLIVE, tint: ["#59c7da", 0.28] },
+    { src: PARALLAX + "forestbg-layer8.png", speed: 0.32, scale: 3, anchor: "ground", y: 14, key: KEY_OLIVE, tint: ["#59c7da", 0.2] },
+    { src: PARALLAX + "forestbg-layer7.png", speed: 0.46, scale: 3, anchor: "ground", y: 20, key: KEY_OLIVE, tint: ["#59c7da", 0.12] }
+  ]),
   extraction: Object.freeze(REDWOOD_LAYERS.map((layer) => ({ ...layer, tint: ["#f0a66f", 0.34] }))),
   "black-site": Object.freeze(DARK_FOREST_LAYERS),
-  containment: Object.freeze(DARK_FOREST_LAYERS.map((layer) => ({ ...layer, tint: ["#2a1d1a", 0.6] })))
+  containment: Object.freeze(DARK_FOREST_LAYERS.map((layer) => ({ ...layer, tint: ["#2a1d1a", 0.6] }))),
+  "rosa-containment": Object.freeze(DARK_FOREST_LAYERS.map((layer) => ({ ...layer, tint: ["#16212b", 0.6] })))
 });
 
 function defaultCreateImage() {
@@ -137,8 +142,7 @@ export class ImageParallax {
     return entry;
   }
 
-  // Dibuja las capas del entorno. Devuelve true solo si las dibujó todas;
-  // si falta alguna, no dibuja nada y el llamador usa el horizonte procedural.
+  // Dibuja las capas del entorno. Devuelve true solo si las dibujó todas.
   draw(context, { environment, cameraX = 0, viewportWidth = 960, groundY = 430 } = {}) {
     const layers = this.layers[environment];
     if (!context || !layers?.length) return false;

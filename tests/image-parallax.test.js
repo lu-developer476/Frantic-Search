@@ -23,10 +23,9 @@ function fakeContext() {
 }
 
 test("each campaign and minigame environment with real art has parallax layers", () => {
-  for (const name of ["redwood", "prairie", "extraction", "black-site", "containment"]) {
+  for (const name of ["coastal", "redwood", "prairie", "extraction", "black-site", "containment", "rosa-containment"]) {
     assert.ok(PARALLAX_LAYERS[name]?.length > 0, name);
   }
-  assert.equal(PARALLAX_LAYERS.coastal, undefined);
 });
 
 test("draw returns false until every layer image has loaded", () => {
@@ -40,7 +39,7 @@ test("draw returns false until every layer image has loaded", () => {
   assert.ok(context.draws.length > 0);
 });
 
-test("failed images keep the procedural fallback", () => {
+test("failed images are not drawn", () => {
   const { images, createImage } = fakeImages();
   const parallax = new ImageParallax({ createImage, createCanvas: () => null });
   parallax.preload("prairie");
@@ -50,8 +49,8 @@ test("failed images keep the procedural fallback", () => {
 
 test("unknown environments are not handled", () => {
   const parallax = new ImageParallax({ createImage: () => null });
-  assert.equal(parallax.hasEnvironment("coastal"), false);
-  assert.equal(parallax.draw(fakeContext(), { environment: "coastal" }), false);
+  assert.equal(parallax.hasEnvironment("unknown"), false);
+  assert.equal(parallax.draw(fakeContext(), { environment: "unknown" }), false);
 });
 
 test("layers tile across the viewport and scroll slower than the camera", () => {

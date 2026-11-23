@@ -3,8 +3,6 @@ import { observeCanvasViewport } from "../rendering/CanvasUtils.js";
 import { WildDinosaur } from "../entities/WildDinosaur.js";
 import { SpriteRenderer } from "../rendering/SpriteRenderer.js";
 import { MinigameEnvironmentRenderer, MINIGAME_ENVIRONMENT_SCENES } from "./MinigameEnvironment.js";
-import { drawGroundScenery } from "../rendering/SceneryRenderer.js";
-import { createGroundSceneryProp } from "../world/SceneryGenerator.js";
 
 let WIDTH = 960;
 const HEIGHT = 540;
@@ -12,8 +10,6 @@ const FLOOR = 438;
 const SECTION_END = 5200;
 const BEST_KEY = "frantic-hunting-best";
 const PREDATOR_BEST_KEY = "frantic-hunting-predator-best";
-export const HUNTING_GROUND_SCENERY_SPAWN_SPACING = 215;
-export const HUNTING_GROUND_SCENERY_VIEWPORT_MARGIN = 64;
 export const HUNTING_ENEMY_SPAWN_MARGIN = 28;
 export const HUNTING_CAMERA_DEAD_ZONE_LEFT_RATIO = 0.22;
 export const HUNTING_CAMERA_DEAD_ZONE_RIGHT_RATIO = 0.78;
@@ -284,10 +280,6 @@ export class Hunting {
     this.playerAttackTimer = 0;
     this.playerAttackHit = false;
     this.predatorHunterKills = 0;
-    this.groundScenery = [];
-    this.groundScenerySpawnIndex = 0;
-    this.nextGroundSceneryX = WIDTH + 12;
-    this.nextGroundSceneryLeftX = -12;
     this.kills = 0;
     this.finished = null;
     this.keys.clear();
@@ -437,41 +429,6 @@ export class Hunting {
     }
   }
 
-  updateGroundScenery(random = Math.random) {
-    this.groundScenery ??= [];
-    this.groundScenerySpawnIndex ??= 0;
-    this.nextGroundSceneryX ??= WIDTH + 12;
-    this.nextGroundSceneryLeftX ??= -12;
-
-    const spawn = (edgeX, direction) => {
-      const prop = createGroundSceneryProp({
-        environment: MINIGAME_ENVIRONMENT_SCENES.hunting.environment,
-        x: edgeX,
-        groundY: FLOOR,
-        random,
-        id: "hunting-ground-" + this.groundScenerySpawnIndex
-      });
-      this.groundScenerySpawnIndex += 1;
-      if (!prop) return;
-
-      // Keep each prop fully outside the viewport until the camera reveals it.
-      prop.x += direction * (prop.width / 2 + 12);
-      this.groundScenery.push(prop);
-    };
-
-    const rightEdge = this.cameraX + WIDTH + HUNTING_GROUND_SCENERY_VIEWPORT_MARGIN;
-    while (this.nextGroundSceneryX <= rightEdge) {
-      spawn(this.nextGroundSceneryX, 1);
-      this.nextGroundSceneryX += HUNTING_GROUND_SCENERY_SPAWN_SPACING;
-    }
-
-    const leftEdge = this.cameraX - HUNTING_GROUND_SCENERY_VIEWPORT_MARGIN;
-    while (this.nextGroundSceneryLeftX >= leftEdge) {
-      spawn(this.nextGroundSceneryLeftX, -1);
-      this.nextGroundSceneryLeftX -= HUNTING_GROUND_SCENERY_SPAWN_SPACING;
-    }
-  }
-
   beginWeaponReload(hunter) {
     if (!hunter || hunter.reloadTimer > 0 || hunter.ammo >= HUNTER_MAGAZINE_SIZE ||
         hunter.reserveAmmo <= 0 || hunter.health <= 0) return false;
@@ -599,7 +556,6 @@ export class Hunting {
     }
 
     this.cameraX += getHuntingCameraFollowDelta(player.x - this.cameraX, player.w, WIDTH);
-    this.updateGroundScenery();
 
     while (this.waveIndex < this.wavePlan.length && this.wavePlan[this.waveIndex].at <= player.x + 510) {
       this.spawnWave(this.wavePlan[this.waveIndex]);
@@ -828,8 +784,7 @@ export class Hunting {
       cameraX: this.cameraX,
       viewportWidth: WIDTH,
       viewportHeight: HEIGHT,
-      elapsed: this.elapsed,
-      includeGroundScenery: false
+      elapsed: this.elapsed
     }) ?? false;
 
     if (!layeredBackground) {
@@ -873,13 +828,6 @@ export class Hunting {
       ctx.fillText(String(i + 1).padStart(2, "0"), x + 5, FLOOR - 8);
     }
 
-    // Ground details share the redwood biome palette and remain in world space.
-    ctx.save();
-    ctx.translate(-this.cameraX, 0);
-    for (const prop of this.groundScenery ?? []) {
-      drawGroundScenery(ctx, prop, MINIGAME_ENVIRONMENT_SCENES.hunting);
-    }
-    ctx.restore();
   }
 
   drawHunter(hunter, index) {
