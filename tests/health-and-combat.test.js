@@ -220,5 +220,6 @@ test("the player can eat food by interacting and the AI companion consumes it au
   assert.match(main, /tryEatFood\(companion\.actor\)/);
   assert.match(main, /function drawFoodDrop\(food\)/);
   assert.match(main, /drawFoodDrop\(food\)/);
+  assert.match(main, /if \(result\.defeated\) dropLigocristusFood\(prey, foodSources\)/);
   assert.match(main, /enemy\.retainDefeatedRemains \|\| !isEnemyFadeComplete\(enemy\)/);
 });

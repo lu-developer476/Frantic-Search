@@ -144,7 +144,7 @@ export function getRaceAnimationSource(dinosaur, action) {
   const sources = {
     idle: [dinosaur?.idle, dinosaur?.walk],
     walk: [dinosaur?.walk, dinosaur?.idle],
-    run: [dinosaur?.run, dinosaur?.idle]
+    run: [dinosaur?.run, dinosaur?.walk, dinosaur?.idle]
   };
   return (sources[action] ?? []).find((source) => typeof source === "string" && source.length > 0) ?? null;
 }

@@ -112,3 +112,12 @@ test("defeated Emboscada enemies are not rendered with reduced opacity", async (
   assert.match(source, /drawTacticalEffect/);
 });
 
+
+test("Ambush renders player and hunter characters with the supplied human GIFs", async () => {
+  const source = await readFile(new URL("../src/minigames/Ambush.js", import.meta.url), "utf8");
+  assert.match(source, /human-v1/);
+  assert.match(source, /human-v2/);
+  assert.doesNotMatch(source, /ctx\.fillRect\(7, 58, 25, 5\)/);
+  await access(new URL("../public/references/human-v1.gif", import.meta.url));
+  await access(new URL("../public/references/human-v2.gif", import.meta.url));
+});

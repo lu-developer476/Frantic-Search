@@ -1,3 +1,4 @@
+import { getRaceAnimationSource } from "../src/minigames/Race.js";
 import { getDinosaurRenderScale } from "../src/config/DinosaurSizing.js";
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -247,4 +248,17 @@ test("Brisa routes through the available juvenile reference GIFs", () => {
   };
   assert.equal(renderer.drawAnimated({}, "brisa", 0, 0, 90, 70, {}, 0), true);
   assert.deepEqual(calls, ["brisa"]);
+});
+
+test("Race prefers RUN artwork while moving, then falls back to walk before idle", () => {
+  assert.equal(getRaceAnimationSource({ run: "run.gif", walk: "walk.gif", idle: "idle.gif" }, "run"), "run.gif");
+  assert.equal(getRaceAnimationSource({ run: null, walk: "walk.gif", idle: "idle.gif" }, "run"), "walk.gif");
+  assert.equal(getRaceAnimationSource({ run: null, walk: null, idle: "idle.gif" }, "run"), "idle.gif");
+});
+
+test("the tactical enemy atlas is RGBA so sprites and combat effects retain transparency", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const png = await readFile(new URL("../public/references/tactical-enemies.png", import.meta.url));
+  assert.equal(png.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
+  assert.equal(png[25], 6, "tactical-enemies.png must use PNG truecolor with alpha");
 });

@@ -716,46 +716,25 @@ export class Ambush {
   }
 
   drawHuman(actor, player = false) {
-    if (!player && (actor.defeated || actor.health <= 0)) return;
-    const ctx = this.ctx;
-    if (!player && this.spriteRenderer?.drawAnimated(
-      ctx, "hunter", actor.x - 5, actor.y - 5, actor.w + 10, actor.h + 10, actor, this.elapsed,
-      { alpha: 1, facing: actor.direction }
-    )) return;
-    const x = actor.x;
-    const y = actor.y;
-    const stride = Math.sin(this.elapsed * 10 + actor.x * 0.04);
-    const palette = player
-      ? { vest: "#536a4d", trim: "#d8f36a", pack: "#35443a" }
-      : { vest: "#715944", trim: "#d78e69", pack: "#473b31" };
-    const alpha = actor.invulnerable > 0 && Math.floor(this.elapsed * 18) % 2 ? 0.45 : 1;
-    ctx.save();
-    ctx.globalAlpha *= alpha;
-    ctx.translate(actor.direction < 0 ? x + actor.w : x, y);
-    if (actor.direction < 0) ctx.scale(-1, 1);
-    ctx.fillStyle = "#202a29";
-    ctx.fillRect(7, 58, 25, 5);
-    ctx.fillStyle = "#bd9a72";
-    ctx.fillRect(11, 5, 17, 17);
-    ctx.fillStyle = palette.pack;
-    ctx.fillRect(9, 3, 21, 8);
-    ctx.fillRect(6, 23, 27, 23);
-    ctx.fillStyle = palette.vest;
-    ctx.fillRect(10, 26, 19, 13);
-    ctx.fillStyle = palette.trim;
-    ctx.fillRect(12, 23, 15, 4);
-    ctx.fillRect(8, 28, 3, 12);
-    ctx.fillStyle = "#25302b";
-    ctx.fillRect(10, 45, 8, 15 + Math.round(stride * 3));
-    ctx.fillRect(23, 45, 8, 15 - Math.round(stride * 3));
-    ctx.fillStyle = "#141c1b";
-    ctx.fillRect(25, 31, 17, 4);
-    ctx.fillRect(39, 29, 4, 3);
-    if (player) {
-      ctx.fillStyle = "#f1e7bd";
-      ctx.fillRect(17, 12, 7, 3);
-    }
-    ctx.restore();
+    if (!player && (actor.defeated || actor.health <= 0)) return false;
+    const identity = String(actor?.id ?? actor?.squadIndex ?? (player ? "ambush-player" : "ambush-enemy"));
+    let hash = 0;
+    for (const character of identity) hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
+    const humanFile = hash % 2 === 0 ? "human-v1" : "human-v2";
+    return Boolean(this.spriteRenderer?.drawAnimated(
+      this.ctx,
+      humanFile,
+      actor.x - 5,
+      actor.y - 5,
+      actor.w + 10,
+      actor.h + 10,
+      actor,
+      this.elapsed,
+      {
+        alpha: actor.invulnerable > 0 && Math.floor(this.elapsed * 18) % 2 ? 0.45 : 1,
+        facing: actor.direction
+      }
+    ));
   }
 
   drawDinosaur(actor) {
