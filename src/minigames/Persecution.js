@@ -105,9 +105,15 @@ export function herdPreyAnimationKey(prey = {}, elapsed = 0) {
   return prey.animationState === "perturbed" ? "parasaurPerturbed" : "parasaurRun";
 }
 
+const MINIGAME_SPRITE_SOURCE_FACING = Object.freeze({
+  // Both pterodactyl GIFs are authored facing left; mirror only for rightward travel.
+  googlePterodactyl: -1,
+  pterodactyl: -1
+});
+
 export function shouldFlipMinigameSprite(key, facing = 1) {
   if (typeof key !== "string") return false;
-  const sourceFacing = 1;
+  const sourceFacing = MINIGAME_SPRITE_SOURCE_FACING[key] ?? 1;
   return Math.sign(facing || 1) !== sourceFacing;
 }
 

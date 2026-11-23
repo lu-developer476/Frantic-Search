@@ -79,6 +79,13 @@ test("Empty Stomach includes both Brontosaurus movement GIFs and mirrors them fo
   assert.equal(shouldFlipMinigameSprite("coral", -1), true);
 });
 
+test("both pterodactyl GIFs face toward the playfield from either screen edge", () => {
+  for (const key of ["pterodactyl", "googlePterodactyl"]) {
+    assert.equal(shouldFlipMinigameSprite(key, 1), true, `${key} must face right when entering from the left`);
+    assert.equal(shouldFlipMinigameSprite(key, -1), false, `${key} must face left when entering from the right`);
+  }
+});
+
 test("Empty Stomach uses rectangle overlap for predator contact", () => {
   assert.equal(overlaps({ x: 0, y: 0, w: 20, h: 20 }, { x: 19, y: 5, w: 20, h: 20 }), true);
   assert.equal(overlaps({ x: 0, y: 0, w: 20, h: 20 }, { x: 20, y: 5, w: 20, h: 20 }), false);
