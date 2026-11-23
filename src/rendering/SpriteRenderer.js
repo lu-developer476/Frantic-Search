@@ -18,7 +18,7 @@ export const LIGOCRISTUS_ANIMATION_ASSETS = Object.freeze({
   walk: "ligocristus-innocens-walk.gif"
 });
 const PROLOGUE_BRISA_SCALE = 1.8;
-const ANIMATED_REFERENCE_VERSION = "20261123-special-enemy-assets-1";
+const ANIMATED_REFERENCE_VERSION = "20261123-blocky-directional-pterodactyl-2";
 
 // Every scale is derived from the species' size class and artwork detail (see DinosaurSizing.js).
 export const DINOSAUR_REFERENCE_SCALES = Object.freeze({
@@ -157,7 +157,7 @@ export const REFERENCE_PRELOAD_FILES = [
   "tactical-enemies.png"
 ];
 
-const SPRITE_ASSET_VERSION = "20261123-special-enemy-assets-1";
+const SPRITE_ASSET_VERSION = "20261123-blocky-directional-pterodactyl-2";
 const ROSA_RIG_PARTS = [
   "rosa-rig-body",
   "rosa-rig-tail",
@@ -1750,7 +1750,8 @@ export class SpriteRenderer {
       return this.drawAnimatedReference(context, humanFile, x, y, width, height, actor ?? {}, elapsed, options);
     }
     if (character === "hunter-tactical") return this.drawTacticalEnemy(context, x, y, width, height, actor ?? {}, elapsed, options);
-    if (character === "human-v1" || character === "human-v2" || character === "blocky") return this.drawAnimatedReference(context, character + ".gif", x, y, width, height, actor ?? {}, elapsed, options);
+    if (character === "blocky") return this.drawAnimatedReference(context, "blocky.gif", x, y, width, height, actor ?? {}, 0, options);
+    if (character === "human-v1" || character === "human-v2") return this.drawAnimatedReference(context, character + ".gif", x, y, width, height, actor ?? {}, elapsed, options);
     if (character === "ligocristus") {
       return this.drawAnimatedLigocristus(context, x, y, width, height, actor ?? {}, elapsed, options);
     }

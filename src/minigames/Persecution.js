@@ -828,7 +828,8 @@ export class Persecution {
     }
     this.pterodactylSpawnTimer -= delta;
     if (this.pterodactylSpawnTimer <= 0 && this.pterodactyls.length === 0 && this.pterodactylCaptureTimer <= 0) {
-      this.pterodactyls.push({ kind: "pterodactyl", state: "diving", x: WIDTH + 80, y: 94, w: 116, h: 72, lane: this.getEntityLane(this.player), phase: Math.random() * 4, speed: 190 + Math.random() * 35 });
+      const direction = Math.random() < 0.5 ? -1 : 1;
+      this.pterodactyls.push({ kind: "pterodactyl", state: "diving", x: direction < 0 ? WIDTH + 80 : -160, y: 94, w: 116, h: 72, lane: this.getEntityLane(this.player), phase: Math.random() * 4, speed: 190 + Math.random() * 35, direction });
       this.pterodactylSpawnTimer = 14 + Math.random() * 9;
     }
     for (const enemy of this.deadlyEnemies) {
@@ -877,8 +878,8 @@ export class Persecution {
       return false;
     }
     for (const bird of this.pterodactyls) {
-      if (bird.state === "fleeing") { bird.x += 245 * delta; continue; }
-      bird.x -= (speed * 0.58 + bird.speed) * delta;
+      if (bird.state === "fleeing") { bird.x -= (bird.direction ?? -1) * 245 * delta; continue; }
+      bird.x += (bird.direction ?? -1) * (speed * 0.58 + bird.speed) * delta;
       bird.y = Math.min(getLaneBaseline(bird.lane) - bird.h + 5, bird.y + 135 * delta);
       const prey = this.herd.find((item) => item.small && this.getEntityLane(item) === bird.lane && overlaps(bird, item));
       if (prey) { this.herd = this.herd.filter((item) => item !== prey); bird.state = "fleeing"; continue; }
@@ -891,7 +892,7 @@ export class Persecution {
         return false;
       }
     }
-    this.pterodactyls = this.pterodactyls.filter((bird) => bird.x < WIDTH + 220 || bird.state === "carrying");
+    this.pterodactyls = this.pterodactyls.filter((bird) => bird.state === "carrying" || ((bird.direction ?? -1) < 0 ? bird.x + bird.w > -220 : bird.x < WIDTH + 220));
     return false;
   }
 
@@ -1714,7 +1715,7 @@ export class Persecution {
         const pose = Math.floor(this.animationClock * 7 + rex.phase) % 3 === 0 ? "googleRexDuck" : "googleRexRun";
         this.drawSprite(pose, rex.x, rex.y, rex.w, rex.h, "#6d7770", undefined, 1);
       }
-      for (const bird of (this.pterodactyls ?? []).filter((item) => item.lane === lane)) this.drawSprite("pterodactyl", bird.x, bird.y, bird.w, bird.h, "#7c6d5d", undefined, -1);
+      for (const bird of (this.pterodactyls ?? []).filter((item) => item.lane === lane)) this.drawSprite("pterodactyl", bird.x, bird.y, bird.w, bird.h, "#7c6d5d", undefined, bird.direction ?? -1);
       for (const enemy of this.enemies.filter((item) => this.getEntityLane(item) === lane)) {
         const pose = enemyAnimationKey(enemy, this.elapsed);
         const frozenPose = ["departing", "stunned", "trapped"].includes(enemy.state) ||
