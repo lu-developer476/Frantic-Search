@@ -34,9 +34,9 @@ export function prairieHerdAnimationKey(animal = {}, elapsed = 0) {
   return "ligocristusWalk";
 }
 export const CORAL_ANIMATION_ASSETS = Object.freeze({
-  idle: "references/miniraptor-idle.gif",
-  run: "references/miniraptor-run.gif",
-  jump: "references/miniraptor-jump.gif"
+  idle: "references/coral-idle.gif",
+  run: "references/coral-run.gif",
+  jump: "references/coral-jump.gif"
 });
 
 export const ASSETS = {

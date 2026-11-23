@@ -6,7 +6,7 @@ Frantic Search is an unofficial fan-made dinosaur ambush-platformer. Play as Gal
 
 ## Additional game modes
 
-- **Empty Stomach** is an endless ambush minigame starring Coral, the miniraptor in `miniraptor-run.gif`. Escape the xenoraptors and velociraptors while Parasaurolophus, Brontosaurus and Ligocristus Innocens appear in the ambient prairie herd and cross the playable lanes; predators can hunt and eat every herd species. The run has no finish line: it ends only when a predator catches Coral. Distance is scored and the personal best is stored locally.
+- **Empty Stomach** is an endless ambush minigame starring Coral, the miniraptor in `coral-run.gif`. Escape the xenoraptors and velociraptors while Parasaurolophus, Brontosaurus and Ligocristus Innocens appear in the ambient prairie herd and cross the playable lanes; predators can hunt and eat every herd species. The run has no finish line: it ends only when a predator catches Coral. Distance is scored and the personal best is stored locally.
 - **Time Attack** is a finite hunting time trial. Control one hunter alongside three AI teammates, eliminate all 14 Venatosaurus across four waves, and reach extraction. The fastest successful completion is stored locally.
 - **Ambush** is an endless arena with progressive waves. Play as an armed hunter against Venatosaurus, or choose Gala / Basilio to fight poachers. Enemy count, health and pressure increase over time; every second cleared wave restores one health point. Personal bests are saved separately for each role.
 

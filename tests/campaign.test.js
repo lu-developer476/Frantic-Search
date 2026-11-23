@@ -4,6 +4,8 @@ import { CampaignManager } from "../src/campaign/CampaignManager.js";
 import { GAME, LEVELS, WORLD } from "../src/config/GameConfig.js";
 import { Beta } from "../src/entities/Beta.js";
 import { FacilityConsole } from "../src/entities/FacilityConsole.js";
+import { PlatformWorld } from "../src/world/PlatformWorld.js";
+import { selectCampaignHunterAnimation } from "../src/rendering/SpriteRenderer.js";
 
 function drainScenes(campaign) {
   let guard = 0;
@@ -13,6 +15,26 @@ function drainScenes(campaign) {
   }
   assert.ok(guard < 40, "dialogue queue should not get stuck");
 }
+
+test("Campaign has human poachers in every level and unlocks human-v2 only in the final two", () => {
+  const world = new PlatformWorld(GAME.groundY, { seed: 12345 });
+  world.extendTo(GAME.playerX + WORLD.totalLength);
+
+  for (let levelIndex = 0; levelIndex < LEVELS.length; levelIndex += 1) {
+    const start = GAME.playerX + LEVELS[levelIndex].distance;
+    const end = levelIndex + 1 < LEVELS.length
+      ? GAME.playerX + LEVELS[levelIndex + 1].distance
+      : GAME.campaignEndX;
+    const spawns = world.hunterSpawns.filter((spawn) => spawn.x >= start && spawn.x < end);
+    assert.ok(spawns.length > 0, `${LEVELS[levelIndex].name} should contain a human enemy`);
+
+    const variants = spawns.map((spawn) =>
+      selectCampaignHunterAnimation(spawn, levelIndex >= LEVELS.length - 2)
+    );
+    assert.ok(variants.includes("human-v1.gif"));
+    assert.equal(variants.includes("human-v2.gif"), levelIndex >= LEVELS.length - 2);
+  }
+});
 
 function progressToFacility(campaign) {
   campaign.begin();

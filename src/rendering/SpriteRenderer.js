@@ -6,9 +6,9 @@ import { getDinosaurRenderScale } from "../config/DinosaurSizing.js";
 const BOSS_DRAW_PADDING = 8;
 
 export const BRISA_ANIMATIONS = Object.freeze({
-  idle: "juvenile-velociraptor-abyssomirabilis-idle.gif",
-  jump: "juvenile-velociraptor-abyssomirabilis-jump.gif",
-  run: "juvenile-velociraptor-abyssomirabilis-run.gif"
+  idle: "brisa-idle.gif",
+  jump: "brisa-jump.gif",
+  run: "brisa-run.gif"
 });
 export const BRISA_REFERENCE = BRISA_ANIMATIONS.idle;
 export const TACTICAL_COMBAT_EFFECT_SPRITES = Object.freeze({
@@ -162,6 +162,14 @@ export function selectVenatosaurusAnimation(character, actor = {}) {
   if (actor?.state === "pursuit" || Math.abs(actor?.motionSpeed ?? actor?.vx ?? 0) > 70) return assets.run;
   if (actor?.state === "patrol") return assets.walk;
   return assets.idle;
+}
+
+export function selectCampaignHunterAnimation(actor = {}, allowHumanV2 = false) {
+  if (!allowHumanV2) return "human-v1.gif";
+  const identity = String(actor?.id ?? actor?.squadIndex ?? "hunter");
+  let hash = 0;
+  for (const character of identity) hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
+  return hash % 2 === 0 ? "human-v1.gif" : "human-v2.gif";
 }
 
 export const CAMPAIGN_ANIMATED_REFERENCE_FILES = Object.freeze([
@@ -1782,7 +1790,7 @@ export class SpriteRenderer {
       for (const char of identity) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
       if ((actor?.useTacticalSprite ?? hash % 3 === 0) &&
           this.drawTacticalEnemy(context, x, y, width, height, actor ?? {}, elapsed, options)) return true;
-      const humanFile = hash % 2 === 0 ? "human-v1.gif" : "human-v2.gif";
+      const humanFile = selectCampaignHunterAnimation(actor, options.allowHumanV2);
       return this.drawAnimatedReference(context, humanFile, x, y, width, height, actor ?? {}, elapsed, options);
     }
     if (character === "hunter-tactical") return this.drawTacticalEnemy(context, x, y, width, height, actor ?? {}, elapsed, options);

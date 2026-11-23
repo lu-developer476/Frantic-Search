@@ -103,7 +103,7 @@ const HUNTER_SPAWNS_BY_SECTION = [
   [{ ratio: 0.27, carriesCaptive: false }, { ratio: 0.92, carriesCaptive: false }],
   [],
   [{ ratio: 0.22, carriesCaptive: false }, { ratio: 0.82, carriesCaptive: true }],
-  [],
+  [{ ratio: 0.88, carriesCaptive: false }],
   [{ ratio: 0.34, carriesCaptive: false }, { ratio: 0.72, carriesCaptive: false }],
   [{ ratio: 0.30, carriesCaptive: false }, { ratio: 0.72, carriesCaptive: false }]
 ];

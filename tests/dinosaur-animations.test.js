@@ -2,7 +2,7 @@ import { getRaceAnimationSource } from "../src/minigames/Race.js";
 import { getDinosaurRenderScale } from "../src/config/DinosaurSizing.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import { IndoraptorBoss } from "../src/entities/IndoraptorBoss.js";
 import { IndominusRexBoss } from "../src/entities/IndominusRexBoss.js";
 import {
@@ -16,6 +16,7 @@ import {
   BRISA_ANIMATIONS,
   TACTICAL_COMBAT_EFFECT_SPRITES,
   selectJuvenileAnimation,
+  selectCampaignHunterAnimation,
   selectBrontosaurusAnimation,
   selectVenatosaurusAnimation,
   SpriteRenderer
@@ -29,6 +30,23 @@ test("Brisa selects her dedicated running GIF whenever companion motion is activ
   assert.equal(selectJuvenileAnimation({ vx: 0, motionSpeed: 0, state: "confined" }), "idle");
   assert.equal(selectJuvenileAnimation({ vx: 240, motionSpeed: 0, state: "running" }), "run");
   assert.equal(selectJuvenileAnimation({ vx: 240, onGround: false, state: "jumping" }), "jump");
+});
+
+test("campaign hunters keep human-v1 throughout and unlock human-v2 in the final two levels", () => {
+  assert.equal(selectCampaignHunterAnimation({ id: "hunter-0-0" }, false), "human-v1.gif");
+  assert.equal(selectCampaignHunterAnimation({ id: "hunter-5-0" }, false), "human-v1.gif");
+  assert.equal(selectCampaignHunterAnimation({ id: "hunter-0-0" }, true), "human-v1.gif");
+  assert.equal(selectCampaignHunterAnimation({ id: "hunter-5-0" }, true), "human-v2.gif");
+});
+
+test("renamed Brisa and Coral GIF assets are present under their new filenames", async () => {
+  const renamedAssets = [
+    "brisa-idle.gif", "brisa-jump.gif", "brisa-run.gif",
+    "coral-idle.gif", "coral-jump.gif", "coral-run.gif"
+  ];
+  for (const file of renamedAssets) {
+    await access(new URL("../public/references/" + file, import.meta.url));
+  }
 });
 
 test("tactical atlas provides muzzle-flash and impact sprites", () => {
@@ -133,9 +151,9 @@ test("Brontosaurus uses dedicated walking and running GIFs instead of a missing 
 });
 
 test("Brisa uses her dedicated juvenile Velociraptor idle, jump and run GIFs", () => {
-  assert.equal(BRISA_ANIMATIONS.idle, "juvenile-velociraptor-abyssomirabilis-idle.gif");
-  assert.equal(BRISA_ANIMATIONS.jump, "juvenile-velociraptor-abyssomirabilis-jump.gif");
-  assert.equal(BRISA_ANIMATIONS.run, "juvenile-velociraptor-abyssomirabilis-run.gif");
+  assert.equal(BRISA_ANIMATIONS.idle, "brisa-idle.gif");
+  assert.equal(BRISA_ANIMATIONS.jump, "brisa-jump.gif");
+  assert.equal(BRISA_ANIMATIONS.run, "brisa-run.gif");
   assert.ok(CAMPAIGN_ANIMATED_REFERENCE_FILES.includes(BRISA_ANIMATIONS.idle));
   assert.ok(CAMPAIGN_ANIMATED_REFERENCE_FILES.includes(BRISA_ANIMATIONS.jump));
   assert.ok(CAMPAIGN_ANIMATED_REFERENCE_FILES.includes(BRISA_ANIMATIONS.run));

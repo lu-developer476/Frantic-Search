@@ -803,7 +803,8 @@ function drawHunter(hunter) {
 
   const spriteDrawn = drawAnimatedSafely(ctx, "hunter", x - 6, y - 5, hunter.w + 12, hunter.h + 8, hunter, elapsed, {
     alpha,
-    facing: hunter.direction
+    facing: hunter.direction,
+    allowHumanV2: !explorationMode && currentCampaignLevelIndex() >= LEVELS.length - 2
   });
   if (!spriteDrawn) return;
 
