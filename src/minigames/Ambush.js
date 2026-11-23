@@ -246,6 +246,7 @@ export class Ambush {
     this.enemies = [];
     this.projectiles = [];
     this.particles = [];
+    this.combatEffects = [];
     this.blockyPickups = [];
     this.blockySpawnTimer = 4 + Math.random() * 3;
     this.spawnRemaining = 0;
@@ -384,6 +385,7 @@ export class Ambush {
       radius: 5,
       lifetime: 1.8
     }));
+    this.addCombatEffect("muzzle", muzzleX, this.player.y + 31, this.player.direction);
     this.player.fireCooldown = 0.23;
     this.burst(muzzleX, this.player.y + 31, "#ffe5a1", 3);
   }
@@ -482,6 +484,7 @@ export class Ambush {
             radius: 6,
             lifetime: 2
           }));
+          this.addCombatEffect("muzzle", event.projectile.x, event.projectile.y, enemy.direction);
         }
       }
     }
@@ -523,6 +526,7 @@ export class Ambush {
 
   update(delta) {
     this.elapsed += delta;
+    this.updateCombatEffects(delta);
     if (this.intermission > 0) {
       this.intermission -= delta;
       if (this.intermission <= 0) this.beginWave();
@@ -577,6 +581,7 @@ export class Ambush {
     if (!enemy || enemy.defeated) return;
     const result = enemy.takeDamage(amount);
     if (!result.hit) return;
+    this.addCombatEffect("impact", enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, enemy.direction);
     if (result.defeated) {
       this.kills += 1;
       this.burst(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, "#e7a16f", 11);
@@ -594,8 +599,34 @@ export class Ambush {
     } else {
       if (!this.player.takeHit()) return;
     }
+    this.addCombatEffect("impact", this.player.x + this.player.w / 2, this.player.y + this.player.h / 2);
     this.burst(this.player.x + this.player.w / 2, this.player.y + this.player.h / 2, "#ef8c69", 8);
     if (this.player.health <= 0) this.finish();
+  }
+
+  addCombatEffect(type, x, y, facing = 1) {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    this.combatEffects ??= [];
+    const duration = type === "muzzle" ? 0.13 : 0.24;
+    this.combatEffects.push({ type, x, y, facing, life: duration, max: duration, elapsed: 0 });
+  }
+
+  updateCombatEffects(delta) {
+    this.combatEffects ??= [];
+    for (const effect of this.combatEffects) {
+      effect.elapsed += delta;
+      effect.life = Math.max(0, effect.life - delta);
+    }
+    this.combatEffects = this.combatEffects.filter(effect => effect.life > 0);
+  }
+
+  drawCombatEffects() {
+    for (const effect of this.combatEffects ?? []) {
+      this.spriteRenderer?.drawTacticalEffect?.(
+        this.ctx, effect.type, effect.x, effect.y, effect.elapsed,
+        { alpha: effect.life / effect.max, facing: effect.facing }
+      );
+    }
   }
 
   burst(x, y, color, count) {
@@ -685,10 +716,11 @@ export class Ambush {
   }
 
   drawHuman(actor, player = false) {
+    if (!player && (actor.defeated || actor.health <= 0)) return;
     const ctx = this.ctx;
     if (!player && this.spriteRenderer?.drawAnimated(
       ctx, "hunter", actor.x - 5, actor.y - 5, actor.w + 10, actor.h + 10, actor, this.elapsed,
-      { alpha: actor.defeated ? 0.35 : 1, facing: actor.direction }
+      { alpha: 1, facing: actor.direction }
     )) return;
     const x = actor.x;
     const y = actor.y;
@@ -744,9 +776,10 @@ export class Ambush {
   }
 
   drawDinosaurEnemy(enemy) {
+    if (!enemy || enemy.defeated || enemy.health <= 0) return;
     const drawn = this.spriteRenderer?.drawAnimated(
       this.ctx, enemy.kind, enemy.x, enemy.y, enemy.w, enemy.h,
-      enemy, this.elapsed, { facing: enemy.direction, alpha: enemy.defeated ? 0.36 : 1 }
+      enemy, this.elapsed, { facing: enemy.direction, alpha: 1 }
     );
     if (drawn) return;
     const ctx = this.ctx;
@@ -788,6 +821,7 @@ export class Ambush {
       ctx.arc(projectile.x, projectile.y, projectile.radius, 0, Math.PI * 2);
       ctx.fill();
     }
+    this.drawCombatEffects();
     for (const particle of this.particles) {
       ctx.globalAlpha = Math.max(0, particle.life / particle.max);
       ctx.fillStyle = particle.color;

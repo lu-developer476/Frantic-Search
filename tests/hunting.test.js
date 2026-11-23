@@ -187,3 +187,12 @@ test("Predator player starts with one hundred health points", async () => {
   assert.match(source, /this\.player\.health = PREDATOR_PLAYER_HEALTH/);
   assert.match(source, /this\.player\.maxHealth = PREDATOR_PLAYER_HEALTH/);
 });
+
+test("defeated Cacería enemies are hidden instead of rendered as faded sprites", async () => {
+  const source = await readFile(new URL("../src/minigames/Hunting.js", import.meta.url), "utf8");
+  assert.match(source, /if \(!hunter \|\| hunter\.defeated \|\| \(this\.mode === "predator" && hunter\.health <= 0\)\) return/);
+  assert.match(source, /if \(!dinosaur \|\| dinosaur\.defeated \|\| dinosaur\.health <= 0\) return/);
+  assert.match(source, /const alpha = hunter\.health > 0[\s\S]{0,100}: 0\.3/);
+  assert.match(source, /drawTacticalEffect/);
+});
+

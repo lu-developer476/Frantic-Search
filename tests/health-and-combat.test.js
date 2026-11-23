@@ -10,7 +10,7 @@ import { PhysicsSystem } from "../src/systems/PhysicsSystem.js";
 import { PlatformWorld } from "../src/world/PlatformWorld.js";
 import { CollisionSystem } from "../src/systems/CollisionSystem.js";
 import { advanceEnemyFade, getEnemyOpacity, isEnemyFadeComplete } from "../src/systems/EnemyFadeSystem.js";
-import { dropVenatosaurusFood, VENATOSAURUS_REMAINS_OPACITY } from "../src/systems/FoodSystem.js";
+import { dropLigocristusFood, dropVenatosaurusFood, VENATOSAURUS_REMAINS_OPACITY } from "../src/systems/FoodSystem.js";
 
 test("player health changes on impact and does not keep decreasing afterward", () => {
   const player = new Player("blue", 100, 430);
@@ -100,7 +100,7 @@ test("Vasti's character ability is a ground stomp and an airborne slam", () => {
   assert.equal(player.isSlamming, true);
 });
 
-test("defeated Ligocristus become fading carcasses that can be consumed", () => {
+test("Ligocristus only becomes consumable after it is defeated", () => {
   const prey = new LigocristusPrey({ id: "ligocristus-carcass", x: 100, groundY: 430 });
   assert.equal(prey.consume(), false);
   assert.equal(prey.takeDamage(1).defeated, false);
@@ -111,6 +111,22 @@ test("defeated Ligocristus become fading carcasses that can be consumed", () => 
   assert.equal(prey.defeatFadeRemaining, 0.9);
   assert.equal(prey.consume(), true);
   assert.equal(prey.consumed, true);
+});
+
+test("an attacked and defeated Ligocristus turns into one edible food drop", () => {
+  const prey = new LigocristusPrey({ id: "ligocristus-food", x: 240, groundY: 430 });
+  const foodSources = [prey];
+
+  assert.equal(prey.takeDamage(2).defeated, true);
+  const drop = dropLigocristusFood(prey, foodSources);
+
+  assert.equal(prey.consumed, true);
+  assert.equal(prey.state, "consumed");
+  assert.equal(drop.kind, "ligocristus-food");
+  assert.equal(drop.id, "food-ligocristus-food");
+  assert.equal(foodSources.length, 2);
+  assert.equal(dropLigocristusFood(prey, foodSources), null);
+  assert.equal(foodSources.length, 2, "a prey must not create duplicate food drops");
 });
 
 test("Ligocristus forage and flee when threatened", () => {

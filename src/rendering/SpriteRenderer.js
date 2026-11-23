@@ -11,6 +11,37 @@ export const BRISA_ANIMATIONS = Object.freeze({
   run: "juvenile-velociraptor-abyssomirabilis-run.gif"
 });
 export const BRISA_REFERENCE = BRISA_ANIMATIONS.idle;
+export const TACTICAL_COMBAT_EFFECT_SPRITES = Object.freeze({
+  muzzle: Object.freeze([
+    Object.freeze({ x: 286, y: 2, width: 17, height: 17 }),
+    Object.freeze({ x: 310, y: 2, width: 17, height: 17 }),
+    Object.freeze({ x: 334, y: 2, width: 17, height: 17 }),
+    Object.freeze({ x: 358, y: 2, width: 17, height: 17 })
+  ]),
+  impact: Object.freeze([
+    Object.freeze({ x: 285, y: 245, width: 22, height: 27 }),
+    Object.freeze({ x: 309, y: 245, width: 22, height: 27 })
+  ])
+});
+
+export function selectJuvenileAnimation(actor = {}, options = {}) {
+  if (options.animationKey) return options.animationKey;
+  if (options.sleeping) return "idle";
+
+  const state = actor?.state;
+  const airborne = actor?.onGround === false || state === "jumping" || state === "jump";
+  if (airborne) return "jump";
+
+  // vx may be zero while the companion's motionSpeed is updated independently.
+  const motionSpeed = Math.max(
+    Math.abs(Number(actor?.vx) || 0),
+    Math.abs(Number(actor?.motionSpeed) || 0),
+    Math.abs(Number(actor?.speed) || 0)
+  );
+  const moving = motionSpeed > 24 ||
+    ["following", "running", "chasing", "retreating", "moving", "walking"].includes(state);
+  return moving ? "run" : "idle";
+}
 export const LIGOCRISTUS_ANIMATION_ASSETS = Object.freeze({
   idle: "ligocristus-innocens-idle.gif",
   jump: "ligocristus-innocens-jump.gif",
@@ -374,13 +405,8 @@ export class SpriteRenderer {
     const definition = JUVENILE_ANIMATED_CHARACTERS[character];
     if (!definition || !(this.animatedReferences instanceof Map)) return false;
 
-    const state = actor?.state;
+    const animationKey = selectJuvenileAnimation(actor, options);
     const sleeping = Boolean(options.sleeping);
-    const airborne = actor?.onGround === false || state === "jumping" || state === "jump";
-    const moving = Math.abs(actor?.vx ?? actor?.motionSpeed ?? actor?.speed ?? 0) > 24 ||
-      ["following", "running", "chasing", "retreating", "moving"].includes(state);
-    const animationKey = options.animationKey ??
-      (sleeping ? "idle" : airborne ? "jump" : moving ? "run" : "idle");
     const file = BRISA_ANIMATIONS[animationKey] ?? BRISA_ANIMATIONS.idle;
     const animation = this.animatedReferences.get(file);
     if (!animation?.frames?.length) {
@@ -1690,27 +1716,37 @@ export class SpriteRenderer {
     context.save(); context.globalAlpha *= options.alpha ?? 1; context.imageSmoothingEnabled = false;
     if (Math.sign(facing || 1) < 0) { context.translate(x + width, 0); context.scale(-1, 1); context.drawImage(image, sx, sy, 19, 23, 0, y, width, height); }
     else context.drawImage(image, sx, sy, 19, 23, x, y, width, height);
-    if (["attack", "windup", "shooting"].includes(actor?.state)) {
-      const mx = facing < 0 ? x - 3 : x + width + 3, my = y + height * 0.46;
-      const flicker = Math.sin(elapsed * 31) * 2;
-      context.fillStyle = "#e95b2b"; context.beginPath(); context.moveTo(mx, my);
-      context.lineTo(mx + (facing < 0 ? -14 : 14), my - 5 - flicker);
-      context.lineTo(mx + (facing < 0 ? -9 : 9), my + 5); context.closePath(); context.fill();
-      context.fillStyle = "#ffb34d"; context.beginPath(); context.moveTo(mx, my - 2);
-      context.lineTo(mx + (facing < 0 ? -9 : 9), my - 1); context.lineTo(mx + (facing < 0 ? -5 : 5), my + 2); context.closePath(); context.fill();
-      context.fillStyle = "#fff0bc"; context.fillRect(mx + (facing < 0 ? -5 : 2), my - 1, 4, 2);
-    }
-    if (actor?.health <= 0 || actor?.defeated) {
-      const pulse = 5 + Math.abs(Math.sin(elapsed * 16)) * 7;
-      context.strokeStyle = "rgba(255, 159, 72, 0.85)"; context.lineWidth = 2;
-      context.beginPath(); context.arc(x + width / 2, y + height / 2, pulse, 0, Math.PI * 2); context.stroke();
-      context.fillStyle = "#f28b3c";
-      for (let i = 0; i < 4; i += 1) {
-        const angle = elapsed * 3 + i * Math.PI / 2;
-        context.fillRect(x + width / 2 + Math.cos(angle) * pulse - 2, y + height / 2 + Math.sin(angle) * pulse - 2, 4, 4);
-      }
-    }
     context.restore(); return true;
+  }
+
+  drawTacticalEffect(context, type, x, y, elapsed = 0, options = {}) {
+    const frames = TACTICAL_COMBAT_EFFECT_SPRITES[type];
+    if (!frames || !Number.isFinite(x) || !Number.isFinite(y)) return false;
+
+    const image = this.getReferenceImage("tactical-enemies.png");
+    if (!image?.complete || !image.naturalWidth) return false;
+
+    const frameRate = type === "muzzle" ? 34 : 22;
+    const frame = frames[Math.floor(Math.max(0, elapsed) * frameRate) % frames.length];
+    const defaultWidth = type === "muzzle" ? 34 : 44;
+    const drawWidth = Math.max(1, Math.round(Number(options.size) || defaultWidth));
+    const drawHeight = Math.max(1, Math.round(drawWidth * frame.height / frame.width));
+    const alpha = Math.max(0, Math.min(1, Number(options.alpha ?? 1)));
+    const facing = Math.sign(options.facing ?? 1) || 1;
+
+    context.save();
+    context.globalAlpha *= alpha;
+    context.imageSmoothingEnabled = false;
+    context.translate(Math.round(x), Math.round(y));
+    context.scale(facing < 0 ? -1 : 1, 1);
+    context.drawImage(
+      image,
+      frame.x, frame.y, frame.width, frame.height,
+      -Math.round(drawWidth / 2), -Math.round(drawHeight / 2),
+      drawWidth, drawHeight
+    );
+    context.restore();
+    return true;
   }
 
   drawAnimatedBrontosaurus(context, x, y, width, height, actor = {}, elapsed = 0, options = {}) {

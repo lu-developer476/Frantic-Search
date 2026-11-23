@@ -277,6 +277,7 @@ export class Hunting {
     this.dinosaurs = [];
     this.projectiles = [];
     this.particles = [];
+    this.combatEffects = [];
     this.blockyPickups = [];
     this.blockySpawnTimer = 5 + Math.random() * 3;
     this.playerAttackTimer = 0;
@@ -473,6 +474,7 @@ export class Hunting {
       x: muzzleX, y: muzzleY, targetX, targetY,
       shooterId: hunter.id, speed: 710, damage: 1, radius: 5, lifetime: 2.3
     }));
+    this.addCombatEffect("muzzle", muzzleX, muzzleY, hunter.direction);
     hunter.ammo -= 1;
     hunter.fireCooldown = hunter.shotInterval ?? 0.5;
     this.particles.push({ x: muzzleX, y: muzzleY, vx: hunter.direction * 36, vy: -12, life: 0.11, max: 0.11, color: "#ffe5a1", size: 5 });
@@ -532,6 +534,7 @@ export class Hunting {
 
   update(delta) {
     this.elapsed += delta;
+    this.updateCombatEffects(delta);
     const player = this.player;
     const predatorMode = this.mode === "predator";
     const move = Number(this.keys.has("ArrowRight") || this.keys.has("KeyD")) -
@@ -677,6 +680,8 @@ export class Hunting {
       if (!target) continue;
       projectile.active = false;
       const result = target.takeDamage(projectile.damage);
+      if (!result.hit) continue;
+      this.addCombatEffect("impact", projectile.x, projectile.y);
       if (result.defeated) {
         this.kills += 1;
         this.burst(target.x + target.w / 2, target.y + target.h * 0.55, "#e8a56e", 13);
@@ -701,6 +706,7 @@ export class Hunting {
 
   damageHunter(hunter, damage = 1) {
     if (!hunter || hunter.invulnerable > 0 || hunter.health <= 0 || hunter.defeated) return;
+    this.addCombatEffect("impact", hunter.x + hunter.w / 2, hunter.y + hunter.h * 0.5, hunter.direction);
     hunter.health = Math.max(0, hunter.health - damage);
     hunter.invulnerable = this.mode === "predator" ? 0.18 : 1.05;
     this.burst(hunter.x + hunter.w / 2, hunter.y + 22, "#f08b64", 7);
@@ -721,9 +727,35 @@ export class Hunting {
     const player = this.player;
     if (this.mode !== "predator" || player.invulnerable > 0 || player.health <= 0) return;
     player.health = Math.max(0, player.health - damage);
+    this.addCombatEffect("impact", player.x + player.w / 2, player.y + player.h * 0.55);
     player.invulnerable = 0.68;
     this.burst(player.x + player.w / 2, player.y + player.h * 0.55, "#e58a68", 9);
     if (player.health <= 0) this.finish(false);
+  }
+
+  addCombatEffect(type, x, y, facing = 1) {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    this.combatEffects ??= [];
+    const duration = type === "muzzle" ? 0.13 : 0.24;
+    this.combatEffects.push({ type, x, y, facing, life: duration, max: duration, elapsed: 0 });
+  }
+
+  updateCombatEffects(delta) {
+    this.combatEffects ??= [];
+    for (const effect of this.combatEffects) {
+      effect.elapsed += delta;
+      effect.life = Math.max(0, effect.life - delta);
+    }
+    this.combatEffects = this.combatEffects.filter(effect => effect.life > 0);
+  }
+
+  drawCombatEffects() {
+    for (const effect of this.combatEffects ?? []) {
+      this.sprites?.drawTacticalEffect?.(
+        this.ctx, effect.type, effect.x - this.cameraX, effect.y, effect.elapsed,
+        { alpha: effect.life / effect.max, facing: effect.facing }
+      );
+    }
   }
 
   burst(x, y, color, count) {
@@ -848,12 +880,15 @@ export class Hunting {
   }
 
   drawHunter(hunter, index) {
+    if (!hunter || hunter.defeated || (this.mode === "predator" && hunter.health <= 0)) return;
     const ctx = this.ctx;
     const palette = TEAM_COLORS[index] ?? TEAM_COLORS[0];
     const x = hunter.x - this.cameraX;
     const y = hunter.y;
     const stride = Math.sin(this.elapsed * 10 + index * 1.7 + hunter.x * 0.035);
-    const alpha = hunter.health > 0 ? (hunter.invulnerable > 0 && Math.floor(this.elapsed * 18) % 2 ? 0.48 : 1) : 0.3;
+    const alpha = hunter.health > 0
+      ? (hunter.invulnerable > 0 && Math.floor(this.elapsed * 18) % 2 ? 0.48 : 1)
+      : 0.3;
     const humanCharacter = (hunter.squadIndex ?? index) % 2 === 0 ? "human-v1" : "human-v2";
     const spriteDrawn = this.sprites.drawAnimated(ctx, humanCharacter, x - 12, y - 13, hunter.w + 24, hunter.h + 18, hunter, this.elapsed, { alpha, facing: hunter.direction });
     if (!spriteDrawn) {
@@ -908,6 +943,7 @@ export class Hunting {
   }
 
   drawDinosaur(dinosaur) {
+    if (!dinosaur || dinosaur.defeated || dinosaur.health <= 0) return;
     const ctx = this.ctx;
     const x = dinosaur.x - this.cameraX;
     if (x < -180 || x > WIDTH + 180) return;
@@ -978,6 +1014,7 @@ export class Hunting {
       ctx.fillStyle = "#ffe8a1";
       ctx.fillRect(projectile.x - this.cameraX - 3, projectile.y - 2, 8, 4);
     }
+    this.drawCombatEffects();
     for (const particle of this.particles) {
       ctx.globalAlpha = Math.max(0, particle.life / particle.max);
       ctx.fillStyle = particle.color;

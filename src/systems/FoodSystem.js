@@ -2,6 +2,27 @@ import { beginEnemyFade } from "./EnemyFadeSystem.js";
 
 export const VENATOSAURUS_REMAINS_OPACITY = 0.38;
 
+export function dropLigocristusFood(prey, foodSources) {
+  if (!prey?.defeated || !Array.isArray(foodSources) || prey.foodDropCreated) return null;
+
+  prey.foodDropCreated = true;
+  prey.consumed = true;
+  prey.state = "consumed";
+  prey.motionSpeed = 0;
+
+  const drop = {
+    id: "food-" + prey.id,
+    kind: "ligocristus-food",
+    x: prey.x + 5,
+    y: prey.y + prey.h - 22,
+    w: 54,
+    h: 22,
+    consumed: false
+  };
+  foodSources.push(drop);
+  return drop;
+}
+
 export function dropVenatosaurusFood(enemy, foodSources) {
   if (!enemy?.defeated || !Array.isArray(foodSources)) return null;
 

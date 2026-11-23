@@ -13,12 +13,47 @@ import {
   VENATOSAURUS_ANIMATION_ASSETS,
   BRONTOSAURUS_ANIMATION_ASSETS,
   BRISA_ANIMATIONS,
+  TACTICAL_COMBAT_EFFECT_SPRITES,
+  selectJuvenileAnimation,
   selectBrontosaurusAnimation,
   selectVenatosaurusAnimation,
   SpriteRenderer
 } from "../src/rendering/SpriteRenderer.js";
 import { ENEMY_FADE_DURATION, beginEnemyFade, advanceEnemyFade, getEnemyOpacity, isEnemyFadeComplete } from "../src/systems/EnemyFadeSystem.js";
 import { selectActorPose } from "../src/rendering/AnimationProfiles.js";
+
+test("Brisa selects her dedicated running GIF whenever companion motion is active", () => {
+  assert.equal(BRISA_ANIMATIONS.run, "juvenile-velociraptor-abyssomirabilis-run.gif");
+  assert.equal(selectJuvenileAnimation({ vx: 0, motionSpeed: 230, state: "following" }), "run");
+  assert.equal(selectJuvenileAnimation({ vx: 0, motionSpeed: 0, state: "confined" }), "idle");
+  assert.equal(selectJuvenileAnimation({ vx: 240, motionSpeed: 0, state: "running" }), "run");
+  assert.equal(selectJuvenileAnimation({ vx: 240, onGround: false, state: "jumping" }), "jump");
+});
+
+test("tactical atlas provides muzzle-flash and impact sprites", () => {
+  assert.ok(TACTICAL_COMBAT_EFFECT_SPRITES.muzzle.length > 0);
+  assert.ok(TACTICAL_COMBAT_EFFECT_SPRITES.impact.length > 0);
+  const renderer = Object.create(SpriteRenderer.prototype);
+  const atlas = { complete: true, naturalWidth: 452 };
+  const draws = [];
+  renderer.getReferenceImage = () => atlas;
+  const context = {
+    globalAlpha: 1,
+    save() {},
+    restore() {},
+    translate() {},
+    scale() {},
+    drawImage(...args) { draws.push(args); }
+  };
+
+  assert.equal(renderer.drawTacticalEffect(context, "muzzle", 100, 60, 0, { size: 32 }), true);
+  assert.equal(renderer.drawTacticalEffect(context, "impact", 120, 80, 0, { size: 40 }), true);
+  assert.equal(draws.length, 2);
+  assert.equal(draws[0][0], atlas);
+  assert.equal(draws[0][1], TACTICAL_COMBAT_EFFECT_SPRITES.muzzle[0].x);
+  assert.equal(draws[1][1], TACTICAL_COMBAT_EFFECT_SPRITES.impact[0].x);
+  assert.equal(renderer.drawTacticalEffect(context, "unknown", 0, 0), false);
+});
 
 test("feeding, jumping and combat actions resolve to their own poses", () => {
   assert.equal(selectActorPose("blue", { animationState: "eat" }), "violeta-eat");

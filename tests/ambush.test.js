@@ -103,3 +103,12 @@ test("Empty Stomach references the shipped velociraptor walk animation", async (
   assert.match(source, /velociraptor-walk\.gif/);
   await access(new URL("../public/minigame/persecution/gif/enemies/velociraptor/velociraptor-walk.gif", import.meta.url));
 });
+
+test("defeated Emboscada enemies are not rendered with reduced opacity", async () => {
+  const source = await readFile(new URL("../src/minigames/Ambush.js", import.meta.url), "utf8");
+  assert.match(source, /if \(!player && \(actor\.defeated \|\| actor\.health <= 0\)\) return/);
+  assert.match(source, /if \(!enemy \|\| enemy\.defeated \|\| enemy\.health <= 0\) return/);
+  assert.doesNotMatch(source, /actor\.defeated \? 0\.35|enemy\.defeated \? 0\.36/);
+  assert.match(source, /drawTacticalEffect/);
+});
+

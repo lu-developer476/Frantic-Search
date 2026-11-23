@@ -27,7 +27,7 @@ import { IndominusRexBoss } from "./entities/IndominusRexBoss.js";
 import { PhysicsSystem } from "./systems/PhysicsSystem.js";
 import { CollisionSystem } from "./systems/CollisionSystem.js";
 import { beginEnemyFade, advanceEnemyFade, getEnemyOpacity, isEnemyFadeComplete } from "./systems/EnemyFadeSystem.js";
-import { dropVenatosaurusFood } from "./systems/FoodSystem.js";
+import { dropLigocristusFood, dropVenatosaurusFood } from "./systems/FoodSystem.js";
 import { BOSS_ARENA_HALF_WIDTH, PlatformWorld } from "./world/PlatformWorld.js";
 import { COLLECTIBLE_TOTALS } from "./world/CollectibleGenerator.js";
 import { CampaignManager, BOSS_ENCOUNTER_FLAGS } from "./campaign/CampaignManager.js";
@@ -249,6 +249,7 @@ let player = new Player(selected, GAME.playerX, GAME.groundY);
 let world = new PlatformWorld(GAME.groundY);
 let hunters = [];
 let hunterProjectiles = [];
+let tacticalCombatEffects = [];
 let venatosauruses = [];
 let foodSources = [];
 let wildlife = [];
@@ -323,6 +324,29 @@ function updateMinigamePreview() {
 function advanceEnemyFades(delta) {
   for (const enemy of [...hunters, ...venatosauruses, ...bosses, ...foodSources.filter((food) => food.defeated)]) {
     advanceEnemyFade(enemy, delta);
+  }
+}
+
+function addTacticalCombatEffect(type, x, y, facing = 1) {
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+  const duration = type === "muzzle" ? 0.13 : 0.24;
+  tacticalCombatEffects.push({ type, x, y, facing, life: duration, max: duration, elapsed: 0 });
+}
+
+function advanceTacticalCombatEffects(delta) {
+  for (const effect of tacticalCombatEffects) {
+    effect.elapsed += delta;
+    effect.life = Math.max(0, effect.life - delta);
+  }
+  tacticalCombatEffects = tacticalCombatEffects.filter((effect) => effect.life > 0);
+}
+
+function drawTacticalCombatEffects(context = ctx) {
+  for (const effect of tacticalCombatEffects) {
+    spriteRenderer.drawTacticalEffect(
+      context, effect.type, effect.x - cameraX, effect.y, effect.elapsed,
+      { alpha: effect.life / effect.max, facing: effect.facing }
+    );
   }
 }
 
@@ -1372,6 +1396,7 @@ function damageProloguePredator(enemy, amount = 1) {
   if (!enemy || enemy.defeated) return false;
   const result = enemy.takeDamage(amount);
   if (!result.hit) return false;
+  addTacticalCombatEffect("impact", enemy.x + enemy.w / 2, enemy.y + enemy.h * 0.55, enemy.direction);
   audio.hit();
   burst(
     enemy.x + enemy.w / 2,
@@ -2054,6 +2079,7 @@ function pruneEncounterBookkeeping() {
 
 function registerHunterResult(hunter, result) {
   if (!result || !result.hit) return;
+  addTacticalCombatEffect("impact", hunter.x + hunter.w / 2, hunter.y + hunter.h / 2, hunter.direction);
   if (result.defeated) {
     if (hunter instanceof WildDinosaur) {
       dropVenatosaurusFood(hunter, foodSources);
@@ -2103,15 +2129,17 @@ function damageLigocristus(prey, amount = 1) {
   if (!prey || prey.defeated || prey.consumed) return;
   const result = prey.takeDamage(amount);
   if (!result.hit) return;
+  addTacticalCombatEffect("impact", prey.x + prey.w / 2, prey.y + prey.h * 0.55, prey.direction);
   audio.hit();
   burst(prey.x + prey.w / 2, prey.y + prey.h * 0.55, result.defeated ? "#9bd48a" : "#e8a77d", result.defeated ? 18 : 8);
-  if (result.defeated) beginEnemyFade(prey);
+  if (result.defeated) dropLigocristusFood(prey, foodSources);
 }
 
 function damageVenatosaurus(enemy, amount = 1) {
   if (!enemy || enemy.defeated) return;
   const result = enemy.takeDamage(amount);
   if (!result.hit) return;
+  addTacticalCombatEffect("impact", enemy.x + enemy.w / 2, enemy.y + enemy.h * 0.55, enemy.direction);
   audio.hit();
   burst(enemy.x + enemy.w / 2, enemy.y + enemy.h * 0.55, result.defeated ? "#9bd48a" : "#e8a77d", result.defeated ? 22 : 10);
   if (result.defeated) dropVenatosaurusFood(enemy, foodSources);
@@ -2119,6 +2147,7 @@ function damageVenatosaurus(enemy, amount = 1) {
 
 function damagePlayer() {
   if (!player.takeHit()) return;
+  addTacticalCombatEffect("impact", player.x + player.w / 2, player.y + player.h / 2, player.facing);
   updatePlayerHealthHud();
   audio.hit();
   burst(player.x + player.w / 2, player.y + player.h / 2, "#ed8e55", 15);
@@ -2127,6 +2156,7 @@ function damagePlayer() {
 
 function damageCompanion(actor) {
   if (!actor?.takeHit?.()) return false;
+  addTacticalCombatEffect("impact", actor.x + actor.w / 2, actor.y + actor.h / 2, actor.facing);
   audio.hit();
   burst(actor.x + actor.w / 2, actor.y + actor.h / 2, "#ed8e55", 12);
   return true;
@@ -2260,6 +2290,7 @@ function damageBoss(boss, amount, source) {
   const result = boss.takeDamage(amount);
   if (!result.hit) return;
 
+  addTacticalCombatEffect("impact", boss.x + boss.w / 2, boss.y + boss.h * 0.52, boss.direction);
   audio.bossHit();
   burst(
     boss.x + boss.w / 2,
@@ -2401,6 +2432,7 @@ function update(delta) {
     return;
   }
   elapsed += delta;
+  advanceTacticalCombatEffects(delta);
   bossCueTimer = Math.max(0, bossCueTimer - delta);
   pickupCueTimer = Math.max(0, pickupCueTimer - delta);
   world.update(delta);
@@ -2524,6 +2556,7 @@ function update(delta) {
     if (previousState !== hunter.state && (hunter.state === "investigate" || hunter.state === "windup")) audio.collect();
     if (hunterEvent?.type === "shoot") {
       hunterProjectiles.push(new HunterProjectile(hunterEvent.projectile));
+      addTacticalCombatEffect("muzzle", hunterEvent.projectile.x, hunterEvent.projectile.y, hunter.direction);
     }
 
     if (
@@ -2870,6 +2903,7 @@ function render() {
   if (beta) drawBrisa(beta);
   if (stegoceratops) drawAnimatedSafely(ctx, "stegoceratops", stegoceratops.x, stegoceratops.y, stegoceratops.w, stegoceratops.h, stegoceratops, elapsed, { facing: 1 });
   drawCampaignPrologueActors();
+  drawTacticalCombatEffects();
   effectsRenderer.drawParticles(ctx, { particles });
 
   if (!campaignPrologue?.active) {
