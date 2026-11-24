@@ -4910,3 +4910,183 @@ html.site-mode-beige .story-card .story-text,
 html.site-mode-gray .story-card .story-text {
   color: #000;
 }
+
+
+
+/* Combats — configurable ten-dinosaur roster and 1v1 forest arena. */
+.combats-panel.active {
+  display:grid;
+  grid-template-rows:auto minmax(0,1fr);
+  gap:12px;
+  min-width:0;
+  min-height:0;
+}
+.combats-stage {
+  position:relative;
+  width:100%;
+  height:100%;
+  min-width:0;
+  min-height:0;
+  overflow:hidden;
+}
+.combats-stage canvas {
+  position:absolute;
+  inset:0;
+  display:block;
+  width:100%;
+  height:100%;
+  max-width:none;
+  max-height:none;
+  object-fit:fill;
+  image-rendering:pixelated;
+}
+.combats-panel:not(.playing) .combats-top { display:none; }
+.combats-panel.playing .combats-top { display:flex; }
+.combats-intro {
+  overflow:auto;
+  justify-content:flex-start;
+  gap:8px;
+}
+.combats-intro h2 { margin:4px 0 0; }
+.combats-intro p { margin:0; }
+.combats-side-picker {
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:8px;
+  width:min(100%,560px);
+  margin-top:4px;
+}
+.combats-side-picker button {
+  min-width:140px;
+  padding:9px 12px;
+  border:1px solid #738775;
+  background:#1c2a23;
+  color:#e9f0dc;
+  font:9px var(--font-mono);
+  letter-spacing:.08em;
+  cursor:pointer;
+}
+.combats-side-picker button.is-selected {
+  border-color:#d8f36a;
+  background:#d8f36a;
+  color:#1b211a;
+}
+.combats-roster {
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:7px;
+  width:min(100%,720px);
+  max-height:166px;
+  overflow:auto;
+  padding:3px;
+}
+.combats-roster-slot {
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  grid-template-rows:auto auto;
+  align-items:center;
+  gap:2px 7px;
+  min-width:0;
+  min-height:57px;
+  padding:7px;
+  border:1px solid #53675a;
+  background:rgba(20,34,27,.92);
+  color:#e9f0dc;
+  text-align:left;
+  cursor:pointer;
+}
+.combats-roster-number {
+  grid-row:1 / span 2;
+  color:#d8f36a;
+  font: bold 13px var(--font-mono);
+}
+.combats-roster-slot strong {
+  overflow:hidden;
+  color:#f3f1df;
+  font:9px var(--font-mono);
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.combats-roster-slot small {
+  overflow:hidden;
+  color:#aab9a8;
+  font:7px var(--font-mono);
+  letter-spacing:.06em;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.combats-roster-slot:disabled {
+  opacity:.48;
+  cursor:not-allowed;
+}
+.combats-roster-slot.is-player {
+  border-color:#d8f36a;
+  box-shadow:inset 0 0 0 1px #d8f36a;
+}
+.combats-roster-slot.is-opponent {
+  border-color:#e1a17f;
+  box-shadow:inset 0 0 0 1px #e1a17f;
+}
+.combats-selection-status {
+  min-height:14px;
+  color:#d8e3d1!important;
+  font:8px var(--font-mono)!important;
+  letter-spacing:.07em;
+  text-align:center;
+}
+.combats-actions { margin-top:3px; }
+.combats-actions [data-combats-start]:disabled {
+  opacity:.38;
+  cursor:not-allowed;
+  transform:none;
+}
+.combats-panel:not(.playing) .combats-stage canvas { visibility:hidden; }
+.combats-panel:not(.playing) .combats-intro { background:#000!important; }
+.canvas-wrap > #combats-panel {
+  box-sizing:border-box;
+  width:100%;
+  height:100%;
+  min-width:0;
+  min-height:0;
+  max-width:none;
+  max-height:none;
+  aspect-ratio:auto;
+}
+body:has(#combats-panel.active:not(.playing)) {
+  background:#000!important;
+  color:#fff5cf;
+}
+body:has(#combats-panel.active:not(.playing)) #app {
+  grid-template-rows:0 minmax(0,1fr)!important;
+}
+body:has(#combats-panel.active:not(.playing)) .topbar {
+  height:0!important;
+  min-height:0!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+body:has(#combats-panel.active:not(.playing)) .navbar-identity,
+body:has(#combats-panel.active:not(.playing)) .panel-head {
+  display:none!important;
+}
+body:has(#combats-panel.active:not(.playing)) .nav-actions {
+  position:fixed!important;
+  top:12px;
+  right:16px;
+  z-index:60!important;
+}
+body:has(#combats-panel.active:not(.playing)) .game-panel,
+body:has(#combats-panel.active:not(.playing)) .layout,
+body:has(#combats-panel.active:not(.playing)) .canvas-wrap {
+  background:#000!important;
+}
+@media(max-width:700px) {
+  .combats-intro { padding:12px; }
+  .combats-intro h2 { font-size:40px; }
+  .combats-roster { grid-template-columns:repeat(2,minmax(0,1fr)); max-height:180px; }
+  .combats-roster-slot { min-height:48px; }
+  .combats-side-picker button { flex:1 1 120px; }
+}
