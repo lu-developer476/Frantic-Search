@@ -4040,6 +4040,7 @@ function applyLanguage() {
   hunting.setLocale(locale);
   ambush.setLocale(locale);
   race.setLocale(locale);
+  combats.setLocale(locale);
   document.documentElement.lang = locale;
   document.title = ui("documentTitle");
   document.querySelector('meta[name="description"]')?.setAttribute("content", ui("metaDescription"));
