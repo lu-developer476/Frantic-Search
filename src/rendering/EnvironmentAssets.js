@@ -7,7 +7,6 @@
 
 const PARALLAX = "environment/maps/parallax/";
 const FOREST = "environment/maps/forest/";
-const FACILITY = "environment/maps/facility/";
 const TILESETS = "environment/tilesets/";
 
 // Color de fondo plano de las capas de parallax (se vuelve transparente).
@@ -197,28 +196,9 @@ export const SLICES = Object.freeze({
   // Muro de fondo del interior y bloques de edificio (tileset.png, 16 px -> 48 px).
   greyWall: { src: TS_GREY, crop: [32, 0, 16, 16], prescale: 3, tint: ["#16212b", 0.45] },
   greyBlock: { src: TS_GREY, crop: [32, 32, 16, 16], prescale: 3 },
-  // Objetos de contexto (facility/*).
-  hazardDeck: { src: FACILITY + "doodads_spritesheet.png", crop: [0, 58, 16, 3], prescale: 6 },
-  hazardSign: { src: FACILITY + "doodads_spritesheet.png", crop: [64, 16, 16, 16], prescale: 3 },
-  radiationSign: { src: FACILITY + "doodads_spritesheet.png", crop: [48, 16, 16, 16], prescale: 3 },
-  extinguisher: { src: FACILITY + "doodads_spritesheet.png", crop: [32, 48, 16, 16], prescale: 3 },
-  crateA: { src: FACILITY + "crates_spritesheet.png", crop: [32, 0, 16, 16], prescale: 4 },
-  crateB: { src: FACILITY + "crates_spritesheet.png", crop: [32, 16, 16, 16], prescale: 4 },
-  crateC: { src: FACILITY + "crates_spritesheet.png", crop: [32, 32, 16, 16], prescale: 4 },
-  computerOff: { src: FACILITY + "computer_spritesheet.png", crop: [0, 0, 16, 16], prescale: 4 },
-  computerOn: { src: FACILITY + "computer_spritesheet.png", crop: [16, 0, 16, 16], prescale: 4 },
-  laserBeam: { src: FACILITY + "lasers_spritesheet.png", crop: [0, 0, 16, 16], prescale: 3 },
-  buttonRed: { src: FACILITY + "button_large_spritesheet.png", crop: [0, 0, 16, 16], prescale: 3 },
-  portal0: { src: FACILITY + "portal_spritesheet.png", crop: [0, 0, 16, 16], prescale: 6 },
-  portal1: { src: FACILITY + "portal_spritesheet.png", crop: [16, 0, 16, 16], prescale: 6 },
-  portal2: { src: FACILITY + "portal_spritesheet.png", crop: [32, 0, 16, 16], prescale: 6 },
-  portal3: { src: FACILITY + "portal_spritesheet.png", crop: [48, 0, 16, 16], prescale: 6 },
-  portal4: { src: FACILITY + "portal_spritesheet.png", crop: [64, 0, 16, 16], prescale: 6 },
-  portal5: { src: FACILITY + "portal_spritesheet.png", crop: [80, 0, 16, 16], prescale: 6 }
+
 });
 
-export const PORTAL_FRAMES = Object.freeze(["portal0", "portal1", "portal2", "portal3", "portal4", "portal5"]);
-export const CRATE_VARIANTS = Object.freeze(["crateA", "crateB", "crateC"]);
 
 // Tema de terreno por entorno: textura de relleno (body), borde superior (cap)
 // y, en exteriores, las matas que decoran la línea de suelo.
@@ -243,6 +223,7 @@ export const TERRAIN_THEMES = Object.freeze({
   redwood: outdoorTheme("redwood"),
   prairie: outdoorTheme("prairie"),
   extraction: outdoorTheme("extraction"),
+  forest: outdoorTheme("redwood"),
   "black-site": Object.freeze({
     kind: "tile", body: SLICES.bluePlate, rock: SLICES.bluePlate, cap: SLICES.oliveCap, cover: Object.freeze([])
   }),
@@ -262,12 +243,6 @@ export function themeSpecs(theme) {
   return [theme.body, theme.rock, theme.cap, theme.capShade, ...theme.cover].filter(Boolean);
 }
 
-export const OBJECT_SPECS = Object.freeze([
-  SLICES.hazardDeck, SLICES.hazardSign, SLICES.extinguisher, SLICES.greyBlock,
-  ...CRATE_VARIANTS.map((name) => SLICES[name]),
-  SLICES.computerOff, SLICES.computerOn, SLICES.laserBeam, SLICES.buttonRed,
-  ...PORTAL_FRAMES.map((name) => SLICES[name])
-]);
 
 // ---------------------------------------------------------------------------
 // Helpers de dibujo
