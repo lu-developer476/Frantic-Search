@@ -90,3 +90,17 @@ test("color key makes the background transparent and tint is applied", () => {
   assert.equal(pixels[7], 255);
   assert.ok(calls.includes("fillRect"));
 });
+
+
+test("the forest minigame parallax preserves the original map colors", () => {
+  const layers = PARALLAX_LAYERS.forest;
+  assert.deepEqual(layers.map(layer => layer.src), [
+    "environment/maps/forest/Back.png",
+    "environment/maps/forest/middle.png",
+    "environment/maps/forest/front.png"
+  ]);
+  for (const layer of layers) {
+    assert.equal(layer.tint, undefined, layer.src);
+    assert.equal(layer.key, undefined, layer.src);
+  }
+});
