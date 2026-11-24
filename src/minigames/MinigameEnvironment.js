@@ -67,7 +67,7 @@ const HUNTING_SCENE = Object.freeze({
 
 export const MINIGAME_ENVIRONMENT_SCENES = Object.freeze({
   race: RACE_SCENE,
-  persecution: PRAIRIE_SCENE,
+  persecution: FOREST_SCENE,
   hunting: HUNTING_SCENE,
   ambush: FOREST_SCENE,
   combats: FOREST_SCENE
