@@ -795,7 +795,26 @@ export class Ambush {
       if (this.player) this.drawDinosaur(this.player);
     }
     for (const projectile of this.projectiles) {
-      ctx.fillStyle = this.role === "hunter" ? "#ffe6a4" : "#f0b17c";
+      if (this.role !== "hunter") {
+        ctx.save();
+        ctx.translate(projectile.x, projectile.y);
+        ctx.rotate(Math.atan2(projectile.vy, projectile.vx));
+        this.spriteRenderer?.drawAnimatedReference(
+          ctx,
+          "bullet.gif",
+          -12,
+          -6,
+          24,
+          12,
+          projectile,
+          this.elapsed
+        );
+        ctx.restore();
+        continue;
+      }
+
+      // Player-controlled hunter shots keep their existing visual.
+      ctx.fillStyle = "#ffe6a4";
       ctx.beginPath();
       ctx.arc(projectile.x, projectile.y, projectile.radius, 0, Math.PI * 2);
       ctx.fill();

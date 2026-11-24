@@ -204,7 +204,7 @@ export const CAMPAIGN_ANIMATED_REFERENCE_FILES = Object.freeze([
   ...Object.values(VENATOSAURUS_ANIMATION_ASSETS).flatMap((assets) => [
     assets.attack, assets.idle, assets.jump, assets.run, assets.walk
   ]),
-  "human-v1.gif", "human-v2.gif", "blocky.gif"
+  "human-v1.gif", "human-v2.gif", "blocky.gif", "bullet.gif"
 ]);
 
 export const REFERENCE_PRELOAD_FILES = [

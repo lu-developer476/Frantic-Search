@@ -834,24 +834,20 @@ function drawHunter(hunter) {
 function drawHunterProjectile(projectile, context = ctx) {
   const fade = Math.min(1, projectile.life / 0.18);
   context.save();
-  context.globalAlpha = fade;
-  context.shadowColor = "#ff1f2d";
-  context.shadowBlur = 15;
-  context.fillStyle = "#b81725";
-  context.beginPath();
-  context.arc(projectile.x, projectile.y, projectile.radius + 2, 0, Math.PI * 2);
-  context.fill();
-  context.shadowBlur = 0;
-  context.fillStyle = "#ff3644";
-  context.beginPath();
-  context.arc(projectile.x, projectile.y, projectile.radius, 0, Math.PI * 2);
-  context.fill();
-  context.fillStyle = "#ffd5d5";
-  context.beginPath();
-  context.arc(projectile.x - projectile.radius * 0.32, projectile.y - projectile.radius * 0.34, projectile.radius * 0.28, 0, Math.PI * 2);
-  context.fill();
+  context.translate(projectile.x, projectile.y);
+  context.rotate(Math.atan2(projectile.vy, projectile.vx));
+  spriteRenderer.drawAnimatedReference(
+    context,
+    "bullet.gif",
+    -12,
+    -6,
+    24,
+    12,
+    projectile,
+    elapsed,
+    { alpha: fade }
+  );
   context.restore();
-
 }
 function syncEncounters() {
   for (const spawn of world.hunterSpawns) {

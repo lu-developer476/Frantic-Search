@@ -87,6 +87,14 @@ test("every PNG in public/references is registered as a renderable character", (
   assert.deepEqual(registered, pngFiles);
 });
 
+test("human-enemy projectiles use the committed GIF assets", () => {
+  const referenceFiles = new Set(readdirSync(resolve("public/references")));
+  assert.ok(referenceFiles.has("bullet.gif"));
+  assert.ok(referenceFiles.has("orange-grenade.gif"));
+  assert.ok(referenceFiles.has("yellow-grenade.gif"));
+  assert.ok(CAMPAIGN_ANIMATED_REFERENCE_FILES.includes("bullet.gif"));
+});
+
 test("active characters resolve their intended reference images", () => {
   assert.equal(REFERENCE_PNG_CHARACTERS.blue, undefined);
   assert.equal(REFERENCE_PNG_CHARACTERS.gala, undefined);

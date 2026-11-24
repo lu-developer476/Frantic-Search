@@ -1011,8 +1011,26 @@ export class Hunting {
     }
     for (let i = 0; i < this.hunters.length; i += 1) this.drawHunter(this.hunters[i], i);
     for (const projectile of this.projectiles) {
-      ctx.fillStyle = "#ffe8a1";
-      ctx.fillRect(projectile.x - this.cameraX - 3, projectile.y - 2, 8, 4);
+      if (this.mode === "predator") {
+        ctx.save();
+        ctx.translate(projectile.x - this.cameraX, projectile.y);
+        ctx.rotate(Math.atan2(projectile.vy, projectile.vx));
+        this.sprites.drawAnimatedReference(
+          ctx,
+          "bullet.gif",
+          -12,
+          -6,
+          24,
+          12,
+          projectile,
+          this.elapsed
+        );
+        ctx.restore();
+      } else {
+        // Human player/allied hunter shots keep their existing visual.
+        ctx.fillStyle = "#ffe8a1";
+        ctx.fillRect(projectile.x - this.cameraX - 3, projectile.y - 2, 8, 4);
+      }
     }
     this.drawCombatEffects();
     for (const particle of this.particles) {
