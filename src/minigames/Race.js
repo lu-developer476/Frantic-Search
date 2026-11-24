@@ -4,6 +4,7 @@ import {
 } from "./Persecution.js";
 import { observeCanvasViewport } from "../rendering/CanvasUtils.js";
 import { MinigameEnvironmentRenderer, MINIGAME_ENVIRONMENT_SCENES } from "./MinigameEnvironment.js";
+import { GALA_DISPLAY_SCALE } from "../config/DinosaurSizing.js";
 
 import { drawMinigameHudBar, drawMinigameHudText } from "./MinigameHud.js";
 let WIDTH = 960;
@@ -57,7 +58,7 @@ export function areAllRaceParticipantsEaten(racers = []) {
 export const DEFAULT_RACE_DINOSAUR_ID = "gala";
 
 export const BREAKING_RACE_ROSTER = Object.freeze([
-  { id: "gala", name: "Gala", species: "Gala", idle: "references/gala-idle.gif", walk: "references/gala-walk.gif", run: "references/gala-run.gif", jump: "references/gala-fly.gif", spriteScale: 0.7, speed: 92 },
+  { id: "gala", name: "Gala", species: "Gala", idle: "references/gala-idle.gif", walk: "references/gala-walk.gif", run: "references/gala-run.gif", jump: "references/gala-fly.gif", spriteScale: GALA_DISPLAY_SCALE, speed: 92 },
   { id: "brisa", name: "Brisa", species: "Velociraptor abyssomirabilis", idle: "references/juvenile-velociraptor-abyssomirabilis-idle.gif", walk: null, run: "references/juvenile-velociraptor-abyssomirabilis-run.gif", jump: "references/juvenile-velociraptor-abyssomirabilis-jump.gif", speed: 88 },
   { id: "venatosaurus-impavidus", name: "Venatosaurus impavidus", species: "Venatosaurus impavidus", idle: "references/venatosaurus-impavidus-idle.gif", walk: "references/venatosaurus-impavidus-walk.gif", run: "references/venatosaurus-impavidus-run.gif", jump: "references/venatosaurus-impavidus-jump.gif", speed: 86 },
   { id: "venatosaurus-saevidicus", name: "Venatosaurus saevidicus", species: "Venatosaurus saevidicus", idle: "references/venatosaurus-saevidicus-idle.gif", walk: "references/venatosaurus-saevidicus-walk.gif", run: "references/venatosaurus-saevidicus-run.gif", jump: "references/venatosaurus-saevidicus-jump.gif", speed: 84 },

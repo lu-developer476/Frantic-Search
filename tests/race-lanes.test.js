@@ -28,6 +28,7 @@ import {
   hasRacerBeenEaten,
   areAllRaceParticipantsEaten
 } from "../src/minigames/Race.js";
+import { GALA_DISPLAY_SCALE } from "../src/config/DinosaurSizing.js";
 
 test("Breaking Race shares Empty Stomach's four depth-lane baselines and scales", () => {
   const lanes = [0, 1, 2, 3].map((lane) => getRaceLaneLayout(lane));
@@ -78,6 +79,7 @@ test("procedural spike hazards have no visible renderer but retain their gamepla
 test("Gala's animated sprites render at 70% scale while other racers keep their normal size", () => {
   const gala = BREAKING_RACE_ROSTER.find((dinosaur) => dinosaur.id === "gala");
   const brisa = BREAKING_RACE_ROSTER.find((dinosaur) => dinosaur.id === "brisa");
+  assert.equal(getRaceSpriteScale(gala), GALA_DISPLAY_SCALE);
   assert.equal(getRaceSpriteScale(gala), 0.7);
   assert.equal(getRaceSpriteScale(brisa), 1);
   assert.equal(getRaceSpriteScale(null), 1);

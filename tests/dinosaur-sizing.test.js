@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   DINOSAUR_SIZE_PROFILES,
+  GALA_DISPLAY_SCALE,
   SIZE_CLASSES,
   classifyDetailTier,
   classifySizeClass,
@@ -55,7 +56,8 @@ test("every profile resolves to a render width inside its own class band", () =>
 });
 
 test("Gala is reduced by 30 percent and remains between Brisa and Basilio", () => {
-  assert.equal(DINOSAUR_SIZE_PROFILES.gala.sizeMultiplier, 0.7);
+  assert.equal(DINOSAUR_SIZE_PROFILES.gala.sizeMultiplier, GALA_DISPLAY_SCALE);
+  assert.equal(GALA_DISPLAY_SCALE, 0.7);
   const width = (key) => resolveDinosaurSize(key).renderWidth;
   assert.ok(width("brisa") < width("gala"));
   assert.ok(width("gala") < width("basilio"));

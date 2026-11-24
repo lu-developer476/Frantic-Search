@@ -5117,3 +5117,10 @@ body:has(#combats-panel.active:not(.playing)) .canvas-wrap {
 .combats-panel.playing .combats-top {
   display: none !important;
 }
+
+
+/* Keep Gala at the same 70% display scale in every character-selection portrait. */
+.dino-dialog .character-card[data-character="blue"] .character-art img {
+  transform: scale(.7);
+  transform-origin: center;
+}
