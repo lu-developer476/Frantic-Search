@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import { access } from "node:fs/promises";
 import {
   EnvironmentAssets,
-  OBJECT_SPECS,
   SLICES,
   TERRAIN_THEMES,
   fillTiled,
@@ -29,7 +28,7 @@ test("every slice and theme points at a PNG shipped in public/", async () => {
 });
 
 test("every campaign environment has a terrain theme built from project tilesets", () => {
-  for (const name of ["coastal", "redwood", "black-site", "containment", "rosa-containment", "extraction", "prairie"]) {
+  for (const name of ["coastal", "redwood", "black-site", "containment", "rosa-containment", "extraction", "prairie", "forest"]) {
     const theme = TERRAIN_THEMES[name];
     assert.ok(theme, name);
     assert.ok(theme.body && theme.cap, name);
@@ -40,24 +39,24 @@ test("every campaign environment has a terrain theme built from project tilesets
 test("each PNG is requested once and slices are prepared once, after the image loads", () => {
   const { images, createImage } = fakeLoader();
   const assets = new EnvironmentAssets({ baseUrl: "/", createImage, createCanvas: () => null });
-  assert.equal(assets.get(SLICES.crateA), null);
-  assets.get(SLICES.crateB);
-  assert.equal(images.length, 1, "crateA and crateB share crates_spritesheet.png");
+  assert.equal(assets.get(SLICES.oliveCap), null);
+  assets.get(SLICES.bluePlate);
+  assert.equal(images.length, 1, "oliveCap and bluePlate share tileset-export_0.png");
   images[0].onload();
-  const first = assets.get(SLICES.crateA);
+  const first = assets.get(SLICES.oliveCap);
   assert.ok(first);
-  assert.equal(assets.get(SLICES.crateA), first, "the prepared slice is cached");
+  assert.equal(assets.get(SLICES.oliveCap), first, "the prepared slice is cached");
   assert.equal(images.length, 1);
-  assets.preload(OBJECT_SPECS);
-  assert.ok(images.length <= new Set(OBJECT_SPECS.map((spec) => spec.src)).size);
+  assets.preload(themeSpecs(TERRAIN_THEMES["black-site"]));
+  assert.equal(images.length, 1, "preloading an already requested theme keeps the source cached");
 });
 
 test("a failed image never yields a drawable and does not retry", () => {
   const { images, createImage } = fakeLoader();
   const assets = new EnvironmentAssets({ createImage, createCanvas: () => null });
-  assets.get(SLICES.crateA);
+  assets.get(SLICES.oliveCap);
   images[0].onerror();
-  assert.equal(assets.get(SLICES.crateA), null);
+  assert.equal(assets.get(SLICES.oliveCap), null);
   assert.equal(images.length, 1);
 });
 
