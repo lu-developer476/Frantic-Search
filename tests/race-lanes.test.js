@@ -4,6 +4,10 @@ import {
   getRaceLaneLayout,
   generateRaceCourse,
   createRaceLineup,
+  createRaceStartingGrid,
+  getRaceHazardRenderKind,
+  getRaceStartScreenX,
+  DEFAULT_RACE_DINOSAUR_ID,
   BREAKING_RACE_ROSTER,
   Race,
   RACE_DISTANCE_METERS,
@@ -39,6 +43,35 @@ test("Breaking Race clamps invalid lane indices to the nearest depth lane", () =
   assert.deepEqual(getRaceLaneLayout(-1), { lane: 0, baseline: 448, scale: 0.82 });
   assert.deepEqual(getRaceLaneLayout(8), { lane: 3, baseline: 526, scale: 1.18 });
   assert.deepEqual(getRaceLaneLayout("invalid"), { lane: 3, baseline: 526, scale: 1.18 });
+});
+
+test("Gala remains playable under her character name, without the Velociraptor nublarensis roster entry", () => {
+  const gala = BREAKING_RACE_ROSTER.find((dinosaur) => dinosaur.id === "gala");
+  assert.ok(gala, "Gala must remain a playable character");
+  assert.equal(gala.name, "Gala");
+  assert.equal(gala.species, "Gala", "the selection list displays Gala rather than the species entry");
+  assert.equal(gala.idle, "references/gala-idle.gif");
+  assert.equal(gala.walk, "references/gala-walk.gif");
+  assert.equal(gala.run, "references/gala-run.gif");
+  assert.equal(gala.jump, "references/gala-fly.gif");
+  assert.equal(BREAKING_RACE_ROSTER.some((dinosaur) => dinosaur.species === "Velociraptor nublarensis"), false);
+  assert.equal(DEFAULT_RACE_DINOSAUR_ID, "gala");
+});
+
+test("all four racers share the start-line X coordinate and use a fixed lane order", () => {
+  const lineup = createRaceLineup(DEFAULT_RACE_DINOSAUR_ID, () => 0.5);
+  const grid = createRaceStartingGrid(lineup, 0);
+  assert.equal(grid.length, 4);
+  assert.deepEqual(grid.map((entry) => entry.lane), [0, 1, 2, 3]);
+  assert.deepEqual(grid.map((entry) => entry.x), [0, 0, 0, 0]);
+  assert.equal(getRaceStartScreenX(960), 960 * 0.18);
+  assert.equal(getRaceStartScreenX(1280), 1280 * 0.18);
+});
+
+test("procedural spike hazards have no visible renderer but retain their gameplay identity", () => {
+  assert.equal(getRaceHazardRenderKind("spikes"), null);
+  assert.equal(getRaceHazardRenderKind("rock"), "rock");
+  assert.equal(getRaceHazardRenderKind("pit"), "pit");
 });
 
 test("the player-selected dinosaur is always included in a four-dinosaur lineup", () => {
@@ -167,8 +200,19 @@ test("race opening uses walk GIFs for staging and run GIFs for the race", () => 
   const umbraraptor = BREAKING_RACE_ROSTER.find((entry) => entry.id === "umbraraptor-silvis");
   assert.equal(getRaceAnimationSource(umbraraptor, "run"), umbraraptor.idle);
   const xenoraptor = BREAKING_RACE_ROSTER.find((entry) => entry.id === "xenoraptor-crypticus");
-  assert.equal(getRaceAnimationSource(xenoraptor, "idle"), null);
-  assert.equal(getRaceAnimationSource(xenoraptor, "walk"), null, "a run GIF must not play while taking positions");
+  assert.equal(getRaceAnimationSource(xenoraptor, "idle"), xenoraptor.run, "the run GIF fills the missing idle animation");
+  assert.equal(getRaceAnimationSource(xenoraptor, "walk"), xenoraptor.run, "the run GIF prevents a blank placeholder during staging");
+});
+
+test("invisible spike hazards still slow and penalize racers on contact", () => {
+  const race = Object.create(Race.prototype);
+  const spike = { id: "spike-lane-1", kind: "spikes", lane: 1, x: 100, w: 58, h: 27, scale: 1 };
+  const racer = { lane: 1, x: 100, jumping: false, hitHazards: new Set(), slow: 0, flash: 0, score: 30 };
+  race.hazards = [spike];
+  race.resolveHazards(racer);
+  assert.equal(racer.hitHazards.has(spike.id), true);
+  assert.equal(racer.slow, 1.55);
+  assert.equal(racer.score, 18);
 });
 
 test("the player can accelerate forward, reverse, and release horizontal controls", () => {

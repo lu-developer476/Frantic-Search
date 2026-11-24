@@ -34,8 +34,13 @@ export function getRacePace(rosterSpeed) {
   const speed = Number.isFinite(Number(rosterSpeed)) ? Number(rosterSpeed) : RACE_BASE_SPEED;
   return RACE_BASE_SPEED + (speed - RACE_BASE_SPEED) * RACE_SPEED_VARIANCE;
 }
-const START_SCREEN_RATIO = 0.29;
+export const RACE_START_SCREEN_RATIO = RACE_CAMERA_LEFT_RATIO;
 export const RACE_OPENING_CINEMATIC_DURATION = 10;
+
+export function getRaceStartScreenX(viewportWidth = BASE_WIDTH) {
+  const width = Number.isFinite(Number(viewportWidth)) ? Math.max(BASE_WIDTH, Number(viewportWidth)) : BASE_WIDTH;
+  return width * RACE_START_SCREEN_RATIO;
+}
 
 export function getRaceDistanceMeters(worldX) {
   return clamp((Number(worldX) || 0) / RACE_PIXELS_PER_METER, 0, RACE_DISTANCE_METERS);
@@ -49,8 +54,10 @@ export function areAllRaceParticipantsEaten(racers = []) {
   return racers.length === LANE_COUNT && racers.every((racer) => racer.eaten && !racer.finished);
 }
 
+export const DEFAULT_RACE_DINOSAUR_ID = "gala";
+
 export const BREAKING_RACE_ROSTER = Object.freeze([
-  { id: "gala", name: "Gala", species: "Velociraptor nublarensis", idle: null, walk: null, run: "references/adult-velociraptor-nublarensis.png", jump: "references/adult-velociraptor-nublarensis.png", speed: 92 },
+  { id: "gala", name: "Gala", species: "Gala", idle: "references/gala-idle.gif", walk: "references/gala-walk.gif", run: "references/gala-run.gif", jump: "references/gala-fly.gif", speed: 92 },
   { id: "brisa", name: "Brisa", species: "Velociraptor abyssomirabilis", idle: "references/juvenile-velociraptor-abyssomirabilis-idle.gif", walk: null, run: "references/juvenile-velociraptor-abyssomirabilis-run.gif", jump: "references/juvenile-velociraptor-abyssomirabilis-jump.gif", speed: 88 },
   { id: "venatosaurus-impavidus", name: "Venatosaurus impavidus", species: "Venatosaurus impavidus", idle: "references/venatosaurus-impavidus-idle.gif", walk: "references/venatosaurus-impavidus-walk.gif", run: "references/venatosaurus-impavidus-run.gif", jump: "references/venatosaurus-impavidus-jump.gif", speed: 86 },
   { id: "venatosaurus-saevidicus", name: "Venatosaurus saevidicus", species: "Venatosaurus saevidicus", idle: "references/venatosaurus-saevidicus-idle.gif", walk: "references/venatosaurus-saevidicus-walk.gif", run: "references/venatosaurus-saevidicus-run.gif", jump: "references/venatosaurus-saevidicus-jump.gif", speed: 84 },
@@ -143,8 +150,8 @@ export function generateRaceCourse(seed = Date.now()) {
 
 export function getRaceAnimationSource(dinosaur, action) {
   const sources = {
-    idle: [dinosaur?.idle, dinosaur?.walk],
-    walk: [dinosaur?.walk, dinosaur?.idle],
+    idle: [dinosaur?.idle, dinosaur?.walk, dinosaur?.run],
+    walk: [dinosaur?.walk, dinosaur?.idle, dinosaur?.run],
     run: [dinosaur?.run, dinosaur?.walk, dinosaur?.idle]
   };
   return (sources[action] ?? []).find((source) => typeof source === "string" && source.length > 0) ?? null;
@@ -188,6 +195,7 @@ export function getRaceCameraX(
 
 export function createRaceLineup(selectedDinosaurId, random = Math.random) {
   const selected = BREAKING_RACE_ROSTER.find((dinosaur) => dinosaur.id === selectedDinosaurId)
+    ?? BREAKING_RACE_ROSTER.find((dinosaur) => dinosaur.id === DEFAULT_RACE_DINOSAUR_ID)
     ?? BREAKING_RACE_ROSTER[0];
   const opponents = BREAKING_RACE_ROSTER.filter((dinosaur) => dinosaur.id !== selected.id);
 
@@ -197,6 +205,15 @@ export function createRaceLineup(selectedDinosaurId, random = Math.random) {
   }
 
   return [selected, ...opponents.slice(0, LANE_COUNT - 1)];
+}
+
+export function createRaceStartingGrid(lineup, startX = 0) {
+  const sharedStartX = Number.isFinite(Number(startX)) ? Number(startX) : 0;
+  return lineup.slice(0, LANE_COUNT).map((dinosaur, lane) => ({ dinosaur, lane, x: sharedStartX }));
+}
+
+export function getRaceHazardRenderKind(kind) {
+  return kind === "spikes" ? null : kind;
 }
 
 export function getRaceLaneLayout(lane = 0) {
@@ -261,7 +278,7 @@ export class Race {
     this.ramDustClouds = [];
     this.eatEffects = [];
     this.random = Math.random;
-    this.selectedDinosaurId = BREAKING_RACE_ROSTER[0].id;
+    this.selectedDinosaurId = DEFAULT_RACE_DINOSAUR_ID;
     this.dinosaurSelect = root.querySelector("[data-br-dinosaur-select]");
     this.dinosaurSelectLabel = root.querySelector("[data-br-select-label]");
     this.populateDinosaurSelect();
@@ -336,7 +353,7 @@ export class Race {
   }
 
   get startScreenX() {
-    return Math.min(330, Math.max(240, WIDTH * START_SCREEN_RATIO));
+    return getRaceStartScreenX(WIDTH);
   }
 
   get playerRacer() {
@@ -486,12 +503,22 @@ export class Race {
     const sources = new Set(lineup.flatMap((dinosaur) =>
       [dinosaur.idle, dinosaur.walk, dinosaur.run, dinosaur.jump].filter(Boolean)
     ));
+    const pending = [];
     for (const source of sources) {
-      if (this.images.has(source)) continue;
-      const image = new Image();
-      image.src = import.meta.env.BASE_URL + source;
-      this.images.set(source, image);
+      let image = this.images.get(source);
+      if (!image) {
+        image = new Image();
+        this.images.set(source, image);
+        image.src = import.meta.env.BASE_URL + source;
+      }
+      if (image.complete) continue;
+      pending.push(new Promise((resolve) => {
+        const settle = () => resolve(image);
+        image.addEventListener("load", settle, { once: true });
+        image.addEventListener("error", settle, { once: true });
+      }));
     }
+    return Promise.all(pending);
   }
 
   openSelectionConfirmation() {
@@ -538,11 +565,12 @@ export class Race {
     this.elapsed = elapsed;
     this.drawBackground();
     this.drawLaneGuides();
-    this.drawStartAndFinish();
-    this.drawLeftChaserEdge();
 
     const phase = elapsed < 3 ? "idle" : elapsed < 6.5 ? "walk" : "run";
-    const walkProgress = clamp((elapsed - 3) / 3.5, 0, 1);
+    context.save();
+    context.translate(-this.cameraX, 0);
+    this.drawStartAndFinish();
+
     for (let index = 0; index < lineup.length; index += 1) {
       const dinosaur = lineup[index];
       const lane = index;
@@ -550,17 +578,10 @@ export class Race {
       const source = getRaceAnimationSource(dinosaur, phase);
       const image = source ? this.images.get(source) : null;
       const width = 118 * layout.scale;
-      const height = image?.naturalWidth
+      const height = image?.naturalWidth && image?.naturalHeight
         ? width * image.naturalHeight / image.naturalWidth
         : 48 * layout.scale;
-      const positionRatio = lineup.length > 1 ? index / (lineup.length - 1) : 0.5;
-      const targetX = WIDTH * (0.23 + positionRatio * 0.54);
-      const entryX = targetX - WIDTH * 0.11;
-      const x = phase === "idle"
-        ? entryX
-        : phase === "walk"
-          ? entryX + (targetX - entryX) * walkProgress
-          : targetX + Math.sin(elapsed * 9 + index) * 3;
+      const x = this.startX;
       const baseline = layout.baseline;
       context.fillStyle = "rgba(35, 43, 28, 0.24)";
       context.beginPath();
@@ -581,6 +602,7 @@ export class Race {
       context.textAlign = "center";
       context.fillText(dinosaur.id === this.selectedDinosaurId ? dinosaur.name + " · P1" : dinosaur.name, x, baseline - height - 8);
     }
+    context.restore();
 
     if (elapsed >= 7) {
       context.save();
@@ -597,13 +619,13 @@ export class Race {
     }
   }
 
-  beginOpeningCinematic() {
+  async beginOpeningCinematic() {
     if (this.running || this.openingCinematic) return;
     this.canvasViewport();
     this.reset();
     const lineup = createRaceLineup(this.selectedDinosaurId, this.random);
-    this.loadDinosaurImages(lineup);
-    this.openingCinematic = { startedAt: performance.now(), lineup };
+    const cinematic = { startedAt: null, lineup };
+    this.openingCinematic = cinematic;
     this.root.classList.add("playing", "cinematic");
     this.root.querySelector("[data-br-start]").hidden = true;
     this.root.querySelector("[data-br-retry]").hidden = true;
@@ -611,6 +633,9 @@ export class Race {
     this.openingOverlay.hidden = false;
     this.setStatus("CARRERA // PRESENTACIÓN", "RACE // INTRODUCTION");
     this.updateOpeningOverlay(0);
+    await this.loadDinosaurImages(lineup);
+    if (this.openingCinematic !== cinematic || !this.root.classList.contains("active")) return;
+    cinematic.startedAt = performance.now();
     this.renderOpeningCinematic(0, lineup);
     this.openingFrame = requestAnimationFrame((time) => this.tickOpeningCinematic(time));
   }
@@ -638,17 +663,13 @@ export class Race {
     this.canvasViewport();
     this.reset();
     const lineup = preparedLineup ?? createRaceLineup(this.selectedDinosaurId, this.random);
-    const laneOrder = [0, 1, 2, 3];
-    for (let index = laneOrder.length - 1; index > 0; index -= 1) {
-      const swapIndex = Math.floor(this.random() * (index + 1));
-      [laneOrder[index], laneOrder[swapIndex]] = [laneOrder[swapIndex], laneOrder[index]];
-    }
-    this.racers = lineup.map((dinosaur, index) => ({
+    const startingGrid = createRaceStartingGrid(lineup, this.startX);
+    this.racers = startingGrid.map(({ dinosaur, lane, x }) => ({
       raceId: dinosaur.id,
       d: dinosaur,
       raceSpeed: getRacePace(dinosaur.speed),
-      lane: laneOrder[index],
-      x: this.startX,
+      lane,
+      x,
       aiPaceFactor: 0.84 + this.random() * 0.32,
       aiPaceFrequency: 0.3 + this.random() * 0.38,
       aiPacePhase: this.random() * Math.PI * 2,
@@ -1194,32 +1215,6 @@ export class Race {
     context.restore();
   }
 
-  drawSpikes(spikes) {
-    const context = this.ctx;
-    const floor = getLaneBaseline(spikes.lane);
-    const count = 5;
-    const step = spikes.w / count;
-    context.save();
-    context.fillStyle = "rgba(34, 39, 28, 0.24)";
-    context.beginPath();
-    context.ellipse(spikes.x + spikes.w / 2, floor - 1, spikes.w * 0.53, 4 * spikes.scale, 0, 0, Math.PI * 2);
-    context.fill();
-    for (let index = 0; index < count; index += 1) {
-      const left = spikes.x + index * step;
-      context.fillStyle = index % 2 ? "#777f70" : "#aab09a";
-      context.strokeStyle = "#3d493e";
-      context.lineWidth = Math.max(1, spikes.scale);
-      context.beginPath();
-      context.moveTo(left, floor);
-      context.lineTo(left + step * 0.5, floor - spikes.h);
-      context.lineTo(left + step, floor);
-      context.closePath();
-      context.fill();
-      context.stroke();
-    }
-    context.restore();
-  }
-
   drawPit(pit) {
     const context = this.ctx;
     const floor = getLaneBaseline(pit.lane);
@@ -1330,14 +1325,16 @@ export class Race {
     const context = this.ctx;
     const layout = getRaceLaneLayout(racer.lane);
     const width = 64 * layout.scale;
-    const height = 48 * layout.scale;
     const baseline = layout.baseline;
     const sink = racer.pitfallTimer > 0 ? (1 - racer.pitfallTimer / 0.82) * 23 * layout.scale : 0;
-    const y = baseline - height + (racer.jumpY || 0) + sink;
     const imageSource = racer.jumping
-      ? racer.d.jump
+      ? (racer.d.jump ?? getRaceAnimationSource(racer.d, "run"))
       : getRaceAnimationSource(racer.d, "run");
-    const image = this.images.get(imageSource);
+    const image = imageSource ? this.images.get(imageSource) : null;
+    const height = image?.naturalWidth && image?.naturalHeight
+      ? width * image.naturalHeight / image.naturalWidth
+      : 48 * layout.scale;
+    const y = baseline - height + (racer.jumpY || 0) + sink;
 
     context.fillStyle = "rgba(35, 43, 28, 0.24)";
     context.beginPath();
@@ -1358,9 +1355,23 @@ export class Race {
       context.drawImage(image, racer.x - width / 2, y, width, height);
       context.restore();
     } else {
-      context.fillStyle = ["#526b4b", "#b38b61", "#786b54", "#8d715b"][racer.lane];
-      context.fillRect(racer.x - width * 0.38, baseline - 23 * layout.scale + sink, width * 0.76, 20 * layout.scale);
-      context.fillRect(racer.x + width * 0.08, baseline - 31 * layout.scale + sink, 16 * layout.scale, 13 * layout.scale);
+      // A visible dinosaur-shaped fallback prevents missing or delayed GIFs from becoming blank boxes.
+      const color = ["#526b4b", "#b38b61", "#786b54", "#8d715b"][racer.lane];
+      context.save();
+      context.fillStyle = color;
+      context.beginPath();
+      context.ellipse(racer.x, baseline - 17 * layout.scale + sink, width * 0.36, 10 * layout.scale, 0, 0, Math.PI * 2);
+      context.fill();
+      context.fillRect(racer.x + width * 0.12, baseline - 27 * layout.scale + sink, width * 0.28, 12 * layout.scale);
+      context.beginPath();
+      context.moveTo(racer.x - width * 0.28, baseline - 16 * layout.scale + sink);
+      context.lineTo(racer.x - width * 0.55, baseline - 10 * layout.scale + sink);
+      context.lineTo(racer.x - width * 0.25, baseline - 11 * layout.scale + sink);
+      context.closePath();
+      context.fill();
+      context.fillRect(racer.x - width * 0.22, baseline - 10 * layout.scale + sink, 5 * layout.scale, 10 * layout.scale);
+      context.fillRect(racer.x + width * 0.13, baseline - 10 * layout.scale + sink, 5 * layout.scale, 10 * layout.scale);
+      context.restore();
     }
 
     const label = racer.d.name + " · " + racer.score + (racer.isPlayer ? " · P1" : "");
@@ -1403,30 +1414,6 @@ export class Race {
     context.restore();
   }
 
-  drawLeftChaserEdge() {
-    const context = this.ctx;
-    context.save();
-    const gradient = context.createLinearGradient(0, 0, 32, 0);
-    gradient.addColorStop(0, "rgba(37, 14, 13, 0.96)");
-    gradient.addColorStop(1, "rgba(91, 31, 24, 0.52)");
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, 30, HEIGHT);
-    context.fillStyle = "#e8dcc1";
-    for (let y = 10; y < HEIGHT - 12; y += 34) {
-      context.beginPath();
-      context.moveTo(1, y);
-      context.lineTo(22, y + 15);
-      context.lineTo(1, y + 25);
-      context.closePath();
-      context.fill();
-    }
-    context.fillStyle = "rgba(34, 10, 10, 0.9)";
-    context.font = "bold 8px monospace";
-    context.textAlign = "center";
-    context.fillText(this.text("ATRÁS", "BACK"), 14, 12);
-    context.restore();
-  }
-
   drawEatenEffects() {
     const context = this.ctx;
     for (const effect of this.eatEffects) {
@@ -1455,7 +1442,6 @@ export class Race {
     context.clearRect(0, 0, WIDTH, HEIGHT);
     this.drawBackground();
     this.drawLaneGuides();
-    this.drawLeftChaserEdge();
 
     context.save();
     context.translate(-this.cameraX, 0);
@@ -1464,12 +1450,12 @@ export class Race {
     for (const checkpoint of this.checkpoints) this.drawCheckpoint(checkpoint);
     for (const cloud of this.ramDustClouds) this.drawRamDustCloud(cloud);
     for (const hazard of this.hazards) {
-      if (hazard.kind === "pit") this.drawPit(hazard);
-      else if (hazard.kind === "mud") this.drawMud(hazard);
+      const renderKind = getRaceHazardRenderKind(hazard.kind);
+      if (renderKind === "pit") this.drawPit(hazard);
+      else if (renderKind === "mud") this.drawMud(hazard);
     }
     for (const hazard of this.hazards) {
-      if (hazard.kind === "rock") this.drawRock(hazard);
-      else if (hazard.kind === "spikes") this.drawSpikes(hazard);
+      if (getRaceHazardRenderKind(hazard.kind) === "rock") this.drawRock(hazard);
     }
     for (const pickup of this.pickups) {
       if (!pickup.taken) this.drawPickup(pickup);
@@ -1479,7 +1465,7 @@ export class Race {
       if (!racer.eaten) this.drawDino(racer);
     }
     for (const hazard of this.hazards) {
-      if (hazard.kind === "bush") this.drawBush(hazard);
+      if (getRaceHazardRenderKind(hazard.kind) === "bush") this.drawBush(hazard);
     }
     context.restore();
 
