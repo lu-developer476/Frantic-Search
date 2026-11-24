@@ -903,9 +903,9 @@ export class Hunting {
 
     if (!layeredBackground) {
       const gradient = ctx.createLinearGradient(0, 0, 0, HEIGHT);
-    gradient.addColorStop(0, "#a9c6bd");
-    gradient.addColorStop(0.63, "#d5d3b0");
-    gradient.addColorStop(1, "#84906a");
+    gradient.addColorStop(0, "#10131b");
+    gradient.addColorStop(0.63, "#18211f");
+    gradient.addColorStop(1, "#27302a");
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
     ctx.fillStyle = "#809887";
