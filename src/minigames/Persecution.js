@@ -17,12 +17,12 @@ export const PLAYER_WIDTH = 80;
 export const PLAYER_HEIGHT = 66;
 const INTRO_END_X = 250;
 export const PRAIRIE_HERD = Object.freeze([
-  Object.freeze({ species: "parasaur", pose: "parasaurIdle", x: 32, y: 368, w: 72, h: 52 }),
-  Object.freeze({ species: "brontosaurus", pose: "brontosaurusWalk", x: 282, y: 358, w: 88, h: 64 }),
-  Object.freeze({ species: "ligocristus", phase: 0.2, x: 452, y: 373, w: 60, h: 43 }),
-  Object.freeze({ species: "parasaur", pose: "parasaurWalk", x: 610, y: 366, w: 78, h: 56 }),
-  Object.freeze({ species: "ligocristus", phase: 4.25, x: 770, y: 372, w: 64, h: 46 }),
-  Object.freeze({ species: "littleDino", pose: "littleDino", x: 905, y: 382, w: 52, h: 38 })
+  Object.freeze({ species: "parasaur", pose: "parasaurIdle", x: 32, y: 390, w: 72, h: 52 }),
+  Object.freeze({ species: "brontosaurus", pose: "brontosaurusWalk", x: 282, y: 380, w: 88, h: 64 }),
+  Object.freeze({ species: "ligocristus", phase: 0.2, x: 452, y: 395, w: 60, h: 43 }),
+  Object.freeze({ species: "parasaur", pose: "parasaurWalk", x: 610, y: 388, w: 78, h: 56 }),
+  Object.freeze({ species: "ligocristus", phase: 4.25, x: 770, y: 394, w: 64, h: 46 }),
+  Object.freeze({ species: "littleDino", pose: "littleDino", x: 905, y: 404, w: 52, h: 38 })
 ]);
 
 export function prairieHerdAnimationKey(animal = {}, elapsed = 0) {
@@ -819,12 +819,12 @@ export class Persecution {
     }
     this.drRaptorSpawnTimer -= delta;
     if (this.drRaptorSpawnTimer <= 0 && this.drRaptors.length === 0) {
-      this.drRaptors.push({ kind: "dr-raptor", state: "walking", x: WIDTH + 24, y: 270, w: 92, h: 70, lane: null, phase: Math.random() * 5, fleeingTimer: 0 });
+      this.drRaptors.push({ kind: "dr-raptor", state: "alerting", x: WIDTH + 24, y: 378, w: 92, h: 70, lane: null, phase: Math.random() * 5, alertTimer: 2, fleeingTimer: 0, respawnTimer: 0 });
       this.drRaptorSpawnTimer = 25 + Math.random() * 14;
     }
     this.googleRexSpawnTimer -= delta;
     if (this.googleRexSpawnTimer <= 0 && this.googleRexes.length === 0) {
-      this.googleRexes.push({ kind: "google-rex", state: "idle", x: WIDTH + 28, y: 280, w: 76, h: 64, lane: null, phase: Math.random() * 5, fleeTimer: 0 });
+      this.googleRexes.push({ kind: "google-rex", state: "alerting", x: WIDTH + 28, y: 384, w: 76, h: 64, lane: null, phase: Math.random() * 5, alertTimer: 2, fleeTimer: 0, respawnTimer: 0 });
       this.googleRexSpawnTimer = 18 + Math.random() * 15;
     }
     this.googlePterodactylSpawnTimer -= delta;
@@ -864,23 +864,53 @@ export class Persecution {
     }
     this.deadlyEnemies = this.deadlyEnemies.filter((enemy) => enemy.x + enemy.w > -50);
     for (const raptor of this.drRaptors) {
-      if (raptor.state === "walking") {
+      if (raptor.state === "alerting") {
+        raptor.alertTimer = Math.max(0, raptor.alertTimer - delta);
+        if (raptor.alertTimer <= 0) raptor.state = "walking";
+      } else if (raptor.state === "walking") {
         raptor.x -= speed * 0.34 * delta;
-        if (raptor.x < this.player.x + this.player.w + 250) {
-          raptor.state = "fleeing"; raptor.lane = randomLane(); applyLane(raptor, raptor.lane, raptor.w, raptor.h); raptor.fleeingTimer = 5;
+        if (raptor.x <= this.player.x + this.player.w + 250) {
+          raptor.state = "fleeing-background";
+          raptor.lane = null;
         }
-      } else { raptor.x += 235 * delta; raptor.fleeingTimer = Math.max(0, raptor.fleeingTimer - delta); }
+      } else if (raptor.state === "fleeing-background") {
+        raptor.x += 235 * delta;
+        if (raptor.x >= WIDTH + 120) { raptor.state = "offscreen"; raptor.respawnTimer = 3; }
+      } else if (raptor.state === "offscreen") {
+        raptor.respawnTimer = Math.max(0, raptor.respawnTimer - delta);
+        if (raptor.respawnTimer <= 0) {
+          raptor.lane = randomLane();
+          applyLane(raptor, raptor.lane, raptor.w, raptor.h);
+          raptor.x = -raptor.w;
+          raptor.state = "fleeing";
+        }
+      } else if (raptor.state === "fleeing") raptor.x += 235 * delta;
     }
-    this.drRaptors = this.drRaptors.filter((raptor) => raptor.state === "walking" ? raptor.x + raptor.w > -80 : raptor.x < WIDTH + 120);
+    this.drRaptors = this.drRaptors.filter((raptor) => raptor.state === "offscreen" || raptor.x < WIDTH + 120);
     for (const rex of this.googleRexes) {
-      if (rex.state === "idle") {
+      if (rex.state === "alerting") {
+        rex.alertTimer = Math.max(0, rex.alertTimer - delta);
+        if (rex.alertTimer <= 0) rex.state = "idle";
+      } else if (rex.state === "idle") {
         rex.x -= speed * 0.32 * delta;
-        if (Math.abs(rex.x - this.player.x) < 250 || this.herd.some((prey) => Math.abs(prey.x - rex.x) < 180)) {
-          rex.state = "fleeing"; rex.lane = randomLane(); rex.fleeTimer = 5; applyLane(rex, rex.lane, rex.w, rex.h);
+        if (rex.x <= this.player.x + this.player.w + 250) {
+          rex.state = "fleeing-background";
+          rex.lane = null;
         }
-      } else { rex.x += 205 * delta; rex.fleeTimer = Math.max(0, rex.fleeTimer - delta); }
+      } else if (rex.state === "fleeing-background") {
+        rex.x += 205 * delta;
+        if (rex.x >= WIDTH + 120) { rex.state = "offscreen"; rex.respawnTimer = 3; }
+      } else if (rex.state === "offscreen") {
+        rex.respawnTimer = Math.max(0, rex.respawnTimer - delta);
+        if (rex.respawnTimer <= 0) {
+          rex.lane = randomLane();
+          applyLane(rex, rex.lane, rex.w, rex.h);
+          rex.x = -rex.w;
+          rex.state = "fleeing";
+        }
+      } else if (rex.state === "fleeing") rex.x += 205 * delta;
     }
-    this.googleRexes = this.googleRexes.filter((rex) => rex.state === "idle" ? rex.x + rex.w > -80 : rex.x < WIDTH + 120);
+    this.googleRexes = this.googleRexes.filter((rex) => rex.state === "offscreen" || rex.x < WIDTH + 120);
     for (const flyer of this.googlePterodactyls) flyer.x += flyer.direction * flyer.speed * delta;
     this.googlePterodactyls = this.googlePterodactyls.filter((flyer) => flyer.x < WIDTH + 110 && flyer.x + flyer.w > -110);
     if (this.pterodactylCaptureTimer > 0) {
@@ -896,8 +926,14 @@ export class Persecution {
         this.player.y = getLaneBaseline(this.getEntityLane(this.player)) - this.player.h;
         this.player.trappedTimer = 0; this.invulnerabilityTimer = 2.5;
         this.enemies = []; this.deadlyEnemies = []; this.herd = [];
+        const rescuedEgg = this.carriedItem?.kind === "egg" ? this.carriedItem : null;
         this.eggs = []; this.rocks = []; this.pits = []; this.mudPuddles = []; this.bushes = [];
         this.pterodactyls = []; this.pterodactylCaptureMode = null;
+        if (rescuedEgg) {
+          this.carriedItem = rescuedEgg;
+          this.setEntityLane(rescuedEgg, this.getEntityLane(this.player));
+          rescuedEgg.vx = 0;
+        }
       }
       return false;
     }
@@ -1722,9 +1758,12 @@ export class Persecution {
       const py = flyer.y + Math.sin(this.animationClock * 5 + flyer.phase) * 5;
       this.drawSprite("googlePterodactyl", flyer.x, py, flyer.w, flyer.h, "#a5a9a0", undefined, flyer.direction);
     }
-    for (const actor of this.drRaptors ?? []) if (actor.state === "walking") this.drawSprite("drRaptorWalk", actor.x, actor.y, actor.w, actor.h, "#9d8b72", undefined, -1);
+    for (const actor of this.drRaptors ?? []) {
+      if (["alerting", "walking"].includes(actor.state)) this.drawSprite("drRaptorWalk", actor.x, actor.y, actor.w, actor.h, "#9d8b72", undefined, -1);
+      else if (actor.state === "fleeing-background") this.drawSprite("drRaptorRun", actor.x, actor.y, actor.w, actor.h, "#9d8b72", undefined, 1);
+    }
     for (const rex of this.googleRexes ?? []) {
-      const pose = rex.state === "idle" ? "googleRexIdle" : Math.floor(this.animationClock * 7 + rex.phase) % 3 === 0 ? "googleRexDuck" : "googleRexRun";
+      const pose = ["idle", "alerting"].includes(rex.state) ? "googleRexIdle" : Math.floor(this.animationClock * 7 + rex.phase) % 3 === 0 ? "googleRexDuck" : "googleRexRun";
       this.drawSprite(pose, rex.x, rex.y, rex.w, rex.h, "#6d7770", undefined, rex.state === "idle" ? -1 : 1);
     }
     for (let lane = 0; lane < LANE_COUNT; lane += 1) {

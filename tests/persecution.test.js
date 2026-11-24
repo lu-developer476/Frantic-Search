@@ -972,7 +972,7 @@ test("all relocated pursuit GIF and reference assets exist directly under public
     "umbraraptor-silvis-jump.gif",
     "umbraraptor-silvis-run.gif",
     "xenoraptor-crypticus-attack.gif",
-    "xenoraptor-crypticus-background.png",
+    "xenoraptor-crypticus-idle.gif",
     "xenoraptor-crypticus-jump.gif",
     "xenoraptor-crypticus-run.gif",
     "parasaurolophus-attack.gif",

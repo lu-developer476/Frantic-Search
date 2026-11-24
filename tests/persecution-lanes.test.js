@@ -280,6 +280,8 @@ test("dead, infected and zombie dinosaurs destroy every same-lane entity without
   const baseline = LANE_BASELINES[lane];
   const predator = { x: 320, y: baseline - 42, w: 30, h: 30, lane };
   const prey = { x: 320, y: baseline - 42, w: 30, h: 30, lane };
+  const backgroundRaptor = { kind: "dr-raptor", state: "fleeing", x: 320, y: baseline - 70, w: 92, h: 70, lane };
+  const backgroundRex = { kind: "google-rex", state: "fleeing", x: 320, y: baseline - 64, w: 76, h: 64, lane };
   const egg = createEgg(lane, 320);
   egg.y = baseline - egg.h;
   const rock = { x: 320, y: baseline - 25, w: 34, h: 25, lane };
@@ -299,13 +301,15 @@ test("dead, infected and zombie dinosaurs destroy every same-lane entity without
   });
   const deadly = { kind: "zombie", lane, x: 300, y: baseline - 48, w: 78, h: 48, speed: 200 };
   Object.assign(simulation, {
-    deadlyEnemies: [deadly], drRaptors: [], googleRexes: [],
+    deadlyEnemies: [deadly], drRaptors: [backgroundRaptor], googleRexes: [backgroundRex],
     googlePterodactyls: [], pterodactyls: [],
     deadlySpawnTimer: 60, drRaptorSpawnTimer: 60, googleRexSpawnTimer: 60,
     googlePterodactylSpawnTimer: 60, pterodactylSpawnTimer: 60, pterodactylCaptureTimer: 0
   });
   simulation.updateSpecialActors(0.01, 0, { x: 20, y: 20, w: 10, h: 10 });
   assert.deepEqual(simulation.enemies, [otherLanePredator]);
+  assert.equal(simulation.drRaptors.length, 0);
+  assert.equal(simulation.googleRexes.length, 0);
   assert.equal(simulation.herd.length, 0);
   assert.equal(simulation.eggs.length, 0);
   assert.equal(simulation.rocks.length, 0);
