@@ -57,7 +57,7 @@ export function areAllRaceParticipantsEaten(racers = []) {
 export const DEFAULT_RACE_DINOSAUR_ID = "gala";
 
 export const BREAKING_RACE_ROSTER = Object.freeze([
-  { id: "gala", name: "Gala", species: "Gala", idle: "references/gala-idle.gif", walk: "references/gala-walk.gif", run: "references/gala-run.gif", jump: "references/gala-fly.gif", speed: 92 },
+  { id: "gala", name: "Gala", species: "Gala", idle: "references/gala-idle.gif", walk: "references/gala-walk.gif", run: "references/gala-run.gif", jump: "references/gala-fly.gif", spriteScale: 0.7, speed: 92 },
   { id: "brisa", name: "Brisa", species: "Velociraptor abyssomirabilis", idle: "references/juvenile-velociraptor-abyssomirabilis-idle.gif", walk: null, run: "references/juvenile-velociraptor-abyssomirabilis-run.gif", jump: "references/juvenile-velociraptor-abyssomirabilis-jump.gif", speed: 88 },
   { id: "venatosaurus-impavidus", name: "Venatosaurus impavidus", species: "Venatosaurus impavidus", idle: "references/venatosaurus-impavidus-idle.gif", walk: "references/venatosaurus-impavidus-walk.gif", run: "references/venatosaurus-impavidus-run.gif", jump: "references/venatosaurus-impavidus-jump.gif", speed: 86 },
   { id: "venatosaurus-saevidicus", name: "Venatosaurus saevidicus", species: "Venatosaurus saevidicus", idle: "references/venatosaurus-saevidicus-idle.gif", walk: "references/venatosaurus-saevidicus-walk.gif", run: "references/venatosaurus-saevidicus-run.gif", jump: "references/venatosaurus-saevidicus-jump.gif", speed: 84 },
@@ -146,6 +146,11 @@ export function generateRaceCourse(seed = Date.now()) {
   }
 
   return { seed: Number(seed) >>> 0, distanceMeters: RACE_DISTANCE_METERS, hazards, pickups };
+}
+
+export function getRaceSpriteScale(dinosaur) {
+  const scale = Number(dinosaur?.spriteScale);
+  return Number.isFinite(scale) && scale > 0 ? scale : 1;
 }
 
 export function getRaceAnimationSource(dinosaur, action) {
@@ -527,6 +532,7 @@ export class Race {
       ?? BREAKING_RACE_ROSTER[0];
     const previewSource = getRaceAnimationSource(selected, "idle") ?? selected.run;
     this.confirmationImage.src = import.meta.env.BASE_URL + previewSource;
+    this.confirmationImage.classList.toggle("is-gala", selected.id === "gala");
     this.confirmationImage.alt = selected.species;
     this.confirmationSpecies.textContent = selected.species;
     this.confirmationDialog.hidden = false;
@@ -577,7 +583,7 @@ export class Race {
       const layout = getRaceLaneLayout(lane);
       const source = getRaceAnimationSource(dinosaur, phase);
       const image = source ? this.images.get(source) : null;
-      const width = 118 * layout.scale;
+      const width = 118 * layout.scale * getRaceSpriteScale(dinosaur);
       const height = image?.naturalWidth && image?.naturalHeight
         ? width * image.naturalHeight / image.naturalWidth
         : 48 * layout.scale;
@@ -1324,7 +1330,7 @@ export class Race {
     if (racer.eaten) return;
     const context = this.ctx;
     const layout = getRaceLaneLayout(racer.lane);
-    const width = 64 * layout.scale;
+    const width = 64 * layout.scale * getRaceSpriteScale(racer.d);
     const baseline = layout.baseline;
     const sink = racer.pitfallTimer > 0 ? (1 - racer.pitfallTimer / 0.82) * 23 * layout.scale : 0;
     const imageSource = racer.jumping

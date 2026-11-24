@@ -4817,6 +4817,10 @@ html.site-mode-gray .ambush-intro button {
   object-fit: contain;
   image-rendering: pixelated;
 }
+.race-confirmation-preview img.is-gala {
+  width: 70%;
+  justify-self: center;
+}
 .race-confirmation-preview strong {
   color: #e8ff8a;
   font: 700 12px var(--font-mono);

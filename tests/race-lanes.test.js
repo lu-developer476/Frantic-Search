@@ -18,6 +18,7 @@ import {
   RACE_SPEED_VARIANCE,
   getRacePace,
   getRaceAnimationSource,
+  getRaceSpriteScale,
   getRaceHorizontalInput,
   getRaceMovementSpeed,
   getRaceCameraX,
@@ -72,6 +73,14 @@ test("procedural spike hazards have no visible renderer but retain their gamepla
   assert.equal(getRaceHazardRenderKind("spikes"), null);
   assert.equal(getRaceHazardRenderKind("rock"), "rock");
   assert.equal(getRaceHazardRenderKind("pit"), "pit");
+});
+
+test("Gala's animated sprites render at 70% scale while other racers keep their normal size", () => {
+  const gala = BREAKING_RACE_ROSTER.find((dinosaur) => dinosaur.id === "gala");
+  const brisa = BREAKING_RACE_ROSTER.find((dinosaur) => dinosaur.id === "brisa");
+  assert.equal(getRaceSpriteScale(gala), 0.7);
+  assert.equal(getRaceSpriteScale(brisa), 1);
+  assert.equal(getRaceSpriteScale(null), 1);
 });
 
 test("the player-selected dinosaur is always included in a four-dinosaur lineup", () => {
