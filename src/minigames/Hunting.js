@@ -196,6 +196,10 @@ export class Hunting {
         this.reloadPlayer();
         return;
       }
+      if (event.code === "KeyG" && !event.repeat && this.running && this.mode === "sentinel") {
+        this.throwPlayerGrenade();
+        return;
+      }
       if (["ArrowLeft","ArrowRight","ArrowUp","Space","KeyA","KeyD","KeyW","KeyF"].includes(event.code)) this.keys.add(event.code);
       if (["ArrowUp","KeyW"].includes(event.code) && !event.repeat && this.running) this.jump();
     };
@@ -243,8 +247,8 @@ export class Hunting {
       "Choose your role: protect the expedition as a hunter or survive as a dinosaur."
     );
     this.root.querySelector("[data-ta-instructions]").textContent = this.text(
-      "CENTINELA: A / D mover · W / ↑ saltar · ESPACIO / F / clic disparar · R recargar. DEPREDADOR: A / D mover · W / ↑ saltar · ESPACIO / F / clic morder. P pausa · ESC salir.",
-      "SENTINEL: A / D move · W / ↑ jump · SPACE / F / click fire · R reload. PREDATOR: A / D move · W / ↑ jump · SPACE / F / click bite. P pause · ESC exit."
+      "CENTINELA: A / D mover · W / ↑ saltar · ESPACIO / F / clic disparar · G lanzar granada · R recargar. DEPREDADOR: A / D mover · W / ↑ saltar · ESPACIO / F / clic morder. P pausa · ESC salir.",
+      "SENTINEL: A / D move · W / ↑ jump · SPACE / F / click fire · G throw grenade · R reload. PREDATOR: A / D move · W / ↑ jump · SPACE / F / click bite. P pause · ESC exit."
     );
     this.root.querySelector("[data-ta-start]").textContent = this.text("CENTINELA", "SENTINEL");
     this.root.querySelector("[data-ta-predator]").textContent = this.text("DEPREDADOR", "PREDATOR");
@@ -500,6 +504,16 @@ export class Hunting {
     return true;
   }
 
+  throwPlayerGrenade() {
+    if (!this.running || this.mode !== "sentinel" || !this.player) return false;
+    const target = nearestTarget(this.player, this.dinosaurs, Infinity);
+    const targetX = this.pointer.active
+      ? this.pointer.x + this.cameraX
+      : target ? target.x + target.w / 2 : this.player.x + this.player.direction * 520;
+    this.player.direction = targetX >= this.player.x + this.player.w / 2 ? 1 : -1;
+    return this.throwGrenade(this.player, targetX);
+  }
+
   firePlayer() {
     if (!this.running) return false;
     if (this.mode === "predator") return this.startPredatorAttack();
@@ -718,11 +732,26 @@ export class Hunting {
       grenade.update(delta);
       if (!grenade.justExploded) continue;
       this.burst(grenade.x, grenade.y, grenade.type === "yellow" ? "#f2d45a" : "#ef8a3e", 17);
-      if (predatorMode && CollisionSystem.grenadeHit(grenade, {
-        x: player.x + 8, y: player.y + 14, w: player.w - 16, h: player.h - 22
-      })) {
-        this.damagePredator(grenade.damage);
-        if (!this.running) return;
+      if (predatorMode) {
+        if (CollisionSystem.grenadeHit(grenade, {
+          x: player.x + 8, y: player.y + 14, w: player.w - 16, h: player.h - 22
+        })) {
+          this.damagePredator(grenade.damage);
+          if (!this.running) return;
+        }
+      } else {
+        for (const dinosaur of this.dinosaurs) {
+          if (dinosaur.defeated || !CollisionSystem.grenadeHit(grenade, dinosaur)) continue;
+          const result = dinosaur.takeDamage(grenade.damage);
+          if (!result.hit) continue;
+          this.addCombatEffect("impact", grenade.x, grenade.y);
+          if (result.defeated) {
+            this.kills += 1;
+            this.burst(dinosaur.x + dinosaur.w / 2, dinosaur.y + dinosaur.h * 0.55, "#e8a56e", 13);
+          } else {
+            this.burst(grenade.x, grenade.y, "#f5dc9a", 4);
+          }
+        }
       }
     }
     this.grenades = this.grenades.filter(grenade => grenade.active);

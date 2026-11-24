@@ -11,7 +11,8 @@ test("the prologue fixes the capture, encounter, battle-end and Level 1 mileston
   const prologue = new CampaignPrologue({ startX: 100 });
 
   assert.equal(prologue.captureX - prologue.startX, 2000);
-  assert.equal(prologue.jeepX + 78, prologue.captureX);
+  assert.equal("jeepX" in prologue, false);
+  assert.equal("jeepVisualX" in prologue, false);
   assert.equal(prologue.trackX - prologue.startX, 2500);
   assert.equal(prologue.encounterX - prologue.startX, 2500);
   assert.equal(prologue.fightStartX - prologue.startX, 2200);
@@ -118,4 +119,10 @@ test("the opening narration leaves the campaign dinosaurs visible below its stor
   assert.ok(panel.includes("rgba(7,16,15,.06)"));
   assert.ok(panel.includes("pointer-events:none"));
   assert.ok(card.includes("pointer-events:auto"));
+});
+
+
+test("campaign opening no longer renders or narrates a jeep", async () => {
+  const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
+  assert.doesNotMatch(main, /drawPrologueJeep|prologue\.jeepX|prologue\.jeepVisualX/);
 });

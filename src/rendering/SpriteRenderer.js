@@ -36,19 +36,6 @@ export const BRISA_ANIMATIONS = Object.freeze({
   run: "brisa-run.gif"
 });
 export const BRISA_REFERENCE = BRISA_ANIMATIONS.idle;
-export const TACTICAL_COMBAT_EFFECT_SPRITES = Object.freeze({
-  muzzle: Object.freeze([
-    Object.freeze({ x: 286, y: 2, width: 17, height: 17 }),
-    Object.freeze({ x: 310, y: 2, width: 17, height: 17 }),
-    Object.freeze({ x: 334, y: 2, width: 17, height: 17 }),
-    Object.freeze({ x: 358, y: 2, width: 17, height: 17 })
-  ]),
-  impact: Object.freeze([
-    Object.freeze({ x: 285, y: 245, width: 22, height: 27 }),
-    Object.freeze({ x: 309, y: 245, width: 22, height: 27 })
-  ])
-});
-
 export function selectJuvenileAnimation(actor = {}, options = {}) {
   if (options.animationKey) return options.animationKey;
   if (options.sleeping) return "idle";
@@ -215,8 +202,7 @@ export const REFERENCE_PRELOAD_FILES = [
   "indominus-rex-first-generation.png",
   "indominus-rex-second-generation.png",
   "indominus-rex-second-generation-variant.png",
-  "stegoceratops.png",
-  "tactical-enemies.png"
+  "stegoceratops.png"
 ];
 
 const SPRITE_ASSET_VERSION = "20261123-gala-alpha-trimmed-1";
@@ -1777,46 +1763,48 @@ export class SpriteRenderer {
     context.restore(); return true;
   }
 
-  drawTacticalEnemy(context, x, y, width, height, actor = {}, elapsed = 0, options = {}) {
-    const image = this.getReferenceImage("tactical-enemies.png");
-    if (!image?.complete || !image.naturalWidth) return false;
-    const identity = String(actor?.id ?? actor?.squadIndex ?? actor?.name ?? "enemy"); let hash = 0;
-    for (const char of identity) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-    const sx = 8 + (hash % 2) * 24;
-    const motionFrame = Math.floor(Math.max(0, elapsed) * (actor?.state === "attack" ? 11 : 7) + hash) % 8;
-    const sy = 76 + motionFrame * 26, facing = options.facing ?? actor?.direction ?? 1;
-    context.save(); context.globalAlpha *= options.alpha ?? 1; context.imageSmoothingEnabled = false;
-    if (Math.sign(facing || 1) < 0) { context.translate(x + width, 0); context.scale(-1, 1); context.drawImage(image, sx, sy, 19, 23, 0, y, width, height); }
-    else context.drawImage(image, sx, sy, 19, 23, x, y, width, height);
-    context.restore(); return true;
-  }
-
   drawTacticalEffect(context, type, x, y, elapsed = 0, options = {}) {
-    const frames = TACTICAL_COMBAT_EFFECT_SPRITES[type];
-    if (!frames || !Number.isFinite(x) || !Number.isFinite(y)) return false;
+    if (!["muzzle", "impact"].includes(type) || !Number.isFinite(x) || !Number.isFinite(y)) return false;
 
-    const image = this.getReferenceImage("tactical-enemies.png");
-    if (!image?.complete || !image.naturalWidth) return false;
-
-    const frameRate = type === "muzzle" ? 34 : 22;
-    const frame = frames[Math.floor(Math.max(0, elapsed) * frameRate) % frames.length];
-    const defaultWidth = type === "muzzle" ? 34 : 44;
-    const drawWidth = Math.max(1, Math.round(Number(options.size) || defaultWidth));
-    const drawHeight = Math.max(1, Math.round(drawWidth * frame.height / frame.width));
     const alpha = Math.max(0, Math.min(1, Number(options.alpha ?? 1)));
+    const size = Math.max(4, Math.round(Number(options.size) || (type === "muzzle" ? 30 : 38)));
     const facing = Math.sign(options.facing ?? 1) || 1;
+    const pulse = 0.82 + Math.sin(Math.max(0, elapsed) * (type === "muzzle" ? 42 : 28)) * 0.18;
 
     context.save();
-    context.globalAlpha *= alpha;
-    context.imageSmoothingEnabled = false;
+    context.globalAlpha *= alpha * pulse;
     context.translate(Math.round(x), Math.round(y));
-    context.scale(facing < 0 ? -1 : 1, 1);
-    context.drawImage(
-      image,
-      frame.x, frame.y, frame.width, frame.height,
-      -Math.round(drawWidth / 2), -Math.round(drawHeight / 2),
-      drawWidth, drawHeight
-    );
+    if (type === "muzzle") {
+      context.scale(facing, 1);
+      context.fillStyle = "#ffdf78";
+      context.beginPath();
+      context.moveTo(0, 0);
+      context.lineTo(size * 0.72, -size * 0.28);
+      context.lineTo(size, 0);
+      context.lineTo(size * 0.72, size * 0.28);
+      context.closePath();
+      context.fill();
+      context.fillStyle = "#fff7d8";
+      context.beginPath();
+      context.arc(size * 0.35, 0, Math.max(2, size * 0.12), 0, Math.PI * 2);
+      context.fill();
+    } else {
+      context.strokeStyle = "#f7df9a";
+      context.lineWidth = Math.max(1, size * 0.065);
+      context.beginPath();
+      for (let ray = 0; ray < 8; ray += 1) {
+        const angle = ray * Math.PI / 4 + elapsed * 1.2;
+        const inner = size * 0.2;
+        const outer = size * (ray % 2 === 0 ? 0.5 : 0.36);
+        context.moveTo(Math.cos(angle) * inner, Math.sin(angle) * inner);
+        context.lineTo(Math.cos(angle) * outer, Math.sin(angle) * outer);
+      }
+      context.stroke();
+      context.fillStyle = "#fff0bd";
+      context.beginPath();
+      context.arc(0, 0, Math.max(2, size * 0.12), 0, Math.PI * 2);
+      context.fill();
+    }
     context.restore();
     return true;
   }
@@ -1851,16 +1839,10 @@ export class SpriteRenderer {
     if (character === "blue" || character === "gala") {
       return this.drawAnimatedGala(context, character, x, y, width, height, actor ?? {}, elapsed, options);
     }
-    if (character === "hunter") {
-      const identity = String(actor?.id ?? actor?.squadIndex ?? "hunter");
-      let hash = 0;
-      for (const char of identity) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-      if ((actor?.useTacticalSprite ?? hash % 3 === 0) &&
-          this.drawTacticalEnemy(context, x, y, width, height, actor ?? {}, elapsed, options)) return true;
+    if (character === "hunter" || character === "hunter-tactical") {
       const humanFile = selectCampaignHunterAnimation(actor, options.allowHumanV2);
       return this.drawAnimatedReference(context, humanFile, x, y, width, height, actor ?? {}, elapsed, options);
     }
-    if (character === "hunter-tactical") return this.drawTacticalEnemy(context, x, y, width, height, actor ?? {}, elapsed, options);
     if (character === "blocky") return this.drawAnimatedReference(context, "blocky.gif", x, y, width, height, actor ?? {}, 0, options);
     if (character === "human-v1" || character === "human-v2") return this.drawAnimatedReference(context, character + ".gif", x, y, width, height, actor ?? {}, elapsed, options);
     if (character === "ligocristus") {

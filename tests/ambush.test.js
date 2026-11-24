@@ -121,3 +121,27 @@ test("Ambush renders player and hunter characters with the supplied human GIFs",
   await access(new URL("../public/references/human-v1.gif", import.meta.url));
   await access(new URL("../public/references/human-v2.gif", import.meta.url));
 });
+
+
+test("the human hunter can throw alternating grenade types with a cooldown", () => {
+  const game = Object.create(Ambush.prototype);
+  game.running = true;
+  game.role = "hunter";
+  game.player = {
+    id: "ambush-human-player", x: 100, y: 300, w: 38, h: 64,
+    direction: 1, health: 5, defeated: false, grenadeCooldown: 0, grenadeCount: 0
+  };
+  game.enemies = [];
+  game.pointer = { active: true, x: 320 };
+  game.grenades = [];
+  game.burst = () => {};
+
+  assert.equal(game.throwHunterGrenade(), true);
+  assert.equal(game.grenades[0].asset, "orange-grenade.gif");
+  assert.equal(game.grenades[0].targetX, 320);
+  assert.equal(game.throwHunterGrenade(), false);
+
+  game.player.grenadeCooldown = 0;
+  assert.equal(game.throwHunterGrenade(), true);
+  assert.equal(game.grenades[1].asset, "yellow-grenade.gif");
+});

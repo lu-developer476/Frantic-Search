@@ -1154,11 +1154,11 @@ function beginCampaignPrologue() {
   // Hunters remain off-screen until the jeep ambush starts at 2,000 m.
   prologue.hunters = [
     {
-      id: "prologue-poacher-left", x: prologue.jeepX - 190, y: GAME.groundY - 68,
+      id: "prologue-poacher-left", x: prologue.captureX - 268, y: GAME.groundY - 68,
       w: 44, h: 68, health: 1, maxHealth: 1, state: "patrol", direction: 1, defeated: false
     },
     {
-      id: "prologue-poacher-right", x: prologue.jeepX + 210, y: GAME.groundY - 68,
+      id: "prologue-poacher-right", x: prologue.captureX + 132, y: GAME.groundY - 68,
       w: 44, h: 68, health: 1, maxHealth: 1, state: "patrol", direction: -1, defeated: false
     }
   ];
@@ -1544,7 +1544,7 @@ function updateCampaignPrologue(delta) {
       player.animationState = "impact";
       player.animationTimer = 0.4;
       player.state = "stunned";
-      cameraX = Math.max(0, prologue.jeepX - 330);
+      cameraX = Math.max(0, prologue.captureX - 408);
       updatePrologueDistance(prologue.captureX);
       audio.hit();
     }
@@ -1555,8 +1555,8 @@ function updateCampaignPrologue(delta) {
   if (prologue.phase === "capture") {
     const progress = prologue.progress;
     const center = prologue.captureX;
-    prologue.hunters[0].x = prologue.jeepX - 190 + progress * 170;
-    prologue.hunters[1].x = prologue.jeepX + 210 - progress * 138;
+    prologue.hunters[0].x = prologue.captureX - 268 + progress * 170;
+    prologue.hunters[1].x = prologue.captureX + 132 - progress * 138;
     prologue.hunters.forEach((hunter) => {
       hunter.state = progress > 0.25 ? "investigate" : "patrol";
       hunter.direction = hunter.x < center ? 1 : -1;
@@ -1574,16 +1574,15 @@ function updateCampaignPrologue(delta) {
     prologue.violetaActor.x = prologue.startX - 70 - prologue.violetaActor.w / 2 +
       Math.max(0, progress - 0.68) * 74;
     prologue.violetaActor.motionSpeed = progress > 0.68 ? 90 : 0;
-    prologue.jeepVisualX = prologue.jeepX + Math.max(0, progress - 0.7) * 250;
-    cameraX = Math.max(0, prologue.jeepVisualX - 330);
+    cameraX = Math.max(0, prologue.captureX - 408 + Math.max(0, progress - 0.7) * 250);
     const event = prologue.update(delta);
     if (event === "capture") {
       prologue.violetaActor.state = "alert";
       prologue.violetaActor.animationState = null;
       campaign.objective = "FOLLOW BRISA'S TRAIL";
       campaign.queueScene("prologue-capture", "THE NOISE IN THE WOODS", [
-        "At 2,000 meters, Brisa reaches a narrow service track and spots a lone poachers' jeep. No hunters are visible; the vehicle appears abandoned.",
-        "As she approaches, two hunters burst from cover and cut off her way home. Brisa struggles, but they force her into the jeep and speed away. Gala wakes to the engine and follows the tracks."
+        "At 2,000 meters, Brisa reaches a narrow service track and notices signs of a recent presence. No hunters are visible.",
+        "As she investigates, two hunters burst from cover and cut off her way home. Brisa struggles, but they capture her and disappear into the trees. Gala wakes to the commotion and follows the tracks."
       ]);
       updateCampaignHud();
       renderStoryPanel();
@@ -1713,10 +1712,6 @@ function drawJeep(x, y, { scale = 1, alpha = 1, label = "POACHER // 04" } = {}) 
   ctx.restore();
 }
 
-function drawPrologueJeep(x) {
-  drawJeep(x, GAME.groundY - 78);
-}
-
 function drawWildlifeJeep(chase) {
   const sway = Math.sin(elapsed * 1.7 + chase.phase) * 5;
   drawJeep(chase.x + sway, GAME.groundY - 78, {
@@ -1774,11 +1769,6 @@ function drawCampaignPrologueActors() {
   if (!prologue?.active) return;
 
   if (["rest", "explore", "capture", "capture-dialog"].includes(prologue.phase)) {
-    // Keep the jeep completely out of view until Brisa reaches the 2,000 m
-    // milestone. The hunters are revealed later during the ambush animation.
-    if (["capture", "capture-dialog"].includes(prologue.phase)) {
-      drawPrologueJeep(prologue.jeepVisualX ?? prologue.jeepX);
-    }
     drawDino(
       prologue.violetaActor.x, prologue.violetaActor.y,
       prologue.violetaActor.w, prologue.violetaActor.h,
@@ -1804,9 +1794,6 @@ function drawCampaignPrologueActors() {
 
   drawPrologueTracks(prologue);
   if (["search", "tracks-dialog", "character-select"].includes(prologue.phase)) {
-    if (prologue.rosaCaptured) {
-      drawPrologueJeep(prologue.jeepVisualX ?? prologue.jeepX);
-    }
     const actor = prologue.violetaActor;
     drawDino(actor.x, actor.y, actor.w, actor.h, "#75a99b", "blue", elapsed, 1, actor.facing, actor);
     if (prologue.vastiActor) {

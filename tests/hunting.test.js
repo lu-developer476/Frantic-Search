@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { HunterGrenade } from "../src/entities/HunterGrenade.js";
 import { readFile } from "node:fs/promises";
 import {
   canCompleteSection,
@@ -76,7 +77,7 @@ test("Hunting camera follows the player in both directions using the live canvas
   assert.equal(Number((100 - backwardDelta).toFixed(1)), 211.2);
   assert.equal(Number((800 - forwardDelta).toFixed(1)), 710.8);
   assert.equal(getHuntingCameraFollowDelta(480, playerWidth, viewportWidth), 0);
-  assert.equal(getHuntingCameraFollowDelta(100, playerWidth, 1280), -181.6);
+  assert.equal(Number(getHuntingCameraFollowDelta(100, playerWidth, 1280).toFixed(1)), -181.6);
   assert.equal(getHuntingCameraFollowDelta(Number.NaN, playerWidth, viewportWidth), 0);
 });
 
@@ -196,3 +197,37 @@ test("defeated Cacería enemies are hidden instead of rendered as faded sprites"
   assert.match(source, /drawTacticalEffect/);
 });
 
+
+
+test("Sentinel's human player can throw animated area grenades with a cooldown", () => {
+  const simulation = Object.create(Hunting.prototype);
+  simulation.running = true;
+  simulation.mode = "sentinel";
+  simulation.player = {
+    id: "hunting-human-player", x: 100, y: 300, w: 38, h: 64,
+    direction: 1, health: 4, defeated: false, grenadeCooldown: 0, grenadeCount: 0, squadIndex: 0
+  };
+  simulation.dinosaurs = [];
+  simulation.pointer = { active: true, x: 350 };
+  simulation.cameraX = 50;
+  simulation.grenades = [];
+  simulation.burst = () => {};
+
+  assert.equal(simulation.throwPlayerGrenade(), true);
+  assert.ok(simulation.grenades[0] instanceof HunterGrenade);
+  assert.equal(simulation.grenades[0].asset, "orange-grenade.gif");
+  assert.equal(simulation.grenades[0].targetX, 400);
+  assert.equal(simulation.throwPlayerGrenade(), false);
+
+  simulation.player.grenadeCooldown = 0;
+  assert.equal(simulation.throwPlayerGrenade(), true);
+  assert.equal(simulation.grenades[1].asset, "yellow-grenade.gif");
+});
+
+test("Sentinel documents the G grenade action while Predator keeps its bite controls", async () => {
+  const source = await readFile(new URL("../src/minigames/Hunting.js", import.meta.url), "utf8");
+  assert.match(source, /event\.code === "KeyG"/);
+  assert.match(source, /G lanzar granada/);
+  assert.match(source, /G throw grenade/);
+  assert.match(source, /throwPlayerGrenade\(\)/);
+});

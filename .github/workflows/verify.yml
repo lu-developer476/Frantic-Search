@@ -32,6 +32,6 @@ jobs:
           tests/collectibles.test.js
           tests/checkpoints.test.js
           tests/hunter-projectiles.test.js
-
+          tests/hunting.test.js
       - name: Build production bundle
         run: npm run build

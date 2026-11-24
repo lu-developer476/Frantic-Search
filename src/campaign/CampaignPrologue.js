@@ -32,8 +32,6 @@ export class CampaignPrologue {
 
     this.startX = startX;
     this.captureX = startX + PROLOGUE_MILESTONES.capture;
-    this.jeepX = this.captureX - 78;
-    this.jeepVisualX = this.jeepX;
     this.fightStartX = startX + PROLOGUE_MILESTONES.fightStart;
     this.trackX = startX + PROLOGUE_MILESTONES.encounter;
     this.encounterX = this.trackX;

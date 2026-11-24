@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { HunterEnemy } from "../src/entities/HunterEnemy.js";
 import { HunterProjectile } from "../src/entities/HunterProjectile.js";
 import { HunterGrenade } from "../src/entities/HunterGrenade.js";
@@ -91,4 +92,13 @@ test("grenade explosions expire after their visual duration", () => {
   grenade.explode();
   for (let frame = 0; frame < 5; frame += 1) grenade.update(0.1);
   assert.equal(grenade.active, false);
+});
+
+
+test("Ambush human role exposes the G grenade control and damages enemies in the blast", async () => {
+  const source = await readFile(new URL("../src/minigames/Ambush.js", import.meta.url), "utf8");
+  assert.match(source, /const grenadePressed = this\.pressed\.delete\("KeyG"\)/);
+  assert.match(source, /throwHunterGrenade\(\)/);
+  assert.match(source, /if \(this\.role === "hunter"\)[\s\S]*?CollisionSystem\.grenadeHit\(grenade, enemy\)/);
+  assert.match(source, /this\.player\.grenadeCooldown = 5\.8/);
 });

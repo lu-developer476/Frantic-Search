@@ -355,7 +355,6 @@ test("PNG-backed actors and poachers never request removed SVG sprite files", ()
   renderer.drawReferencePng = () => false;
   renderer.animatedReferences = new Map();
   renderer.loadAnimatedReference = () => Promise.resolve(null);
-  renderer.drawTacticalEnemy = () => false;
   renderer.get = () => { throw new Error("A removed SVG sprite was requested"); };
   const context = createRenderContext();
 
@@ -512,4 +511,28 @@ test("the original adaptive soundtrack still changes themes and stops cleanly", 
   music.setEnabled(false);
   music.stop();
   assert.equal(music.timer, null);
+});
+
+
+test("the removed tactical enemy sheet is not shipped or preloaded", () => {
+  const referenceFiles = new Set(readdirSync(resolve("public/references")));
+  assert.equal(referenceFiles.has("tactical-enemies.png"), false);
+  assert.equal(REFERENCE_PRELOAD_FILES.includes("tactical-enemies.png"), false);
+});
+
+test("muzzle and impact effects render from Canvas primitives without image assets", () => {
+  const renderer = Object.create(SpriteRenderer.prototype);
+  renderer.getReferenceImage = () => { throw new Error("tactical image must not be requested"); };
+  const context = {
+    globalAlpha: 1,
+    save() {}, restore() {}, translate() {}, scale() {},
+    beginPath() {}, moveTo() {}, lineTo() {}, closePath() {},
+    fill() {}, stroke() {}, arc() {},
+    fillStyle: "", strokeStyle: "", lineWidth: 1
+  };
+
+  assert.equal(renderer.drawTacticalEffect(context, "muzzle", 20, 30, 0.04, { facing: -1 }), true);
+  assert.equal(renderer.drawTacticalEffect(context, "impact", 20, 30, 0.08), true);
+  assert.equal(renderer.drawTacticalEffect(context, "unknown", 20, 30), false);
+  assert.equal(context.globalAlpha, 1);
 });

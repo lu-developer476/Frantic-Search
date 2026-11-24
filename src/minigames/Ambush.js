@@ -58,6 +58,8 @@ function createHunterActor() {
     maxHealth: 5,
     invulnerable: 0,
     fireCooldown: 0,
+    grenadeCooldown: 0,
+    grenadeCount: 0,
     onGround: true,
     isPlayer: true
   };
@@ -192,8 +194,8 @@ export class Ambush {
     this.root.querySelector("[data-ambush-back-to-entry]").textContent = this.text("VOLVER", "BACK");
     this.root.querySelector("[data-ambush-back-to-roles]").textContent = this.text("VOLVER", "BACK");
     this.root.querySelector("[data-ambush-instructions]").textContent = this.text(
-      "CAZADOR: A / D, ESPACIO para saltar, F o clic para disparar. DINOSAURIO: A / D, ESPACIO para saltar, X para atacar. P: pausa · ESC: salir.",
-      "HUNTER: A / D, SPACE to jump, F or click to fire. DINOSAUR: A / D, SPACE to jump, X to attack. P: pause · ESC: exit."
+      "CAZADOR: A / D, ESPACIO para saltar, F o clic para disparar, G para lanzar granada. DINOSAURIO: A / D, ESPACIO para saltar, X para atacar. P: pausa · ESC: salir.",
+      "HUNTER: A / D, SPACE to jump, F or click to fire, G to throw a grenade. DINOSAUR: A / D, SPACE to jump, X to attack. P: pause · ESC: exit."
     );
     this.root.querySelector("[data-ambush-retry]").textContent = this.text("VOLVER A INTENTAR", "TRY AGAIN");
     this.root.querySelector("[data-ambush-exit]").textContent = this.text("SALIR", "EXIT");
@@ -394,6 +396,29 @@ export class Ambush {
     this.burst(muzzleX, this.player.y + 31, "#ffe5a1", 3);
   }
 
+  throwHunterGrenade() {
+    if (!this.running || this.role !== "hunter" || !this.player ||
+        this.player.health <= 0 || this.player.defeated || this.player.grenadeCooldown > 0) return false;
+    const target = this.nearestEnemy();
+    const targetX = this.pointer.active
+      ? this.pointer.x
+      : target ? target.x + target.w / 2 : this.player.x + this.player.direction * 360;
+    this.player.direction = targetX >= this.player.x + this.player.w / 2 ? 1 : -1;
+    const muzzleX = this.player.x + (this.player.direction > 0 ? this.player.w + 5 : -5);
+    const type = (this.player.grenadeCount++ % 2) === 0 ? "orange" : "yellow";
+    this.grenades.push(new HunterGrenade({
+      x: muzzleX,
+      y: this.player.y + 28,
+      targetX,
+      groundY: FLOOR,
+      shooterId: this.player.id,
+      type
+    }));
+    this.player.grenadeCooldown = 5.8;
+    this.burst(muzzleX, this.player.y + 28, type === "yellow" ? "#f2d45a" : "#ef8a3e", 4);
+    return true;
+  }
+
   nearestEnemy() {
     const x = this.player.x + this.player.w / 2;
     return living(this.enemies).sort((a, b) =>
@@ -412,7 +437,7 @@ export class Ambush {
       player.vy = -560;
       player.onGround = false;
     }
-    this.pressed.clear();
+    const grenadePressed = this.pressed.delete("KeyG");
     player.vy += 1500 * delta;
     player.y += player.vy * delta;
     if (player.y + player.h >= FLOOR) {
@@ -422,7 +447,10 @@ export class Ambush {
     }
     player.invulnerable = Math.max(0, player.invulnerable - delta);
     player.fireCooldown = Math.max(0, player.fireCooldown - delta);
+    player.grenadeCooldown = Math.max(0, (player.grenadeCooldown ?? 0) - delta);
     if (this.keys.has("KeyF") || this.pointerDown) this.fireHunter();
+    if (grenadePressed) this.throwHunterGrenade();
+    this.pressed.clear();
   }
 
   updateDinosaur(delta) {
@@ -533,7 +561,11 @@ export class Ambush {
       grenade.update(delta);
       if (!grenade.justExploded) continue;
       this.burst(grenade.x, grenade.y, grenade.type === "yellow" ? "#f2d45a" : "#ef8a3e", 16);
-      if (this.role !== "hunter" && CollisionSystem.grenadeHit(grenade, this.player)) {
+      if (this.role === "hunter") {
+        for (const enemy of living(this.enemies)) {
+          if (CollisionSystem.grenadeHit(grenade, enemy)) this.damageEnemy(enemy, grenade.damage);
+        }
+      } else if (CollisionSystem.grenadeHit(grenade, this.player)) {
         this.damagePlayer(grenade.damage);
         if (!this.running) return;
       }
