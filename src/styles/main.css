@@ -3391,6 +3391,7 @@ body:has(#ambush-panel.active:not(.playing)) .canvas-wrap {
 #persecution-button,
 #hunting-button,
 #ambush-button,
+#combats-button,
 #race-button,
 #continue-campaign-button,
 #minigames-button *,
@@ -3399,6 +3400,7 @@ body:has(#ambush-panel.active:not(.playing)) .canvas-wrap {
 #persecution-button *,
 #hunting-button *,
 #ambush-button *,
+#combats-button *,
 #race-button *,
 #continue-campaign-button * {
   font-family: var(--font-mono) !important;
@@ -3560,14 +3562,16 @@ body:has(#dino-modal:not(.hidden)) .dino-dialog {
 body:has(#persecution-panel.active:not(.playing)) .menu-toggle,
 body:has(#hunting-panel.active:not(.playing)) .menu-toggle,
 body:has(#ambush-panel.active:not(.playing)) .menu-toggle,
+body:has(#combats-panel.active:not(.playing)) .menu-toggle,
 body:has(#race-panel.active:not(.playing)) .menu-toggle {
   display: none !important;
 }
 
-/* All four minigame/exploration choices share the same muted green button treatment. */
+/* All minigame/exploration choices share the same muted green button treatment. */
 .start-screen-copy .start-menu-view #persecution-button,
 .start-screen-copy .start-menu-view #hunting-button,
 .start-screen-copy .start-menu-view #ambush-button,
+.start-screen-copy .start-menu-view #combats-button,
 .start-screen-copy .start-menu-view #race-button,
 .start-screen-copy .start-menu-view #exploration-button {
   border: 1px solid #8c9d77;
@@ -3577,6 +3581,7 @@ body:has(#race-panel.active:not(.playing)) .menu-toggle {
 .start-screen-copy .start-menu-view #persecution-button:hover,
 .start-screen-copy .start-menu-view #hunting-button:hover,
 .start-screen-copy .start-menu-view #ambush-button:hover,
+.start-screen-copy .start-menu-view #combats-button:hover,
 .start-screen-copy .start-menu-view #race-button:hover,
 .start-screen-copy .start-menu-view #exploration-button:hover {
   border-color: #d8f36a;
