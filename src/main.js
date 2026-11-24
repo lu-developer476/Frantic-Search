@@ -48,6 +48,7 @@ import { Persecution } from "./minigames/Persecution.js";
 import { Hunting } from "./minigames/Hunting.js";
 import { Ambush } from "./minigames/Ambush.js";
 import { Race } from "./minigames/Race.js";
+import { HaxeFlixelHost } from "./minigames/HaxeFlixelHost.js";
 
 const canvas = document.querySelector("#game");
 const nativeDesktopPlayback = window.matchMedia("(min-width: 768px) and (any-pointer: fine)");
@@ -215,10 +216,19 @@ const returnFromMinigame = () => {
     showStartMenuPage("minigames");
   }
 };
-const persecution = new Persecution(persecutionPanel, returnFromMinigame, showGameplayBrief);
-const hunting = new Hunting(huntingPanel, returnFromMinigame, spriteRenderer, showGameplayBrief);
-const ambush = new Ambush(ambushPanel, returnFromMinigame, spriteRenderer, showGameplayBrief);
-const race = new Race(racePanel, returnFromMinigame);
+const useHaxeFlixel = import.meta.env.VITE_HAXEFLIXEL === "1";
+const persecution = useHaxeFlixel
+  ? new HaxeFlixelHost("persecution", persecutionPanel, returnFromMinigame, showGameplayBrief, import.meta.env.BASE_URL)
+  : new Persecution(persecutionPanel, returnFromMinigame, showGameplayBrief);
+const hunting = useHaxeFlixel
+  ? new HaxeFlixelHost("hunting", huntingPanel, returnFromMinigame, showGameplayBrief, import.meta.env.BASE_URL)
+  : new Hunting(huntingPanel, returnFromMinigame, spriteRenderer, showGameplayBrief);
+const ambush = useHaxeFlixel
+  ? new HaxeFlixelHost("ambush", ambushPanel, returnFromMinigame, showGameplayBrief, import.meta.env.BASE_URL)
+  : new Ambush(ambushPanel, returnFromMinigame, spriteRenderer, showGameplayBrief);
+const race = useHaxeFlixel
+  ? new HaxeFlixelHost("race", racePanel, returnFromMinigame, showGameplayBrief, import.meta.env.BASE_URL)
+  : new Race(racePanel, returnFromMinigame);
 const audio = new AudioManager();
 const music = new AdaptiveMusic();
 music.setSamples(audio.samples);
