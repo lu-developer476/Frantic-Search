@@ -205,6 +205,7 @@
                   <button id="persecution-button" type="button" data-i18n="persecution">PERSECUSIÓN</button>
                   <button id="hunting-button" type="button"><span data-i18n="hunting">CACERÍA</span></button>
                   <button id="ambush-button" type="button"><span data-i18n="ambush">EMBOSCADA</span></button>
+                  <button id="combats-button" type="button"><span data-i18n="combats">COMBATES</span></button>
                   <button id="race-button" type="button"><span data-i18n="race">CARRERA</span></button>
                   <button id="exploration-button" type="button">
                     <span data-i18n="exploration">EXPLORACIÓN</span>
@@ -343,6 +344,33 @@
                     <button type="button" data-ambush-role="vasti" data-ambush-basilio>BASILIO</button>
                     <button type="button" data-ambush-role="rosa" data-ambush-brisa>BRISA</button>
                     <button type="button" data-ambush-back-to-roles>VOLVER</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section id="combats-panel" class="combats-panel ambush-panel game-mode-panel" aria-label="Combates" data-i18n-aria="combats" aria-hidden="true">
+              <div class="combats-stage ambush-stage">
+                <canvas width="960" height="540" aria-label="Minijuego de combate entre dinosaurios" data-i18n-aria="combatsCanvas"></canvas>
+                <div class="combats-top ambush-top">
+                  <span>FRANTIC SEARCH // DINO FIGHTZ</span>
+                  <span data-combats-status>ROSTER // PENDING</span>
+                </div>
+                <div class="combats-intro ambush-intro">
+                  <small>FRANTIC SEARCH // DINO FIGHTZ</small>
+                  <h2 data-combats-title>COMBATES</h2>
+                  <p data-combats-subtitle>Prepará tu dinosaurio y enfrentá a un rival en la arena del bosque.</p>
+                  <p class="combats-instructions ambush-instructions" data-combats-instructions></p>
+                  <p class="combats-result ambush-result" data-combats-result hidden></p>
+                  <div class="combats-side-picker" data-combats-side-picker>
+                    <button type="button" class="is-selected" data-combats-side="player">TU DINOSAURIO</button>
+                    <button type="button" data-combats-side="opponent">RIVAL</button>
+                  </div>
+                  <div class="combats-roster" data-combats-roster aria-label="Selección de diez dinosaurios"></div>
+                  <p class="combats-selection-status" data-combats-selection-status>10 ESPACIOS RESERVADOS · PLANTEL PENDIENTE</p>
+                  <div class="combats-actions ambush-actions">
+                    <button type="button" data-combats-start disabled>COMENZAR COMBATE</button>
+                    <button type="button" data-combats-retry hidden>REPETIR</button>
+                    <button type="button" data-combats-exit>SALIR</button>
                   </div>
                 </div>
               </div>
