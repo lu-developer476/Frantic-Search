@@ -1,4 +1,4 @@
-import { getRaceAnimationSource } from "../src/minigames/Race.js";
+import { BREAKING_RACE_ROSTER, getRaceAnimationSource } from "../src/minigames/Race.js";
 import { getDinosaurRenderScale } from "../src/config/DinosaurSizing.js";
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -26,8 +26,21 @@ import {
 import { ENEMY_FADE_DURATION, beginEnemyFade, advanceEnemyFade, getEnemyOpacity, isEnemyFadeComplete } from "../src/systems/EnemyFadeSystem.js";
 import { selectActorPose } from "../src/rendering/AnimationProfiles.js";
 
-test("Brisa selects her dedicated running GIF whenever companion motion is active", () => {
-  assert.equal(BRISA_ANIMATIONS.run, "juvenile-velociraptor-abyssomirabilis-run.gif");
+test("Brisa uses her dedicated idle, jump and run GIFs throughout the project", () => {
+  assert.deepEqual(BRISA_ANIMATIONS, {
+    idle: "brisa-idle.gif",
+    jump: "brisa-jump.gif",
+    run: "brisa-run.gif"
+  });
+  const raceBrisa = BREAKING_RACE_ROSTER.find((dinosaur) => dinosaur.id === "brisa");
+  assert.deepEqual(
+    { idle: raceBrisa.idle, jump: raceBrisa.jump, run: raceBrisa.run },
+    {
+      idle: "references/brisa-idle.gif",
+      jump: "references/brisa-jump.gif",
+      run: "references/brisa-run.gif"
+    }
+  );
   assert.equal(selectJuvenileAnimation({ vx: 0, motionSpeed: 230, state: "following" }), "run");
   assert.equal(selectJuvenileAnimation({ vx: 0, motionSpeed: 0, state: "confined" }), "idle");
   assert.equal(selectJuvenileAnimation({ vx: 240, motionSpeed: 0, state: "running" }), "run");
