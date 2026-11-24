@@ -23,17 +23,16 @@ const DARK_FOREST_LAYERS = Object.freeze([
   { src: FOREST + "front.png", speed: 0.5, scale: 2, anchor: "top", y: 0, tint: ["#0e1722", 0.42] }
 ]);
 
-// The minigame forest uses the dedicated forest layers with a natural green grade.
-// Campaign facility scenes retain their darker blue/charcoal treatment above.
-const MINIGAME_FOREST_LAYERS = Object.freeze([
-  { src: FOREST + "Back.png", speed: 0.12, scale: 2, anchor: "top", y: -40, tint: ["#486341", 0.26] },
-  { src: FOREST + "middle.png", speed: 0.3, scale: 2, anchor: "top", y: -20, tint: ["#496744", 0.22] },
-  { src: FOREST + "front.png", speed: 0.5, scale: 2, anchor: "top", y: 0, tint: ["#587447", 0.18] }
+// The minigames use the forest map exactly as authored: no color key or tint.
+const FOREST_LAYERS = Object.freeze([
+  { src: FOREST + "Back.png", speed: 0.12, scale: 2, anchor: "top", y: -40 },
+  { src: FOREST + "middle.png", speed: 0.3, scale: 2, anchor: "top", y: -20 },
+  { src: FOREST + "front.png", speed: 0.5, scale: 2, anchor: "top", y: 0 }
 ]);
 
 export const PARALLAX_LAYERS = Object.freeze({
   redwood: REDWOOD_LAYERS,
-  forest: MINIGAME_FOREST_LAYERS,
+  forest: FOREST_LAYERS,
   prairie: Object.freeze([
     { src: PARALLAX + "forestbg-layer8.png", speed: 0.28, scale: 3, anchor: "ground", y: 14, key: KEY_OLIVE, tint: ["#d8e58a", 0.22] },
     { src: PARALLAX + "forestbg-layer7.png", speed: 0.42, scale: 3, anchor: "ground", y: 20, key: KEY_OLIVE, tint: ["#d8e58a", 0.16] }
