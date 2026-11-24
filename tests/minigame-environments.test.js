@@ -6,10 +6,10 @@ import {
   MinigameEnvironmentRenderer
 } from "../src/minigames/MinigameEnvironment.js";
 
-test("mini-game scenes keep prairie racing and forest night environments", () => {
+test("mini-game scenes keep racing in prairie and the four combat/chase modes in forest", () => {
   assert.equal(MINIGAME_ENVIRONMENT_SCENES.race.environment, "prairie");
   assert.equal(MINIGAME_ENVIRONMENT_SCENES.race.name, "LONG-DISTANCE RACE");
-  assert.equal(MINIGAME_ENVIRONMENT_SCENES.persecution.environment, "prairie");
+  assert.equal(MINIGAME_ENVIRONMENT_SCENES.persecution.environment, "forest");
   assert.equal(MINIGAME_ENVIRONMENT_SCENES.hunting.environment, "forest");
   assert.equal(MINIGAME_ENVIRONMENT_SCENES.ambush.environment, "forest");
   assert.equal(MINIGAME_ENVIRONMENT_SCENES.combats.environment, "forest");
@@ -19,7 +19,7 @@ test("mini-game scenes keep prairie racing and forest night environments", () =>
   }
   assert.equal(MINIGAME_ENVIRONMENT_SCENES.ambush.sky, "#10131b");
   assert.equal(MINIGAME_ENVIRONMENT_SCENES.combats.sky, "#10131b");
-  assert.ok(MINIGAME_ENVIRONMENT_SCENES.persecution.sky);
+  assert.equal(MINIGAME_ENVIRONMENT_SCENES.persecution.sky, "#10131b");
   assert.ok(MINIGAME_ENVIRONMENT_SCENES.hunting.tree);
   assert.ok(MINIGAME_ENVIRONMENT_SCENES.ambush.platformTop);
 });
