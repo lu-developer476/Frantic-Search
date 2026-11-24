@@ -11,6 +11,10 @@ import {
 } from "../src/minigames/Persecution.js";
 import { removeEdgeBackground, getBottomTransparentPadding } from "../src/minigames/AnimatedGif.js";
 
+test("Xenoraptor background uses the animated idle GIF instead of a static PNG", () => {
+  assert.equal(ASSETS.xenoraptorIdle, "references/xenoraptor-crypticus-idle.gif");
+});
+
 test("Empty Stomach resolves every animation from the current GIF asset directory", async () => {
   const { access } = await import("node:fs/promises");
   await Promise.all(Object.entries(ASSETS).map(([key, path]) =>
@@ -972,6 +976,7 @@ test("all relocated pursuit GIF and reference assets exist directly under public
     "umbraraptor-silvis-jump.gif",
     "umbraraptor-silvis-run.gif",
     "xenoraptor-crypticus-attack.gif",
+    "xenoraptor-crypticus-idle.gif",
     "xenoraptor-crypticus-idle.gif",
     "xenoraptor-crypticus-jump.gif",
     "xenoraptor-crypticus-run.gif",

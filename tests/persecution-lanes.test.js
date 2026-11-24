@@ -302,7 +302,8 @@ test("dead, infected and zombie dinosaurs destroy every same-lane entity without
   const deadly = { kind: "zombie", lane, x: 300, y: baseline - 48, w: 78, h: 48, speed: 200 };
   Object.assign(simulation, {
     deadlyEnemies: [deadly], drRaptors: [backgroundRaptor], googleRexes: [backgroundRex],
-    googlePterodactyls: [], pterodactyls: [],
+    googlePterodactyls: [{ kind: "google-pterodactyl", x: 320, y: baseline - 80, w: 50, h: 30, lane }],
+    pterodactyls: [{ kind: "pterodactyl", x: 320, y: baseline - 60, w: 44, h: 30, lane }],
     deadlySpawnTimer: 60, drRaptorSpawnTimer: 60, googleRexSpawnTimer: 60,
     googlePterodactylSpawnTimer: 60, pterodactylSpawnTimer: 60, pterodactylCaptureTimer: 0
   });
@@ -310,6 +311,8 @@ test("dead, infected and zombie dinosaurs destroy every same-lane entity without
   assert.deepEqual(simulation.enemies, [otherLanePredator]);
   assert.equal(simulation.drRaptors.length, 0);
   assert.equal(simulation.googleRexes.length, 0);
+  assert.equal(simulation.googlePterodactyls.length, 0);
+  assert.equal(simulation.pterodactyls.length, 0);
   assert.equal(simulation.herd.length, 0);
   assert.equal(simulation.eggs.length, 0);
   assert.equal(simulation.rocks.length, 0);
@@ -318,4 +321,64 @@ test("dead, infected and zombie dinosaurs destroy every same-lane entity without
   assert.equal(simulation.bushes.length, 0);
   assert.equal(simulation.deadlyEnemies.length, 1);
   assert.ok(deadly.x < 300, "the lethal dinosaur keeps advancing after destroying obstacles");
+});
+
+
+test("background dinosaurs wait through their two-second alert and flee only when a predator approaches from the left", () => {
+  const raptor = { kind: "dr-raptor", state: "alerting", x: 700, y: 378, w: 92, h: 70, lane: null, alertTimer: 2, respawnTimer: 0 };
+  const rex = { kind: "google-rex", state: "alerting", x: 820, y: 384, w: 76, h: 64, lane: null, alertTimer: 2, respawnTimer: 0 };
+  const simulation = makeSimulation();
+  Object.assign(simulation, {
+    drRaptors: [raptor], googleRexes: [rex], deadlyEnemies: [],
+    googlePterodactyls: [], pterodactyls: [],
+    drRaptorSpawnTimer: 60, googleRexSpawnTimer: 60,
+    googlePterodactylSpawnTimer: 60, pterodactylSpawnTimer: 60,
+    pterodactylCaptureTimer: 0, player: { x: 200, w: 80, y: 366, h: 66, lane: 3 }
+  });
+  simulation.enemies = [];
+  simulation.updateSpecialActors(2, 150, { x: 20, y: 20, w: 10, h: 10 });
+  assert.equal(raptor.state, "walking");
+  assert.equal(rex.state, "idle");
+  simulation.updateSpecialActors(0.1, 150, { x: 20, y: 20, w: 10, h: 10 });
+  assert.equal(raptor.state, "walking");
+  assert.equal(rex.state, "idle");
+  simulation.enemies = [{ state: "chasing", x: 650, w: 70 }];
+  simulation.updateSpecialActors(0.01, 150, { x: 20, y: 20, w: 10, h: 10 });
+  assert.equal(raptor.state, "fleeing-background");
+  assert.equal(rex.state, "fleeing-background");
+});
+
+test("a Google pterodactyl keeps Coral's egg as its reward after releasing her", () => {
+  const egg = createEgg(3, 280);
+  const bird = { kind: "pterodactyl", state: "carrying", x: 180, y: 280, w: 116, h: 72, lane: 3, direction: -1 };
+  const simulation = makeSimulation();
+  Object.assign(simulation, {
+    player: { x: 200, y: 320, w: 80, h: 66, lane: 3, trappedTimer: 0.1, vy: 0, grounded: true },
+    carriedItem: egg, pterodactyls: [bird], pterodactylCaptureTimer: 0.01,
+    pterodactylCaptureMode: "transport", deadlyEnemies: [], drRaptors: [], googleRexes: [],
+    googlePterodactyls: [], deadlySpawnTimer: 60, drRaptorSpawnTimer: 60,
+    googleRexSpawnTimer: 60, googlePterodactylSpawnTimer: 60, pterodactylSpawnTimer: 60
+  });
+  simulation.updateSpecialActors(0.02, 150, { x: 200, y: 320, w: 80, h: 66 });
+  assert.equal(simulation.carriedItem, null);
+  assert.equal(bird.carriedEgg, egg);
+  assert.equal(bird.state, "fleeing");
+  assert.equal(bird.lane, null);
+  assert.ok(simulation.pterodactyls.includes(bird));
+});
+
+test("background dinosaurs reappear in a random lane after three seconds offscreen", () => {
+  const actor = { kind: "dr-raptor", state: "offscreen", x: 1100, y: 378, w: 92, h: 70, lane: null, respawnTimer: 0.01 };
+  const simulation = makeSimulation();
+  Object.assign(simulation, {
+    drRaptors: [actor], googleRexes: [], deadlyEnemies: [], enemies: [],
+    googlePterodactyls: [], pterodactyls: [],
+    drRaptorSpawnTimer: 60, googleRexSpawnTimer: 60,
+    googlePterodactylSpawnTimer: 60, pterodactylSpawnTimer: 60,
+    pterodactylCaptureTimer: 0, player: { x: 200, w: 80, y: 366, h: 66, lane: 3 }
+  });
+  simulation.updateSpecialActors(0.02, 150, { x: 20, y: 20, w: 10, h: 10 });
+  assert.equal(actor.state, "fleeing");
+  assert.ok(actor.lane >= 0 && actor.lane < LANE_COUNT);
+  assert.equal(actor.x, -actor.w);
 });
