@@ -434,8 +434,8 @@ export class Combats {
     });
     if (!rendered) {
       const gradient = this.ctx.createLinearGradient(0, 0, 0, HEIGHT);
-      gradient.addColorStop(0, "#70877a");
-      gradient.addColorStop(1, "#263b2f");
+      gradient.addColorStop(0, "#10131b");
+      gradient.addColorStop(1, "#27302a");
       this.ctx.fillStyle = gradient;
       this.ctx.fillRect(0, 0, WIDTH, HEIGHT);
       this.ctx.fillStyle = "#795b3d";
