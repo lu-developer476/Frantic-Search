@@ -1,6 +1,6 @@
 # Plan de assets: audio, tilesets y mapas
 
-> **Nota de vigencia (24/11/2026):** este documento conserva propuestas y decisiones de planificación anteriores; no es el inventario del renderizado actual. Para saber qué archivos existen y cuáles solicita el juego en ejecución, la referencia es [`public/environment/ASSET_USAGE.md`](../public/environment/ASSET_USAGE.md). En la limpieza del 24/11/2026 se eliminaron los recursos ambientales sin referencias de ejecución. Las menciones de este plan a capas, tilesets o spritesheets retirados deben entenderse como propuestas históricas, no como archivos disponibles.
+> **Nota de vigencia (24/11/2026):** este documento conserva propuestas y decisiones de planificación anteriores; no es el inventario del renderizado actual. Para saber qué archivos existen y cuáles solicita el juego en ejecución, la referencia es [`public/environment/ASSET_USAGE.md`](../public/environment/ASSET_USAGE.md). En la limpieza del 24/11/2026 se eliminaron los recursos ambientales sin referencias de ejecución. Las menciones de este plan a capas, tilesets o spritesheets retirados deben entenderse como propuestas históricas, no como archivos disponibles. El 24/11/2026 se eliminó por completo `public/environment/maps/facility/`; Cacería, Emboscada y Combates usan ahora las tres capas de `maps/forest/` con el entorno `forest`.
 
 Decisiones para reemplazar lo generado por código (música/SFX de Web Audio y escenarios dibujados con Canvas) por assets reales, según la historia de la campaña y los minijuegos.
 
