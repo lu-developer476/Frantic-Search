@@ -741,9 +741,9 @@ export class Ambush {
 
     if (!layeredBackground) {
       const gradient = ctx.createLinearGradient(0, 0, 0, HEIGHT);
-    gradient.addColorStop(0, "#9cbdb6");
-    gradient.addColorStop(0.62, "#d2d2ae");
-    gradient.addColorStop(1, "#788d68");
+    gradient.addColorStop(0, "#10131b");
+    gradient.addColorStop(0.62, "#18211f");
+    gradient.addColorStop(1, "#27302a");
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
     for (let i = 0; i < 13; i += 1) {
