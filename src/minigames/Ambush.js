@@ -254,8 +254,6 @@ export class Ambush {
     this.grenades = [];
     this.particles = [];
     this.combatEffects = [];
-    this.blockyPickups = [];
-    this.blockySpawnTimer = 4 + Math.random() * 3;
     this.spawnRemaining = 0;
     this.spawnTimer = 0;
     this.intermission = 0;
@@ -584,23 +582,6 @@ export class Ambush {
     if (this.role === "hunter") this.updateHunter(delta);
     else this.updateDinosaur(delta);
     if (!this.running) return;
-    this.blockySpawnTimer -= delta;
-    if (this.blockySpawnTimer <= 0) {
-      this.blockyPickups.push({ x: -48, y: FLOOR - 48, w: 42, h: 44, vx: 290, phase: Math.random() * Math.PI * 2 });
-      this.blockySpawnTimer = 12 + Math.random() * 8;
-    }
-    for (const pickup of this.blockyPickups) {
-      pickup.x += pickup.vx * delta;
-      pickup.y = FLOOR - pickup.h + Math.sin(this.elapsed * 4.5 + pickup.phase) * 3;
-      if (!pickup.collected && this.player && overlaps(pickup, this.player)) {
-        pickup.collected = true;
-        this.player.health = Math.min(this.player.maxHealth, this.player.health + 1);
-        this.player.invulnerable = Math.max(this.player.invulnerable ?? 0, 0.45);
-        this.burst(pickup.x + pickup.w / 2, pickup.y + pickup.h / 2, "#d8f36a", 14);
-      }
-    }
-    this.blockyPickups = this.blockyPickups.filter(pickup => !pickup.collected && pickup.x < WIDTH + 70);
-
     if (this.waveStarted) {
       this.spawnTimer -= delta;
       if (this.spawnRemaining > 0 && this.spawnTimer <= 0) this.spawnEnemy();
@@ -832,11 +813,6 @@ export class Ambush {
     const ctx = this.ctx;
     ctx.clearRect(0, 0, WIDTH, HEIGHT);
     this.drawBackground();
-    for (const pickup of this.blockyPickups ?? []) {
-      if (!this.spriteRenderer?.drawAnimated(ctx, "blocky", pickup.x, pickup.y, pickup.w, pickup.h, { state: "running", direction: 1 }, this.elapsed, { facing: 1 })) {
-        ctx.fillStyle = "#d8f36a"; ctx.fillRect(pickup.x + 8, pickup.y + 10, pickup.w - 16, pickup.h - 18);
-      }
-    }
     if (this.role === "hunter") {
       for (const enemy of this.enemies) this.drawDinosaurEnemy(enemy);
       if (this.player) this.drawHuman(this.player, true);

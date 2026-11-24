@@ -88,7 +88,7 @@ export const DINOSAUR_SIZE_PROFILES = Object.freeze({
     art: { file: "venatosaurus-impavidus-idle.gif", width: 172, height: 100, bytes: 25_600 }
   }),
   gala: Object.freeze({
-    species: "Velociraptor (adult)", role: "playable", lengthMeters: 3.4, bodyAspect: 0.97,
+    species: "Velociraptor (adult)", role: "playable", lengthMeters: 3.4, bodyAspect: 0.97, sizeMultiplier: 0.7,
     art: { file: "gala-idle.gif", width: 420, height: 336, bytes: 50_256, detailTier: "high" }
   }),
   venatosaurusSaevidicus: Object.freeze({
@@ -132,7 +132,8 @@ export function resolveDinosaurSize(key) {
   const sizeClass = classifySizeClass(profile.lengthMeters);
   const detail = classifyDetailTier(profile.art);
   const renderWidth = Math.round(
-    sizeClass.minWidth + (sizeClass.maxWidth - sizeClass.minWidth) * detail.bandPosition
+    (sizeClass.minWidth + (sizeClass.maxWidth - sizeClass.minWidth) * detail.bandPosition) *
+    (profile.sizeMultiplier ?? 1)
   );
   const renderHeight = Math.round(renderWidth * profile.art.height / profile.art.width);
 

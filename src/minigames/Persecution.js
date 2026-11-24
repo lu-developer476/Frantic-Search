@@ -840,10 +840,27 @@ export class Persecution {
       this.pterodactylSpawnTimer = 14 + Math.random() * 9;
     }
     for (const enemy of this.deadlyEnemies) {
-      enemy.x -= (speed * 0.72 + enemy.speed) * delta; enemy.y = getLaneBaseline(enemy.lane) - enemy.h;
+      // These variants are unstoppable: they destroy every same-lane entity they touch.
+      // The player can only survive by changing lanes; the lethal dinosaur never stops.
+      enemy.x -= (speed * 0.72 + enemy.speed) * delta;
+      enemy.y = getLaneBaseline(enemy.lane) - enemy.h;
       const hitbox = { x: enemy.x + 12, y: enemy.y + 8, w: enemy.w - 24, h: enemy.h - 12 };
-      if (enemy.lane === this.getEntityLane(this.player) && overlaps(playerHitbox, hitbox)) { this.finish(enemy.kind); return true; }
-      this.herd = this.herd.filter((prey) => this.getEntityLane(prey) !== enemy.lane || !overlaps(hitbox, prey));
+      if (enemy.lane === this.getEntityLane(this.player) && overlaps(playerHitbox, hitbox)) {
+        this.finish(enemy.kind);
+        return true;
+      }
+      const clearLane = (entities) => entities.filter((entity) =>
+        this.getEntityLane(entity) !== enemy.lane || !overlaps(hitbox, entity)
+      );
+      for (const collection of [
+        "enemies", "herd", "eggs", "rocks", "pits", "mudPuddles", "bushes",
+        "drRaptors", "googleRexes", "pterodactyls", "googlePterodactyls"
+      ]) {
+        if (Array.isArray(this[collection])) this[collection] = clearLane(this[collection]);
+      }
+      if (this.carriedItem &&
+          this.getEntityLane(this.carriedItem) === enemy.lane &&
+          overlaps(hitbox, this.carriedItem)) this.carriedItem = null;
     }
     this.deadlyEnemies = this.deadlyEnemies.filter((enemy) => enemy.x + enemy.w > -50);
     for (const raptor of this.drRaptors) {

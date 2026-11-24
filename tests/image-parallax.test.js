@@ -95,10 +95,13 @@ test("color key makes the background transparent and tint is applied", () => {
 test("the forest minigame parallax preserves the original map colors", () => {
   const layers = PARALLAX_LAYERS.forest;
   assert.deepEqual(layers.map(layer => layer.src), [
-    "environment/maps/forest/Back.png",
+    "environment/maps/forest/moon.png",
+    "environment/maps/forest/back.png",
     "environment/maps/forest/middle.png",
     "environment/maps/forest/front.png"
   ]);
+  assert.equal(layers[0].repeat, false, "the moon is a single distant background element, not a tiled layer");
+  assert.ok(layers[0].speed < layers[1].speed, "the moon must move more slowly than the back layer");
   for (const layer of layers) {
     assert.equal(layer.tint, undefined, layer.src);
     assert.equal(layer.key, undefined, layer.src);

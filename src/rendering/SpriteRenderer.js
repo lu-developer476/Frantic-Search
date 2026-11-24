@@ -87,7 +87,7 @@ export const JUVENILE_ANIMATED_CHARACTERS = Object.freeze({
 
 const GALA_REFERENCE = Object.freeze({
   file: GALA_ANIMATION_ASSETS.idle,
-  sourceFacing: 1,
+  sourceFacing: -1,
   scale: DINOSAUR_REFERENCE_SCALES.gala
 });
 const BASILIO_REFERENCE = Object.freeze({
@@ -191,7 +191,7 @@ export const CAMPAIGN_ANIMATED_REFERENCE_FILES = Object.freeze([
   ...Object.values(VENATOSAURUS_ANIMATION_ASSETS).flatMap((assets) => [
     assets.attack, assets.idle, assets.jump, assets.run, assets.walk
   ]),
-  "human-v1.gif", "human-v2.gif", "blocky.gif", "bullet.gif", "orange-grenade.gif", "yellow-grenade.gif"
+  "human-v1.gif", "human-v2.gif", "bullet.gif", "orange-grenade.gif", "yellow-grenade.gif"
 ]);
 
 export const REFERENCE_PRELOAD_FILES = [
@@ -446,7 +446,7 @@ export class SpriteRenderer {
       : Math.abs(Math.sin(elapsed * 7.2 + phaseOf(actor, character))) * 0.45;
     const groundAlignedY = y + height - drawHeight + scaledBottomPadding + bob;
     const facing = options.facing ?? actor?.facing ?? actor?.direction ?? 1;
-    const flip = Math.sign(facing || 1) !== 1;
+    const flip = Math.sign(facing || 1) !== GALA_REFERENCE.sourceFacing;
 
     context.save();
     context.globalAlpha *= options.alpha ?? 1;
@@ -1843,7 +1843,6 @@ export class SpriteRenderer {
       const humanFile = selectCampaignHunterAnimation(actor, options.allowHumanV2);
       return this.drawAnimatedReference(context, humanFile, x, y, width, height, actor ?? {}, elapsed, options);
     }
-    if (character === "blocky") return this.drawAnimatedReference(context, "blocky.gif", x, y, width, height, actor ?? {}, 0, options);
     if (character === "human-v1" || character === "human-v2") return this.drawAnimatedReference(context, character + ".gif", x, y, width, height, actor ?? {}, elapsed, options);
     if (character === "ligocristus") {
       return this.drawAnimatedLigocristus(context, x, y, width, height, actor ?? {}, elapsed, options);

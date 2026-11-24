@@ -273,3 +273,45 @@ test("Empty Stomach saves a checkpoint at every 250-meter boundary", () => {
   assert.equal(simulation.checkpoint.milestone, 2);
   assert.equal(simulation.checkpoint.distance, CHECKPOINT_INTERVAL_DISTANCE * 2);
 });
+
+
+test("dead, infected and zombie dinosaurs destroy every same-lane entity without slowing down", () => {
+  const lane = 3;
+  const baseline = LANE_BASELINES[lane];
+  const predator = { x: 320, y: baseline - 42, w: 30, h: 30, lane };
+  const prey = { x: 320, y: baseline - 42, w: 30, h: 30, lane };
+  const egg = createEgg(lane, 320);
+  egg.y = baseline - egg.h;
+  const rock = { x: 320, y: baseline - 25, w: 34, h: 25, lane };
+  const pit = { x: 320, y: baseline - 24, w: 32, h: 24, lane };
+  const mud = { x: 320, y: baseline - 25, w: 36, h: 25, lane };
+  const bush = { x: 320, y: baseline - 40, w: 40, h: 40, lane };
+  const otherLanePredator = { x: 320, y: LANE_BASELINES[2] - 42, w: 30, h: 30, lane: 2 };
+  const simulation = makeSimulation({
+    player: { x: 40, y: baseline - 66, w: 80, h: 66, lane },
+    enemies: [predator, otherLanePredator],
+    herd: [prey],
+    eggs: [egg],
+    rocks: [rock],
+    pits: [pit],
+    mudPuddles: [mud],
+    bushes: [bush]
+  });
+  const deadly = { kind: "zombie", lane, x: 300, y: baseline - 48, w: 78, h: 48, speed: 200 };
+  Object.assign(simulation, {
+    deadlyEnemies: [deadly], drRaptors: [], googleRexes: [],
+    googlePterodactyls: [], pterodactyls: [],
+    deadlySpawnTimer: 60, drRaptorSpawnTimer: 60, googleRexSpawnTimer: 60,
+    googlePterodactylSpawnTimer: 60, pterodactylSpawnTimer: 60, pterodactylCaptureTimer: 0
+  });
+  simulation.updateSpecialActors(0.01, 0, { x: 20, y: 20, w: 10, h: 10 });
+  assert.deepEqual(simulation.enemies, [otherLanePredator]);
+  assert.equal(simulation.herd.length, 0);
+  assert.equal(simulation.eggs.length, 0);
+  assert.equal(simulation.rocks.length, 0);
+  assert.equal(simulation.pits.length, 0);
+  assert.equal(simulation.mudPuddles.length, 0);
+  assert.equal(simulation.bushes.length, 0);
+  assert.equal(simulation.deadlyEnemies.length, 1);
+  assert.ok(deadly.x < 300, "the lethal dinosaur keeps advancing after destroying obstacles");
+});

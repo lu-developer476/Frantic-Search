@@ -48,8 +48,17 @@ test("every profile resolves to a render width inside its own class band", () =>
   for (const key of Object.keys(DINOSAUR_SIZE_PROFILES)) {
     const size = resolveDinosaurSize(key);
     const band = SIZE_CLASSES.find((c) => c.id === size.sizeClass);
-    assert.ok(size.renderWidth >= band.minWidth && size.renderWidth <= band.maxWidth, key);
+    const multiplier = DINOSAUR_SIZE_PROFILES[key].sizeMultiplier ?? 1;
+    const classifiedWidth = size.renderWidth / multiplier;
+    assert.ok(classifiedWidth >= band.minWidth && classifiedWidth <= band.maxWidth, key);
   }
+});
+
+test("Gala is reduced by 30 percent and remains between Brisa and Basilio", () => {
+  assert.equal(DINOSAUR_SIZE_PROFILES.gala.sizeMultiplier, 0.7);
+  const width = (key) => resolveDinosaurSize(key).renderWidth;
+  assert.ok(width("brisa") < width("gala"));
+  assert.ok(width("gala") < width("basilio"));
 });
 
 test("the real-world hierarchy holds: Brisa < Gala < Indoraptor < Basilio < Indominus < Brontosaurus", () => {

@@ -3,12 +3,13 @@
  * Campaign HUD remains an independent HTML/CSS interface.
  */
 export const MINIGAME_HUD_COLORS = Object.freeze({
-  primary: "#30452a",
-  secondary: "#f4efc2",
-  notice: "#fff0bd",
+  primary: "#4a3022",
+  secondary: "#4a3022",
+  notice: "#6b3f28",
+  outline: "#fff0c9",
   track: "#34463a",
   fill: "#d8f36a",
-  danger: "#e27b60",
+  danger: "#8b3324",
   empty: "#34463a"
 });
 
@@ -21,8 +22,16 @@ export function drawMinigameHudText(context, value, x, y, {
   context.fillStyle = color ?? MINIGAME_HUD_COLORS[tone] ?? MINIGAME_HUD_COLORS.secondary;
   context.textAlign = align;
   context.textBaseline = "alphabetic";
-  if (Number.isFinite(maxWidth) && maxWidth > 0) context.fillText(String(value), x, y, maxWidth);
-  else context.fillText(String(value), x, y);
+  context.lineJoin = "round";
+  context.strokeStyle = MINIGAME_HUD_COLORS.outline;
+  context.lineWidth = Math.max(2, size * 0.2);
+  if (Number.isFinite(maxWidth) && maxWidth > 0) {
+    if (typeof context.strokeText === "function") context.strokeText(String(value), x, y, maxWidth);
+    context.fillText(String(value), x, y, maxWidth);
+  } else {
+    if (typeof context.strokeText === "function") context.strokeText(String(value), x, y);
+    context.fillText(String(value), x, y);
+  }
   context.restore();
 }
 

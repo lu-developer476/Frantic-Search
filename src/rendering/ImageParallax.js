@@ -18,14 +18,15 @@ const REDWOOD_LAYERS = Object.freeze([
 ]);
 
 const DARK_FOREST_LAYERS = Object.freeze([
-  { src: FOREST + "Back.png", speed: 0.12, scale: 2, anchor: "top", y: -40, tint: ["#0e1722", 0.62] },
+  { src: FOREST + "back.png", speed: 0.12, scale: 2, anchor: "top", y: -40, tint: ["#0e1722", 0.62] },
   { src: FOREST + "middle.png", speed: 0.3, scale: 2, anchor: "top", y: -20, tint: ["#0e1722", 0.5] },
   { src: FOREST + "front.png", speed: 0.5, scale: 2, anchor: "top", y: 0, tint: ["#0e1722", 0.42] }
 ]);
 
 // The minigames use the forest map exactly as authored: no color key or tint.
 const FOREST_LAYERS = Object.freeze([
-  { src: FOREST + "Back.png", speed: 0.12, scale: 2, anchor: "top", y: -40 },
+  { src: FOREST + "moon.png", speed: 0.02, scale: 2, anchor: "top", y: 8, repeat: false, align: "right" },
+  { src: FOREST + "back.png", speed: 0.12, scale: 2, anchor: "top", y: -40 },
   { src: FOREST + "middle.png", speed: 0.3, scale: 2, anchor: "top", y: -20 },
   { src: FOREST + "front.png", speed: 0.5, scale: 2, anchor: "top", y: 0 }
 ]);
@@ -167,6 +168,13 @@ export class ImageParallax {
       const width = sourceWidth * layer.scale;
       const height = sourceHeight * layer.scale;
       const y = Math.round(layer.anchor === "top" ? layer.y : groundY + layer.y - height);
+      if (layer.repeat === false) {
+        const baseX = layer.align === "right"
+          ? viewportWidth - width - 48
+          : layer.align === "center" ? (viewportWidth - width) / 2 : 0;
+        context.drawImage(image, Math.round(baseX - cameraX * layer.speed), y, width, height);
+        return;
+      }
       const offset = (((-cameraX * layer.speed) % width) + width) % width;
       for (let x = Math.round(offset - width); x < viewportWidth; x += width) {
         context.drawImage(image, x, y, width, height);

@@ -234,9 +234,8 @@ const input = new InputManager(window, canvas);
 const physics = new PhysicsSystem({ gravity: GAME.gravity, worldBottom: GAME.height + 150 });
 
 const savedCharacter = save.get("selectedCharacter");
-let selected = savedCharacter === "vasti" ? "vasti" : "blue";
-// Brisa is a rescue objective, never a playable character. Migrate old saves
-// that may contain the previous mistaken "rosa" selection back to Gala.
+let selected = "blue";
+// Gala is the only available character in campaign and exploration until Basilio's idle animation is ready.
 if (savedCharacter !== selected) save.update({ selectedCharacter: selected });
 let running = false;
 let paused = false;
@@ -3568,7 +3567,7 @@ function updateCharacterConfirmationCopy() {
 }
 
 function selectCharacter(value) {
-  if (value !== "blue" && value !== "vasti") return;
+  if (value !== "blue") return;
   selected = value;
   save.update({ selectedCharacter: value });
   document.querySelectorAll(".character-card").forEach((card) => {
