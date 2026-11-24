@@ -7,6 +7,7 @@ import { WildDinosaur } from "../entities/WildDinosaur.js";
 import { SpriteRenderer } from "../rendering/SpriteRenderer.js";
 import { MinigameEnvironmentRenderer, MINIGAME_ENVIRONMENT_SCENES } from "./MinigameEnvironment.js";
 
+import { drawMinigameHudBar, drawMinigameHudSegments, drawMinigameHudText } from "./MinigameHud.js";
 let WIDTH = 960;
 const HEIGHT = 540;
 const FLOOR = 438;
@@ -1106,68 +1107,26 @@ export class Hunting {
     }
     ctx.globalAlpha = 1;
 
-    ctx.save();
-    ctx.shadowColor = "rgba(7, 16, 13, .92)";
-    ctx.shadowBlur = 4;
-    ctx.shadowOffsetX = 1;
-    ctx.shadowOffsetY = 2;
-    ctx.font = "17px monospace";
-    ctx.fillStyle = "#f0f3e7";
-    ctx.fillText(formatTime(this.elapsed * 1000), 24, 25);
-    ctx.font = "9px monospace";
-    ctx.fillStyle = "#c8d5c6";
-    ctx.fillText(this.text("TIEMPO", "TIME"), 25, 43);
-    ctx.font = "14px monospace";
-    ctx.fillStyle = "#d8f36a";
     const totalTargets = this.mode === "predator" ? TOTAL_PREDATOR_HUNTERS : TOTAL_DINOSAURS;
-    ctx.fillText(this.kills + "/" + totalTargets, 204, 26);
-    ctx.font = "9px monospace";
-    ctx.fillStyle = "#c8d5c6";
-    ctx.fillText(this.text(
-      this.mode === "predator" ? "CAZADORES" : "DINOSAURIOS",
-      this.mode === "predator" ? "HUNTERS" : "DINOSAURS"
-    ), 204, 43);
-    ctx.font = "14px monospace";
-    ctx.fillStyle = "#f0f3e7";
-    ctx.fillText(this.waveIndex + "/" + this.wavePlan.length, 382, 26);
-    ctx.font = "9px monospace";
-    ctx.fillStyle = "#c8d5c6";
-    ctx.fillText(this.text("OLEADAS", "WAVES"), 382, 43);
-    ctx.font = "9px monospace";
-    ctx.fillStyle = "#c8d5c6";
-    ctx.fillText(this.text("VIDA", "HEALTH"), 548, 26);
-    if (this.mode === "predator") {
-      ctx.fillStyle = "#34463a";
-      ctx.fillRect(548, 33, 150, 8);
-      ctx.fillStyle = "#d8f36a";
-      ctx.fillRect(548, 33, 150 * this.player.health / this.player.maxHealth, 8);
-      ctx.font = "9px monospace";
-      ctx.fillStyle = "#d8f36a";
-      ctx.fillText(this.text("VENATOSAURUS", "VENATOSAURUS"), 740, 26);
-      ctx.fillStyle = "#e7c59d";
-      ctx.fillText(this.text("ESPACIO / CLIC: MORDER", "SPACE / CLICK: BITE"), 740, 43);
-    } else {
-      for (let i = 0; i < this.player.maxHealth; i += 1) {
-        ctx.fillStyle = i < this.player.health ? "#d8f36a" : "#34463a";
-        ctx.fillRect(548 + i * 15, 33, 11, 8);
+    drawMinigameHudText(ctx, formatTime(this.elapsed * 1000), 26, 34, { size: 16, tone: "primary" });
+    drawMinigameHudText(ctx, this.text("OBJETIVOS ", "TARGETS ") + this.kills + "/" + totalTargets, 26, 56);
+    drawMinigameHudText(ctx, this.text("OLEADAS ", "WAVES ") + this.waveIndex + "/" + this.wavePlan.length, 26, 76);
+    if (this.player) {
+      drawMinigameHudText(ctx, this.text("VIDA", "HEALTH"), WIDTH - 246, 34, { size: 13, tone: "primary" });
+      if (this.mode === "predator") {
+        const healthRatio = this.player.health / Math.max(1, this.player.maxHealth);
+        drawMinigameHudBar(ctx, { x: WIDTH - 184, y: 27, width: 158, height: 8, ratio: healthRatio, fillColor: healthRatio <= 0.3 ? "#e27b60" : "#d8f36a" });
+        drawMinigameHudText(ctx, this.text("VENATOSAURUS", "VENATOSAURUS"), WIDTH - 26, 56, { align: "right" });
+        drawMinigameHudText(ctx, this.text("ESPACIO / CLIC: MORDER", "SPACE / CLICK: BITE"), WIDTH - 26, 76, { align: "right", tone: "notice", size: 12 });
+      } else {
+        drawMinigameHudSegments(ctx, { x: WIDTH - 184, y: 26, health: this.player.health, maxHealth: this.player.maxHealth, segmentWidth: 11, segmentHeight: 8, gap: 4 });
+        drawMinigameHudText(ctx, this.text("ESCUADRA 1 + 3 IA", "SQUAD 1 + 3 AI"), WIDTH - 26, 56, { align: "right" });
+        drawMinigameHudText(ctx, this.player.reloadTimer > 0
+          ? this.text("RECARGANDO...", "RELOADING...")
+          : this.text("MUNICIÓN " + this.player.ammo + "/" + this.player.reserveAmmo + " · R: RECARGAR", "AMMO " + this.player.ammo + "/" + this.player.reserveAmmo + " · R: RELOAD"),
+          WIDTH - 26, 76, { align: "right", tone: "notice", size: 12 });
       }
-      ctx.font = "9px monospace";
-      ctx.fillStyle = "#d8f36a";
-      ctx.fillText(this.text("ESCUADRA 1 + 3 IA", "SQUAD 1 + 3 AI"), 740, 26);
-      ctx.fillStyle = "#e7c59d";
-      ctx.fillText(
-        this.text(
-          this.player.reloadTimer > 0
-            ? "RECARGANDO..."
-            : "MUNICIÓN " + this.player.ammo + "/" + this.player.reserveAmmo + " · R: RECARGAR",
-          this.player.reloadTimer > 0
-            ? "RELOADING..."
-            : "AMMO " + this.player.ammo + "/" + this.player.reserveAmmo + " · R: RELOAD"
-        ),
-        740, 43
-      );
     }
-    ctx.restore();
     if (this.pointer.active && this.running) {
       ctx.strokeStyle = "rgba(245,236,190,.85)";
       ctx.lineWidth = 1;

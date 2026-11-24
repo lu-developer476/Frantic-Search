@@ -5,6 +5,7 @@ import {
 import { observeCanvasViewport } from "../rendering/CanvasUtils.js";
 import { MinigameEnvironmentRenderer, MINIGAME_ENVIRONMENT_SCENES } from "./MinigameEnvironment.js";
 
+import { drawMinigameHudBar, drawMinigameHudText } from "./MinigameHud.js";
 let WIDTH = 960;
 const HEIGHT = 540;
 const BASE_WIDTH = 960;
@@ -1483,50 +1484,19 @@ export class Race {
     context.restore();
 
     this.drawEatenEffects();
-    context.save();
-    context.fillStyle = "rgba(27, 39, 29, 0.82)";
-    context.fillRect(12, 10, WIDTH - 24, 48);
-    context.fillStyle = "#f3f1df";
-    context.font = "12px monospace";
-    context.textAlign = "left";
-    context.fillText(this.text("TIEMPO ", "TIME ") + this.elapsed.toFixed(1) + "s", 22, 29);
-
     const player = this.playerRacer;
-    const playerDistance = player
-      ? (player.eaten ? player.eliminationDistance : getRaceDistanceMeters(player.x))
-      : 0;
+    const playerDistance = player ? (player.eaten ? player.eliminationDistance : getRaceDistanceMeters(player.x)) : 0;
     const formattedDistance = Math.floor(playerDistance).toLocaleString(this.locale === "es" ? "es-AR" : "en-US");
-    context.textAlign = "center";
-    context.font = "bold 12px monospace";
-    context.fillText(
-      this.text("DISTANCIA ", "DISTANCE ") + formattedDistance +
-        this.text(" / 10.000 M", " / 10,000 M"),
-      WIDTH / 2,
-      29
-    );
+    drawMinigameHudText(context, this.text("TIEMPO ", "TIME ") + this.elapsed.toFixed(1) + "s", 26, 34, { size: 16, tone: "primary" });
+    drawMinigameHudText(context, this.text("DISTANCIA ", "DISTANCE ") + formattedDistance + this.text(" / 10.000 M", " / 10,000 M"), WIDTH / 2, 34, { size: 16, tone: "primary", align: "center" });
     if (player) {
-      context.textAlign = "right";
-      const ramLabel = player.eaten
-        ? this.text("ELIMINADO", "ELIMINATED")
-        : player.ramCooldown <= 0
-          ? this.text("X: EMBESTIDA LISTA", "X: RAM READY")
-          : this.text("X: RECARGANDO", "X: RECHARGING");
-      context.fillText(
-        this.text("CARRIL ", "LANE ") + (player.lane + 1) + "/4 · " + ramLabel,
-        WIDTH - 22,
-        29
-      );
+      const ramLabel = player.eaten ? this.text("ELIMINADO", "ELIMINATED")
+        : player.ramCooldown <= 0 ? this.text("X: EMBESTIDA LISTA", "X: RAM READY")
+        : this.text("X: RECARGANDO", "X: RECHARGING");
+      drawMinigameHudText(context, this.text("CARRIL ", "LANE ") + (player.lane + 1) + "/4 · " + ramLabel, WIDTH - 26, 58, { align: "right", tone: "secondary", size: 12 });
     }
-
-    const barX = 22;
-    const barY = 42;
-    const barWidth = WIDTH - 44;
     const progress = clamp(playerDistance / RACE_DISTANCE_METERS, 0, 1);
-    context.fillStyle = "rgba(239, 230, 200, 0.3)";
-    context.fillRect(barX, barY, barWidth, 5);
-    context.fillStyle = player?.eaten ? "#d36c58" : "#d8f36a";
-    context.fillRect(barX, barY, barWidth * progress, 5);
-    context.restore();
+    drawMinigameHudBar(context, { x: 26, y: 82, width: WIDTH - 52, height: 6, ratio: progress, fillColor: player?.eaten ? "#e27b60" : "#d8f36a", trackColor: "rgba(48, 69, 42, .38)" });
   }
 
   exit() {

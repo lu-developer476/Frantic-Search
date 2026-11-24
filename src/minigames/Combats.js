@@ -1,6 +1,7 @@
 import { MinigameEnvironmentRenderer, MINIGAME_ENVIRONMENT_SCENES } from "./MinigameEnvironment.js";
 import { observeCanvasViewport } from "../rendering/CanvasUtils.js";
 
+import { drawMinigameHudBar, drawMinigameHudText } from "./MinigameHud.js";
 const WIDTH = 960;
 const HEIGHT = 540;
 const FLOOR = 438;
@@ -492,29 +493,21 @@ export class Combats {
   }
 
   drawHealthBar(x, y, width, fighter, label, alignRight = false) {
-    const ctx = this.ctx;
-    ctx.fillStyle = "rgba(14, 22, 18, .86)";
-    ctx.fillRect(x, y, width, 44);
-    ctx.fillStyle = "#eff3e5";
-    ctx.font = "bold 12px monospace";
-    ctx.textAlign = alignRight ? "right" : "left";
-    ctx.fillText(label, alignRight ? x + width - 12 : x + 12, y + 16);
-    ctx.fillStyle = "#38443a";
-    ctx.fillRect(x + 12, y + 25, width - 24, 9);
-    ctx.fillStyle = fighter.health > 35 ? "#d8f36a" : "#e27b60";
-    ctx.fillRect(x + 12, y + 25, (width - 24) * fighter.health / fighter.maxHealth, 9);
-    ctx.textAlign = "left";
+    const ratio = fighter.health / Math.max(1, fighter.maxHealth);
+    const anchorX = alignRight ? x + width : x;
+    drawMinigameHudText(this.ctx, label + " · " + this.text("VIDA ", "HEALTH ") + Math.ceil(ratio * 100) + "%", anchorX, y, {
+      align: alignRight ? "right" : "left", tone: "primary", size: 13, maxWidth: width
+    });
+    drawMinigameHudBar(this.ctx, { x, y: y + 10, width, height: 7, ratio, fillColor: ratio <= 0.3 ? "#e27b60" : "#d8f36a" });
   }
 
   render() {
     const ctx = this.ctx;
     ctx.clearRect(0, 0, WIDTH, HEIGHT);
     this.drawBackground();
-    ctx.fillStyle = "rgba(17, 27, 22, .76)";
-    ctx.fillRect(0, 0, WIDTH, 52);
     if (this.fighters.length === 2) {
-      this.drawHealthBar(20, 8, 310, this.fighters[0], this.fighters[0].species.name);
-      this.drawHealthBar(WIDTH - 330, 8, 310, this.fighters[1], this.fighters[1].species.name, true);
+      this.drawHealthBar(26, 34, 300, this.fighters[0], this.fighters[0].species.name);
+      this.drawHealthBar(WIDTH - 326, 34, 300, this.fighters[1], this.fighters[1].species.name, true);
       this.fighters.forEach((fighter, index) => this.drawFighter(fighter, index));
     } else {
       ctx.fillStyle = "#e7ebd9";
@@ -535,6 +528,7 @@ export class Combats {
       ctx.textAlign = "left";
     }
   }
+
 
   exit() {
     this.stop();

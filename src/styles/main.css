@@ -5098,3 +5098,12 @@ body:has(#combats-panel.active:not(.playing)) .canvas-wrap {
   .combats-roster-slot { min-height:48px; }
   .combats-side-picker button { flex:1 1 120px; }
 }
+
+
+/* All standalone minigames use their own shared in-canvas HUD while active. */
+.hunting-panel.playing .hunting-top,
+.ambush-panel.playing .ambush-top,
+.race-panel.playing .race-top,
+.combats-panel.playing .combats-top {
+  display: none !important;
+}

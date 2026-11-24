@@ -1,6 +1,7 @@
 import { loadAnimatedGif, getAnimatedFrameIndex } from "./AnimatedGif.js";
 import { drawSpriteImage, observeCanvasViewport } from "../rendering/CanvasUtils.js";
 import { MinigameEnvironmentRenderer, MINIGAME_ENVIRONMENT_SCENES } from "./MinigameEnvironment.js";
+import { drawMinigameHudText } from "./MinigameHud.js";
 let WIDTH = 960;
 const HEIGHT = 540;
 const FLOOR = 438;
@@ -1760,59 +1761,26 @@ export class Persecution {
     }
 
     if (this.isPlayerHidden()) {
-      ctx.fillStyle = "#f4efc2";
-      ctx.font = "13px monospace";
-      ctx.fillText(this.text("OCULTA", "HIDDEN"), 26, 56);
+      drawMinigameHudText(ctx, this.text("OCULTA", "HIDDEN"), 26, 56);
     } else if ((this.player.trappedTimer ?? 0) > 0) {
-      ctx.fillStyle = "#f4efc2";
-      ctx.font = "13px monospace";
-      ctx.fillText(this.text("ATRAPADA ", "TRAPPED ") + this.player.trappedTimer.toFixed(1) + "s", 26, 56);
+      drawMinigameHudText(ctx, this.text("ATRAPADA ", "TRAPPED ") + this.player.trappedTimer.toFixed(1) + "s", 26, 56);
     } else if (this.isInMud(this.player)) {
-      ctx.fillStyle = "#f4efc2";
-      ctx.font = "13px monospace";
-      ctx.fillText(this.text("LODO · LENTO", "MUD · SLOWED"), 26, 56);
+      drawMinigameHudText(ctx, this.text("LODO · LENTO", "MUD · SLOWED"), 26, 56);
     }
     if (this.invulnerabilityTimer > 0) {
-      ctx.fillStyle = "#fff0bd";
-      ctx.font = "13px monospace";
-      ctx.fillText("INVULNERABLE " + this.invulnerabilityTimer.toFixed(1) + "s", 26, 74);
+      drawMinigameHudText(ctx, "INVULNERABLE " + this.invulnerabilityTimer.toFixed(1) + "s", 26, 74, { tone: "notice" });
     }
     if (this.phase === "playing" || this.phase === "finished") {
-      ctx.fillStyle = "#30452a";
-      ctx.font = "16px monospace";
-      ctx.fillText(this.text("DISTANCIA", "DISTANCE") + "  " + scoreForDistance(this.distance) + " M", 26, 34);
-      ctx.textAlign = "right";
-      ctx.fillText(this.text("CARRIL", "LANE") + " " + (this.getEntityLane(this.player) + 1) + "/4", WIDTH - 26, 34);
-      ctx.font = "12px monospace";
-      const checkpointMeters = this.checkpoint?.milestone
-        ? this.checkpoint.milestone * CHECKPOINT_INTERVAL_METERS
-        : CHECKPOINT_INTERVAL_METERS;
-      ctx.fillText(
-        this.checkpoint?.milestone
-          ? this.text("CHECKPOINT ", "CHECKPOINT ") + checkpointMeters + " M"
-          : this.text("PRÓXIMO CP ", "NEXT CP ") + checkpointMeters + " M",
-        WIDTH - 26,
-        56
-      );
-      ctx.textAlign = "left";
+      drawMinigameHudText(ctx, this.text("DISTANCIA", "DISTANCE") + "  " + scoreForDistance(this.distance) + " M", 26, 34, { size: 16, tone: "primary" });
+      drawMinigameHudText(ctx, this.text("CARRIL", "LANE") + " " + (this.getEntityLane(this.player) + 1) + "/4", WIDTH - 26, 34, { size: 16, tone: "primary", align: "right" });
+      const checkpointMeters = this.checkpoint?.milestone ? this.checkpoint.milestone * CHECKPOINT_INTERVAL_METERS : CHECKPOINT_INTERVAL_METERS;
+      drawMinigameHudText(ctx, this.checkpoint?.milestone
+        ? this.text("CHECKPOINT ", "CHECKPOINT ") + checkpointMeters + " M"
+        : this.text("PRÓXIMO CP ", "NEXT CP ") + checkpointMeters + " M", WIDTH - 26, 56, { size: 12, align: "right" });
       const eggsProgress = (this.eggsEaten ?? 0) % EGGS_PER_CHECKPOINT_CONTINUE;
-      ctx.font = "12px monospace";
-      ctx.fillText(
-        this.text("HUEVOS ", "EGGS ") + eggsProgress + "/" + EGGS_PER_CHECKPOINT_CONTINUE +
-          " · " + (this.checkpointCharges ?? 0) + " " + this.text("CONTINUACIONES", "CONTINUES"),
-        26,
-        94
-      );
+      drawMinigameHudText(ctx, this.text("HUEVOS ", "EGGS ") + eggsProgress + "/" + EGGS_PER_CHECKPOINT_CONTINUE + " · " + (this.checkpointCharges ?? 0) + " " + this.text("CONTINUACIONES", "CONTINUES"), 26, 94, { size: 12 });
       if ((this.checkpointNoticeTimer ?? 0) > 0) {
-        ctx.textAlign = "center";
-        ctx.fillStyle = "#fff0bd";
-        ctx.font = "16px monospace";
-        ctx.fillText(
-          this.text("CHECKPOINT ALCANZADO · ", "CHECKPOINT REACHED · ") + checkpointMeters + " M",
-          WIDTH / 2,
-          112
-        );
-        ctx.textAlign = "left";
+        drawMinigameHudText(ctx, this.text("CHECKPOINT ALCANZADO · ", "CHECKPOINT REACHED · ") + checkpointMeters + " M", WIDTH / 2, 112, { size: 16, tone: "notice", align: "center" });
       }
     }
     if (!this.running && !this.root.querySelector("[data-empty-result]").hidden) {

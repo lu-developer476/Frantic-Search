@@ -8,6 +8,7 @@ import { Player } from "../entities/Player.js";
 import { WildDinosaur } from "../entities/WildDinosaur.js";
 import { MinigameEnvironmentRenderer, MINIGAME_ENVIRONMENT_SCENES } from "./MinigameEnvironment.js";
 
+import { drawMinigameHudSegments, drawMinigameHudText } from "./MinigameHud.js";
 let WIDTH = 960;
 const HEIGHT = 540;
 const FLOOR = 438;
@@ -876,43 +877,16 @@ export class Ambush {
       ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
     }
     ctx.globalAlpha = 1;
-    ctx.save();
-    ctx.shadowColor = "rgba(7, 16, 13, .92)";
-    ctx.shadowBlur = 4;
-    ctx.shadowOffsetX = 1;
-    ctx.shadowOffsetY = 2;
-    ctx.font = "17px monospace";
-    ctx.fillStyle = "#f0f3e7";
-    ctx.fillText(this.text("OLEADA", "WAVE") + " " + String(this.wave).padStart(2, "0"), 24, 26);
-    ctx.font = "9px monospace";
-    ctx.fillStyle = "#c8d5c6";
-    ctx.fillText(this.roleLabel().toUpperCase(), 25, 45);
-    ctx.font = "16px monospace";
-    ctx.fillStyle = "#d8f36a";
-    ctx.fillText(String(this.kills).padStart(3, "0"), 260, 27);
-    ctx.font = "9px monospace";
-    ctx.fillStyle = "#c8d5c6";
-    ctx.fillText(this.text("ELIMINACIONES", "ELIMINATIONS"), 260, 45);
     const remaining = this.spawnRemaining + living(this.enemies).length;
-    ctx.font = "16px monospace";
-    ctx.fillStyle = "#f0f3e7";
-    ctx.fillText(String(remaining).padStart(2, "0"), 500, 27);
-    ctx.font = "9px monospace";
-    ctx.fillStyle = "#c8d5c6";
-    ctx.fillText(this.text("AMENAZAS", "THREATS"), 500, 45);
-    ctx.font = "9px monospace";
-    ctx.fillStyle = "#d8f36a";
-    ctx.fillText(this.text("VIDA", "HEALTH"), 700, 26);
+    drawMinigameHudText(ctx, this.text("OLEADA", "WAVE") + " " + String(this.wave).padStart(2, "0"), 26, 34, { size: 16, tone: "primary" });
+    drawMinigameHudText(ctx, this.roleLabel().toUpperCase(), 26, 56);
+    drawMinigameHudText(ctx, this.text("ELIMINACIONES ", "ELIMINATIONS ") + String(this.kills).padStart(3, "0"), 26, 76);
+    drawMinigameHudText(ctx, this.text("AMENAZAS ", "THREATS ") + String(remaining).padStart(2, "0"), 26, 96, { tone: "notice", size: 12 });
     if (this.player) {
-      for (let i = 0; i < this.player.maxHealth; i += 1) {
-        ctx.fillStyle = i < this.player.health ? "#d8f36a" : "#34463a";
-        ctx.fillRect(700 + i * 18, 34, 13, 8);
-      }
+      drawMinigameHudText(ctx, this.text("VIDA", "HEALTH"), WIDTH - 184, 34, { size: 13, tone: "primary" });
+      drawMinigameHudSegments(ctx, { x: WIDTH - 112, y: 26, health: this.player.health, maxHealth: this.player.maxHealth, segmentWidth: 11, segmentHeight: 8, gap: 4 });
     }
-    ctx.font = "9px monospace";
-    ctx.fillStyle = "#c8d5c6";
-    ctx.fillText(this.text("RÉCORD", "BEST") + " " + this.best, 838, 45);
-    ctx.restore();
+    drawMinigameHudText(ctx, this.text("RÉCORD ", "BEST ") + this.best, WIDTH - 26, 56, { align: "right" });
     if (this.paused) {
       ctx.fillStyle = "rgba(7,14,12,.62)";
       ctx.fillRect(0, 0, WIDTH, HEIGHT);
