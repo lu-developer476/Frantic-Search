@@ -39,11 +39,27 @@ const RACE_SCENE = Object.freeze({
   ridge: "#73965a"
 });
 
+const FOREST_SCENE = Object.freeze({
+  ...LEVELS[1],
+  name: "FOREST ARENA",
+  subtitle: "A wooded arena for close dinosaur encounters.",
+  sky: "#70877a",
+  ground: "#865638",
+  environment: "forest",
+  soil: "#865638",
+  grass: "#47734b",
+  detail: "#8b9a58",
+  platform: "#6b7650",
+  platformTop: "#b3b56b",
+  platformShadow: "#354a36"
+});
+
 export const MINIGAME_ENVIRONMENT_SCENES = Object.freeze({
   race: RACE_SCENE,
   persecution: PRAIRIE_SCENE,
-  hunting: LEVELS[1],
-  ambush: LEVELS[1]
+  hunting: FOREST_SCENE,
+  ambush: FOREST_SCENE,
+  combats: FOREST_SCENE
 });
 
 let parallaxInstance = null;
