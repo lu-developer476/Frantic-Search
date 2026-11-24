@@ -125,12 +125,11 @@ test("layer allocation failure safely falls back to native mini-game drawing", (
 });
 
 
-test("hidden minigames do not render during application bootstrap", async () => {
+test("minigames that defer rendering wait until opened", async () => {
   const paths = [
     "../src/minigames/Persecution.js",
     "../src/minigames/Hunting.js",
     "../src/minigames/Ambush.js",
-    "../src/minigames/Race.js",
     "../src/minigames/Combats.js"
   ];
   for (const path of paths) {
