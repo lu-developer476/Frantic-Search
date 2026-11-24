@@ -22,13 +22,13 @@ Los edificios, vallas, consolas, cajas, portal de extracción y límites de las 
 
 | Minijuego | Entorno | Recursos solicitados |
 | --- | --- | --- |
-| Persecución / Empty Stomach | `prairie` | Parallax `forestbg-layer8.png` y `layer7.png`; terreno y cobertura `bg-trees1.png` y `forestbg-layer1.png` a `forestbg-layer4.png`. |
+| Persecución / Empty Stomach | `forest` | Capas `maps/forest/Back.png`, `middle.png` y `front.png`; terreno forestal compartido. |
 | Carrera / Breaking Race | `prairie` | Parallax `forestbg-layer8.png` y `layer7.png`; terreno y cobertura `bg-trees1.png` y `forestbg-layer1.png` a `forestbg-layer4.png`. |
 | Cacería / Time Attack | `forest` | Capas dedicadas `maps/forest/Back.png`, `middle.png` y `front.png`, con tratamiento verde; terreno exterior Redwood. |
 | Emboscada / Ambush | `forest` | Capas dedicadas `maps/forest/Back.png`, `middle.png` y `front.png`, con tratamiento verde; terreno exterior Redwood. |
-| Combates / Dino Fightz | `forest` | Las mismas tres capas de bosque y terreno exterior Redwood. La selección reserva diez posiciones para el plantel de dinosaurios. |
+| Combates / Dino Fightz | `forest` | Las mismas tres capas de bosque y terreno forestal compartido. La selección reserva diez posiciones para el plantel de dinosaurios. |
 
-Los cinco minijuegos comparten los renderizadores de atmósfera y terreno. No hay un mapa independiente por minijuego: el entorno se compone con capas de parallax y terreno repetido.
+Persecución, Cacería, Emboscada y Combates utilizan la carpeta `maps/forest/`; Carrera conserva `prairie`. Los cinco minijuegos comparten los renderizadores de atmósfera y terreno. No hay un mapa independiente por minijuego: el entorno se compone con capas de parallax y terreno repetido.
 
 ## Tilesets activos
 
