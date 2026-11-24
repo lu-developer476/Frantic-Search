@@ -163,7 +163,6 @@ export class Combats {
 
     this.setLocale("es");
     this.populateRoster();
-    this.render();
   }
 
   text(es, en) {
