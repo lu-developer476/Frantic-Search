@@ -4903,3 +4903,10 @@ html.site-mode-gray .ambush-intro button {
 .exploration-biome-options button { min-height: 68px; border: 1px solid rgba(210,230,190,.24); border-radius: 8px; background: rgba(34,54,42,.78); color: #edf3df; font: inherit; letter-spacing: .08em; cursor: pointer; }
 .exploration-biome-options button:hover, .exploration-biome-options button:focus-visible { border-color: #d8f36a; background: rgba(72,94,49,.9); outline: none; }
 @media (max-width: 620px) { .exploration-biome-options { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Keep narrator dialogue text black across both visual themes. */
+.story-card .story-text,
+html.site-mode-beige .story-card .story-text,
+html.site-mode-gray .story-card .story-text {
+  color: #000;
+}
