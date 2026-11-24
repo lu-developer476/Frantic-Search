@@ -3697,6 +3697,15 @@ raceButton.addEventListener("click", () => {
   campaignBriefHeader?.classList.add("is-hidden");
   race.open();
 });
+combatsButton.addEventListener("click", () => {
+  if (!desktopPlayback.matches || desktopBlocked) return;
+  startScreen.classList.add("hidden");
+  setMenuOpen(false);
+  document.body.classList.add("game-session-active");
+  operationHeader?.classList.add("is-hidden");
+  campaignBriefHeader?.classList.add("is-hidden");
+  combats.open();
+});
 overlayActionButton.addEventListener("click", () => {
   if (paused) {
     togglePause();
@@ -4015,6 +4024,7 @@ function setLanguage(nextLocale) {
   hunting.setLocale(locale);
   ambush.setLocale(locale);
   race.setLocale(locale);
+  combats.setLocale(locale);
   save.update({ language: locale });
   applyLanguage();
   updateCampaignHud();
