@@ -23,7 +23,7 @@ function fakeContext() {
 }
 
 test("each campaign and minigame environment with real art has parallax layers", () => {
-  for (const name of ["coastal", "redwood", "prairie", "extraction", "black-site", "containment", "rosa-containment"]) {
+  for (const name of ["coastal", "redwood", "forest", "prairie", "extraction", "black-site", "containment", "rosa-containment"]) {
     assert.ok(PARALLAX_LAYERS[name]?.length > 0, name);
   }
 });
