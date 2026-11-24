@@ -13,6 +13,8 @@ import { Player } from "./entities/Player.js";
 import { AutonomousCompanion } from "./entities/AutonomousCompanion.js";
 import { HunterEnemy } from "./entities/HunterEnemy.js";
 import { HunterProjectile } from "./entities/HunterProjectile.js";
+import { HunterGrenade } from "./entities/HunterGrenade.js";
+import { drawHunterGrenade } from "./rendering/GrenadeRenderer.js";
 import { WildDinosaur } from "./entities/WildDinosaur.js";
 import { LigocristusPrey, Brontosaurus } from "./entities/LigocristusPrey.js";
 import {
@@ -249,6 +251,7 @@ let player = new Player(selected, GAME.playerX, GAME.groundY);
 let world = new PlatformWorld(GAME.groundY);
 let hunters = [];
 let hunterProjectiles = [];
+let hunterGrenades = [];
 let tacticalCombatEffects = [];
 let venatosauruses = [];
 let foodSources = [];
@@ -797,7 +800,7 @@ function drawFerrucutusCageFront(context, captive) {
 function drawHunter(hunter) {
   const x = hunter.x;
   const y = hunter.y;
-  const alert = hunter.state === "investigate" || hunter.state === "windup" || hunter.state === "attack";
+  const alert = hunter.state === "investigate" || hunter.state === "windup" || hunter.state === "grenade-windup" || hunter.state === "attack";
   const defeated = hunter.defeated;
   const alpha = getEnemyOpacity(hunter);
 
@@ -823,7 +826,7 @@ function drawHunter(hunter) {
     drawWorldHealthBar(x + 4, y - 7, 30, hunter.health, hunter.maxHealth);
   }
 
-  if (hunter.state === "attack" && !defeated) {
+  if (hunter.state === "attack" && hunter.attackType !== "grenade" && !defeated) {
     ctx.fillStyle = "#ff6a3d";
     ctx.beginPath();
     ctx.arc(hunter.direction > 0 ? x + hunter.w + 7 : x - 7, y + 31, 4, 0, Math.PI * 2);
@@ -1162,6 +1165,7 @@ function beginCampaignPrologue() {
 
   hunters = [];
   hunterProjectiles = [];
+  hunterGrenades = [];
   venatosauruses = [];
   foodSources = [];
   wildlife = [];
@@ -2521,10 +2525,13 @@ function update(delta) {
     const previousState = hunter.state;
     const hunterEvent = hunter.update(delta, player);
     if (resolveEnemyPitfall(hunter, delta)) continue;
-    if (previousState !== hunter.state && (hunter.state === "investigate" || hunter.state === "windup")) audio.collect();
+    if (previousState !== hunter.state && ["investigate", "windup", "grenade-windup"].includes(hunter.state)) audio.collect();
     if (hunterEvent?.type === "shoot") {
       hunterProjectiles.push(new HunterProjectile(hunterEvent.projectile));
       addTacticalCombatEffect("muzzle", hunterEvent.projectile.x, hunterEvent.projectile.y, hunter.direction);
+    } else if (hunterEvent?.type === "throw-grenade") {
+      hunterGrenades.push(new HunterGrenade(hunterEvent.grenade));
+      burst(hunterEvent.grenade.x, hunterEvent.grenade.y, "#ef9a45", 4);
     }
 
     if (
@@ -2558,6 +2565,20 @@ function update(delta) {
     if (!running || player.health <= 0) return;
   }
   hunterProjectiles = hunterProjectiles.filter((projectile) => projectile.active);
+  for (const grenade of hunterGrenades) {
+    grenade.update(delta);
+    if (!grenade.justExploded) continue;
+    burst(grenade.x, grenade.y, grenade.type === "yellow" ? "#f2d45a" : "#ef8a3e", 18);
+    for (const hit of projectileTargets) {
+      if (!CollisionSystem.grenadeHit(grenade, hit.entity)) continue;
+      if (hit.kind === "player") damagePlayer();
+      else if (hit.kind === "companion") damageCompanion(hit.entity);
+      else if (hit.kind === "wild-dinosaur") damageVenatosaurus(hit.entity, grenade.damage);
+      else if (hit.kind === "boss") damageBoss(hit.entity, grenade.damage, "hunter-grenade");
+      if (!running || player.health <= 0) return;
+    }
+  }
+  hunterGrenades = hunterGrenades.filter((grenade) => grenade.active);
 
   updateDashDust(delta);
 
@@ -2852,8 +2873,11 @@ function render() {
   }
   objectRenderer.drawLayer(ctx, "projectiles", objectLayerOptions, (layerContext) => {
     for (const projectile of hunterProjectiles) {
-      if (projectile.x >= cameraX - 30 && projectile.x <= cameraX + GAME.width + 30) {
-        drawHunterProjectile(projectile, layerContext);
+      if (projectile.x >= cameraX - 30 && projectile.x <= cameraX + GAME.width + 30) drawHunterProjectile(projectile, layerContext);
+    }
+    for (const grenade of hunterGrenades) {
+      if (grenade.x >= cameraX - grenade.blastRadius && grenade.x <= cameraX + GAME.width + grenade.blastRadius) {
+        drawHunterGrenade(layerContext, grenade, spriteRenderer, elapsed);
       }
     }
   });
@@ -3235,6 +3259,7 @@ function resetPlayer(worldSeed = undefined) {
   world = new PlatformWorld(GAME.groundY, worldSeed === undefined ? {} : { seed: worldSeed });
   hunters = [];
   hunterProjectiles = [];
+  hunterGrenades = [];
   venatosauruses = [];
   foodSources = [];
   wildlife = [];

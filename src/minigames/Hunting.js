@@ -1,4 +1,7 @@
 import { HunterProjectile } from "../entities/HunterProjectile.js";
+import { HunterGrenade } from "../entities/HunterGrenade.js";
+import { CollisionSystem } from "../systems/CollisionSystem.js";
+import { drawHunterGrenade } from "../rendering/GrenadeRenderer.js";
 import { observeCanvasViewport } from "../rendering/CanvasUtils.js";
 import { WildDinosaur } from "../entities/WildDinosaur.js";
 import { SpriteRenderer } from "../rendering/SpriteRenderer.js";
@@ -147,6 +150,8 @@ function hunterActor(index, x, isPlayer = index === 0) {
     reserveAmmo: HUNTER_RESERVE_AMMO,
     reloadTimer: 0,
     shotInterval: isPlayer ? 0.34 : 0.78 + index * 0.07,
+    grenadeCooldown: isPlayer ? 0 : 2.9 + (index % 2) * 1.1,
+    grenadeCount: index,
     vy: 0, onGround: true, isPlayer, defeated: false
   };
 }
@@ -276,6 +281,7 @@ export class Hunting {
     this.waveIndex = 0;
     this.dinosaurs = [];
     this.projectiles = [];
+    this.grenades = [];
     this.particles = [];
     this.combatEffects = [];
     this.blockyPickups = [];
@@ -442,6 +448,7 @@ export class Hunting {
   updateWeapon(hunter, delta) {
     if (!hunter) return;
     hunter.fireCooldown = Math.max(0, hunter.fireCooldown - delta);
+    hunter.grenadeCooldown = Math.max(0, (hunter.grenadeCooldown ?? 0) - delta);
     if (hunter.reloadTimer > 0) {
       hunter.reloadTimer = Math.max(0, hunter.reloadTimer - delta);
       if (hunter.reloadTimer === 0) {
@@ -478,6 +485,18 @@ export class Hunting {
     hunter.ammo -= 1;
     hunter.fireCooldown = hunter.shotInterval ?? 0.5;
     this.particles.push({ x: muzzleX, y: muzzleY, vx: hunter.direction * 36, vy: -12, life: 0.11, max: 0.11, color: "#ffe5a1", size: 5 });
+    return true;
+  }
+
+  throwGrenade(hunter, targetX) {
+    if (!hunter || hunter.health <= 0 || hunter.defeated || (hunter.grenadeCooldown ?? 0) > 0) return false;
+    const type = (hunter.grenadeCount ?? hunter.squadIndex ?? 0) % 2 === 0 ? "orange" : "yellow";
+    hunter.grenadeCount = (hunter.grenadeCount ?? hunter.squadIndex ?? 0) + 1;
+    const muzzleX = hunter.x + (hunter.direction > 0 ? hunter.w + 5 : -5);
+    this.grenades.push(new HunterGrenade({ x: muzzleX, y: hunter.y + 28, targetX, groundY: FLOOR, shooterId: hunter.id, type }));
+    hunter.grenadeCooldown = 5.8;
+    hunter.fireCooldown = Math.max(hunter.fireCooldown, 0.7);
+    this.burst(muzzleX, hunter.y + 28, type === "yellow" ? "#f2d45a" : "#ef8a3e", 4);
     return true;
   }
 
@@ -614,7 +633,12 @@ export class Hunting {
         hunter.x += clamp(desiredX - hunter.x, -150 * delta, 150 * delta);
         hunter.x = clamp(hunter.x, 0, SECTION_END);
         if (Math.abs(separation) <= 760 && hunter.fireCooldown <= 0) {
-          this.fire(hunter, playerCenter, player.y + player.h * 0.48);
+          const distance = Math.abs(separation);
+          if (distance >= 180 && distance <= 560 && hunter.grenadeCooldown <= 0) {
+            this.throwGrenade(hunter, playerCenter + (Number(player.vx) || 0) * 0.16);
+          } else {
+            this.fire(hunter, playerCenter, player.y + player.h * 0.48);
+          }
         }
         continue;
       }
@@ -690,6 +714,18 @@ export class Hunting {
       }
     }
     this.projectiles = this.projectiles.filter(projectile => projectile.active);
+    for (const grenade of this.grenades) {
+      grenade.update(delta);
+      if (!grenade.justExploded) continue;
+      this.burst(grenade.x, grenade.y, grenade.type === "yellow" ? "#f2d45a" : "#ef8a3e", 17);
+      if (predatorMode && CollisionSystem.grenadeHit(grenade, {
+        x: player.x + 8, y: player.y + 14, w: player.w - 16, h: player.h - 22
+      })) {
+        this.damagePredator(grenade.damage);
+        if (!this.running) return;
+      }
+    }
+    this.grenades = this.grenades.filter(grenade => grenade.active);
     for (const particle of this.particles) {
       particle.x += particle.vx * delta;
       particle.y += particle.vy * delta;
@@ -1032,6 +1068,7 @@ export class Hunting {
         ctx.fillRect(projectile.x - this.cameraX - 3, projectile.y - 2, 8, 4);
       }
     }
+    for (const grenade of this.grenades) drawHunterGrenade(ctx, grenade, this.sprites, this.elapsed, this.cameraX);
     this.drawCombatEffects();
     for (const particle of this.particles) {
       ctx.globalAlpha = Math.max(0, particle.life / particle.max);

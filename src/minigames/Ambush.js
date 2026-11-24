@@ -1,6 +1,9 @@
 import { HunterEnemy } from "../entities/HunterEnemy.js";
 import { observeCanvasViewport } from "../rendering/CanvasUtils.js";
 import { HunterProjectile } from "../entities/HunterProjectile.js";
+import { HunterGrenade } from "../entities/HunterGrenade.js";
+import { CollisionSystem } from "../systems/CollisionSystem.js";
+import { drawHunterGrenade } from "../rendering/GrenadeRenderer.js";
 import { Player } from "../entities/Player.js";
 import { WildDinosaur } from "../entities/WildDinosaur.js";
 import { MinigameEnvironmentRenderer, MINIGAME_ENVIRONMENT_SCENES } from "./MinigameEnvironment.js";
@@ -245,6 +248,7 @@ export class Ambush {
     this.kills = 0;
     this.enemies = [];
     this.projectiles = [];
+    this.grenades = [];
     this.particles = [];
     this.combatEffects = [];
     this.blockyPickups = [];
@@ -485,6 +489,9 @@ export class Ambush {
             lifetime: 2
           }));
           this.addCombatEffect("muzzle", event.projectile.x, event.projectile.y, enemy.direction);
+        } else if (event?.type === "throw-grenade" && event.grenade) {
+          this.grenades.push(new HunterGrenade(event.grenade));
+          this.burst(event.grenade.x, event.grenade.y, "#ef9a45", 4);
         }
       }
     }
@@ -522,6 +529,16 @@ export class Ambush {
       }
     }
     this.projectiles = this.projectiles.filter(projectile => projectile.active);
+    for (const grenade of this.grenades) {
+      grenade.update(delta);
+      if (!grenade.justExploded) continue;
+      this.burst(grenade.x, grenade.y, grenade.type === "yellow" ? "#f2d45a" : "#ef8a3e", 16);
+      if (this.role !== "hunter" && CollisionSystem.grenadeHit(grenade, this.player)) {
+        this.damagePlayer(grenade.damage);
+        if (!this.running) return;
+      }
+    }
+    this.grenades = this.grenades.filter(grenade => grenade.active);
   }
 
   update(delta) {
@@ -819,6 +836,7 @@ export class Ambush {
       ctx.arc(projectile.x, projectile.y, projectile.radius, 0, Math.PI * 2);
       ctx.fill();
     }
+    for (const grenade of this.grenades) drawHunterGrenade(ctx, grenade, this.spriteRenderer, this.elapsed);
     this.drawCombatEffects();
     for (const particle of this.particles) {
       ctx.globalAlpha = Math.max(0, particle.life / particle.max);

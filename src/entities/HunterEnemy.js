@@ -14,6 +14,9 @@ export class HunterEnemy {
     this.state = "patrol";
     this.stateTimer = 0;
     this.attackCooldown = 0;
+    this.grenadeCooldown = 2.8 + (String(id).length % 2) * 0.9;
+    this.grenadeCount = 0;
+    this.grenadeVariantOffset = [...String(id)].reduce((sum, character) => sum + character.charCodeAt(0), 0) % 2;
     this.direction = 1;
     this.alerted = false;
     this.defeated = false;
@@ -33,6 +36,7 @@ export class HunterEnemy {
     if (this.defeated || this.fellIntoPit) return null;
 
     this.attackCooldown = Math.max(0, this.attackCooldown - delta);
+    this.grenadeCooldown = Math.max(0, this.grenadeCooldown - delta);
     this.stateTimer = Math.max(0, this.stateTimer - delta);
     const targetCenter = target.x + target.w / 2;
     const ownCenter = this.x + this.w / 2;
@@ -82,9 +86,39 @@ export class HunterEnemy {
       this.direction = separation >= 0 ? 1 : -1;
       if (distance > 360) {
         this.x += this.direction * 128 * delta;
+      } else if (distance >= 175 && this.grenadeCooldown <= 0) {
+        this.state = "grenade-windup";
+        this.stateTimer = 0.52;
       } else if (this.attackCooldown <= 0) {
         this.state = "windup";
         this.stateTimer = 0.42;
+      }
+      return null;
+    }
+
+    if (this.state === "grenade-windup") {
+      this.direction = separation >= 0 ? 1 : -1;
+      if (distance > 440 || !sameRoute) {
+        this.state = "pursuit";
+        this.stateTimer = 0.2;
+      } else if (this.stateTimer <= 0) {
+        this.state = "attack";
+        this.stateTimer = 0.2;
+        this.attackCooldown = 1.55;
+        this.grenadeCooldown = 5.8;
+        this.attackType = "grenade";
+        const type = (this.grenadeCount++ + this.grenadeVariantOffset) % 2 === 0 ? "orange" : "yellow";
+        return {
+          type: "throw-grenade",
+          grenade: {
+            x: this.direction > 0 ? this.x + this.w + 5 : this.x - 5,
+            y: this.y + 28,
+            targetX: targetCenter + (Number(target.vx) || 0) * 0.18,
+            groundY: this.groundY,
+            shooterId: this.id,
+            type
+          }
+        };
       }
       return null;
     }
@@ -95,6 +129,7 @@ export class HunterEnemy {
         this.state = "attack";
         this.stateTimer = 0.16;
         this.attackCooldown = 1.35;
+        this.attackType = "shoot";
         return {
           type: "shoot",
           projectile: {

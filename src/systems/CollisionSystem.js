@@ -33,6 +33,15 @@ export class CollisionSystem {
     return CollisionSystem.overlaps(bounds, target, 3);
   }
 
+  static grenadeHit(grenade, target) {
+    if (!grenade || !target || !Number.isFinite(grenade.blastRadius)) return false;
+    const closestX = Math.max(target.x, Math.min(grenade.x, target.x + target.w));
+    const closestY = Math.max(target.y, Math.min(grenade.y, target.y + target.h));
+    const dx = grenade.x - closestX;
+    const dy = grenade.y - closestY;
+    return dx * dx + dy * dy <= grenade.blastRadius * grenade.blastRadius;
+  }
+
   static bossAttackHit(player, boss) {
     const attack = boss.attackBox;
     return attack ? CollisionSystem.overlaps(player, attack, 6) : false;
