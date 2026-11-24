@@ -6,12 +6,13 @@ import {
   MinigameEnvironmentRenderer
 } from "../src/minigames/MinigameEnvironment.js";
 
-test("mini-game scenes keep distinct prairie and Redwood identities with campaign palettes", () => {
+test("mini-game scenes keep prairie racing and dedicated forest combat palettes", () => {
   assert.equal(MINIGAME_ENVIRONMENT_SCENES.race.environment, "prairie");
   assert.equal(MINIGAME_ENVIRONMENT_SCENES.race.name, "LONG-DISTANCE RACE");
   assert.equal(MINIGAME_ENVIRONMENT_SCENES.persecution.environment, "prairie");
-  assert.equal(MINIGAME_ENVIRONMENT_SCENES.hunting.environment, "redwood");
-  assert.equal(MINIGAME_ENVIRONMENT_SCENES.ambush.environment, "redwood");
+  assert.equal(MINIGAME_ENVIRONMENT_SCENES.hunting.environment, "forest");
+  assert.equal(MINIGAME_ENVIRONMENT_SCENES.ambush.environment, "forest");
+  assert.equal(MINIGAME_ENVIRONMENT_SCENES.combats.environment, "forest");
   assert.ok(MINIGAME_ENVIRONMENT_SCENES.persecution.sky);
   assert.ok(MINIGAME_ENVIRONMENT_SCENES.hunting.tree);
   assert.ok(MINIGAME_ENVIRONMENT_SCENES.ambush.platformTop);
@@ -33,7 +34,8 @@ test("all mini-games delegate their environment backgrounds to the shared render
     "../src/minigames/Persecution.js",
     "../src/minigames/Hunting.js",
     "../src/minigames/Ambush.js",
-    "../src/minigames/Race.js"
+    "../src/minigames/Race.js",
+    "../src/minigames/Combats.js"
   ];
   const sources = await Promise.all(paths.map(path =>
     readFile(new URL(path, import.meta.url), "utf8")
@@ -46,6 +48,9 @@ test("all mini-games delegate their environment backgrounds to the shared render
   assert.match(sources[3], /new MinigameEnvironmentRenderer\(/);
   assert.match(sources[3], /cameraX: this\.cameraX/);
   assert.match(sources[3], /MINIGAME_ENVIRONMENT_SCENES\.race/);
+  assert.match(sources[4], /new MinigameEnvironmentRenderer\(/);
+  assert.match(sources[4], /this\.environmentRenderer\.draw\(this\.ctx/);
+  assert.match(sources[4], /MINIGAME_ENVIRONMENT_SCENES\.combats/);
 });
 
 test("prairie and every other biome get terrain and parallax from project art", async () => {
@@ -53,6 +58,8 @@ test("prairie and every other biome get terrain and parallax from project art", 
   const { PARALLAX_LAYERS } = await import("../src/rendering/ImageParallax.js");
   assert.ok(TERRAIN_THEMES.prairie);
   assert.ok(PARALLAX_LAYERS.prairie.length > 0);
+  assert.ok(TERRAIN_THEMES.forest);
+  assert.ok(PARALLAX_LAYERS.forest.length > 0);
 });
 
 test("ground coverage extends forward and behind the world origin without generating props", () => {
@@ -123,7 +130,8 @@ test("hidden minigames do not render during application bootstrap", async () => 
     "../src/minigames/Persecution.js",
     "../src/minigames/Hunting.js",
     "../src/minigames/Ambush.js",
-    "../src/minigames/Race.js"
+    "../src/minigames/Race.js",
+    "../src/minigames/Combats.js"
   ];
   for (const path of paths) {
     const source = await readFile(new URL(path, import.meta.url), "utf8");
