@@ -3894,6 +3894,7 @@ function getActiveTutorialMode() {
   if (huntingPanel.classList.contains("active")) return "hunting";
   if (ambushPanel.classList.contains("active")) return "ambush";
   if (racePanel.classList.contains("active")) return "race";
+  if (combatsPanel.classList.contains("active")) return "combats";
   return running && explorationMode ? "exploration" : "campaign";
 }
 
