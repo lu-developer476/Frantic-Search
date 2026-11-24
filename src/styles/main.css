@@ -2714,6 +2714,7 @@ html.site-mode-gray .story-card .story-actions span{
 .start-screen-copy .start-menu-view #persecution-button,
 .start-screen-copy .start-menu-view #hunting-button,
 .start-screen-copy .start-menu-view #ambush-button,
+.start-screen-copy .start-menu-view #combats-button,
 .start-screen-copy .start-menu-view #continue-campaign-button{
   display:flex;width:100%;min-width:0;min-height:48px;margin:0;
 }
@@ -3065,6 +3066,7 @@ body:has(#ambush-panel.active:not(.playing)) .canvas-wrap {
   #persecution-button,
   #hunting-button,
   #ambush-button,
+  #combats-button,
   #exploration-button,
   #campaign-back-button,
   #minigames-back-button
@@ -3080,6 +3082,7 @@ body:has(#ambush-panel.active:not(.playing)) .canvas-wrap {
   #persecution-button,
   #hunting-button,
   #ambush-button,
+  #combats-button,
   #exploration-button,
   #campaign-back-button,
   #minigames-back-button
