@@ -14,6 +14,8 @@ import {
   VENATOSAURUS_ANIMATION_ASSETS,
   BRONTOSAURUS_ANIMATION_ASSETS,
   BRISA_ANIMATIONS,
+  GALA_ANIMATION_ASSETS,
+  selectGalaAnimation,
   TACTICAL_COMBAT_EFFECT_SPRITES,
   selectJuvenileAnimation,
   selectCampaignHunterAnimation,
@@ -159,11 +161,24 @@ test("Brisa uses her dedicated juvenile Velociraptor idle, jump and run GIFs", (
   assert.ok(CAMPAIGN_ANIMATED_REFERENCE_FILES.includes(BRISA_ANIMATIONS.run));
 });
 
-test("Gala and Basilio use their dedicated adult PNG reference artwork", () => {
-  assert.equal(REFERENCE_PNG_CHARACTERS.gala.file, "adult-velociraptor-nublarensis.png");
-  assert.equal(REFERENCE_PNG_CHARACTERS.basilio.file, "vastatosaurus-rex.png");
-  assert.equal(REFERENCE_PNG_CHARACTERS.blue, REFERENCE_PNG_CHARACTERS.gala);
-  assert.equal(REFERENCE_PNG_CHARACTERS.vasti, REFERENCE_PNG_CHARACTERS.basilio);
+test("Gala uses four dedicated transparent GIF animations for idle, walk, run and flight", async () => {
+  assert.deepEqual(GALA_ANIMATION_ASSETS, {
+    idle: "gala-idle.gif",
+    walk: "gala-walk.gif",
+    run: "gala-run.gif",
+    fly: "gala-fly.gif"
+  });
+  for (const file of Object.values(GALA_ANIMATION_ASSETS)) {
+    await access(new URL("../public/references/" + file, import.meta.url));
+    assert.ok(CAMPAIGN_ANIMATED_REFERENCE_FILES.includes(file));
+  }
+  assert.equal(REFERENCE_PNG_CHARACTERS.gala, undefined);
+  assert.equal(REFERENCE_PNG_CHARACTERS.blue, undefined);
+  assert.equal(REFERENCE_PRELOAD_FILES.includes("adult-velociraptor-nublarensis.png"), false);
+  assert.equal(selectGalaAnimation({}), "idle");
+  assert.equal(selectGalaAnimation({ vx: 64, onGround: true }), "walk");
+  assert.equal(selectGalaAnimation({ vx: 260, onGround: true }), "run");
+  assert.equal(selectGalaAnimation({ vx: 0, onGround: false }), "fly");
 });
 
 

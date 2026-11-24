@@ -38,9 +38,12 @@ const LOW_DETAIL_AREA = 150_000;
 const HIGH_DETAIL_AREA = 350_000;
 const FLAT_ART_BYTES_PER_PIXEL = 0.02;
 
-export function classifyDetailTier({ width, height, bytes = null } = {}) {
+export function classifyDetailTier({ width, height, bytes = null, detailTier = null } = {}) {
   const area = Number(width) * Number(height);
   if (!Number.isFinite(area) || area <= 0) throw new RangeError("Reference artwork needs a positive size.");
+  if (typeof detailTier === "string" && Object.hasOwn(DETAIL_TIERS, detailTier)) {
+    return DETAIL_TIERS[detailTier];
+  }
   let tier = area < LOW_DETAIL_AREA ? "low" : area >= HIGH_DETAIL_AREA ? "high" : "standard";
   // Large canvases with almost no image data are flat artwork, not detailed artwork.
   if (Number.isFinite(bytes) && bytes / area < FLAT_ART_BYTES_PER_PIXEL) {
@@ -86,7 +89,7 @@ export const DINOSAUR_SIZE_PROFILES = Object.freeze({
   }),
   gala: Object.freeze({
     species: "Velociraptor (adult)", role: "playable", lengthMeters: 3.4, bodyAspect: 0.97,
-    art: { file: "adult-velociraptor-nublarensis.png", width: 870, height: 418, bytes: 66_560 }
+    art: { file: "gala-idle.gif", width: 420, height: 336, bytes: 50_256, detailTier: "high" }
   }),
   venatosaurusSaevidicus: Object.freeze({
     species: "Venatosaurus saevidicus", role: "creature", lengthMeters: 4.3, bodyAspect: 0.82,

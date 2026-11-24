@@ -37,6 +37,7 @@ test("inside one class, detailed artwork is drawn larger than low-detail artwork
   assert.equal(classifyDetailTier({ ...base, width: 172, height: 100 }).id, "low");
   assert.equal(classifyDetailTier({ width: 544, height: 352 }).id, "standard");
   assert.equal(classifyDetailTier({ width: 1376, height: 768 }).id, "high");
+  assert.equal(classifyDetailTier({ width: 420, height: 336, detailTier: "high" }).id, "high");
   // large canvas with almost no image data is flat art, not detailed art
   assert.equal(classifyDetailTier({ width: 990, height: 650, bytes: 7168 }).id, "standard");
   const small = SIZE_CLASSES.find((c) => c.id === "small");

@@ -5,6 +5,31 @@ import { getDinosaurRenderScale } from "../config/DinosaurSizing.js";
 
 const BOSS_DRAW_PADDING = 8;
 
+export const GALA_ANIMATION_ASSETS = Object.freeze({
+  idle: "gala-idle.gif",
+  walk: "gala-walk.gif",
+  run: "gala-run.gif",
+  fly: "gala-fly.gif"
+});
+
+export function selectGalaAnimation(actor = {}, options = {}) {
+  if (GALA_ANIMATION_ASSETS[options.animationKey]) return options.animationKey;
+  if (options.sleeping) return "idle";
+
+  const state = actor?.state;
+  if (actor?.onGround === false || ["jump", "jumping", "airborne", "flying"].includes(state)) return "fly";
+  if (actor?.dashTimer > 0 || ["attack", "attacking", "dash", "dashing"].includes(actor?.animationState)) return "run";
+
+  const motionSpeed = Math.max(
+    Math.abs(Number(actor?.vx) || 0),
+    Math.abs(Number(actor?.motionSpeed) || 0),
+    Math.abs(Number(actor?.speed) || 0)
+  );
+  if (motionSpeed > 120 || ["running", "sprinting", "chasing"].includes(state)) return "run";
+  if (motionSpeed > 24 || ["walking", "moving", "following"].includes(state)) return "walk";
+  return "idle";
+}
+
 export const BRISA_ANIMATIONS = Object.freeze({
   idle: "brisa-idle.gif",
   jump: "brisa-jump.gif",
@@ -49,7 +74,7 @@ export const LIGOCRISTUS_ANIMATION_ASSETS = Object.freeze({
   walk: "ligocristus-innocens-walk.gif"
 });
 const PROLOGUE_BRISA_SCALE = 1.8;
-const ANIMATED_REFERENCE_VERSION = "20261123-blocky-directional-pterodactyl-2";
+const ANIMATED_REFERENCE_VERSION = "20261123-gala-alpha-trimmed-1";
 
 // Every scale is derived from the species' size class and artwork detail (see DinosaurSizing.js).
 export const DINOSAUR_REFERENCE_SCALES = Object.freeze({
@@ -74,7 +99,7 @@ export const JUVENILE_ANIMATED_CHARACTERS = Object.freeze({
 });
 
 const GALA_REFERENCE = Object.freeze({
-  file: "adult-velociraptor-nublarensis.png",
+  file: GALA_ANIMATION_ASSETS.idle,
   sourceFacing: 1,
   scale: DINOSAUR_REFERENCE_SCALES.gala
 });
@@ -85,8 +110,6 @@ const BASILIO_REFERENCE = Object.freeze({
 });
 
 export const REFERENCE_PNG_CHARACTERS = Object.freeze({
-  gala: GALA_REFERENCE,
-  blue: GALA_REFERENCE,
   basilio: BASILIO_REFERENCE,
   vasti: BASILIO_REFERENCE,
   ferrucutus: { file: "ferrucutus-cerastes.png", sourceFacing: -1, scale: DINOSAUR_REFERENCE_SCALES.ferrucutus },
@@ -173,6 +196,7 @@ export function selectCampaignHunterAnimation(actor = {}, allowHumanV2 = false) 
 }
 
 export const CAMPAIGN_ANIMATED_REFERENCE_FILES = Object.freeze([
+  ...Object.values(GALA_ANIMATION_ASSETS),
   ...Object.values(BRISA_ANIMATIONS),
   ...Object.values(LIGOCRISTUS_ANIMATION_ASSETS),
   BRONTOSAURUS_ANIMATION_ASSETS.walk,
@@ -184,7 +208,6 @@ export const CAMPAIGN_ANIMATED_REFERENCE_FILES = Object.freeze([
 ]);
 
 export const REFERENCE_PRELOAD_FILES = [
-  "adult-velociraptor-nublarensis.png",
   "vastatosaurus-rex.png",
   "ferrucutus-cerastes.png",
   "indoraptor-first-generation.png",
@@ -196,7 +219,7 @@ export const REFERENCE_PRELOAD_FILES = [
   "tactical-enemies.png"
 ];
 
-const SPRITE_ASSET_VERSION = "20261123-blocky-directional-pterodactyl-2";
+const SPRITE_ASSET_VERSION = "20261123-gala-alpha-trimmed-1";
 const ROSA_RIG_PARTS = [
   "rosa-rig-body",
   "rosa-rig-tail",
@@ -330,6 +353,7 @@ export class SpriteRenderer {
   }
 
   getReferenceConfig(character, actor = {}) {
+    if (character === "blue" || character === "gala") return { ...GALA_REFERENCE };
     const definition = REFERENCE_PNG_CHARACTERS[character];
     if (!definition) return null;
     if (!definition.first) return { ...definition, file: definition.file };
@@ -407,6 +431,45 @@ export class SpriteRenderer {
     this.referenceImages.set(file, image);
     image.src = this.baseUrl + "references/" + file + "?v=" + SPRITE_ASSET_VERSION;
     return image;
+  }
+
+  drawAnimatedGala(context, character, x, y, width, height, actor = {}, elapsed = 0, options = {}) {
+    if (!(this.animatedReferences instanceof Map)) return false;
+
+    const animationKey = selectGalaAnimation(actor, options);
+    const file = GALA_ANIMATION_ASSETS[animationKey] ?? GALA_ANIMATION_ASSETS.idle;
+    const animation = this.animatedReferences.get(file);
+    if (!animation?.frames?.length) {
+      this.loadAnimatedReference(file);
+      return false;
+    }
+
+    const frameIndex = getAnimatedFrameIndex(animation.frames, Math.max(0, elapsed) * 1000);
+    const frame = animation.frames[frameIndex];
+    if (!frame?.image || !(animation.width > 0) || !(animation.height > 0)) return false;
+
+    const drawWidth = Math.max(1, Math.round(width * (options.scale ?? DINOSAUR_REFERENCE_SCALES.gala)));
+    const drawHeight = Math.max(1, Math.round(drawWidth * animation.height / animation.width));
+    const bottomPadding = Math.max(
+      0,
+      Math.min(animation.height, Number(frame.bottomPadding ?? animation.bottomPadding) || 0)
+    );
+    const scaledBottomPadding = drawHeight * bottomPadding / animation.height;
+    const bob = actor?.onGround === false
+      ? 0
+      : Math.abs(Math.sin(elapsed * 7.2 + phaseOf(actor, character))) * 0.45;
+    const groundAlignedY = y + height - drawHeight + scaledBottomPadding + bob;
+    const facing = options.facing ?? actor?.facing ?? actor?.direction ?? 1;
+    const flip = Math.sign(facing || 1) !== 1;
+
+    context.save();
+    context.globalAlpha *= options.alpha ?? 1;
+    context.imageSmoothingEnabled = false;
+    context.translate(Math.round(x + width / 2), Math.round(groundAlignedY));
+    context.scale(flip ? -1 : 1, 1);
+    drawSpriteImage(context, frame.image, -drawWidth / 2, 0, drawWidth, drawHeight);
+    context.restore();
+    return true;
   }
 
   drawAnimatedJuvenile(context, character, x, y, width, height, actor = {}, elapsed = 0, options = {}) {
@@ -536,6 +599,7 @@ export class SpriteRenderer {
   }
 
   drawReferencePng(context, character, x, y, width, height, actor, elapsed, options = {}, poseOverride = null) {
+    if (character === "blue" || character === "gala") return false;
     // Tests and lightweight renderers may intentionally use this prototype without
     // running the browser constructor; in that case preserve the legacy fallback.
     if (!(this.referenceImages instanceof Map)) return false;
@@ -1784,6 +1848,9 @@ export class SpriteRenderer {
   }
 
   drawAnimated(context, character, x, y, width, height, actor, elapsed, options = {}) {
+    if (character === "blue" || character === "gala") {
+      return this.drawAnimatedGala(context, character, x, y, width, height, actor ?? {}, elapsed, options);
+    }
     if (character === "hunter") {
       const identity = String(actor?.id ?? actor?.squadIndex ?? "hunter");
       let hash = 0;
@@ -1838,6 +1905,13 @@ export class SpriteRenderer {
   }
 
   drawDinosaur(context, kind, x, y, width, height, player, elapsed, alpha = 1) {
+    if (kind === "blue") {
+      return this.drawAnimatedGala(context, "blue", x, y, width, height, player ?? {}, elapsed, {
+        alpha,
+        facing: player?.facing ?? 1
+      });
+    }
+
     const isBrisa = kind === "brisa" || kind === "rosa";
     const character = kind === "blue" ? "blue" : isBrisa ? "brisa" : "vasti";
     const prefix = kind === "blue" ? "violeta" : isBrisa ? "rosa" : "vasti";

@@ -176,7 +176,14 @@ export async function loadAnimatedGif(url) {
     const snapshotContext = snapshot.getContext("2d", { willReadFrequently: true });
     snapshotContext.drawImage(canvas, 0, 0);
     const snapshotData = snapshotContext.getImageData(0, 0, width, height);
-    if (removeEdgeBackground(snapshotData) > 0) snapshotContext.putImageData(snapshotData, 0, 0);
+    let transparentPixels = 0;
+    for (let alphaIndex = 3; alphaIndex < frame.patch.length; alphaIndex += 4) {
+      if (frame.patch[alphaIndex] === 0) transparentPixels += 1;
+    }
+    const alreadyTransparent = transparentPixels >= frame.patch.length / 32;
+    if (!alreadyTransparent && removeEdgeBackground(snapshotData) > 0) {
+      snapshotContext.putImageData(snapshotData, 0, 0);
+    }
     const frameBottomPadding = getBottomTransparentPadding(snapshotData);
     bottomPadding = Math.min(bottomPadding, frameBottomPadding);
 

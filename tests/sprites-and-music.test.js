@@ -7,6 +7,8 @@ import {
   CAMPAIGN_ANIMATED_REFERENCE_FILES,
   DINOSAUR_REFERENCE_SCALES,
   LIGOCRISTUS_ANIMATION_ASSETS,
+  GALA_ANIMATION_ASSETS,
+  selectGalaAnimation,
   PROLOGUE_ROSA_REFERENCE,
   REFERENCE_PNG_CHARACTERS,
   REFERENCE_PRELOAD_FILES,
@@ -86,7 +88,20 @@ test("every PNG in public/references is registered as a renderable character", (
 });
 
 test("active characters resolve their intended reference images", () => {
-  assert.equal(REFERENCE_PNG_CHARACTERS.blue.file, "adult-velociraptor-nublarensis.png");
+  assert.equal(REFERENCE_PNG_CHARACTERS.blue, undefined);
+  assert.equal(REFERENCE_PNG_CHARACTERS.gala, undefined);
+  assert.deepEqual(GALA_ANIMATION_ASSETS, {
+    idle: "gala-idle.gif",
+    walk: "gala-walk.gif",
+    run: "gala-run.gif",
+    fly: "gala-fly.gif"
+  });
+  assert.ok(Object.values(GALA_ANIMATION_ASSETS).every((file) => CAMPAIGN_ANIMATED_REFERENCE_FILES.includes(file)));
+  assert.equal(REFERENCE_PRELOAD_FILES.includes("adult-velociraptor-nublarensis.png"), false);
+  assert.equal(selectGalaAnimation({}), "idle");
+  assert.equal(selectGalaAnimation({ vx: 48, onGround: true }), "walk");
+  assert.equal(selectGalaAnimation({ vx: 220, onGround: true }), "run");
+  assert.equal(selectGalaAnimation({ onGround: false }), "fly");
   assert.equal(REFERENCE_PNG_CHARACTERS.beta.file, "juvenile-velociraptor-nublarensis.png");
   assert.equal(REFERENCE_PNG_CHARACTERS.vasti.file, "vastatosaurus-rex.png");
   assert.equal(REFERENCE_PNG_CHARACTERS.ferrucutus.file, "ferrucutus-cerastes.png");
@@ -96,7 +111,8 @@ test("active characters resolve their intended reference images", () => {
 });
 
 test("the requested dinosaur silhouettes use consistent, species-specific visual scales", () => {
-  assert.equal(REFERENCE_PNG_CHARACTERS.blue.scale, DINOSAUR_REFERENCE_SCALES.violeta);
+  const renderer = Object.create(SpriteRenderer.prototype);
+  assert.equal(renderer.getReferenceConfig("blue").scale, DINOSAUR_REFERENCE_SCALES.violeta);
   assert.equal(REFERENCE_PNG_CHARACTERS.vasti.scale, DINOSAUR_REFERENCE_SCALES.vastatosaurusRex);
   assert.equal(DINOSAUR_REFERENCE_SCALES.ligocristusInnocens, 0.9);
   assert.equal(REFERENCE_PNG_CHARACTERS["venatosaurus-impavidus"].scale, DINOSAUR_REFERENCE_SCALES.venatosaurusImpavidus);
@@ -165,10 +181,10 @@ test("reference images are loaded from the Vite base path and cached", () => {
   globalThis.Image = FakeImage;
   try {
     const renderer = new SpriteRenderer("/game/");
-    const first = renderer.getReferenceImage("adult-velociraptor-nublarensis.png");
-    const second = renderer.getReferenceImage("adult-velociraptor-nublarensis.png");
+    const first = renderer.getReferenceImage("vastatosaurus-rex.png");
+    const second = renderer.getReferenceImage("vastatosaurus-rex.png");
     assert.equal(first, second);
-    assert.equal(first.src, "/game/references/adult-velociraptor-nublarensis.png?v=20261118-campaign-ligocristus-gif-routing-1");
+    assert.equal(first.src, "/game/references/vastatosaurus-rex.png?v=20261123-gala-alpha-trimmed-1");
     assert.equal(renderer.referenceImages.size, REFERENCE_PRELOAD_FILES.length);
     assert.ok([...renderer.referenceImages.values()].every((image) => /\.png\?v=/.test(image.src)));
     assert.equal(renderer.readiness().total, REFERENCE_PRELOAD_FILES.length + CAMPAIGN_ANIMATED_REFERENCE_FILES.length);
@@ -305,23 +321,33 @@ test("Indoraptor gameplay rendering draws the generation-two PNG in phase two", 
   assert.equal(context.calls.find(([name]) => name === "drawImage")?.[1], reference);
 });
 
-test("Violeta and Vasti player rendering reads their PNG references directly", () => {
-  for (const [character, file] of [
-    ["blue", "adult-velociraptor-nublarensis.png"],
-    ["vasti", "vastatosaurus-rex.png"]
-  ]) {
-    const { renderer, reference } = rendererWithReference(file);
-    const context = createRenderContext();
-    const player = { id: character, facing: 1, onGround: true, vx: 0, duck: false, animationState: null };
-    assert.equal(renderer.drawDinosaur(context, character, 100, 200, 72, 66, player, 0.3), true);
-    assert.equal(context.calls.find(([name]) => name === "drawImage")?.[1], reference);
-  }
+test("Gala renders from her idle GIF while Basilio continues to use his PNG reference", () => {
+  const galaRenderer = Object.create(SpriteRenderer.prototype);
+  const galaFrame = { id: "gala-idle-frame" };
+  galaRenderer.animatedReferences = new Map([[
+    GALA_ANIMATION_ASSETS.idle,
+    { width: 420, height: 336, frames: [{ image: galaFrame, delay: 100, bottomPadding: 0 }] }
+  ]]);
+  galaRenderer.loadAnimatedReference = () => Promise.resolve(null);
+  const galaContext = createRenderContext();
+  const galaPlayer = { id: "blue", facing: 1, onGround: true, vx: 0, dashTimer: 0, animationState: null };
+  assert.equal(galaRenderer.drawDinosaur(galaContext, "blue", 100, 200, 72, 66, galaPlayer, 0.3), true);
+  assert.equal(galaContext.calls.find(([name]) => name === "drawImage")?.[1], galaFrame);
+
+  const { renderer, reference } = rendererWithReference("vastatosaurus-rex.png");
+  const context = createRenderContext();
+  const player = { id: "vasti", facing: 1, onGround: true, vx: 0, duck: false, animationState: null };
+  assert.equal(renderer.drawDinosaur(context, "vasti", 100, 200, 72, 66, player, 0.3), true);
+  assert.equal(context.calls.find(([name]) => name === "drawImage")?.[1], reference);
 });
 
 
 test("PNG-backed actors and poachers never request removed SVG sprite files", () => {
   const renderer = Object.create(SpriteRenderer.prototype);
   renderer.drawReferencePng = () => false;
+  renderer.animatedReferences = new Map();
+  renderer.loadAnimatedReference = () => Promise.resolve(null);
+  renderer.drawTacticalEnemy = () => false;
   renderer.get = () => { throw new Error("A removed SVG sprite was requested"); };
   const context = createRenderContext();
 
@@ -346,7 +372,7 @@ test("failed reference-image loads are reported without retrying the missing ass
   globalThis.Image = FakeImage;
   try {
     const renderer = new SpriteRenderer("/", (file, readiness, status) => notifications.push({ file, status }));
-    const file = "adult-velociraptor-nublarensis.png";
+    const file = REFERENCE_PRELOAD_FILES[0];
     instances[0].onerror();
     assert.deepEqual(notifications[0], { file, status: "error" });
     assert.equal(renderer.getReferenceImage(file), null);
@@ -453,10 +479,12 @@ test("the player HUD has an accessible health meter and captive labels are remov
   assert.match(main, /spriteW: 76, spriteH: 54/);
 });
 
-test("character picker uses repository PNGs and poachers retain a Canvas fallback", () => {
+test("character picker uses Gala animation GIFs and Basilio PNG while poachers retain a Canvas fallback", () => {
   const html = readFileSync(resolve("index.html"), "utf8");
   const main = readFileSync(resolve("src/main.js"), "utf8");
-  assert.match(html, /references\/adult-velociraptor-nublarensis\.png/);
+  assert.match(html, /references\/gala-idle\.gif/);
+  assert.match(html, /references\/gala-walk\.gif/);
+  assert.match(html, /references\/gala-run\.gif/);
   assert.match(html, /references\/vastatosaurus-rex\.png/);
   assert.match(main, /Poachers have no supplied PNG reference/);
   assert.match(main, /drawHunter\(hunter\)/);
