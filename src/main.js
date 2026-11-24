@@ -40,7 +40,6 @@ import { FacilityConsole } from "./entities/FacilityConsole.js";
 import { SpriteRenderer } from "./rendering/SpriteRenderer.js";
 import { AtmosphereRenderer } from "./rendering/AtmosphereRenderer.js";
 import { ImageParallax } from "./rendering/ImageParallax.js";
-import { CRATE_VARIANTS, OBJECT_SPECS, PORTAL_FRAMES, SLICES, fillTiled, imageSize, sharedEnvironmentAssets } from "./rendering/EnvironmentAssets.js";
 import { TerrainRenderer } from "./rendering/TerrainRenderer.js";
 import { ObjectRenderer } from "./rendering/ObjectRenderer.js";
 import { EnvironmentalEffectsRenderer } from "./rendering/EnvironmentalEffectsRenderer.js";
@@ -50,6 +49,7 @@ import { Persecution } from "./minigames/Persecution.js";
 import { Hunting } from "./minigames/Hunting.js";
 import { Ambush } from "./minigames/Ambush.js";
 import { Race } from "./minigames/Race.js";
+import { Combats } from "./minigames/Combats.js";
 
 const canvas = document.querySelector("#game");
 const nativeDesktopPlayback = window.matchMedia("(min-width: 768px) and (any-pointer: fine)");
@@ -68,9 +68,6 @@ ctx.fillText = () => {};
 ctx.strokeText = () => {};
 ctx.imageSmoothingEnabled = false;
 const atmosphereRenderer = new AtmosphereRenderer({ parallax: new ImageParallax() });
-const environmentAssets = sharedEnvironmentAssets();
-environmentAssets.preload(OBJECT_SPECS);
-const art = (spec) => environmentAssets.get(spec);
 const terrainRenderer = new TerrainRenderer();
 const objectRenderer = new ObjectRenderer();
 const effectsRenderer = new EnvironmentalEffectsRenderer();
@@ -113,6 +110,8 @@ const persecutionPanel = document.querySelector("#persecution-panel");
 const huntingButton = document.querySelector("#hunting-button");
 const huntingPanel = document.querySelector("#hunting-panel");
 const ambushButton = document.querySelector("#ambush-button");
+const combatsButton = document.querySelector("#combats-button");
+const combatsPanel = document.querySelector("#combats-panel");
 const raceButton = document.querySelector("#race-button");
 const racePanel = document.querySelector("#race-panel");
 const ambushPanel = document.querySelector("#ambush-panel");
@@ -124,6 +123,7 @@ const minigamePreviewSources = new Map([
   [persecutionButton, minigamesStartScreenArtwork],
   [huntingButton, `${import.meta.env.BASE_URL}artwork/hunting-artwork.png`],
   [ambushButton, `${import.meta.env.BASE_URL}artwork/ambush-artwork.png`],
+  [combatsButton, `${import.meta.env.BASE_URL}artwork/dino-fightz-artwork.png`],
   [raceButton, `${import.meta.env.BASE_URL}artwork/race-artwork.png`],
   [explorationButton, `${import.meta.env.BASE_URL}artwork/exploration-artwork.png`]
 ]);
@@ -221,6 +221,7 @@ const persecution = new Persecution(persecutionPanel, returnFromMinigame, showGa
 const hunting = new Hunting(huntingPanel, returnFromMinigame, spriteRenderer, showGameplayBrief);
 const ambush = new Ambush(ambushPanel, returnFromMinigame, spriteRenderer, showGameplayBrief);
 const race = new Race(racePanel, returnFromMinigame);
+const combats = new Combats(combatsPanel, returnFromMinigame, spriteRenderer);
 const audio = new AudioManager();
 const music = new AdaptiveMusic();
 music.setSamples(audio.samples);
@@ -448,41 +449,68 @@ function drawBackground() {
 
 
 function drawFacilityProp(prop, context = ctx) {
+  context.save();
   context.imageSmoothingEnabled = false;
-  const view = { visibleLeft: cameraX - 50, visibleRight: cameraX + GAME.width + 50 };
   if (prop.kind === "security-fence") {
-    const deck = art(SLICES.hazardDeck);
-    if (deck) fillTiled(context, deck, prop.x, prop.y, prop.w, imageSize(deck)[1], view);
+    const top = Math.round(prop.y);
+    context.fillStyle = "#303a35";
+    context.fillRect(prop.x, top, prop.w, 10);
+    context.fillStyle = "#bd9b5c";
+    context.fillRect(prop.x, top + 10, prop.w, 4);
+    context.fillStyle = "#66766b";
+    for (let x = prop.x + 8; x < prop.x + prop.w; x += 24) {
+      context.fillRect(x, top + 4, 4, Math.max(20, GAME.groundY - top - 4));
+    }
+    context.restore();
     return;
   }
-  const wall = art(SLICES.greyBlock);
-  if (wall) fillTiled(context, wall, prop.x, prop.y, prop.w, prop.h, view);
-  const sign = art(prop.kind === "containment-wing" ? SLICES.radiationSign : SLICES.hazardSign);
-  if (sign) context.drawImage(sign, Math.round(prop.x + 14), Math.round(prop.y + 14));
+
+  context.fillStyle = "#303d3d";
+  context.fillRect(prop.x, prop.y, prop.w, prop.h);
+  context.fillStyle = "#465654";
+  context.fillRect(prop.x + 5, prop.y + 5, prop.w - 10, prop.h - 10);
+  context.fillStyle = "#1d2929";
+  context.fillRect(prop.x + 12, prop.y + 18, prop.w - 24, Math.max(24, prop.h * 0.34));
+  context.fillStyle = "#72847a";
+  for (let x = prop.x + 18; x < prop.x + prop.w - 22; x += 42) {
+    context.fillRect(x, prop.y + 26, 20, 12);
+  }
+  context.fillStyle = "#b08b53";
+  context.fillRect(prop.x, prop.y + prop.h - 9, prop.w, 9);
   if (prop.kind === "containment-wing") {
     context.fillStyle = "#d8f36a";
     context.font = "10px monospace";
-    context.fillText(tr("CELL BLOCK C"), prop.x + 48, prop.y + prop.h - 28);
-  }
-}
-function drawFacilityConsole(consoleEntity, context = ctx) {
-  const sprite = art(consoleEntity.activated ? SLICES.computerOn : SLICES.computerOff);
-  context.save();
-  context.imageSmoothingEnabled = false;
-  if (sprite) {
-    const [width, height] = imageSize(sprite);
-    context.drawImage(sprite, Math.round(consoleEntity.x + (consoleEntity.w - width) / 2), Math.round(consoleEntity.y + consoleEntity.h - height));
-  }
-  context.fillStyle = "#9aa69d";
-  context.font = "8px monospace";
-  context.fillText(locale === "es" ? (consoleEntity.kind === "power" ? "ENE" : "SEG") : (consoleEntity.kind === "power" ? "PWR" : "LOCK"), consoleEntity.x + 7, consoleEntity.y - 2);
-  if (consoleEntity.activated) {
-    context.fillStyle = "#d8f36a";
-    context.font = "9px monospace";
-    context.fillText(tr("ONLINE"), consoleEntity.x - 2, consoleEntity.y - 12);
+    context.fillText(tr("CELL BLOCK C"), prop.x + 18, prop.y + prop.h - 24);
   }
   context.restore();
 }
+
+function drawFacilityConsole(consoleEntity, context = ctx) {
+  context.save();
+  context.imageSmoothingEnabled = false;
+  const x = Math.round(consoleEntity.x);
+  const y = Math.round(consoleEntity.y);
+  context.fillStyle = "#293735";
+  context.fillRect(x, y + 8, consoleEntity.w, consoleEntity.h - 8);
+  context.fillStyle = "#718078";
+  context.fillRect(x + 4, y + 12, consoleEntity.w - 8, 5);
+  context.fillStyle = consoleEntity.activated ? "#d8f36a" : "#234c4a";
+  context.fillRect(x + 8, y + 20, consoleEntity.w - 16, Math.max(12, consoleEntity.h * 0.42));
+  context.fillStyle = consoleEntity.activated ? "#efffc0" : "#73b8a9";
+  context.fillRect(x + 13, y + 24, Math.max(8, consoleEntity.w - 26), 3);
+  context.fillStyle = "#b7c1ad";
+  context.font = "8px monospace";
+  context.fillText(locale === "es"
+    ? (consoleEntity.kind === "power" ? "ENERGÍA" : "SEGURIDAD")
+    : (consoleEntity.kind === "power" ? "POWER" : "SECURITY"), x + 4, y - 2);
+  if (consoleEntity.activated) {
+    context.fillStyle = "#d8f36a";
+    context.font = "9px monospace";
+    context.fillText(tr("ONLINE"), x - 2, y - 12);
+  }
+  context.restore();
+}
+
 function drawBrisaContainmentFrame(context, entity) {
   if (!entity || entity.state !== "confined") return;
   const x = entity.x;
@@ -510,32 +538,51 @@ function drawBrisa(entity) {
 function drawExtractionMarker(x, context = ctx) {
   if (!Number.isFinite(x)) return;
   const unlocked = beta?.state === "following" || beta?.state === "extracted";
-  const frame = unlocked ? PORTAL_FRAMES[3 + (Math.floor(elapsed * 6) % 3)] : PORTAL_FRAMES[0];
-  const portal = art(SLICES[frame]);
+  const centerX = x + 99;
+  const centerY = GAME.groundY - 54;
   context.save();
-  context.imageSmoothingEnabled = false;
-  if (portal) {
-    const [width, height] = imageSize(portal);
-    context.drawImage(portal, Math.round(x + 99 - width / 2), GAME.groundY - height);
-  }
+  context.globalAlpha = 0.78 + Math.sin(elapsed * 5) * 0.12;
+  context.strokeStyle = unlocked ? "#d8f36a" : "#8c9d9b";
+  context.lineWidth = 5;
+  context.beginPath();
+  context.ellipse(centerX, centerY, 28, 48, 0, 0, Math.PI * 2);
+  context.stroke();
+  context.lineWidth = 2;
+  context.strokeStyle = unlocked ? "#f1ffc0" : "#b5c2b8";
+  context.beginPath();
+  context.ellipse(centerX, centerY, 17, 37, 0, 0, Math.PI * 2);
+  context.stroke();
+  context.fillStyle = unlocked ? "rgba(216,243,106,.18)" : "rgba(140,157,155,.12)";
+  context.fillRect(centerX - 17, centerY - 34, 34, 68);
+  context.globalAlpha = 1;
   context.fillStyle = "#edf3e5";
   context.font = "11px monospace";
   context.textAlign = "center";
-  context.fillText(tr(unlocked ? "EXTRACTION" : "EXIT LOCKED"), x + 99, GAME.groundY - 112);
+  context.fillText(tr(unlocked ? "EXTRACTION" : "EXIT LOCKED"), centerX, GAME.groundY - 112);
   context.fillStyle = "#d8f36a";
   context.font = "8px monospace";
-  context.fillText(tr("EAST GATE"), x + 99, GAME.groundY - 100);
+  context.fillText(tr("EAST GATE"), centerX, GAME.groundY - 100);
   context.restore();
 }
 function drawObstacle(obstacle, context = ctx) {
   context.save();
   if (obstacle.type === "crate") {
-    const variant = CRATE_VARIANTS[Math.abs(Math.round(obstacle.x / 52)) % CRATE_VARIANTS.length];
-    const crate = art(SLICES[variant]);
-    if (crate) {
-      context.imageSmoothingEnabled = false;
-      context.drawImage(crate, obstacle.x, obstacle.y, obstacle.w, obstacle.h);
-    }
+    context.imageSmoothingEnabled = false;
+    context.fillStyle = "#765238";
+    context.fillRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h);
+    context.fillStyle = "#a77b4d";
+    context.fillRect(obstacle.x + 4, obstacle.y + 4, obstacle.w - 8, 5);
+    context.fillStyle = "#4c392b";
+    context.fillRect(obstacle.x + 5, obstacle.y + 12, obstacle.w - 10, 4);
+    context.strokeStyle = "#c19a67";
+    context.lineWidth = 3;
+    context.strokeRect(obstacle.x + 2, obstacle.y + 2, obstacle.w - 4, obstacle.h - 4);
+    context.beginPath();
+    context.moveTo(obstacle.x + 7, obstacle.y + obstacle.h - 7);
+    context.lineTo(obstacle.x + obstacle.w - 7, obstacle.y + 7);
+    context.moveTo(obstacle.x + 7, obstacle.y + 7);
+    context.lineTo(obstacle.x + obstacle.w - 7, obstacle.y + obstacle.h - 7);
+    context.stroke();
   } else if (obstacle.type === "hunter") {
     context.fillStyle = "#d1c5a0";
     context.fillRect(obstacle.x + 8, obstacle.y + 14, obstacle.w - 16, obstacle.h - 14);
@@ -2178,14 +2225,22 @@ function drawBoss(boss) {
 
 function drawBossArenaBoundary(context = ctx) {
   if (!activeBoss || activeBoss.defeated) return;
-  const beam = art(SLICES.laserBeam);
-  if (!beam) return;
-  const [beamWidth] = imageSize(beam);
+  const pulse = 0.72 + Math.sin(elapsed * 7) * 0.18;
   for (const boundaryX of [activeBoss.arenaMinX, activeBoss.arenaMaxX]) {
     context.save();
-    context.imageSmoothingEnabled = false;
-    context.globalAlpha = 0.72 + Math.sin(elapsed * 7) * 0.18;
-    fillTiled(context, beam, Math.round(boundaryX - beamWidth / 2), GAME.groundY - 224, beamWidth, 224);
+    context.globalAlpha = pulse;
+    context.fillStyle = "#253d3a";
+    context.fillRect(boundaryX - 5, GAME.groundY - 224, 10, 224);
+    context.fillStyle = "#d8f36a";
+    for (let y = GAME.groundY - 220; y < GAME.groundY; y += 28) {
+      context.fillRect(boundaryX - 5, y, 10, 12);
+    }
+    context.strokeStyle = "#e9ffaf";
+    context.lineWidth = 2;
+    context.beginPath();
+    context.moveTo(boundaryX, GAME.groundY - 224);
+    context.lineTo(boundaryX, GAME.groundY);
+    context.stroke();
     context.restore();
   }
 }
@@ -4162,6 +4217,7 @@ function syncDesktopAccess() {
   huntingButton.disabled = !canPlay;
   ambushButton.disabled = !canPlay;
   raceButton.disabled = !canPlay;
+  combatsButton.disabled = !canPlay;
 
   if (!canPlay) {
     if (running) {
