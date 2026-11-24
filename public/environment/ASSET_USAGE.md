@@ -30,6 +30,10 @@ Los edificios, vallas, consolas, cajas, portal de extracción y límites de las 
 
 Persecución, Cacería, Emboscada y Combates utilizan la carpeta `maps/forest/`; Carrera conserva `prairie`. Los cinco minijuegos comparten los renderizadores de atmósfera y terreno. No hay un mapa independiente por minijuego: el entorno se compone con capas de parallax y terreno repetido.
 
+## Exploración: asignación pendiente de confirmar
+
+El modo Exploración reutiliza actualmente los seis biomas de campaña mediante `selectedExplorationBiomeIndex`. Por eso, sus fondos varían entre recursos de `maps/parallax/` (Coastal, Redwood y Extraction) y `maps/forest/` (Black Site y las dos secciones de contención). Para que Exploración use exclusivamente `maps/parallax/`, debe definirse si se limitará el selector a los biomas compatibles o si se crearán variantes parallax para los seis biomas. No se ha cambiado esa selección para no eliminar opciones sin confirmación.
+
 ## Tilesets activos
 
 Los tres tilesets están conectados a `src/rendering/EnvironmentAssets.js`:
