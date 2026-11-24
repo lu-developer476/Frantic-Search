@@ -43,7 +43,7 @@ const FOREST_SCENE = Object.freeze({
   ...LEVELS[1],
   name: "FOREST ARENA",
   subtitle: "A wooded arena for close dinosaur encounters.",
-  sky: "#70877a",
+  sky: "#10131b",
   ground: "#865638",
   environment: "forest",
   soil: "#865638",
@@ -54,10 +54,21 @@ const FOREST_SCENE = Object.freeze({
   platformShadow: "#354a36"
 });
 
+// Cacería is a clear night scene: it has no sun, clouds or moon.
+const HUNTING_SCENE = Object.freeze({
+  ...FOREST_SCENE,
+  sun: null,
+  sunShade: null,
+  cloud: null,
+  cloudShadow: null,
+  moon: null,
+  moonShade: null
+});
+
 export const MINIGAME_ENVIRONMENT_SCENES = Object.freeze({
   race: RACE_SCENE,
   persecution: PRAIRIE_SCENE,
-  hunting: FOREST_SCENE,
+  hunting: HUNTING_SCENE,
   ambush: FOREST_SCENE,
   combats: FOREST_SCENE
 });
