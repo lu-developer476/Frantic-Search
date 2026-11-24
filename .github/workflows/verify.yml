@@ -22,16 +22,7 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Run campaign regression tests
-        run: >-
-          node --test
-          tests/campaign.test.js
-          tests/campaign-prologue.test.js
-          tests/campaign-narration.test.js
-          tests/save-manager.test.js
-          tests/collectibles.test.js
-          tests/checkpoints.test.js
-          tests/hunter-projectiles.test.js
-          tests/hunting.test.js
+      - name: Run the complete test suite
+        run: npm test
       - name: Build production bundle
         run: npm run build
